@@ -1,0 +1,8 @@
+project:
+  name: industrial-surface-defect-inspection-platform
+  system_type: decision-support
+  deployment_target: aws
+  environment_default: development
+ownership:
+  metadata: configs/base/project.yaml
+  defaults: configs/base/project.yaml

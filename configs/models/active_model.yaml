@@ -1,0 +1,7 @@
+model:
+  active_model_ownership: configs/models/active_model.yaml
+  name: baseline_classifier
+  family: classification
+parameters:
+  ownership: configs/models/active_model.yaml
+  reference: model-specific parameter configuration

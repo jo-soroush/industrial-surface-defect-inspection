@@ -1,0 +1,11 @@
+training:
+  parameter_ownership: configs/training/training.yaml
+  batch_size: 32
+  epochs: 20
+  random_seed: 42
+optimizer:
+  ownership: configs/training/training.yaml
+  type: adam
+schedule:
+  ownership: configs/training/training.yaml
+  policy_reference: training schedule configuration

@@ -1,0 +1,7 @@
+thresholds:
+  ownership: configs/decision/thresholds.yaml
+  anomaly_alert: 0.75
+  manual_review: 0.60
+decision_rules:
+  ownership: configs/decision/thresholds.yaml
+  band_reference: decision routing policy

@@ -1,0 +1,8 @@
+deployment:
+  runtime_profile_ownership: configs/deployment/deployment.yaml
+  target: local_baseline
+  profile: api_service
+  containerized: true
+runtime:
+  ownership: configs/deployment/deployment.yaml
+  reference: deployment profile configuration

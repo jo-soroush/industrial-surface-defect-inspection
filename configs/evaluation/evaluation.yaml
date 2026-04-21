@@ -1,0 +1,5 @@
+evaluation:
+  parameter_ownership: configs/evaluation/evaluation.yaml
+  primary_metric: f1_macro
+  report_confusion_matrix: true
+  reference: evaluation configuration baseline

@@ -1,0 +1,7 @@
+logging:
+  configuration_ownership: configs/logging/logging.yaml
+  level: INFO
+  format: structured
+handlers:
+  ownership: configs/logging/logging.yaml
+  console: true

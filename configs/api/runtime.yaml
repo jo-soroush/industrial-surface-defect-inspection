@@ -1,0 +1,8 @@
+api:
+  runtime_ownership: configs/api/runtime.yaml
+  host: 0.0.0.0
+  port: 8000
+  workers: 1
+runtime_controls:
+  ownership: configs/api/runtime.yaml
+  reload: false

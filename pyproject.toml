@@ -1,0 +1,9 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "industrial-surface-defect-inspection-platform"
+version = "0.1.0"
+description = "Production-oriented industrial surface inspection platform baseline."
+requires-python = ">=3.10"

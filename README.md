@@ -40,6 +40,37 @@ The system provides decision-support rather than prediction in isolation. In ope
 
 Anomaly detection adds value by identifying cases that may not align with known defect categories and therefore require stronger scrutiny than standard classification output can provide. Human review integration adds value by ensuring that ambiguous, high-risk, or distribution-shifted cases are handled through defined oversight instead of silent automation. The resulting value is operational: more controlled inspection decisions, clearer escalation behavior, and better alignment between model output and real inspection workflow needs.
 
+## Repository Structure Overview
+
+This repository is being organized as a production-oriented AI system codebase. At the current stage, the Phase 0 governance documents are present in `docs/`, and the repository is being prepared for Phase 1 implementation structure.
+
+The intended root-level structure includes the following major areas:
+
+- `docs/` for system definition, governance, risk, and policy documents
+- `src/` for the core Python package and application logic
+- `api/` for the serving layer and API entrypoints
+- `configs/` for versioned configuration and environment-specific settings
+- `data/` for controlled local data structure and dataset references
+- `artifacts/` for governed model and evaluation outputs
+- `notebooks/` for exploratory and analysis notebooks under policy controls
+- `scripts/` for operational and development scripts
+- `tests/` for test coverage across package, API, and workflow behavior
+- `ops/` for deployment, container, and operational support assets
+- `frontend/` for any inspection-facing interface layer if included in later phases
+
+These directories are part of the intended repository structure. Their mention here does not imply that all of them already exist in the current repository state.
+
+## Basic Setup
+
+This repository currently establishes the governance and root-baseline needed before feature implementation begins. Basic local setup at this stage is intentionally minimal:
+
+1. Create a Python virtual environment in the repository root.
+2. Install runtime dependencies from `requirements.txt`.
+3. Install development dependencies from `requirements-dev.txt` when working on tests, linting, or local quality checks.
+4. Copy `.env.example` into a local environment file only when local runtime configuration is needed.
+
+The repository is not yet presented as a complete runnable service. Setup instructions are therefore limited to the current baseline and root-governance stage.
+
 ## Human-in-the-Loop Principle
 
 Human-in-the-loop operation is a system design principle. The inspection workflow is intentionally structured so that model outputs inform decisions while defined classes of cases are routed to qualified human review under explicit operational criteria.
@@ -61,6 +92,12 @@ The system is defined to support the following core capabilities:
 The system scope is intentionally bounded. Its behavior and claims are limited by the documented operating context, data characteristics, model behavior, deployment assumptions, review policy, and evidence standards under which it is evaluated and used. System outputs must be interpreted within those constraints and not as general guarantees.
 
 All capabilities are governed by documented risk and limitation controls. Use of the system must remain aligned with the defined intended use, explicit non-intended use boundaries, human-in-the-loop policy, evidence requirements, and documented limitations. Any use outside those controls is outside the defined scope of the system.
+
+## Responsible-Use Statement
+
+This repository defines a decision-support system for governed industrial inspection workflows. It must not be interpreted or deployed as a fully autonomous inspection authority. Model outputs, anomaly-related signals, confidence-related signals, and explainability artifacts are bounded decision-support signals and must not be treated as ground truth or as a substitute for human judgment.
+
+Use of the system remains subject to documented intended use, explicit non-intended use boundaries, risk and limitation controls, human-in-the-loop policy, and evidence requirements. Any use that bypasses those controls is outside the defined scope of the system.
 
 ## Repository Documentation Map
 

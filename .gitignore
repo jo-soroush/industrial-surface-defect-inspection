@@ -1,0 +1,34 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+logs/
+*.log
+
+# Artifacts
+artifacts/
+
+# Data payloads
+data/raw/
+data/interim/
+data/processed/
+data/external/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

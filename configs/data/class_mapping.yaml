@@ -1,0 +1,7 @@
+mapping_version: neu_class_mapping_1.0
+dataset_id: neu_classification
+dataset_version: neu_1.0
+classes:
+  - class_id: 0
+    class_name: surface_defect
+    is_active: true

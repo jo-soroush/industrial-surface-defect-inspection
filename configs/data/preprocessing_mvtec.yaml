@@ -1,0 +1,10 @@
+preprocessing_version: preprocessing_policy_1.0
+dataset_id: mvtec_anomaly
+dataset_version: mvtec_1.0
+rgb_conversion_policy: force_rgb
+allowed_image_modes:
+  - RGB
+resize_policy: none
+normalization_policy: deferred_to_model_config
+decode_failure_policy: reject
+invalid_image_policy: reject

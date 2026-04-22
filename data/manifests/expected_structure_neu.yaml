@@ -1,0 +1,6 @@
+dataset_id: neu_classification
+dataset_version: neu_1.0
+root: data/raw/neu/
+required_subfolders:
+  - class_0
+label_source: folder_name

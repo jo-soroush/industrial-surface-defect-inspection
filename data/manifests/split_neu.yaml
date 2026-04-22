@@ -1,0 +1,12 @@
+dataset_id: neu_classification
+dataset_version: neu_1.0
+split_version: neu_split_1.0
+split_seed: 42
+split_strategy: predefined_empty_registration
+train_entries: []
+validation_entries: []
+test_entries: []
+total_train_count: 0
+total_validation_count: 0
+total_test_count: 0
+overlap_check_status: pass

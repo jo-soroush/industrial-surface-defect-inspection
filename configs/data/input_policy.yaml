@@ -1,0 +1,12 @@
+policy_version: input_policy_1.0
+dataset_version_reference: neu_1.0
+allowed_extensions:
+  - jpg
+  - jpeg
+  - png
+allowed_mime_types: []
+max_file_size_bytes: 5242880
+invalid_type_policy: reject
+invalid_size_policy: reject
+decode_failure_policy: reject
+rgb_conversion_policy_reference: force_rgb

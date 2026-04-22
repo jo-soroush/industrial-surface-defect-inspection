@@ -1,0 +1,6 @@
+preprocessing_index_version: preprocessing_index_1.0
+datasets:
+  neu_classification:
+    preprocessing_policy_path: configs/data/preprocessing_neu.yaml
+  mvtec_anomaly:
+    preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml

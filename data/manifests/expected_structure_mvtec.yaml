@@ -1,0 +1,7 @@
+dataset_id: mvtec_anomaly
+dataset_version: mvtec_1.0
+root: data/raw/mvtec/
+required_subfolders:
+  - train
+  - test
+anomaly_labeling: folder_based

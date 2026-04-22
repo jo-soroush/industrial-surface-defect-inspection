@@ -26,6 +26,10 @@ Industrial Surface Defect Inspection Platform is not:
 
 The system is defined for disciplined industrial inspection use, with explicit operating boundaries, documented governance expectations, and review-aware decision handling.
 
+## Scope Note
+
+Current governed data tracks are NEU for classification and MVTec for anomaly detection. A future object-detection track using NEU-DET is approved in scope, but it is not yet operationally implemented in Phase 2. No NEU-DET dataset payload is currently present in the repository, and no Phase 2 detection manifests, configs, or reports exist yet.
+
 ## Operational Problem Context
 
 Industrial surface inspection matters operationally because surface quality affects product release decisions, downstream manufacturing reliability, scrap rates, rework burden, customer acceptance, and quality escalation handling. Inspection outputs are not isolated predictions; they influence operational actions that can carry cost, quality, and accountability consequences.

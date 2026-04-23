@@ -1,5 +1,5 @@
 preprocessing_version: preprocessing_policy_1.0
-dataset_id: mvtec_anomaly
+dataset_id: mvtec_shared
 dataset_version: mvtec_1.0
 rgb_conversion_policy: force_rgb
 allowed_image_modes:

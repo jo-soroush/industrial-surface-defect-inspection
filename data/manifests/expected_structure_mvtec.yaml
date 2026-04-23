@@ -1,4 +1,4 @@
-dataset_id: mvtec_anomaly
+dataset_id: mvtec_shared
 dataset_version: mvtec_1.0
 root: data/raw/mvtec/
 required_subfolders:

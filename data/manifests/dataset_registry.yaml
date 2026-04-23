@@ -31,7 +31,7 @@ datasets:
     expected_structure_id: expected_structure_gc10det
     label_mode: supervised_detection
     status: registered
-    validation_report_path: null
+    validation_report_path: artifacts/reports/data_validation/gc10det_validation_report.yaml
     class_mapping_path: null
     split_manifest_path: null
     preprocessing_policy_path: configs/data/preprocessing_gc10det.yaml

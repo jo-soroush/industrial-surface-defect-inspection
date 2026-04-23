@@ -1,5 +1,5 @@
 policy_version: input_policy_1.0
-dataset_version_reference: neu_1.0
+dataset_version_reference: mvtec_1.0
 allowed_extensions:
   - jpg
   - jpeg

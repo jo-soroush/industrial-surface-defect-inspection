@@ -1,11 +1,11 @@
 active_datasets:
   classification:
-    dataset_name: NEU
-    dataset_id: neu_classification
-    dataset_version: neu_1.0
+    dataset_name: MVTec
+    dataset_id: mvtec_classification
+    dataset_version: mvtec_1.0
     dataset_role: classification
     label_mode: supervised
-    storage_root: data/raw/neu/
+    storage_root: data/raw/mvtec/
   anomaly_detection:
     dataset_name: MVTec
     dataset_id: mvtec_anomaly
@@ -13,3 +13,10 @@ active_datasets:
     dataset_role: anomaly_detection
     label_mode: unsupervised
     storage_root: data/raw/mvtec/
+  detection:
+    dataset_name: GC10-DET
+    dataset_id: gc10det_detection
+    dataset_version: gc10det_1.0
+    dataset_role: object_detection
+    label_mode: supervised_detection
+    storage_root: data/raw/gc10det/

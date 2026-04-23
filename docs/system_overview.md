@@ -28,7 +28,7 @@ The system is defined for disciplined industrial inspection use, with explicit o
 
 ## Scope Note
 
-Current governed data tracks are NEU for classification and MVTec for anomaly detection. A future object-detection track using NEU-DET is approved in scope, but it is not yet operationally implemented in Phase 2. No NEU-DET dataset payload is currently present in the repository, and no Phase 2 detection manifests, configs, or reports exist yet.
+Current governed data tracks are MVTec for classification, MVTec for anomaly detection, and GC10-DET for object detection. The raw GC10-DET payload is present in the repository. Detection remains part of the active governed scope, but the Phase 2 governance layer is not yet fully aligned across manifests, configs, and reports. NEU and NEU-DET are outside the current executable scope.
 
 ## Operational Problem Context
 

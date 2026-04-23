@@ -2,6 +2,49 @@ dataset_id: mvtec_anomaly
 dataset_version: mvtec_1.0
 root: data/raw/mvtec/
 required_subfolders:
-  - train
-  - test
+  - bottle/train
+  - bottle/test
+  - bottle/ground_truth
+  - cable/train
+  - cable/test
+  - cable/ground_truth
+  - capsule/train
+  - capsule/test
+  - capsule/ground_truth
+  - carpet/train
+  - carpet/test
+  - carpet/ground_truth
+  - grid/train
+  - grid/test
+  - grid/ground_truth
+  - hazelnut/train
+  - hazelnut/test
+  - hazelnut/ground_truth
+  - leather/train
+  - leather/test
+  - leather/ground_truth
+  - metal_nut/train
+  - metal_nut/test
+  - metal_nut/ground_truth
+  - pill/train
+  - pill/test
+  - pill/ground_truth
+  - screw/train
+  - screw/test
+  - screw/ground_truth
+  - tile/train
+  - tile/test
+  - tile/ground_truth
+  - toothbrush/train
+  - toothbrush/test
+  - toothbrush/ground_truth
+  - transistor/train
+  - transistor/test
+  - transistor/ground_truth
+  - wood/train
+  - wood/test
+  - wood/ground_truth
+  - zipper/train
+  - zipper/test
+  - zipper/ground_truth
 anomaly_labeling: folder_based

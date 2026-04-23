@@ -1,16 +1,16 @@
 datasets:
-  - dataset_id: neu_classification
-    dataset_name: NEU
+  - dataset_id: mvtec_classification
+    dataset_name: MVTec
     dataset_role: classification
-    dataset_version: neu_1.0
-    storage_root: data/raw/neu/
-    expected_structure_id: expected_structure_neu
+    dataset_version: mvtec_1.0
+    storage_root: data/raw/mvtec/
+    expected_structure_id: expected_structure_mvtec
     label_mode: supervised
     status: registered
-    validation_report_path: artifacts/reports/data_validation/neu_validation_report.yaml
-    class_mapping_path: configs/data/class_mapping.yaml
-    split_manifest_path: data/manifests/split_neu.yaml
-    preprocessing_policy_path: configs/data/preprocessing_neu.yaml
+    validation_report_path: artifacts/reports/data_validation/mvtec_validation_report.yaml
+    class_mapping_path: null
+    split_manifest_path: null
+    preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
   - dataset_id: mvtec_anomaly
     dataset_name: MVTec
     dataset_role: anomaly_detection
@@ -23,3 +23,15 @@ datasets:
     class_mapping_path: null
     split_manifest_path: null
     preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
+  - dataset_id: gc10det_detection
+    dataset_name: GC10-DET
+    dataset_role: object_detection
+    dataset_version: gc10det_1.0
+    storage_root: data/raw/gc10det/
+    expected_structure_id: null
+    label_mode: supervised_detection
+    status: registered
+    validation_report_path: null
+    class_mapping_path: null
+    split_manifest_path: null
+    preprocessing_policy_path: null

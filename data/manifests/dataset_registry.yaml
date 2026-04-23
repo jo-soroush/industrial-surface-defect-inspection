@@ -34,4 +34,4 @@ datasets:
     validation_report_path: null
     class_mapping_path: null
     split_manifest_path: null
-    preprocessing_policy_path: null
+    preprocessing_policy_path: configs/data/preprocessing_gc10det.yaml

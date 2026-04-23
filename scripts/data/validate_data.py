@@ -9,6 +9,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = REPO_ROOT / "data/manifests/dataset_registry.yaml"
 REPORTS_DIR = REPO_ROOT / "artifacts/reports/data_validation"
+IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
 
 
 def _parse_scalar(value: str) -> Any:
@@ -147,6 +148,8 @@ def _scan_dataset(dataset: dict[str, Any]) -> dict[str, Any]:
         for path in sorted(root.rglob("*")):
             if not path.is_file():
                 continue
+            if path.suffix.lower() not in IMAGE_SUFFIXES:
+                continue
             total_seen += 1
             if _readable_image(path):
                 total_readable += 1
@@ -187,6 +190,13 @@ def main() -> int:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     for dataset in datasets:
+        if dataset.get("expected_structure_id") is None or dataset.get("validation_report_path") is None:
+            print(
+                f"Skipping dataset {dataset['dataset_id']}: "
+                "incomplete governance (missing expected_structure_id or validation_report_path)"
+            )
+            continue
+
         report = _scan_dataset(dataset)
         report_path = REPO_ROOT / str(dataset["validation_report_path"])
         _write_report(report_path, report)

@@ -28,7 +28,7 @@ datasets:
     dataset_role: object_detection
     dataset_version: gc10det_1.0
     storage_root: data/raw/gc10det/
-    expected_structure_id: null
+    expected_structure_id: expected_structure_gc10det
     label_mode: supervised_detection
     status: registered
     validation_report_path: null

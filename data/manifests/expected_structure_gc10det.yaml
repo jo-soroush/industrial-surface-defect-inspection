@@ -1,0 +1,7 @@
+dataset_id: gc10det_detection
+dataset_version: gc10det_1.0
+root: data/raw/gc10det/
+required_subfolders:
+  - img
+  - ann
+annotation_labeling: file_based

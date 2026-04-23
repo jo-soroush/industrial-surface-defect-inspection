@@ -7,7 +7,7 @@ datasets:
     expected_structure_id: expected_structure_mvtec
     label_mode: supervised
     status: registered
-    validation_report_path: artifacts/reports/data_validation/mvtec_validation_report.yaml
+    validation_report_path: artifacts/reports/data_validation/mvtec_classification_validation_report.yaml
     class_mapping_path: null
     split_manifest_path: null
     preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
@@ -19,7 +19,7 @@ datasets:
     expected_structure_id: expected_structure_mvtec
     label_mode: unsupervised
     status: registered
-    validation_report_path: artifacts/reports/data_validation/mvtec_validation_report.yaml
+    validation_report_path: artifacts/reports/data_validation/mvtec_anomaly_validation_report.yaml
     class_mapping_path: null
     split_manifest_path: null
     preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml

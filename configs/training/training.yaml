@@ -1,11 +1,49 @@
+identity:
+  config_id: training_config_1.0
+  description: Baseline governed training configuration contract for Phase 3 runs.
+
+dataset_binding:
+  dataset_id: null
+  dataset_version: null
+  track_id: null
+  split_manifest_path: null
+
+preprocessing:
+  preprocessing_version: preprocessing_index_1.0
+  augmentation_policy_version: null
+
 training:
   parameter_ownership: configs/training/training.yaml
   batch_size: 32
+  learning_rate: 0.001
   epochs: 20
+  optimizer: adam
+  loss_function: null
+  seed: 42
   random_seed: 42
+
 optimizer:
   ownership: configs/training/training.yaml
   type: adam
+
 schedule:
   ownership: configs/training/training.yaml
   policy_reference: training schedule configuration
+
+device:
+  device: auto
+
+checkpoint:
+  enabled: true
+  save_best: true
+  save_last: true
+
+early_stopping:
+  enabled: false
+  patience: 5
+
+output_control:
+  save_artifact: true
+  save_metadata: true
+  save_logs: true
+  save_metrics: true

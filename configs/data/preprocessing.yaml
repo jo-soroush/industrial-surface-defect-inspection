@@ -4,3 +4,5 @@ datasets:
     preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
   mvtec_anomaly:
     preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
+  gc10det_detection:
+    preprocessing_policy_path: configs/data/preprocessing_gc10det.yaml

@@ -62,21 +62,38 @@ def handle_object_detection(config: dict[str, Any]) -> None:
     raise NotImplementedError("Object-detection training is not implemented yet.")
 
 
-def dispatch_training(config: dict[str, Any]) -> None:
-    """Validate task type and route to the governed training placeholder."""
-    task_type = config.get("task_type")
+def extract_task_type(config: dict[str, Any]) -> str:
+    """Extract and validate task_type from the resolved run config identity block."""
+    identity = config.get("identity")
+
+    if identity is None:
+        raise ValueError("Training config is missing required section: identity")
+
+    if not isinstance(identity, dict):
+        raise ValueError("Training config section identity must be a dictionary")
+
+    task_type = identity.get("task_type")
 
     if task_type is None:
-        raise ValueError("Training config is missing required field: task_type")
+        raise ValueError(
+            "Training config is missing required field: identity.task_type"
+        )
 
     if not isinstance(task_type, str):
-        raise ValueError("Training config field task_type must be a string")
+        raise ValueError("Training config field identity.task_type must be a string")
 
     if task_type not in ALLOWED_TASK_TYPES:
         raise ValueError(
-            "Training config has unsupported task_type: "
+            "Training config has unsupported identity.task_type: "
             f"{task_type}. Allowed values: {sorted(ALLOWED_TASK_TYPES)}"
         )
+
+    return task_type
+
+
+def dispatch_training(config: dict[str, Any]) -> None:
+    """Validate task type and route to the governed training placeholder."""
+    task_type = extract_task_type(config)
 
     if task_type == "classification":
         handle_classification(config)

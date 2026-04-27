@@ -22,6 +22,7 @@ class TrainingLoop:
     def run(self, model: Any, data_loader: Any) -> TrainingResult:
         """Run a training loop placeholder."""
         result = TrainingResult(self.config)
+        _add_placeholder_outputs(result, self.config)
         return result
 
 
@@ -30,4 +31,26 @@ def run_training_loop(
 ) -> TrainingResult:
     """Functional placeholder for future training loop execution."""
     result = TrainingResult(config)
+    _add_placeholder_outputs(result, config)
     return result
+
+
+def _add_placeholder_outputs(
+    result: TrainingResult, config: dict[str, Any]
+) -> None:
+    task_type = config["identity"]["task_type"]
+
+    if task_type == "classification":
+        result.add_metric("accuracy", 0.5)
+        result.add_metric("f1", 0.5)
+    elif task_type == "anomaly_detection":
+        result.add_metric("reconstruction_loss", 0.1)
+    elif task_type == "object_detection":
+        result.add_metric("mAP", 0.3)
+
+    result.add_learning_point("train_loss", [1.0, 0.8, 0.6])
+    result.add_learning_point("val_loss", [1.1, 0.9, 0.7])
+
+    training_runtime = config.get("training_runtime", {})
+    result.add_metadata("epochs", training_runtime.get("epochs"))
+    result.add_metadata("device", training_runtime.get("device"))

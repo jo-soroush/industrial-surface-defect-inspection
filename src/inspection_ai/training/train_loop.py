@@ -26,6 +26,7 @@ class TrainingLoop:
         result = TrainingResult(self.config)
         start_time = time.perf_counter()
         _add_simulated_outputs(result, self.config)
+        _add_forward_contract_metadata(result, model, self.config)
         duration_seconds = time.perf_counter() - start_time
         _add_completion_metadata(result, duration_seconds)
         _add_data_loader_metadata(result, data_loader)
@@ -41,6 +42,7 @@ def run_training_loop(
     result = TrainingResult(config)
     start_time = time.perf_counter()
     _add_simulated_outputs(result, config)
+    _add_forward_contract_metadata(result, model, config)
     duration_seconds = time.perf_counter() - start_time
     _add_completion_metadata(result, duration_seconds)
     _add_data_loader_metadata(result, data_loader)
@@ -104,6 +106,44 @@ def _add_completion_metadata(
     completed_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     result.add_metadata("completed_at", completed_at)
     result.add_metadata("duration_seconds", max(0.0, duration_seconds))
+
+
+def _add_forward_contract_metadata(
+    result: TrainingResult, model: Any, config: dict[str, Any]
+) -> None:
+    model_identity = config.get("model_identity")
+    model_type = (
+        model_identity.get("model_type") if isinstance(model_identity, dict) else None
+    )
+    if model_type != "mlp":
+        result.add_metadata("forward_contract_checked", False)
+        return
+
+    forward = getattr(model, "forward", None)
+    if not callable(forward):
+        raise ValueError("MLP model must provide a callable forward method.")
+
+    contract_input = {"sample_index": 0, "feature_count": 1}
+    forward_output = forward(contract_input)
+    if not isinstance(forward_output, dict):
+        raise ValueError("MLP forward contract output must be a dictionary.")
+
+    contract_name = forward_output.get("contract")
+    batch_size = forward_output.get("batch_size")
+    output_dimension = forward_output.get("output_dimension")
+    if not isinstance(contract_name, str) or not contract_name:
+        raise ValueError("MLP forward contract output must include a contract name.")
+    if isinstance(batch_size, bool) or not isinstance(batch_size, int):
+        raise ValueError("MLP forward contract output batch_size must be an integer.")
+    if isinstance(output_dimension, bool) or not isinstance(output_dimension, int):
+        raise ValueError(
+            "MLP forward contract output output_dimension must be an integer."
+        )
+
+    result.add_metadata("forward_contract_checked", True)
+    result.add_metadata("forward_contract_name", contract_name)
+    result.add_metadata("forward_contract_batch_size", batch_size)
+    result.add_metadata("forward_contract_output_dimension", output_dimension)
 
 
 def _add_data_loader_metadata(result: TrainingResult, data_loader: Any) -> None:

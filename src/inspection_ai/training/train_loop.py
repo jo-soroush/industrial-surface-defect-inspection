@@ -24,6 +24,7 @@ class TrainingLoop:
         result = TrainingResult(self.config)
         _add_placeholder_outputs(result, self.config)
         _add_data_loader_metadata(result, data_loader)
+        _add_model_metadata(result, self.config)
         return result
 
 
@@ -34,6 +35,7 @@ def run_training_loop(
     result = TrainingResult(config)
     _add_placeholder_outputs(result, config)
     _add_data_loader_metadata(result, data_loader)
+    _add_model_metadata(result, config)
     return result
 
 
@@ -67,3 +69,19 @@ def _add_data_loader_metadata(result: TrainingResult, data_loader: Any) -> None:
 
     result.add_metadata("dataset_id", dataset_id)
     result.add_metadata("task_type_from_loader", task_type_from_loader)
+
+
+def _add_model_metadata(result: TrainingResult, config: dict[str, Any]) -> None:
+    model_identity = config.get("model_identity")
+    if not isinstance(model_identity, dict):
+        raise ValueError("Training config is missing required model_identity section.")
+
+    model_type = model_identity.get("model_type")
+    if not isinstance(model_type, str):
+        raise ValueError(
+            "Training config is missing required model_identity.model_type."
+        )
+
+    result.add_metadata("model_type", model_type)
+    result.add_metadata("model_name", model_identity.get("model_name"))
+    result.add_metadata("model_version", model_identity.get("model_version"))

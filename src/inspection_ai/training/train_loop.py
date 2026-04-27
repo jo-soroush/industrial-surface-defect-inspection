@@ -112,9 +112,28 @@ def _add_data_loader_metadata(result: TrainingResult, data_loader: Any) -> None:
 
     dataset_id = data_loader.get("dataset_id")
     task_type_from_loader = data_loader.get("task_type")
+    train_entries = _require_data_loader_split(data_loader, "train")
+    validation_entries = _require_data_loader_split(data_loader, "validation")
+    test_entries = _require_data_loader_split(data_loader, "test")
 
     result.add_metadata("dataset_id", dataset_id)
     result.add_metadata("task_type_from_loader", task_type_from_loader)
+    result.add_metadata("train_sample_count", len(train_entries))
+    result.add_metadata("validation_sample_count", len(validation_entries))
+    result.add_metadata("test_sample_count", len(test_entries))
+
+
+def _require_data_loader_split(
+    data_loader: dict[str, Any], split_name: str
+) -> list[Any]:
+    if split_name not in data_loader:
+        raise ValueError(f"data_loader is missing required split: {split_name}.")
+
+    entries = data_loader[split_name]
+    if not isinstance(entries, list):
+        raise ValueError(f"data_loader split {split_name} must be a list.")
+
+    return entries
 
 
 def _add_model_metadata(result: TrainingResult, config: dict[str, Any]) -> None:

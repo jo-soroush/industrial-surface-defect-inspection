@@ -23,6 +23,7 @@ class TrainingLoop:
         """Run a training loop placeholder."""
         result = TrainingResult(self.config)
         _add_placeholder_outputs(result, self.config)
+        _add_data_loader_metadata(result, data_loader)
         return result
 
 
@@ -32,6 +33,7 @@ def run_training_loop(
     """Functional placeholder for future training loop execution."""
     result = TrainingResult(config)
     _add_placeholder_outputs(result, config)
+    _add_data_loader_metadata(result, data_loader)
     return result
 
 
@@ -54,3 +56,14 @@ def _add_placeholder_outputs(
     training_runtime = config.get("training_runtime", {})
     result.add_metadata("epochs", training_runtime.get("epochs"))
     result.add_metadata("device", training_runtime.get("device"))
+
+
+def _add_data_loader_metadata(result: TrainingResult, data_loader: Any) -> None:
+    if not isinstance(data_loader, dict):
+        raise ValueError("data_loader must be a dictionary.")
+
+    dataset_id = data_loader.get("dataset_id")
+    task_type_from_loader = data_loader.get("task_type")
+
+    result.add_metadata("dataset_id", dataset_id)
+    result.add_metadata("task_type_from_loader", task_type_from_loader)

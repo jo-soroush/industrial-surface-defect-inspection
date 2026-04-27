@@ -67,6 +67,8 @@ def validate_training_result(result: TrainingResult) -> None:
     artifacts = _require_section(payload, "artifacts", dict)
     metadata = _require_section(payload, "metadata", dict)
 
+    _validate_artifacts(artifacts)
+
     for field in _REQUIRED_LEARNING_CURVE_FIELDS:
         if field not in learning_curves:
             raise ValueError(
@@ -102,6 +104,23 @@ def validate_training_result(result: TrainingResult) -> None:
         raise ValueError("Training result metadata must be a dictionary.")
     if not isinstance(identity, dict):
         raise ValueError("Training result identity must be a dictionary.")
+
+
+def _validate_artifacts(artifacts: dict[Any, Any]) -> None:
+    for name, value in artifacts.items():
+        if not isinstance(name, str):
+            raise ValueError(f"Training result artifact name is invalid: {name}.")
+
+        if isinstance(value, str):
+            continue
+
+        if isinstance(value, dict) and isinstance(value.get("path"), str):
+            continue
+
+        raise ValueError(
+            "Training result artifact "
+            f"{name} must be a path string or a dictionary with a string path field."
+        )
 
 
 def _require_section(

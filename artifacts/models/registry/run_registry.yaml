@@ -1,1 +1,6 @@
-runs: []
+runs:
+- run_id: 5b6ae688-61e4-419f-93c1-566dcda02106
+  task_type: classification
+  model_type: mlp
+  status: completed
+  result_path: artifacts/models/analysis/training_results/training_result__5b6ae688-61e4-419f-93c1-566dcda02106.json

@@ -14,6 +14,7 @@ from typing import Any
 
 import yaml
 
+from inspection_ai.governance.run_registry_writer import append_run_registry_entry
 from inspection_ai.models.factory import create_model
 from inspection_ai.training.result_persistence import persist_training_result
 from inspection_ai.training.train_loop import run_training_loop
@@ -134,8 +135,10 @@ def main() -> int:
         result=result,
         output_dir=Path("artifacts/models/analysis/training_results"),
     )
+    append_run_registry_entry(result=result, result_path=result_path)
     print(f"Training result created: {type(result).__name__}")
     print(f"Training result saved: {result_path}")
+    print("Training run registered.")
     return 0
 
 

@@ -15,6 +15,7 @@ from typing import Any
 import yaml
 
 from inspection_ai.models.factory import create_model
+from inspection_ai.training.train_loop import run_training_loop
 
 ALLOWED_TASK_TYPES = {
     "classification",
@@ -49,22 +50,25 @@ def load_config(config_path: str) -> dict[str, Any]:
     return config
 
 
-def handle_classification(config: dict[str, Any]) -> None:
+def handle_classification(config: dict[str, Any]) -> object:
     """Placeholder handler for classification training dispatch."""
-    create_model(config)
-    raise NotImplementedError("Classification training is not implemented yet.")
+    model = create_model(config)
+    result = run_training_loop(config=config, model=model, data_loader=None)
+    return result
 
 
-def handle_anomaly_detection(config: dict[str, Any]) -> None:
+def handle_anomaly_detection(config: dict[str, Any]) -> object:
     """Placeholder handler for anomaly-detection training dispatch."""
-    create_model(config)
-    raise NotImplementedError("Anomaly-detection training is not implemented yet.")
+    model = create_model(config)
+    result = run_training_loop(config=config, model=model, data_loader=None)
+    return result
 
 
-def handle_object_detection(config: dict[str, Any]) -> None:
+def handle_object_detection(config: dict[str, Any]) -> object:
     """Placeholder handler for object-detection training dispatch."""
-    create_model(config)
-    raise NotImplementedError("Object-detection training is not implemented yet.")
+    model = create_model(config)
+    result = run_training_loop(config=config, model=model, data_loader=None)
+    return result
 
 
 def extract_task_type(config: dict[str, Any]) -> str:
@@ -96,21 +100,18 @@ def extract_task_type(config: dict[str, Any]) -> str:
     return task_type
 
 
-def dispatch_training(config: dict[str, Any]) -> None:
+def dispatch_training(config: dict[str, Any]) -> object:
     """Validate task type and route to the governed training placeholder."""
     task_type = extract_task_type(config)
 
     if task_type == "classification":
-        handle_classification(config)
-        return
+        return handle_classification(config)
 
     if task_type == "anomaly_detection":
-        handle_anomaly_detection(config)
-        return
+        return handle_anomaly_detection(config)
 
     if task_type == "object_detection":
-        handle_object_detection(config)
-        return
+        return handle_object_detection(config)
 
     raise RuntimeError(f"Unhandled task_type dispatch path: {task_type}")
 
@@ -127,7 +128,8 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     config = load_config(args.config)
-    dispatch_training(config)
+    result = dispatch_training(config)
+    print(f"Training result created: {type(result).__name__}")
     return 0
 
 

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from inspection_ai.training.training_result import TrainingResult
+
 
 class TrainingLoop:
     """Placeholder interface for future training loop orchestration."""
@@ -17,11 +19,15 @@ class TrainingLoop:
     def __init__(self, config: dict[str, Any]) -> None:
         self.config = config
 
-    def run(self, model: Any, data_loader: Any) -> None:
+    def run(self, model: Any, data_loader: Any) -> TrainingResult:
         """Run a training loop placeholder."""
-        raise NotImplementedError("TrainingLoop.run is not implemented yet.")
+        result = TrainingResult(self.config)
+        return result
 
 
-def run_training_loop(config: dict[str, Any], model: Any, data_loader: Any) -> None:
+def run_training_loop(
+    config: dict[str, Any], model: Any, data_loader: Any
+) -> TrainingResult:
     """Functional placeholder for future training loop execution."""
-    raise NotImplementedError("run_training_loop is not implemented yet.")
+    result = TrainingResult(config)
+    return result

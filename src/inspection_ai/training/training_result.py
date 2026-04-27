@@ -12,11 +12,13 @@ class TrainingResult:
     def __init__(self, config: dict[str, Any]) -> None:
         task_type = self._extract_task_type(config)
         model_type = self._extract_model_type(config)
+        run_config_id = self._extract_run_config_id(config)
 
         self.identity = {
             "run_id": str(uuid4()),
             "task_type": task_type,
             "model_type": model_type,
+            "run_config_id": run_config_id,
         }
         self.metrics: dict[str, Any] = {}
         self.learning_curves: dict[str, Any] = {}
@@ -76,3 +78,17 @@ class TrainingResult:
             )
 
         return model_type
+
+    @staticmethod
+    def _extract_run_config_id(config: dict[str, Any]) -> str:
+        identity = config.get("identity")
+        if not isinstance(identity, dict):
+            raise ValueError("Training config is missing required identity section.")
+
+        run_config_id = identity.get("run_config_id")
+        if not isinstance(run_config_id, str):
+            raise ValueError(
+                "Training config is missing required identity.run_config_id."
+            )
+
+        return run_config_id

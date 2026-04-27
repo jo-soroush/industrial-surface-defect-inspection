@@ -52,6 +52,7 @@ def append_run_registry_entry(
             "run_id": run_id,
             "task_type": result.identity["task_type"],
             "model_type": result.identity["model_type"],
+            "run_config_id": result.identity["run_config_id"],
             "status": "completed",
             "result_path": str(result_path),
         }

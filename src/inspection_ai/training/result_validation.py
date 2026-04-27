@@ -38,6 +38,10 @@ _REQUIRED_METADATA_FIELDS = (
     "device",
     "completed_at",
     "duration_seconds",
+    "training_config_id",
+    "seed",
+    "device_policy",
+    "split_manifest_path",
 )
 
 _REQUIRED_LEARNING_CURVE_FIELDS = (
@@ -99,6 +103,7 @@ def validate_training_result(result: TrainingResult) -> None:
             raise ValueError(f"Training result metadata is missing field: {field}.")
 
     _validate_timing_metadata(metadata)
+    _validate_config_reproducibility_metadata(metadata)
 
     if not isinstance(metrics, dict):
         raise ValueError("Training result metrics must be a dictionary.")
@@ -150,6 +155,34 @@ def _validate_timing_metadata(metadata: dict[str, Any]) -> None:
     if duration_seconds < 0:
         raise ValueError(
             "Training result metadata duration_seconds must be greater than or equal to 0."
+        )
+
+
+def _validate_config_reproducibility_metadata(metadata: dict[str, Any]) -> None:
+    training_config_id = metadata["training_config_id"]
+    if not isinstance(training_config_id, str) or not training_config_id:
+        raise ValueError(
+            "Training result metadata training_config_id must be a non-empty string."
+        )
+
+    seed = metadata["seed"]
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("Training result metadata seed must be an integer.")
+    if seed < 0:
+        raise ValueError(
+            "Training result metadata seed must be greater than or equal to 0."
+        )
+
+    device_policy = metadata["device_policy"]
+    if not isinstance(device_policy, str) or not device_policy:
+        raise ValueError(
+            "Training result metadata device_policy must be a non-empty string."
+        )
+
+    split_manifest_path = metadata["split_manifest_path"]
+    if not isinstance(split_manifest_path, str) or not split_manifest_path:
+        raise ValueError(
+            "Training result metadata split_manifest_path must be a non-empty string."
         )
 
 

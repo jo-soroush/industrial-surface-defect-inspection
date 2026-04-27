@@ -36,6 +36,12 @@ _REQUIRED_METADATA_FIELDS = (
     "device",
 )
 
+_REQUIRED_METRICS_BY_TASK_TYPE = {
+    "classification": ("accuracy", "f1"),
+    "anomaly_detection": ("reconstruction_loss",),
+    "object_detection": ("mAP",),
+}
+
 
 def validate_training_result(result: TrainingResult) -> None:
     """Validate that a TrainingResult has the required structured payload."""
@@ -59,6 +65,17 @@ def validate_training_result(result: TrainingResult) -> None:
     for field in _REQUIRED_IDENTITY_FIELDS:
         if field not in identity:
             raise ValueError(f"Training result identity is missing field: {field}.")
+
+    task_type = identity["task_type"]
+    if task_type not in _REQUIRED_METRICS_BY_TASK_TYPE:
+        raise ValueError(f"Unsupported training result task_type: {task_type}.")
+
+    for metric_name in _REQUIRED_METRICS_BY_TASK_TYPE[task_type]:
+        if metric_name not in metrics:
+            raise ValueError(
+                "Training result metrics for task_type "
+                f"{task_type} are missing required metric: {metric_name}."
+            )
 
     for field in _REQUIRED_METADATA_FIELDS:
         if field not in metadata:

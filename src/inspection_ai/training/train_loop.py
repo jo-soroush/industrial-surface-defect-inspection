@@ -25,6 +25,7 @@ class TrainingLoop:
         _add_placeholder_outputs(result, self.config)
         _add_data_loader_metadata(result, data_loader)
         _add_model_metadata(result, self.config)
+        _add_config_summary_metadata(result, self.config)
         return result
 
 
@@ -36,6 +37,7 @@ def run_training_loop(
     _add_placeholder_outputs(result, config)
     _add_data_loader_metadata(result, data_loader)
     _add_model_metadata(result, config)
+    _add_config_summary_metadata(result, config)
     return result
 
 
@@ -85,3 +87,35 @@ def _add_model_metadata(result: TrainingResult, config: dict[str, Any]) -> None:
     result.add_metadata("model_type", model_type)
     result.add_metadata("model_name", model_identity.get("model_name"))
     result.add_metadata("model_version", model_identity.get("model_version"))
+
+
+def _add_config_summary_metadata(
+    result: TrainingResult, config: dict[str, Any]
+) -> None:
+    identity = config.get("identity")
+    if not isinstance(identity, dict):
+        raise ValueError("Training config is missing required identity section.")
+
+    track_id = identity.get("track_id")
+    if not isinstance(track_id, str):
+        raise ValueError("Training config is missing required identity.track_id.")
+
+    dataset_binding = config.get("dataset_binding")
+    preprocessing = config.get("preprocessing")
+
+    dataset_version = (
+        dataset_binding.get("dataset_version")
+        if isinstance(dataset_binding, dict)
+        else None
+    )
+    if isinstance(preprocessing, dict):
+        preprocessing_version = preprocessing.get("preprocessing_version")
+        augmentation_policy_version = preprocessing.get("augmentation_policy_version")
+    else:
+        preprocessing_version = None
+        augmentation_policy_version = None
+
+    result.add_metadata("track_id", track_id)
+    result.add_metadata("dataset_version", dataset_version)
+    result.add_metadata("preprocessing_version", preprocessing_version)
+    result.add_metadata("augmentation_policy_version", augmentation_policy_version)

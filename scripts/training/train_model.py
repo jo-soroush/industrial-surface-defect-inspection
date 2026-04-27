@@ -18,6 +18,7 @@ from inspection_ai.governance.run_registry_writer import append_run_registry_ent
 from inspection_ai.models.factory import create_model
 from inspection_ai.training.data_loading import build_data_loaders
 from inspection_ai.training.result_persistence import persist_training_result
+from inspection_ai.training.result_validation import validate_training_result
 from inspection_ai.training.train_loop import run_training_loop
 
 ALLOWED_TASK_TYPES = {
@@ -135,6 +136,7 @@ def main() -> int:
     args = parser.parse_args()
     config = load_config(args.config)
     result = dispatch_training(config)
+    validate_training_result(result)
     result_path = persist_training_result(
         result=result,
         output_dir=Path("artifacts/models/analysis/training_results"),

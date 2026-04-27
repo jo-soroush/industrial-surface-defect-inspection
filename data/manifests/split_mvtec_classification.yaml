@@ -1,0 +1,15 @@
+dataset_id: mvtec_classification
+dataset_version: mvtec_1.0
+task_type: classification
+split_version: mvtec_classification_split_1.0
+split_seed: 42
+split_strategy: pending_file_membership
+split_status: pending_population
+split_limitation: exact per-file split members are not available yet
+train_entries: []
+validation_entries: []
+test_entries: []
+total_train_count: null
+total_validation_count: null
+total_test_count: null
+overlap_check_status: not_run

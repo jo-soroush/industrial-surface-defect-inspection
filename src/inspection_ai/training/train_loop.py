@@ -163,3 +163,14 @@ def _add_config_summary_metadata(
     result.add_metadata("dataset_version", dataset_version)
     result.add_metadata("preprocessing_version", preprocessing_version)
     result.add_metadata("augmentation_policy_version", augmentation_policy_version)
+    result.add_metadata("training_config_id", identity.get("run_config_id"))
+
+    training_runtime = config.get("training_runtime")
+    if isinstance(training_runtime, dict):
+        result.add_metadata("seed", training_runtime.get("seed"))
+        result.add_metadata("device_policy", training_runtime.get("device"))
+
+    if isinstance(dataset_binding, dict):
+        result.add_metadata(
+            "split_manifest_path", dataset_binding.get("split_manifest_path")
+        )

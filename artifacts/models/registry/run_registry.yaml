@@ -10,3 +10,10 @@ runs:
   run_config_id: mlp_train_v0_1_0
   status: completed
   result_path: artifacts/models/analysis/training_results/training_result__6f30f1ca-f595-413f-aef8-bf4d26480652.json
+- run_id: e6db89a0-6dcd-400e-adcd-d68797bb8049
+  task_type: classification
+  model_type: mlp
+  run_config_id: mlp_train_v0_1_0
+  created_at: '2026-04-27T10:46:49.170443Z'
+  status: completed
+  result_path: artifacts/models/analysis/training_results/training_result__e6db89a0-6dcd-400e-adcd-d68797bb8049.json

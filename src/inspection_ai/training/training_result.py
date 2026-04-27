@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
@@ -13,12 +14,14 @@ class TrainingResult:
         task_type = self._extract_task_type(config)
         model_type = self._extract_model_type(config)
         run_config_id = self._extract_run_config_id(config)
+        created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         self.identity = {
             "run_id": str(uuid4()),
             "task_type": task_type,
             "model_type": model_type,
             "run_config_id": run_config_id,
+            "created_at": created_at,
         }
         self.metrics: dict[str, Any] = {}
         self.learning_curves: dict[str, Any] = {}

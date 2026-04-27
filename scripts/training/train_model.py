@@ -14,6 +14,8 @@ from typing import Any
 
 import yaml
 
+from inspection_ai.models.factory import create_model
+
 ALLOWED_TASK_TYPES = {
     "classification",
     "anomaly_detection",
@@ -49,16 +51,19 @@ def load_config(config_path: str) -> dict[str, Any]:
 
 def handle_classification(config: dict[str, Any]) -> None:
     """Placeholder handler for classification training dispatch."""
+    create_model(config)
     raise NotImplementedError("Classification training is not implemented yet.")
 
 
 def handle_anomaly_detection(config: dict[str, Any]) -> None:
     """Placeholder handler for anomaly-detection training dispatch."""
+    create_model(config)
     raise NotImplementedError("Anomaly-detection training is not implemented yet.")
 
 
 def handle_object_detection(config: dict[str, Any]) -> None:
     """Placeholder handler for object-detection training dispatch."""
+    create_model(config)
     raise NotImplementedError("Object-detection training is not implemented yet.")
 
 

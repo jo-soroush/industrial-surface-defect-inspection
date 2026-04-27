@@ -16,6 +16,7 @@ import yaml
 
 from inspection_ai.governance.run_registry_writer import append_run_registry_entry
 from inspection_ai.models.factory import create_model
+from inspection_ai.training.data_loading import build_data_loaders
 from inspection_ai.training.result_persistence import persist_training_result
 from inspection_ai.training.train_loop import run_training_loop
 
@@ -55,21 +56,24 @@ def load_config(config_path: str) -> dict[str, Any]:
 def handle_classification(config: dict[str, Any]) -> object:
     """Placeholder handler for classification training dispatch."""
     model = create_model(config)
-    result = run_training_loop(config=config, model=model, data_loader=None)
+    data_loaders = build_data_loaders(config)
+    result = run_training_loop(config=config, model=model, data_loader=data_loaders)
     return result
 
 
 def handle_anomaly_detection(config: dict[str, Any]) -> object:
     """Placeholder handler for anomaly-detection training dispatch."""
     model = create_model(config)
-    result = run_training_loop(config=config, model=model, data_loader=None)
+    data_loaders = build_data_loaders(config)
+    result = run_training_loop(config=config, model=model, data_loader=data_loaders)
     return result
 
 
 def handle_object_detection(config: dict[str, Any]) -> object:
     """Placeholder handler for object-detection training dispatch."""
     model = create_model(config)
-    result = run_training_loop(config=config, model=model, data_loader=None)
+    data_loaders = build_data_loaders(config)
+    result = run_training_loop(config=config, model=model, data_loader=data_loaders)
     return result
 
 

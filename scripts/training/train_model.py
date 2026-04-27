@@ -135,10 +135,13 @@ def main() -> int:
         result=result,
         output_dir=Path("artifacts/models/analysis/training_results"),
     )
-    append_run_registry_entry(result=result, result_path=result_path)
     print(f"Training result created: {type(result).__name__}")
     print(f"Training result saved: {result_path}")
-    print("Training run registered.")
+    if not result.identity.get("is_experiment", True):
+        append_run_registry_entry(result=result, result_path=result_path)
+        print("Training run registered.")
+    else:
+        print("Experiment run — not registered.")
     return 0
 
 

@@ -8,6 +8,8 @@ access.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import time
 from typing import Any
 
 from inspection_ai.training.training_result import TrainingResult
@@ -22,7 +24,10 @@ class TrainingLoop:
     def run(self, model: Any, data_loader: Any) -> TrainingResult:
         """Run the Phase 3 training simulation."""
         result = TrainingResult(self.config)
+        start_time = time.perf_counter()
         _add_simulated_outputs(result, self.config)
+        duration_seconds = time.perf_counter() - start_time
+        _add_completion_metadata(result, duration_seconds)
         _add_data_loader_metadata(result, data_loader)
         _add_model_metadata(result, self.config)
         _add_config_summary_metadata(result, self.config)
@@ -34,7 +39,10 @@ def run_training_loop(
 ) -> TrainingResult:
     """Run the Phase 3 training simulation."""
     result = TrainingResult(config)
+    start_time = time.perf_counter()
     _add_simulated_outputs(result, config)
+    duration_seconds = time.perf_counter() - start_time
+    _add_completion_metadata(result, duration_seconds)
     _add_data_loader_metadata(result, data_loader)
     _add_model_metadata(result, config)
     _add_config_summary_metadata(result, config)
@@ -88,6 +96,14 @@ def _interpolate_metric(
 
     progress = epoch / (num_epochs - 1)
     return start + ((end - start) * progress)
+
+
+def _add_completion_metadata(
+    result: TrainingResult, duration_seconds: float
+) -> None:
+    completed_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    result.add_metadata("completed_at", completed_at)
+    result.add_metadata("duration_seconds", max(0.0, duration_seconds))
 
 
 def _add_data_loader_metadata(result: TrainingResult, data_loader: Any) -> None:

@@ -2,6 +2,7 @@ identity:
   run_config_id: autoencoder_train_v0_1_0
   description: Resolved training run config for the autoencoder anomaly baseline.
   task_type: anomaly_detection
+  is_experiment: true
   track_id: anomaly_detection
 
 model_identity:

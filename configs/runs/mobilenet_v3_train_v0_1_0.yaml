@@ -2,6 +2,7 @@ identity:
   run_config_id: mobilenet_v3_train_v0_1_0
   description: Resolved training run config for the MobileNetV3 classification baseline.
   task_type: classification
+  is_experiment: true
   track_id: classification
 
 model_identity:

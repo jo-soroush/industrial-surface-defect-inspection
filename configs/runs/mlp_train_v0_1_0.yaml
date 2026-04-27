@@ -2,6 +2,7 @@ identity:
   run_config_id: mlp_train_v0_1_0
   description: Resolved training run config for the MLP classification baseline.
   task_type: classification
+  is_experiment: true
   track_id: classification
 
 model_identity:

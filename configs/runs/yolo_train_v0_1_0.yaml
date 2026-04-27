@@ -2,6 +2,7 @@ identity:
   run_config_id: yolo_train_v0_1_0
   description: Resolved training run config for the YOLO object-detection baseline.
   task_type: object_detection
+  is_experiment: true
   track_id: detection
 
 model_identity:

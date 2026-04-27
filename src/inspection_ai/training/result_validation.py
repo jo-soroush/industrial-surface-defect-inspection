@@ -42,6 +42,9 @@ _REQUIRED_METADATA_FIELDS = (
     "seed",
     "device_policy",
     "split_manifest_path",
+    "train_sample_count",
+    "validation_sample_count",
+    "test_sample_count",
 )
 
 _REQUIRED_LEARNING_CURVE_FIELDS = (
@@ -104,6 +107,7 @@ def validate_training_result(result: TrainingResult) -> None:
 
     _validate_timing_metadata(metadata)
     _validate_config_reproducibility_metadata(metadata)
+    _validate_split_count_metadata(metadata)
 
     if not isinstance(metrics, dict):
         raise ValueError("Training result metrics must be a dictionary.")
@@ -184,6 +188,21 @@ def _validate_config_reproducibility_metadata(metadata: dict[str, Any]) -> None:
         raise ValueError(
             "Training result metadata split_manifest_path must be a non-empty string."
         )
+
+
+def _validate_split_count_metadata(metadata: dict[str, Any]) -> None:
+    for field in (
+        "train_sample_count",
+        "validation_sample_count",
+        "test_sample_count",
+    ):
+        value = metadata[field]
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError(f"Training result metadata {field} must be an integer.")
+        if value < 0:
+            raise ValueError(
+                f"Training result metadata {field} must be greater than or equal to 0."
+            )
 
 
 def _require_section(

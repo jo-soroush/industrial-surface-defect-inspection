@@ -45,6 +45,7 @@ _REQUIRED_METADATA_FIELDS = (
     "train_sample_count",
     "validation_sample_count",
     "test_sample_count",
+    "forward_contract_checked",
 )
 
 _REQUIRED_LEARNING_CURVE_FIELDS = (
@@ -108,6 +109,7 @@ def validate_training_result(result: TrainingResult) -> None:
     _validate_timing_metadata(metadata)
     _validate_config_reproducibility_metadata(metadata)
     _validate_split_count_metadata(metadata)
+    _validate_forward_contract_metadata(metadata)
 
     if not isinstance(metrics, dict):
         raise ValueError("Training result metrics must be a dictionary.")
@@ -203,6 +205,53 @@ def _validate_split_count_metadata(metadata: dict[str, Any]) -> None:
             raise ValueError(
                 f"Training result metadata {field} must be greater than or equal to 0."
             )
+
+
+def _validate_forward_contract_metadata(metadata: dict[str, Any]) -> None:
+    checked = metadata["forward_contract_checked"]
+    if not isinstance(checked, bool):
+        raise ValueError(
+            "Training result metadata forward_contract_checked must be a boolean."
+        )
+
+    optional_fields_present = any(
+        field in metadata
+        for field in (
+            "forward_contract_name",
+            "forward_contract_batch_size",
+            "forward_contract_output_dimension",
+        )
+    )
+    if checked or optional_fields_present:
+        _validate_non_empty_string_metadata(metadata, "forward_contract_name")
+        _validate_non_negative_integer_metadata(
+            metadata, "forward_contract_batch_size"
+        )
+        _validate_non_negative_integer_metadata(
+            metadata, "forward_contract_output_dimension"
+        )
+
+
+def _validate_non_empty_string_metadata(
+    metadata: dict[str, Any], field: str
+) -> None:
+    value = metadata.get(field)
+    if not isinstance(value, str) or not value:
+        raise ValueError(
+            f"Training result metadata {field} must be a non-empty string."
+        )
+
+
+def _validate_non_negative_integer_metadata(
+    metadata: dict[str, Any], field: str
+) -> None:
+    value = metadata.get(field)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"Training result metadata {field} must be an integer.")
+    if value < 0:
+        raise ValueError(
+            f"Training result metadata {field} must be greater than or equal to 0."
+        )
 
 
 def _require_section(

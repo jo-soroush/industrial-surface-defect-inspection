@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+from numbers import Real
 from typing import Any
 
 from inspection_ai.training.training_result import TrainingResult
@@ -34,6 +36,8 @@ _REQUIRED_METADATA_FIELDS = (
     "preprocessing_version",
     "epochs",
     "device",
+    "completed_at",
+    "duration_seconds",
 )
 
 _REQUIRED_LEARNING_CURVE_FIELDS = (
@@ -94,6 +98,8 @@ def validate_training_result(result: TrainingResult) -> None:
         if field not in metadata:
             raise ValueError(f"Training result metadata is missing field: {field}.")
 
+    _validate_timing_metadata(metadata)
+
     if not isinstance(metrics, dict):
         raise ValueError("Training result metrics must be a dictionary.")
     if not isinstance(learning_curves, dict):
@@ -120,6 +126,30 @@ def _validate_artifacts(artifacts: dict[Any, Any]) -> None:
         raise ValueError(
             "Training result artifact "
             f"{name} must be a path string or a dictionary with a string path field."
+        )
+
+
+def _validate_timing_metadata(metadata: dict[str, Any]) -> None:
+    completed_at = metadata["completed_at"]
+    if not isinstance(completed_at, str):
+        raise ValueError("Training result metadata completed_at must be a string.")
+    if not completed_at.endswith("Z"):
+        raise ValueError("Training result metadata completed_at must end with Z.")
+    try:
+        datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(
+            "Training result metadata completed_at must be ISO 8601 format."
+        ) from exc
+
+    duration_seconds = metadata["duration_seconds"]
+    if isinstance(duration_seconds, bool) or not isinstance(duration_seconds, Real):
+        raise ValueError(
+            "Training result metadata duration_seconds must be a number."
+        )
+    if duration_seconds < 0:
+        raise ValueError(
+            "Training result metadata duration_seconds must be greater than or equal to 0."
         )
 
 

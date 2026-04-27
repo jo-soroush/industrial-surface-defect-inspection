@@ -36,6 +36,11 @@ _REQUIRED_METADATA_FIELDS = (
     "device",
 )
 
+_REQUIRED_LEARNING_CURVE_FIELDS = (
+    "train_loss",
+    "val_loss",
+)
+
 _REQUIRED_METRICS_BY_TASK_TYPE = {
     "classification": ("accuracy", "f1"),
     "anomaly_detection": ("reconstruction_loss",),
@@ -61,6 +66,12 @@ def validate_training_result(result: TrainingResult) -> None:
     learning_curves = _require_section(payload, "learning_curves", dict)
     artifacts = _require_section(payload, "artifacts", dict)
     metadata = _require_section(payload, "metadata", dict)
+
+    for field in _REQUIRED_LEARNING_CURVE_FIELDS:
+        if field not in learning_curves:
+            raise ValueError(
+                f"Training result learning_curves is missing field: {field}."
+            )
 
     for field in _REQUIRED_IDENTITY_FIELDS:
         if field not in identity:

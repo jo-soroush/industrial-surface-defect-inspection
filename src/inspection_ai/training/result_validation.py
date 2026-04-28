@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+import json
 from numbers import Real
+from pathlib import Path
 from typing import Any
 
 from inspection_ai.training.training_result import TrainingResult
@@ -70,6 +72,12 @@ _REQUIRED_TRACK_A_SUPERVISED_CLASSIFICATION_METRICS = (
     "val_f1",
 )
 
+_REQUIRED_CLASSIFICATION_EVALUATION_METRICS = (
+    "precision",
+    "recall",
+    "f1",
+)
+
 
 def validate_training_result(result: TrainingResult) -> None:
     """Validate that a TrainingResult has the required structured payload."""
@@ -119,6 +127,9 @@ def validate_training_result(result: TrainingResult) -> None:
 
     if _is_track_a_supervised_classification_result(identity, metadata):
         _validate_track_a_supervised_classification_metrics(metrics)
+        _validate_track_a_supervised_classification_evaluation_artifact(
+            identity, metadata
+        )
 
     _validate_timing_metadata(metadata)
     _validate_config_reproducibility_metadata(metadata)
@@ -180,6 +191,157 @@ def _validate_track_a_supervised_classification_metrics(
         _validate_unit_interval_metric(metrics, metric_name)
 
     _validate_non_negative_numeric_metric(metrics, "val_loss")
+
+
+def _validate_track_a_supervised_classification_evaluation_artifact(
+    identity: dict[str, Any], metadata: dict[str, Any]
+) -> None:
+    artifact_path_value = metadata.get("validation_evaluation_path")
+    if not isinstance(artifact_path_value, str) or not artifact_path_value:
+        raise ValueError(
+            "Track A supervised classification metadata requires "
+            "validation_evaluation_path."
+        )
+
+    artifact_path = Path(artifact_path_value)
+    if not artifact_path.is_file():
+        raise ValueError(
+            "Track A supervised classification validation_evaluation_path "
+            f"does not exist: {artifact_path_value}."
+        )
+
+    try:
+        with artifact_path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "must be valid JSON."
+        ) from exc
+    except OSError as exc:
+        raise ValueError(
+            "Unable to read Track A supervised classification validation "
+            f"evaluation artifact: {artifact_path_value}."
+        ) from exc
+
+    if not isinstance(payload, dict):
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "must contain a JSON object."
+        )
+
+    run_id = payload.get("run_id")
+    if run_id != identity.get("run_id"):
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "run_id must match TrainingResult identity.run_id."
+        )
+
+    dataset_id = payload.get("dataset_id")
+    if dataset_id != metadata.get("dataset_id"):
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "dataset_id must match TrainingResult metadata.dataset_id."
+        )
+
+    if payload.get("split") != "validation":
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "split must be validation."
+        )
+
+    total_samples = payload.get("total_samples")
+    if isinstance(total_samples, bool) or not isinstance(total_samples, int):
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "total_samples must be an integer."
+        )
+    if total_samples <= 0:
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "total_samples must be greater than 0."
+        )
+
+    confusion_matrix = _validate_binary_confusion_matrix(payload)
+    if sum(sum(row) for row in confusion_matrix) != total_samples:
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "confusion_matrix sum must equal total_samples."
+        )
+
+    _validate_classification_evaluation_metric_groups(payload)
+
+
+def _validate_binary_confusion_matrix(payload: dict[str, Any]) -> list[list[int]]:
+    confusion_matrix = payload.get("confusion_matrix")
+    if not isinstance(confusion_matrix, list) or len(confusion_matrix) != 2:
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "confusion_matrix must be a 2x2 list."
+        )
+
+    validated_matrix = []
+    for row in confusion_matrix:
+        if not isinstance(row, list) or len(row) != 2:
+            raise ValueError(
+                "Track A supervised classification validation evaluation artifact "
+                "confusion_matrix must be a 2x2 list."
+            )
+        validated_row = []
+        for value in row:
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise ValueError(
+                    "Track A supervised classification validation evaluation "
+                    "artifact confusion_matrix values must be integers."
+                )
+            if value < 0:
+                raise ValueError(
+                    "Track A supervised classification validation evaluation "
+                    "artifact confusion_matrix values must be non-negative."
+                )
+            validated_row.append(value)
+        validated_matrix.append(validated_row)
+
+    return validated_matrix
+
+
+def _validate_classification_evaluation_metric_groups(
+    payload: dict[str, Any]
+) -> None:
+    per_class = payload.get("per_class")
+    if not isinstance(per_class, dict):
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "per_class must be a dictionary."
+        )
+    for class_name in ("class_0", "class_1"):
+        class_metrics = per_class.get(class_name)
+        if not isinstance(class_metrics, dict):
+            raise ValueError(
+                "Track A supervised classification validation evaluation "
+                f"artifact per_class.{class_name} must be a dictionary."
+            )
+        _validate_evaluation_metric_group(class_metrics, f"per_class.{class_name}")
+
+    macro_metrics = payload.get("macro_metrics")
+    if not isinstance(macro_metrics, dict):
+        raise ValueError(
+            "Track A supervised classification validation evaluation artifact "
+            "macro_metrics must be a dictionary."
+        )
+    _validate_evaluation_metric_group(macro_metrics, "macro_metrics")
+
+
+def _validate_evaluation_metric_group(
+    metrics: dict[str, Any], group_name: str
+) -> None:
+    for metric_name in _REQUIRED_CLASSIFICATION_EVALUATION_METRICS:
+        if metric_name not in metrics:
+            raise ValueError(
+                "Track A supervised classification validation evaluation artifact "
+                f"{group_name} is missing metric: {metric_name}."
+            )
+        _validate_unit_interval_metric(metrics, metric_name)
 
 
 def _validate_unit_interval_metric(metrics: dict[str, Any], field: str) -> None:

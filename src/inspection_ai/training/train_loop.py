@@ -88,6 +88,7 @@ def _add_one_batch_mlp_training_outputs(
     train_loader = data_loader.get("train_loader")
     if train_loader is None:
         raise ValueError("data_loader is missing required train_loader.")
+    validation_loader = data_loader.get("validation_loader")
 
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=float(learning_rate))
@@ -101,6 +102,7 @@ def _add_one_batch_mlp_training_outputs(
     total_tp = 0
     total_fp = 0
     total_fn = 0
+    validation_metrics = None
     train_iterator = iter(train_loader)
     for epoch_index in range(num_epochs):
         try:
@@ -145,7 +147,6 @@ def _add_one_batch_mlp_training_outputs(
             raise ValueError("MLP epoch training loss must be numeric.")
         real_train_loss = float(loss_value)
         train_loss_curve.append(real_train_loss)
-        val_loss_curve.append(real_train_loss)
         last_batch_size = int(images.shape[0])
         total_correct += correct
         total_samples += total
@@ -160,6 +161,30 @@ def _add_one_batch_mlp_training_outputs(
             f"f1={epoch_f1:.6f}"
         )
 
+        if validation_loader is not None:
+            validation_metrics = _evaluate_binary_classification_batches(
+                model=model,
+                data_loader=validation_loader,
+                criterion=criterion,
+                max_batches=1,
+            )
+            val_loss_curve.append(validation_metrics["loss"])
+            print(
+                "validation_metrics "
+                f"epoch={epoch_index + 1} "
+                f"loss={validation_metrics['loss']:.6f} "
+                f"accuracy={validation_metrics['accuracy']:.6f} "
+                f"f1={validation_metrics['f1']:.6f} "
+                f"batches={validation_metrics['batch_count']}"
+            )
+        else:
+            print(
+                "validation_metrics "
+                f"epoch={epoch_index + 1} "
+                "skipped=true "
+                "reason=validation_loader_unavailable"
+            )
+
     result.add_learning_point("train_loss", train_loss_curve)
     result.add_learning_point("val_loss", val_loss_curve)
     train_accuracy = _safe_ratio(total_correct, total_samples)
@@ -168,6 +193,19 @@ def _add_one_batch_mlp_training_outputs(
     result.add_metric("train_f1", train_f1)
     result.add_metric("accuracy", train_accuracy)
     result.add_metric("f1", train_f1)
+    if validation_metrics is not None:
+        result.add_metric("val_loss", validation_metrics["loss"])
+        result.add_metric("val_accuracy", validation_metrics["accuracy"])
+        result.add_metric("val_f1", validation_metrics["f1"])
+        result.add_metadata("validation_evaluation_checked", True)
+        result.add_metadata(
+            "validation_evaluation_batch_count", validation_metrics["batch_count"]
+        )
+    else:
+        result.add_metadata("validation_evaluation_checked", False)
+        result.add_metadata(
+            "validation_evaluation_skip_reason", "validation_loader_unavailable"
+        )
     result.add_metadata("epochs", training_runtime.get("epochs"))
     result.add_metadata("device", training_runtime.get("device"))
     result.add_metadata("real_training_batch_checked", True)
@@ -177,6 +215,82 @@ def _add_one_batch_mlp_training_outputs(
     result.add_metadata(
         "real_training_loss_source", "one_batch_per_epoch_cross_entropy"
     )
+
+
+def _evaluate_binary_classification_batches(
+    model: Any,
+    data_loader: Any,
+    criterion: torch.nn.Module,
+    max_batches: int,
+) -> dict[str, float | int]:
+    if isinstance(max_batches, bool) or max_batches < 1:
+        raise ValueError("Validation evaluation requires max_batches >= 1.")
+
+    was_training = model.training
+    model.eval()
+
+    total_loss = 0.0
+    total_correct = 0
+    total_samples = 0
+    total_tp = 0
+    total_fp = 0
+    total_fn = 0
+    batch_count = 0
+    model_device = next(model.parameters()).device
+
+    with torch.no_grad():
+        for batch in data_loader:
+            if batch_count >= max_batches:
+                break
+            if not isinstance(batch, dict):
+                raise ValueError("validation_loader batch must be a dictionary.")
+
+            images = batch.get("image")
+            labels = batch.get("label")
+            if not isinstance(images, torch.Tensor):
+                raise ValueError("validation_loader batch image must be a torch.Tensor.")
+            if not isinstance(labels, torch.Tensor):
+                raise ValueError("validation_loader batch label must be a torch.Tensor.")
+
+            images = images.to(model_device)
+            labels = labels.to(model_device).reshape(-1).long()
+            logits = model(images)
+            if logits.ndim != 2 or logits.shape[1] != 2:
+                raise ValueError("Validation logits must have shape [B, 2].")
+            if logits.shape[0] != labels.shape[0]:
+                raise ValueError(
+                    "Validation logits and labels batch sizes must match."
+                )
+
+            loss = criterion(logits, labels)
+            loss_value = loss.item()
+            if isinstance(loss_value, bool) or not isinstance(loss_value, (int, float)):
+                raise ValueError("Validation loss must be numeric.")
+
+            predictions = torch.argmax(logits, dim=1)
+            correct, sample_count, tp, fp, fn = _compute_binary_classification_counts(
+                predictions, labels
+            )
+            total_loss += float(loss_value) * sample_count
+            total_correct += correct
+            total_samples += sample_count
+            total_tp += tp
+            total_fp += fp
+            total_fn += fn
+            batch_count += 1
+
+    if was_training:
+        model.train()
+
+    if batch_count == 0:
+        raise ValueError("validation_loader must provide at least one batch.")
+
+    return {
+        "loss": _safe_ratio_float(total_loss, total_samples),
+        "accuracy": _safe_ratio(total_correct, total_samples),
+        "f1": _compute_f1(total_tp, total_fp, total_fn),
+        "batch_count": batch_count,
+    }
 
 
 def _compute_binary_classification_counts(
@@ -197,6 +311,12 @@ def _compute_binary_classification_counts(
 
 
 def _safe_ratio(numerator: int, denominator: int) -> float:
+    if denominator == 0:
+        return 0.0
+    return float(numerator / denominator)
+
+
+def _safe_ratio_float(numerator: float, denominator: int) -> float:
     if denominator == 0:
         return 0.0
     return float(numerator / denominator)

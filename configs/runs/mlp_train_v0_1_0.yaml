@@ -15,6 +15,7 @@ dataset_binding:
   dataset_id: mvtec_classification
   dataset_version: mvtec_1.0
   split_manifest_path: data/manifests/split_mvtec_classification.yaml
+  class_mapping_path: configs/data/class_mapping_mvtec_binary.yaml
 
 preprocessing:
   preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml

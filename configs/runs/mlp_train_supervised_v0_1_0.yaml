@@ -1,0 +1,47 @@
+identity:
+  run_config_id: mlp_train_supervised_v0_1_0
+  description: Resolved training run config for the MLP supervised MVTec classification benchmark.
+  task_type: classification
+  is_experiment: true
+  track_id: classification
+
+model_identity:
+  model_name: mlp
+  model_type: mlp
+  model_version: 0.1.0
+  model_config_id: mlp_supervised_config
+
+dataset_binding:
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  split_manifest_path: data/manifests/split_mvtec_classification_supervised.yaml
+  class_mapping_path: configs/data/class_mapping_mvtec_binary.yaml
+
+preprocessing:
+  preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
+  preprocessing_version: preprocessing_policy_1.0
+  augmentation_policy_version: null
+
+training_runtime:
+  batch_size: 32
+  learning_rate: 0.001
+  epochs: 1
+  optimizer: adam
+  loss_function: cross_entropy
+  seed: 42
+  device: auto
+
+checkpoint:
+  enabled: true
+  save_best: true
+  save_last: true
+
+early_stopping:
+  enabled: false
+  patience: 5
+
+output_control:
+  save_artifact: true
+  save_metadata: true
+  save_logs: true
+  save_metrics: true

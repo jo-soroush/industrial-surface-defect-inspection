@@ -1,0 +1,25 @@
+config_id: mlp_supervised_config
+model_name: mlp
+model_version: 0.1.0
+model_type: mlp
+dataset_id: mvtec_classification_supervised
+dataset_version: mvtec_1.0
+task_type: classification
+track_id: classification
+benchmark_role: track_a_supervised_binary_classification
+input_shape: [3, 224, 224]
+flattened_input_size: 150528
+class_count: 2
+hidden_layers: [128]
+activation: relu
+dropout: 0.0
+seed: 42
+save_artifact: true
+save_metadata: true
+save_logs: true
+save_metrics: true
+batch_size: 32
+learning_rate: 0.001
+epochs: 1
+optimizer: adam
+loss_function: cross_entropy

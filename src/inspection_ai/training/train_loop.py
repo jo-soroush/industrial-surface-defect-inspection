@@ -9,6 +9,8 @@ access.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
+from pathlib import Path
 import time
 from typing import Any
 
@@ -201,10 +203,22 @@ def _add_one_batch_mlp_training_outputs(
         result.add_metadata(
             "validation_evaluation_batch_count", validation_metrics["batch_count"]
         )
+        evaluation_path = _write_classification_validation_evaluation_artifact(
+            result=result,
+            model=model,
+            data_loader=validation_loader,
+            dataset_id=data_loader.get("dataset_id"),
+            max_batches=5,
+        )
+        result.add_metadata("validation_evaluation_path", str(evaluation_path))
     else:
         result.add_metadata("validation_evaluation_checked", False)
         result.add_metadata(
             "validation_evaluation_skip_reason", "validation_loader_unavailable"
+        )
+        result.add_metadata(
+            "validation_evaluation_artifact_skip_reason",
+            "validation_loader_unavailable",
         )
     result.add_metadata("epochs", training_runtime.get("epochs"))
     result.add_metadata("device", training_runtime.get("device"))
@@ -215,6 +229,145 @@ def _add_one_batch_mlp_training_outputs(
     result.add_metadata(
         "real_training_loss_source", "one_batch_per_epoch_cross_entropy"
     )
+
+
+def _write_classification_validation_evaluation_artifact(
+    result: TrainingResult,
+    model: Any,
+    data_loader: Any,
+    dataset_id: Any,
+    max_batches: int,
+) -> Path:
+    evaluation = _evaluate_classification_predictions(
+        model=model,
+        data_loader=data_loader,
+        max_batches=max_batches,
+    )
+    payload = {
+        "run_id": result.identity["run_id"],
+        "dataset_id": dataset_id,
+        "split": "validation",
+        "total_samples": evaluation["total_samples"],
+        "confusion_matrix": evaluation["confusion_matrix"],
+        "per_class": evaluation["per_class"],
+        "macro_metrics": evaluation["macro_metrics"],
+    }
+
+    output_dir = Path("artifacts/models/metrics")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = (
+        output_dir
+        / f"classification_validation_evaluation__{result.identity['run_id']}.json"
+    )
+    with output_path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+
+    return output_path
+
+
+def _evaluate_classification_predictions(
+    model: Any,
+    data_loader: Any,
+    max_batches: int,
+) -> dict[str, Any]:
+    if isinstance(max_batches, bool) or max_batches < 1:
+        raise ValueError("Classification evaluation requires max_batches >= 1.")
+
+    was_training = model.training
+    model.eval()
+
+    total_tn = 0
+    total_fp = 0
+    total_fn = 0
+    total_tp = 0
+    batch_count = 0
+    model_device = next(model.parameters()).device
+
+    with torch.no_grad():
+        for batch in data_loader:
+            if batch_count >= max_batches:
+                break
+            if not isinstance(batch, dict):
+                raise ValueError("validation_loader batch must be a dictionary.")
+
+            images = batch.get("image")
+            labels = batch.get("label")
+            if not isinstance(images, torch.Tensor):
+                raise ValueError("validation_loader batch image must be a torch.Tensor.")
+            if not isinstance(labels, torch.Tensor):
+                raise ValueError("validation_loader batch label must be a torch.Tensor.")
+
+            images = images.to(model_device)
+            labels = labels.to(model_device).reshape(-1).long()
+            logits = model(images)
+            if logits.ndim != 2 or logits.shape[1] != 2:
+                raise ValueError("Validation logits must have shape [B, 2].")
+            if logits.shape[0] != labels.shape[0]:
+                raise ValueError(
+                    "Validation logits and labels batch sizes must match."
+                )
+
+            predictions = torch.argmax(logits, dim=1)
+            if predictions.device != labels.device:
+                raise ValueError("Predictions and labels must be on the same device.")
+            if predictions.shape != labels.shape:
+                raise ValueError("Predictions and labels must have the same shape.")
+
+            total_tn += int(((predictions == 0) & (labels == 0)).sum().item())
+            total_fp += int(((predictions == 1) & (labels == 0)).sum().item())
+            total_fn += int(((predictions == 0) & (labels == 1)).sum().item())
+            total_tp += int(((predictions == 1) & (labels == 1)).sum().item())
+            batch_count += 1
+
+    if was_training:
+        model.train()
+
+    total_samples = total_tn + total_fp + total_fn + total_tp
+    if batch_count == 0 or total_samples == 0:
+        raise ValueError("validation_loader must provide at least one sample.")
+
+    class_0 = _compute_class_metrics(
+        true_positive=total_tn,
+        false_positive=total_fn,
+        false_negative=total_fp,
+    )
+    class_1 = _compute_class_metrics(
+        true_positive=total_tp,
+        false_positive=total_fp,
+        false_negative=total_fn,
+    )
+    macro_metrics = {
+        "precision": (class_0["precision"] + class_1["precision"]) / 2,
+        "recall": (class_0["recall"] + class_1["recall"]) / 2,
+        "f1": (class_0["f1"] + class_1["f1"]) / 2,
+    }
+
+    return {
+        "total_samples": total_samples,
+        "confusion_matrix": [[total_tn, total_fp], [total_fn, total_tp]],
+        "per_class": {
+            "class_0": class_0,
+            "class_1": class_1,
+        },
+        "macro_metrics": macro_metrics,
+    }
+
+
+def _compute_class_metrics(
+    true_positive: int, false_positive: int, false_negative: int
+) -> dict[str, float]:
+    precision = _safe_ratio(true_positive, true_positive + false_positive)
+    recall = _safe_ratio(true_positive, true_positive + false_negative)
+    if precision + recall == 0.0:
+        f1 = 0.0
+    else:
+        f1 = float(2 * (precision * recall) / (precision + recall))
+
+    return {
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+    }
 
 
 def _evaluate_binary_classification_batches(

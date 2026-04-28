@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 import time
 from typing import Any
 
+import torch
+
 from inspection_ai.training.training_result import TrainingResult
 
 
@@ -123,27 +125,19 @@ def _add_forward_contract_metadata(
     if not callable(forward):
         raise ValueError("MLP model must provide a callable forward method.")
 
-    contract_input = {"sample_index": 0, "feature_count": 1}
-    forward_output = forward(contract_input)
-    if not isinstance(forward_output, dict):
-        raise ValueError("MLP forward contract output must be a dictionary.")
+    contract_input = torch.zeros((1, 3, 224, 224), dtype=torch.float32)
+    with torch.no_grad():
+        forward_output = forward(contract_input)
 
-    contract_name = forward_output.get("contract")
-    batch_size = forward_output.get("batch_size")
-    output_dimension = forward_output.get("output_dimension")
-    if not isinstance(contract_name, str) or not contract_name:
-        raise ValueError("MLP forward contract output must include a contract name.")
-    if isinstance(batch_size, bool) or not isinstance(batch_size, int):
-        raise ValueError("MLP forward contract output batch_size must be an integer.")
-    if isinstance(output_dimension, bool) or not isinstance(output_dimension, int):
-        raise ValueError(
-            "MLP forward contract output output_dimension must be an integer."
-        )
+    if not isinstance(forward_output, torch.Tensor):
+        raise ValueError("MLP forward contract output must be a torch.Tensor.")
+    if list(forward_output.shape) != [1, 2]:
+        raise ValueError("MLP forward contract output shape must be [1, 2].")
 
     result.add_metadata("forward_contract_checked", True)
-    result.add_metadata("forward_contract_name", contract_name)
-    result.add_metadata("forward_contract_batch_size", batch_size)
-    result.add_metadata("forward_contract_output_dimension", output_dimension)
+    result.add_metadata("forward_contract_name", "torch_mlp_forward")
+    result.add_metadata("forward_contract_batch_size", 1)
+    result.add_metadata("forward_contract_output_dimension", 2)
 
 
 def _add_data_loader_metadata(result: TrainingResult, data_loader: Any) -> None:

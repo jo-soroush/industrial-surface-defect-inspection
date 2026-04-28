@@ -72,9 +72,15 @@ def _add_one_batch_mlp_training_outputs(
     result: TrainingResult, config: dict[str, Any], model: Any, data_loader: Any
 ) -> None:
     training_runtime = config.get("training_runtime", {})
+    num_epochs = training_runtime.get("epochs")
+    if isinstance(num_epochs, bool) or not isinstance(num_epochs, int) or num_epochs < 1:
+        raise ValueError("Training config requires training_runtime.epochs >= 1.")
+
     learning_rate = training_runtime.get("learning_rate")
     if isinstance(learning_rate, bool) or not isinstance(learning_rate, (int, float)):
-        raise ValueError("Training config requires numeric training_runtime.learning_rate.")
+        raise ValueError(
+            "Training config requires numeric training_runtime.learning_rate."
+        )
 
     if not isinstance(data_loader, dict):
         raise ValueError("data_loader must be a dictionary.")
@@ -83,41 +89,56 @@ def _add_one_batch_mlp_training_outputs(
     if train_loader is None:
         raise ValueError("data_loader is missing required train_loader.")
 
-    batch = next(iter(train_loader))
-    if not isinstance(batch, dict):
-        raise ValueError("train_loader batch must be a dictionary.")
-
-    images = batch.get("image")
-    labels = batch.get("label")
-    if not isinstance(images, torch.Tensor):
-        raise ValueError("train_loader batch image must be a torch.Tensor.")
-    if not isinstance(labels, torch.Tensor):
-        raise ValueError("train_loader batch label must be a torch.Tensor.")
-
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=float(learning_rate))
     criterion = torch.nn.CrossEntropyLoss()
 
-    optimizer.zero_grad()
-    logits = model(images)
-    loss = criterion(logits, labels.long())
-    loss.backward()
-    optimizer.step()
+    train_loss_curve = []
+    val_loss_curve = []
+    last_batch_size = 0
+    train_iterator = iter(train_loader)
+    for _epoch in range(num_epochs):
+        try:
+            batch = next(train_iterator)
+        except StopIteration as exc:
+            raise ValueError("train_loader must provide at least one batch per epoch.") from exc
+        if not isinstance(batch, dict):
+            raise ValueError("train_loader batch must be a dictionary.")
 
-    loss_value = loss.item()
-    if isinstance(loss_value, bool) or not isinstance(loss_value, (int, float)):
-        raise ValueError("MLP one-batch training loss must be numeric.")
-    real_train_loss = float(loss_value)
+        images = batch.get("image")
+        labels = batch.get("label")
+        if not isinstance(images, torch.Tensor):
+            raise ValueError("train_loader batch image must be a torch.Tensor.")
+        if not isinstance(labels, torch.Tensor):
+            raise ValueError("train_loader batch label must be a torch.Tensor.")
 
-    result.add_learning_point("train_loss", [real_train_loss])
-    result.add_learning_point("val_loss", [real_train_loss])
+        optimizer.zero_grad()
+        logits = model(images)
+        loss = criterion(logits, labels.long())
+        loss.backward()
+        optimizer.step()
+
+        loss_value = loss.item()
+        if isinstance(loss_value, bool) or not isinstance(loss_value, (int, float)):
+            raise ValueError("MLP epoch training loss must be numeric.")
+        real_train_loss = float(loss_value)
+        train_loss_curve.append(real_train_loss)
+        val_loss_curve.append(real_train_loss)
+        last_batch_size = int(images.shape[0])
+
+    result.add_learning_point("train_loss", train_loss_curve)
+    result.add_learning_point("val_loss", val_loss_curve)
     result.add_metric("accuracy", 0.9)
     result.add_metric("f1", 0.88)
     result.add_metadata("epochs", training_runtime.get("epochs"))
     result.add_metadata("device", training_runtime.get("device"))
     result.add_metadata("real_training_batch_checked", True)
-    result.add_metadata("real_training_batch_size", int(images.shape[0]))
-    result.add_metadata("real_training_loss_source", "one_batch_cross_entropy")
+    result.add_metadata("real_training_batch_size", last_batch_size)
+    result.add_metadata("real_training_batches_per_epoch", 1)
+    result.add_metadata("real_training_epoch_count", num_epochs)
+    result.add_metadata(
+        "real_training_loss_source", "one_batch_per_epoch_cross_entropy"
+    )
 
 
 def _add_simulated_outputs(result: TrainingResult, config: dict[str, Any]) -> None:

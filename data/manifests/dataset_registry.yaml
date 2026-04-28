@@ -8,7 +8,7 @@ datasets:
     label_mode: supervised
     status: registered
     validation_report_path: artifacts/reports/data_validation/mvtec_classification_validation_report.yaml
-    class_mapping_path: null
+    class_mapping_path: configs/data/class_mapping_mvtec_binary.yaml
     split_manifest_path: null
     preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
   - dataset_id: mvtec_anomaly

@@ -3,8 +3,9 @@ dataset_version: mvtec_1.0
 task_type: classification
 split_version: mvtec_classification_split_1.0
 split_seed: 42
-split_strategy: existing_mvtec_train_test_membership_with_deterministic_train_holdout_validation
-split_status: train_validation_test_populated
+split_strategy: existing_mvtec_train_test_membership
+split_status: train_test_populated_validation_pending
+split_limitation: validation membership is not populated because no governed validation split exists yet
 train_entries:
   - path: data/raw/mvtec/bottle/train/good/000.png
     category: bottle
@@ -18,7 +19,15 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/003.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/004.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/005.png
     category: bottle
     split: train
     label: good
@@ -50,6 +59,10 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/013.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/014.png
     category: bottle
     split: train
@@ -75,6 +88,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/bottle/train/good/020.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/021.png
     category: bottle
     split: train
     label: good
@@ -134,6 +151,14 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/036.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/037.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/038.png
     category: bottle
     split: train
@@ -147,6 +172,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/bottle/train/good/041.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/042.png
     category: bottle
     split: train
     label: good
@@ -222,11 +251,19 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/061.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/062.png
     category: bottle
     split: train
     label: good
   - path: data/raw/mvtec/bottle/train/good/063.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/064.png
     category: bottle
     split: train
     label: good
@@ -262,6 +299,10 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/073.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/074.png
     category: bottle
     split: train
@@ -286,6 +327,10 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/080.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/081.png
     category: bottle
     split: train
@@ -299,6 +344,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/bottle/train/good/084.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/085.png
     category: bottle
     split: train
     label: good
@@ -358,6 +407,10 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/100.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/101.png
     category: bottle
     split: train
@@ -367,6 +420,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/bottle/train/good/103.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/104.png
     category: bottle
     split: train
     label: good
@@ -391,6 +448,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/bottle/train/good/110.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/111.png
     category: bottle
     split: train
     label: good
@@ -614,6 +675,14 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/167.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/168.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/169.png
     category: bottle
     split: train
@@ -718,6 +787,10 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/195.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/196.png
     category: bottle
     split: train
@@ -738,11 +811,19 @@ train_entries:
     category: bottle
     split: train
     label: good
+  - path: data/raw/mvtec/bottle/train/good/201.png
+    category: bottle
+    split: train
+    label: good
   - path: data/raw/mvtec/bottle/train/good/202.png
     category: bottle
     split: train
     label: good
   - path: data/raw/mvtec/bottle/train/good/203.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/204.png
     category: bottle
     split: train
     label: good
@@ -755,6 +836,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/bottle/train/good/207.png
+    category: bottle
+    split: train
+    label: good
+  - path: data/raw/mvtec/bottle/train/good/208.png
     category: bottle
     split: train
     label: good
@@ -802,6 +887,10 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/011.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/012.png
     category: cable
     split: train
@@ -842,6 +931,10 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/022.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/023.png
     category: cable
     split: train
@@ -859,6 +952,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/cable/train/good/027.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/028.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/029.png
     category: cable
     split: train
     label: good
@@ -887,6 +988,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/cable/train/good/036.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/037.png
     category: cable
     split: train
     label: good
@@ -1014,6 +1119,10 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/069.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/070.png
     category: cable
     split: train
@@ -1058,6 +1167,10 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/081.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/082.png
     category: cable
     split: train
@@ -1079,6 +1192,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/cable/train/good/087.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/088.png
     category: cable
     split: train
     label: good
@@ -1130,6 +1247,10 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/101.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/102.png
     category: cable
     split: train
@@ -1143,6 +1264,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/cable/train/good/105.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/106.png
     category: cable
     split: train
     label: good
@@ -1198,6 +1323,10 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/120.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/121.png
     category: cable
     split: train
@@ -1230,6 +1359,14 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/129.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/130.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/131.png
     category: cable
     split: train
@@ -1247,6 +1384,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/cable/train/good/135.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/136.png
     category: cable
     split: train
     label: good
@@ -1275,6 +1416,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/cable/train/good/143.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/144.png
     category: cable
     split: train
     label: good
@@ -1318,11 +1463,23 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/155.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/156.png
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/157.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/158.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/159.png
     category: cable
     split: train
     label: good
@@ -1422,6 +1579,10 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/184.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/185.png
     category: cable
     split: train
@@ -1451,6 +1612,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/cable/train/good/192.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/193.png
+    category: cable
+    split: train
+    label: good
+  - path: data/raw/mvtec/cable/train/good/194.png
     category: cable
     split: train
     label: good
@@ -1530,6 +1699,10 @@ train_entries:
     category: cable
     split: train
     label: good
+  - path: data/raw/mvtec/cable/train/good/214.png
+    category: cable
+    split: train
+    label: good
   - path: data/raw/mvtec/cable/train/good/215.png
     category: cable
     split: train
@@ -1570,11 +1743,19 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/001.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/002.png
     category: capsule
     split: train
     label: good
   - path: data/raw/mvtec/capsule/train/good/003.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/004.png
     category: capsule
     split: train
     label: good
@@ -1606,6 +1787,10 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/012.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/013.png
     category: capsule
     split: train
@@ -1627,6 +1812,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/capsule/train/good/018.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/019.png
     category: capsule
     split: train
     label: good
@@ -1794,11 +1983,19 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/061.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/062.png
     category: capsule
     split: train
     label: good
   - path: data/raw/mvtec/capsule/train/good/063.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/064.png
     category: capsule
     split: train
     label: good
@@ -1938,6 +2135,10 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/099.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/100.png
     category: capsule
     split: train
@@ -1970,6 +2171,10 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/108.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/109.png
     category: capsule
     split: train
@@ -1983,6 +2188,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/capsule/train/good/112.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/113.png
     category: capsule
     split: train
     label: good
@@ -2018,6 +2227,10 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/122.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/123.png
     category: capsule
     split: train
@@ -2050,6 +2263,10 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/131.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/132.png
     category: capsule
     split: train
@@ -2066,6 +2283,10 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/136.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/137.png
     category: capsule
     split: train
@@ -2075,6 +2296,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/capsule/train/good/139.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/140.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/141.png
     category: capsule
     split: train
     label: good
@@ -2158,6 +2387,14 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/162.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/163.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/164.png
     category: capsule
     split: train
@@ -2190,6 +2427,10 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/172.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/173.png
     category: capsule
     split: train
@@ -2207,6 +2448,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/capsule/train/good/177.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/178.png
     category: capsule
     split: train
     label: good
@@ -2262,6 +2507,10 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/192.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/193.png
     category: capsule
     split: train
@@ -2271,6 +2520,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/capsule/train/good/195.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/196.png
     category: capsule
     split: train
     label: good
@@ -2314,6 +2567,10 @@ train_entries:
     category: capsule
     split: train
     label: good
+  - path: data/raw/mvtec/capsule/train/good/207.png
+    category: capsule
+    split: train
+    label: good
   - path: data/raw/mvtec/capsule/train/good/208.png
     category: capsule
     split: train
@@ -2327,6 +2584,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/capsule/train/good/211.png
+    category: capsule
+    split: train
+    label: good
+  - path: data/raw/mvtec/capsule/train/good/212.png
     category: capsule
     split: train
     label: good
@@ -2526,6 +2787,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/043.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/044.png
     category: carpet
     split: train
@@ -2546,6 +2811,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/049.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/050.png
     category: carpet
     split: train
@@ -2555,6 +2824,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/052.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/053.png
     category: carpet
     split: train
     label: good
@@ -2575,6 +2848,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/058.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/059.png
     category: carpet
     split: train
     label: good
@@ -2626,6 +2903,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/072.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/073.png
     category: carpet
     split: train
@@ -2634,11 +2915,19 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/075.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/076.png
     category: carpet
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/077.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/078.png
     category: carpet
     split: train
     label: good
@@ -2663,6 +2952,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/084.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/085.png
     category: carpet
     split: train
     label: good
@@ -2714,6 +3007,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/098.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/099.png
     category: carpet
     split: train
@@ -2723,6 +3020,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/101.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/102.png
     category: carpet
     split: train
     label: good
@@ -2838,6 +3139,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/131.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/132.png
     category: carpet
     split: train
@@ -2878,6 +3183,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/142.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/143.png
     category: carpet
     split: train
@@ -2903,6 +3212,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/149.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/150.png
     category: carpet
     split: train
     label: good
@@ -2962,6 +3275,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/165.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/166.png
     category: carpet
     split: train
@@ -3006,6 +3323,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/177.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/178.png
     category: carpet
     split: train
@@ -3019,6 +3340,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/181.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/182.png
     category: carpet
     split: train
     label: good
@@ -3043,6 +3368,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/188.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/189.png
     category: carpet
     split: train
     label: good
@@ -3098,6 +3427,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/203.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/204.png
     category: carpet
     split: train
@@ -3142,11 +3475,19 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/215.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/216.png
     category: carpet
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/217.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/218.png
     category: carpet
     split: train
     label: good
@@ -3182,6 +3523,14 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/227.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/228.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/229.png
     category: carpet
     split: train
@@ -3198,7 +3547,15 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/233.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/234.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/235.png
     category: carpet
     split: train
     label: good
@@ -3223,6 +3580,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/241.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/242.png
     category: carpet
     split: train
     label: good
@@ -3318,6 +3679,10 @@ train_entries:
     category: carpet
     split: train
     label: good
+  - path: data/raw/mvtec/carpet/train/good/266.png
+    category: carpet
+    split: train
+    label: good
   - path: data/raw/mvtec/carpet/train/good/267.png
     category: carpet
     split: train
@@ -3347,6 +3712,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/carpet/train/good/274.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/275.png
+    category: carpet
+    split: train
+    label: good
+  - path: data/raw/mvtec/carpet/train/good/276.png
     category: carpet
     split: train
     label: good
@@ -3407,6 +3780,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/grid/train/good/011.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/012.png
     category: grid
     split: train
     label: good
@@ -3514,6 +3891,10 @@ train_entries:
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/039.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/040.png
     category: grid
     split: train
@@ -3534,7 +3915,15 @@ train_entries:
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/045.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/046.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/047.png
     category: grid
     split: train
     label: good
@@ -3559,6 +3948,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/grid/train/good/053.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/054.png
     category: grid
     split: train
     label: good
@@ -3686,6 +4079,14 @@ train_entries:
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/086.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/087.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/088.png
     category: grid
     split: train
@@ -3706,6 +4107,10 @@ train_entries:
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/093.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/094.png
     category: grid
     split: train
@@ -3718,6 +4123,10 @@ train_entries:
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/097.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/098.png
     category: grid
     split: train
@@ -3727,6 +4136,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/grid/train/good/100.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/101.png
     category: grid
     split: train
     label: good
@@ -3775,6 +4188,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/grid/train/good/113.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/114.png
     category: grid
     split: train
     label: good
@@ -3850,6 +4267,10 @@ train_entries:
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/133.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/134.png
     category: grid
     split: train
@@ -3875,6 +4296,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/grid/train/good/140.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/141.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/142.png
     category: grid
     split: train
     label: good
@@ -3930,11 +4359,19 @@ train_entries:
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/156.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/157.png
     category: grid
     split: train
     label: good
   - path: data/raw/mvtec/grid/train/good/158.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/159.png
     category: grid
     split: train
     label: good
@@ -3970,7 +4407,19 @@ train_entries:
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/168.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/169.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/170.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/171.png
     category: grid
     split: train
     label: good
@@ -3991,6 +4440,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/grid/train/good/176.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/177.png
     category: grid
     split: train
     label: good
@@ -4018,11 +4471,27 @@ train_entries:
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/184.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/185.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/186.png
     category: grid
     split: train
     label: good
+  - path: data/raw/mvtec/grid/train/good/187.png
+    category: grid
+    split: train
+    label: good
   - path: data/raw/mvtec/grid/train/good/188.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/189.png
     category: grid
     split: train
     label: good
@@ -4087,6 +4556,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/grid/train/good/205.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/206.png
     category: grid
     split: train
     label: good
@@ -4183,6 +4656,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/grid/train/good/230.png
+    category: grid
+    split: train
+    label: good
+  - path: data/raw/mvtec/grid/train/good/231.png
     category: grid
     split: train
     label: good
@@ -4322,6 +4799,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/002.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/003.png
     category: hazelnut
     split: train
@@ -4430,6 +4911,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/030.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/031.png
     category: hazelnut
     split: train
@@ -4470,6 +4955,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/041.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/042.png
     category: hazelnut
     split: train
@@ -4499,6 +4988,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/049.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/050.png
     category: hazelnut
     split: train
     label: good
@@ -4558,7 +5051,19 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/065.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/066.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/067.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/068.png
     category: hazelnut
     split: train
     label: good
@@ -4602,7 +5107,15 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/079.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/080.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/081.png
     category: hazelnut
     split: train
     label: good
@@ -4627,6 +5140,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/087.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/088.png
     category: hazelnut
     split: train
     label: good
@@ -4658,11 +5175,23 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/096.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/097.png
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/098.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/099.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/100.png
     category: hazelnut
     split: train
     label: good
@@ -4671,6 +5200,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/102.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/103.png
     category: hazelnut
     split: train
     label: good
@@ -4786,6 +5319,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/132.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/133.png
     category: hazelnut
     split: train
@@ -4819,6 +5356,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/141.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/142.png
     category: hazelnut
     split: train
     label: good
@@ -4886,6 +5427,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/159.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/160.png
     category: hazelnut
     split: train
@@ -4923,6 +5468,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/169.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/170.png
     category: hazelnut
     split: train
     label: good
@@ -5010,6 +5559,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/192.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/193.png
     category: hazelnut
     split: train
@@ -5035,6 +5588,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/199.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/200.png
     category: hazelnut
     split: train
     label: good
@@ -5066,6 +5623,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/208.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/209.png
     category: hazelnut
     split: train
@@ -5087,6 +5648,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/214.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/215.png
     category: hazelnut
     split: train
     label: good
@@ -5114,6 +5679,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/222.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/223.png
     category: hazelnut
     split: train
@@ -5127,6 +5696,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/226.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/227.png
     category: hazelnut
     split: train
     label: good
@@ -5218,6 +5791,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/250.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/251.png
     category: hazelnut
     split: train
@@ -5246,11 +5823,27 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/258.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/259.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/260.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/261.png
     category: hazelnut
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/262.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/263.png
     category: hazelnut
     split: train
     label: good
@@ -5330,6 +5923,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/283.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/284.png
     category: hazelnut
     split: train
@@ -5346,7 +5943,15 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/288.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/289.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/290.png
     category: hazelnut
     split: train
     label: good
@@ -5407,6 +6012,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/305.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/306.png
     category: hazelnut
     split: train
     label: good
@@ -5502,6 +6111,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/330.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/331.png
     category: hazelnut
     split: train
@@ -5554,6 +6167,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/344.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/345.png
     category: hazelnut
     split: train
@@ -5575,6 +6192,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/350.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/351.png
     category: hazelnut
     split: train
     label: good
@@ -5626,6 +6247,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/364.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/365.png
     category: hazelnut
     split: train
@@ -5650,6 +6275,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/hazelnut/train/good/371.png
+    category: hazelnut
+    split: train
+    label: good
   - path: data/raw/mvtec/hazelnut/train/good/372.png
     category: hazelnut
     split: train
@@ -5663,6 +6292,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/hazelnut/train/good/375.png
+    category: hazelnut
+    split: train
+    label: good
+  - path: data/raw/mvtec/hazelnut/train/good/376.png
     category: hazelnut
     split: train
     label: good
@@ -5722,6 +6355,10 @@ train_entries:
     category: hazelnut
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/000.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/001.png
     category: leather
     split: train
@@ -5778,6 +6415,14 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/015.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/016.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/017.png
     category: leather
     split: train
@@ -5822,6 +6467,10 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/028.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/029.png
     category: leather
     split: train
@@ -5842,6 +6491,10 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/034.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/035.png
     category: leather
     split: train
@@ -5859,6 +6512,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/leather/train/good/039.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/040.png
     category: leather
     split: train
     label: good
@@ -5890,11 +6547,19 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/048.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/049.png
     category: leather
     split: train
     label: good
   - path: data/raw/mvtec/leather/train/good/050.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/051.png
     category: leather
     split: train
     label: good
@@ -5907,6 +6572,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/leather/train/good/054.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/055.png
     category: leather
     split: train
     label: good
@@ -6022,11 +6691,19 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/084.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/085.png
     category: leather
     split: train
     label: good
   - path: data/raw/mvtec/leather/train/good/086.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/087.png
     category: leather
     split: train
     label: good
@@ -6142,6 +6819,10 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/116.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/117.png
     category: leather
     split: train
@@ -6167,6 +6848,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/leather/train/good/123.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/124.png
     category: leather
     split: train
     label: good
@@ -6266,6 +6951,10 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/149.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/150.png
     category: leather
     split: train
@@ -6306,6 +6995,14 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/160.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/161.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/162.png
     category: leather
     split: train
@@ -6322,6 +7019,10 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/166.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/167.png
     category: leather
     split: train
@@ -6330,11 +7031,19 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/169.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/170.png
     category: leather
     split: train
     label: good
   - path: data/raw/mvtec/leather/train/good/171.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/172.png
     category: leather
     split: train
     label: good
@@ -6446,6 +7155,10 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/200.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/201.png
     category: leather
     split: train
@@ -6455,6 +7168,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/leather/train/good/203.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/204.png
     category: leather
     split: train
     label: good
@@ -6518,6 +7235,10 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/220.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/221.png
     category: leather
     split: train
@@ -6550,11 +7271,19 @@ train_entries:
     category: leather
     split: train
     label: good
+  - path: data/raw/mvtec/leather/train/good/229.png
+    category: leather
+    split: train
+    label: good
   - path: data/raw/mvtec/leather/train/good/230.png
     category: leather
     split: train
     label: good
   - path: data/raw/mvtec/leather/train/good/231.png
+    category: leather
+    split: train
+    label: good
+  - path: data/raw/mvtec/leather/train/good/232.png
     category: leather
     split: train
     label: good
@@ -6662,6 +7391,10 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/014.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/015.png
     category: metal_nut
     split: train
@@ -6718,6 +7451,10 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/029.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/030.png
     category: metal_nut
     split: train
@@ -6727,6 +7464,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/032.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/033.png
     category: metal_nut
     split: train
     label: good
@@ -6747,6 +7488,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/038.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/039.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/040.png
     category: metal_nut
     split: train
     label: good
@@ -6870,6 +7619,10 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/071.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/072.png
     category: metal_nut
     split: train
@@ -6879,6 +7632,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/074.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/075.png
     category: metal_nut
     split: train
     label: good
@@ -6962,6 +7719,10 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/096.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/097.png
     category: metal_nut
     split: train
@@ -6983,6 +7744,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/102.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/103.png
     category: metal_nut
     split: train
     label: good
@@ -7046,6 +7811,10 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/119.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/120.png
     category: metal_nut
     split: train
@@ -7067,6 +7836,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/125.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/126.png
     category: metal_nut
     split: train
     label: good
@@ -7114,6 +7887,10 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/138.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/139.png
     category: metal_nut
     split: train
@@ -7154,11 +7931,19 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/149.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/150.png
     category: metal_nut
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/151.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/152.png
     category: metal_nut
     split: train
     label: good
@@ -7186,6 +7971,10 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/159.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/160.png
     category: metal_nut
     split: train
@@ -7210,11 +7999,19 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/166.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/167.png
     category: metal_nut
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/168.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/169.png
     category: metal_nut
     split: train
     label: good
@@ -7278,11 +8075,19 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/metal_nut/train/good/185.png
+    category: metal_nut
+    split: train
+    label: good
   - path: data/raw/mvtec/metal_nut/train/good/186.png
     category: metal_nut
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/187.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/188.png
     category: metal_nut
     split: train
     label: good
@@ -7303,6 +8108,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/193.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/194.png
     category: metal_nut
     split: train
     label: good
@@ -7339,6 +8148,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/metal_nut/train/good/203.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/204.png
+    category: metal_nut
+    split: train
+    label: good
+  - path: data/raw/mvtec/metal_nut/train/good/205.png
     category: metal_nut
     split: train
     label: good
@@ -7398,11 +8215,23 @@ train_entries:
     category: metal_nut
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/000.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/001.png
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/002.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/003.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/004.png
     category: pill
     split: train
     label: good
@@ -7478,6 +8307,10 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/023.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/024.png
     category: pill
     split: train
@@ -7487,6 +8320,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/pill/train/good/026.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/027.png
     category: pill
     split: train
     label: good
@@ -7558,11 +8395,23 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/045.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/046.png
     category: pill
     split: train
     label: good
   - path: data/raw/mvtec/pill/train/good/047.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/048.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/049.png
     category: pill
     split: train
     label: good
@@ -7583,6 +8432,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/pill/train/good/054.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/055.png
     category: pill
     split: train
     label: good
@@ -7619,6 +8472,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/pill/train/good/064.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/065.png
     category: pill
     split: train
     label: good
@@ -7706,7 +8563,19 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/087.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/088.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/089.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/090.png
     category: pill
     split: train
     label: good
@@ -7743,6 +8612,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/pill/train/good/099.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/100.png
     category: pill
     split: train
     label: good
@@ -7810,6 +8683,10 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/117.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/118.png
     category: pill
     split: train
@@ -7819,6 +8696,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/pill/train/good/120.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/121.png
     category: pill
     split: train
     label: good
@@ -7866,11 +8747,19 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/133.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/134.png
     category: pill
     split: train
     label: good
   - path: data/raw/mvtec/pill/train/good/135.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/136.png
     category: pill
     split: train
     label: good
@@ -7982,6 +8871,10 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/164.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/165.png
     category: pill
     split: train
@@ -8023,6 +8916,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/pill/train/good/175.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/176.png
     category: pill
     split: train
     label: good
@@ -8134,6 +9031,10 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/204.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/205.png
     category: pill
     split: train
@@ -8162,11 +9063,23 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/212.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/213.png
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/214.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/215.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/216.png
     category: pill
     split: train
     label: good
@@ -8210,6 +9123,10 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/227.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/228.png
     category: pill
     split: train
@@ -8242,6 +9159,10 @@ train_entries:
     category: pill
     split: train
     label: good
+  - path: data/raw/mvtec/pill/train/good/236.png
+    category: pill
+    split: train
+    label: good
   - path: data/raw/mvtec/pill/train/good/237.png
     category: pill
     split: train
@@ -8267,6 +9188,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/pill/train/good/243.png
+    category: pill
+    split: train
+    label: good
+  - path: data/raw/mvtec/pill/train/good/244.png
     category: pill
     split: train
     label: good
@@ -8366,7 +9291,23 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/002.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/003.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/004.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/005.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/006.png
     category: screw
     split: train
     label: good
@@ -8426,6 +9367,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/021.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/022.png
     category: screw
     split: train
@@ -8447,6 +9392,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/027.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/028.png
     category: screw
     split: train
     label: good
@@ -8526,6 +9475,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/048.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/049.png
     category: screw
     split: train
@@ -8547,6 +9500,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/054.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/055.png
     category: screw
     split: train
     label: good
@@ -8587,6 +9544,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/065.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/066.png
     category: screw
     split: train
     label: good
@@ -8662,6 +9623,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/085.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/086.png
     category: screw
     split: train
@@ -8718,7 +9683,15 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/100.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/101.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/102.png
     category: screw
     split: train
     label: good
@@ -8786,6 +9759,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/119.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/120.png
     category: screw
     split: train
@@ -8819,6 +9796,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/128.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/129.png
     category: screw
     split: train
     label: good
@@ -8918,6 +9899,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/154.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/155.png
     category: screw
     split: train
@@ -8946,6 +9931,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/162.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/163.png
     category: screw
     split: train
@@ -8955,6 +9944,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/165.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/166.png
     category: screw
     split: train
     label: good
@@ -8999,6 +9992,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/177.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/178.png
     category: screw
     split: train
     label: good
@@ -9054,11 +10051,19 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/192.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/193.png
     category: screw
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/194.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/195.png
     category: screw
     split: train
     label: good
@@ -9126,6 +10131,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/212.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/213.png
     category: screw
     split: train
@@ -9162,7 +10171,15 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/222.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/223.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/224.png
     category: screw
     split: train
     label: good
@@ -9175,6 +10192,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/227.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/228.png
     category: screw
     split: train
     label: good
@@ -9254,6 +10275,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/248.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/249.png
     category: screw
     split: train
@@ -9306,6 +10331,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/262.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/263.png
     category: screw
     split: train
@@ -9319,6 +10348,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/266.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/267.png
     category: screw
     split: train
     label: good
@@ -9366,11 +10399,19 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/279.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/280.png
     category: screw
     split: train
     label: good
   - path: data/raw/mvtec/screw/train/good/281.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/282.png
     category: screw
     split: train
     label: good
@@ -9466,6 +10507,10 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/306.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/307.png
     category: screw
     split: train
@@ -9498,6 +10543,14 @@ train_entries:
     category: screw
     split: train
     label: good
+  - path: data/raw/mvtec/screw/train/good/315.png
+    category: screw
+    split: train
+    label: good
+  - path: data/raw/mvtec/screw/train/good/316.png
+    category: screw
+    split: train
+    label: good
   - path: data/raw/mvtec/screw/train/good/317.png
     category: screw
     split: train
@@ -9511,6 +10564,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/tile/train/good/000.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/001.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/002.png
     category: tile
     split: train
     label: good
@@ -9650,6 +10711,10 @@ train_entries:
     category: tile
     split: train
     label: good
+  - path: data/raw/mvtec/tile/train/good/037.png
+    category: tile
+    split: train
+    label: good
   - path: data/raw/mvtec/tile/train/good/038.png
     category: tile
     split: train
@@ -9659,6 +10724,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/tile/train/good/040.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/041.png
     category: tile
     split: train
     label: good
@@ -9691,6 +10760,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/tile/train/good/049.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/050.png
     category: tile
     split: train
     label: good
@@ -9746,7 +10819,15 @@ train_entries:
     category: tile
     split: train
     label: good
+  - path: data/raw/mvtec/tile/train/good/064.png
+    category: tile
+    split: train
+    label: good
   - path: data/raw/mvtec/tile/train/good/065.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/066.png
     category: tile
     split: train
     label: good
@@ -9814,6 +10895,10 @@ train_entries:
     category: tile
     split: train
     label: good
+  - path: data/raw/mvtec/tile/train/good/083.png
+    category: tile
+    split: train
+    label: good
   - path: data/raw/mvtec/tile/train/good/084.png
     category: tile
     split: train
@@ -9847,6 +10932,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/tile/train/good/092.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/093.png
     category: tile
     split: train
     label: good
@@ -9910,11 +10999,23 @@ train_entries:
     category: tile
     split: train
     label: good
+  - path: data/raw/mvtec/tile/train/good/109.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/110.png
+    category: tile
+    split: train
+    label: good
   - path: data/raw/mvtec/tile/train/good/111.png
     category: tile
     split: train
     label: good
   - path: data/raw/mvtec/tile/train/good/112.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/113.png
     category: tile
     split: train
     label: good
@@ -9938,11 +11039,19 @@ train_entries:
     category: tile
     split: train
     label: good
+  - path: data/raw/mvtec/tile/train/good/119.png
+    category: tile
+    split: train
+    label: good
   - path: data/raw/mvtec/tile/train/good/120.png
     category: tile
     split: train
     label: good
   - path: data/raw/mvtec/tile/train/good/121.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/122.png
     category: tile
     split: train
     label: good
@@ -9971,6 +11080,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/tile/train/good/129.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/130.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/131.png
     category: tile
     split: train
     label: good
@@ -10042,6 +11159,10 @@ train_entries:
     category: tile
     split: train
     label: good
+  - path: data/raw/mvtec/tile/train/good/149.png
+    category: tile
+    split: train
+    label: good
   - path: data/raw/mvtec/tile/train/good/150.png
     category: tile
     split: train
@@ -10055,6 +11176,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/tile/train/good/153.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/154.png
     category: tile
     split: train
     label: good
@@ -10146,6 +11271,10 @@ train_entries:
     category: tile
     split: train
     label: good
+  - path: data/raw/mvtec/tile/train/good/177.png
+    category: tile
+    split: train
+    label: good
   - path: data/raw/mvtec/tile/train/good/178.png
     category: tile
     split: train
@@ -10230,6 +11359,18 @@ train_entries:
     category: tile
     split: train
     label: good
+  - path: data/raw/mvtec/tile/train/good/199.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/200.png
+    category: tile
+    split: train
+    label: good
+  - path: data/raw/mvtec/tile/train/good/201.png
+    category: tile
+    split: train
+    label: good
   - path: data/raw/mvtec/tile/train/good/202.png
     category: tile
     split: train
@@ -10310,6 +11451,10 @@ train_entries:
     category: tile
     split: train
     label: good
+  - path: data/raw/mvtec/tile/train/good/222.png
+    category: tile
+    split: train
+    label: good
   - path: data/raw/mvtec/tile/train/good/223.png
     category: tile
     split: train
@@ -10358,7 +11503,15 @@ train_entries:
     category: toothbrush
     split: train
     label: good
+  - path: data/raw/mvtec/toothbrush/train/good/005.png
+    category: toothbrush
+    split: train
+    label: good
   - path: data/raw/mvtec/toothbrush/train/good/006.png
+    category: toothbrush
+    split: train
+    label: good
+  - path: data/raw/mvtec/toothbrush/train/good/007.png
     category: toothbrush
     split: train
     label: good
@@ -10422,6 +11575,10 @@ train_entries:
     category: toothbrush
     split: train
     label: good
+  - path: data/raw/mvtec/toothbrush/train/good/023.png
+    category: toothbrush
+    split: train
+    label: good
   - path: data/raw/mvtec/toothbrush/train/good/024.png
     category: toothbrush
     split: train
@@ -10431,6 +11588,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/toothbrush/train/good/026.png
+    category: toothbrush
+    split: train
+    label: good
+  - path: data/raw/mvtec/toothbrush/train/good/027.png
     category: toothbrush
     split: train
     label: good
@@ -10466,7 +11627,15 @@ train_entries:
     category: toothbrush
     split: train
     label: good
+  - path: data/raw/mvtec/toothbrush/train/good/036.png
+    category: toothbrush
+    split: train
+    label: good
   - path: data/raw/mvtec/toothbrush/train/good/037.png
+    category: toothbrush
+    split: train
+    label: good
+  - path: data/raw/mvtec/toothbrush/train/good/038.png
     category: toothbrush
     split: train
     label: good
@@ -10574,6 +11743,10 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/005.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/006.png
     category: transistor
     split: train
@@ -10622,6 +11795,10 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/018.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/019.png
     category: transistor
     split: train
@@ -10631,6 +11808,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/transistor/train/good/021.png
+    category: transistor
+    split: train
+    label: good
+  - path: data/raw/mvtec/transistor/train/good/022.png
     category: transistor
     split: train
     label: good
@@ -10654,6 +11835,10 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/028.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/029.png
     category: transistor
     split: train
@@ -10663,6 +11848,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/transistor/train/good/031.png
+    category: transistor
+    split: train
+    label: good
+  - path: data/raw/mvtec/transistor/train/good/032.png
     category: transistor
     split: train
     label: good
@@ -10702,6 +11891,10 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/042.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/043.png
     category: transistor
     split: train
@@ -10718,6 +11911,10 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/047.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/048.png
     category: transistor
     split: train
@@ -10727,6 +11924,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/transistor/train/good/050.png
+    category: transistor
+    split: train
+    label: good
+  - path: data/raw/mvtec/transistor/train/good/051.png
     category: transistor
     split: train
     label: good
@@ -10810,11 +12011,19 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/072.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/073.png
     category: transistor
     split: train
     label: good
   - path: data/raw/mvtec/transistor/train/good/074.png
+    category: transistor
+    split: train
+    label: good
+  - path: data/raw/mvtec/transistor/train/good/075.png
     category: transistor
     split: train
     label: good
@@ -10954,6 +12163,10 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/110.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/111.png
     category: transistor
     split: train
@@ -10971,6 +12184,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/transistor/train/good/115.png
+    category: transistor
+    split: train
+    label: good
+  - path: data/raw/mvtec/transistor/train/good/116.png
     category: transistor
     split: train
     label: good
@@ -11026,11 +12243,19 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/130.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/131.png
     category: transistor
     split: train
     label: good
   - path: data/raw/mvtec/transistor/train/good/132.png
+    category: transistor
+    split: train
+    label: good
+  - path: data/raw/mvtec/transistor/train/good/133.png
     category: transistor
     split: train
     label: good
@@ -11058,11 +12283,19 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/140.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/141.png
     category: transistor
     split: train
     label: good
   - path: data/raw/mvtec/transistor/train/good/142.png
+    category: transistor
+    split: train
+    label: good
+  - path: data/raw/mvtec/transistor/train/good/143.png
     category: transistor
     split: train
     label: good
@@ -11162,6 +12395,10 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/168.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/169.png
     category: transistor
     split: train
@@ -11194,7 +12431,15 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/177.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/178.png
+    category: transistor
+    split: train
+    label: good
+  - path: data/raw/mvtec/transistor/train/good/179.png
     category: transistor
     split: train
     label: good
@@ -11278,6 +12523,10 @@ train_entries:
     category: transistor
     split: train
     label: good
+  - path: data/raw/mvtec/transistor/train/good/200.png
+    category: transistor
+    split: train
+    label: good
   - path: data/raw/mvtec/transistor/train/good/201.png
     category: transistor
     split: train
@@ -11287,6 +12536,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/transistor/train/good/203.png
+    category: transistor
+    split: train
+    label: good
+  - path: data/raw/mvtec/transistor/train/good/204.png
     category: transistor
     split: train
     label: good
@@ -11326,6 +12579,10 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/001.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/002.png
     category: wood
     split: train
@@ -11334,11 +12591,19 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/004.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/005.png
     category: wood
     split: train
     label: good
   - path: data/raw/mvtec/wood/train/good/006.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/007.png
     category: wood
     split: train
     label: good
@@ -11383,6 +12648,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/wood/train/good/018.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/019.png
     category: wood
     split: train
     label: good
@@ -11478,6 +12747,10 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/043.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/044.png
     category: wood
     split: train
@@ -11487,6 +12760,14 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/wood/train/good/046.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/047.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/048.png
     category: wood
     split: train
     label: good
@@ -11554,6 +12835,10 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/065.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/066.png
     category: wood
     split: train
@@ -11575,6 +12860,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/wood/train/good/071.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/072.png
     category: wood
     split: train
     label: good
@@ -11627,6 +12916,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/wood/train/good/085.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/086.png
     category: wood
     split: train
     label: good
@@ -11734,6 +13027,10 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/113.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/114.png
     category: wood
     split: train
@@ -11751,6 +13048,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/wood/train/good/118.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/119.png
     category: wood
     split: train
     label: good
@@ -11775,6 +13076,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/wood/train/good/125.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/126.png
     category: wood
     split: train
     label: good
@@ -11842,7 +13147,19 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/143.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/144.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/145.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/146.png
     category: wood
     split: train
     label: good
@@ -11962,7 +13279,15 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/176.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/177.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/178.png
     category: wood
     split: train
     label: good
@@ -11986,6 +13311,10 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/184.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/185.png
     category: wood
     split: train
@@ -12006,7 +13335,15 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/190.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/191.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/192.png
     category: wood
     split: train
     label: good
@@ -12114,6 +13451,10 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/219.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/220.png
     category: wood
     split: train
@@ -12150,6 +13491,10 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/229.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/230.png
     category: wood
     split: train
@@ -12171,6 +13516,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/wood/train/good/235.png
+    category: wood
+    split: train
+    label: good
+  - path: data/raw/mvtec/wood/train/good/236.png
     category: wood
     split: train
     label: good
@@ -12198,6 +13547,10 @@ train_entries:
     category: wood
     split: train
     label: good
+  - path: data/raw/mvtec/wood/train/good/243.png
+    category: wood
+    split: train
+    label: good
   - path: data/raw/mvtec/wood/train/good/244.png
     category: wood
     split: train
@@ -12219,6 +13572,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/zipper/train/good/002.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/003.png
     category: zipper
     split: train
     label: good
@@ -12262,11 +13619,23 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/014.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/015.png
     category: zipper
     split: train
     label: good
   - path: data/raw/mvtec/zipper/train/good/016.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/017.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/018.png
     category: zipper
     split: train
     label: good
@@ -12315,6 +13684,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/zipper/train/good/030.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/031.png
     category: zipper
     split: train
     label: good
@@ -12438,6 +13811,10 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/062.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/063.png
     category: zipper
     split: train
@@ -12478,6 +13855,10 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/073.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/074.png
     category: zipper
     split: train
@@ -12515,6 +13896,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/zipper/train/good/083.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/084.png
     category: zipper
     split: train
     label: good
@@ -12563,6 +13948,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/zipper/train/good/096.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/097.png
     category: zipper
     split: train
     label: good
@@ -12658,7 +14047,15 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/121.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/122.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/123.png
     category: zipper
     split: train
     label: good
@@ -12686,7 +14083,15 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/130.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/131.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/132.png
     category: zipper
     split: train
     label: good
@@ -12695,6 +14100,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/zipper/train/good/134.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/135.png
     category: zipper
     split: train
     label: good
@@ -12758,7 +14167,15 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/151.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/152.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/153.png
     category: zipper
     split: train
     label: good
@@ -12775,6 +14192,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/zipper/train/good/157.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/158.png
     category: zipper
     split: train
     label: good
@@ -12806,6 +14227,10 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/166.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/167.png
     category: zipper
     split: train
@@ -12831,6 +14256,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/zipper/train/good/173.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/174.png
     category: zipper
     split: train
     label: good
@@ -12918,6 +14347,10 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/196.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/197.png
     category: zipper
     split: train
@@ -12942,6 +14375,10 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/203.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/204.png
     category: zipper
     split: train
@@ -12950,7 +14387,15 @@ train_entries:
     category: zipper
     split: train
     label: good
+  - path: data/raw/mvtec/zipper/train/good/206.png
+    category: zipper
+    split: train
+    label: good
   - path: data/raw/mvtec/zipper/train/good/207.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/208.png
     category: zipper
     split: train
     label: good
@@ -13007,6 +14452,10 @@ train_entries:
     split: train
     label: good
   - path: data/raw/mvtec/zipper/train/good/222.png
+    category: zipper
+    split: train
+    label: good
+  - path: data/raw/mvtec/zipper/train/good/223.png
     category: zipper
     split: train
     label: good
@@ -13074,1455 +14523,7 @@ train_entries:
     category: zipper
     split: train
     label: good
-validation_entries:
-  - path: data/raw/mvtec/bottle/train/good/003.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/005.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/013.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/021.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/036.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/037.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/042.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/061.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/064.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/073.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/080.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/085.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/100.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/104.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/111.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/167.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/168.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/195.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/201.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/204.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/bottle/train/good/208.png
-    category: bottle
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/011.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/022.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/028.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/029.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/037.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/069.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/081.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/088.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/101.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/106.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/120.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/129.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/130.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/136.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/144.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/155.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/157.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/159.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/184.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/193.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/194.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/cable/train/good/214.png
-    category: cable
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/001.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/004.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/012.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/019.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/061.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/064.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/099.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/108.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/113.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/122.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/131.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/136.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/140.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/141.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/162.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/163.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/172.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/178.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/192.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/196.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/207.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/capsule/train/good/212.png
-    category: capsule
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/043.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/049.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/053.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/059.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/072.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/075.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/078.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/085.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/098.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/102.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/131.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/142.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/150.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/165.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/177.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/182.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/189.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/203.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/215.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/218.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/227.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/228.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/233.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/235.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/242.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/266.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/275.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/carpet/train/good/276.png
-    category: carpet
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/012.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/039.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/045.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/047.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/054.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/086.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/087.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/093.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/097.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/101.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/114.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/133.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/141.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/142.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/156.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/159.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/168.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/170.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/171.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/177.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/184.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/185.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/187.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/189.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/206.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/grid/train/good/231.png
-    category: grid
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/002.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/030.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/041.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/050.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/065.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/066.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/068.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/079.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/081.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/088.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/096.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/098.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/100.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/103.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/132.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/142.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/159.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/170.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/192.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/200.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/208.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/215.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/222.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/227.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/250.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/258.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/259.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/260.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/263.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/283.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/288.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/290.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/306.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/330.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/344.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/351.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/364.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/371.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/hazelnut/train/good/376.png
-    category: hazelnut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/000.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/015.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/016.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/028.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/034.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/040.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/048.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/051.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/055.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/084.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/087.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/116.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/124.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/149.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/160.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/161.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/166.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/169.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/172.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/200.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/204.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/220.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/229.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/leather/train/good/232.png
-    category: leather
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/014.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/029.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/033.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/039.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/040.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/071.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/075.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/096.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/103.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/119.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/126.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/138.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/149.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/152.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/159.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/166.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/169.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/185.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/188.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/194.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/204.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/metal_nut/train/good/205.png
-    category: metal_nut
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/000.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/002.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/004.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/023.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/027.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/045.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/048.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/049.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/055.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/065.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/087.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/089.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/090.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/100.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/117.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/121.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/133.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/136.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/164.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/176.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/204.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/212.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/214.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/216.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/227.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/236.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/pill/train/good/244.png
-    category: pill
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/002.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/004.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/005.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/006.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/021.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/028.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/048.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/055.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/066.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/085.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/100.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/102.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/119.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/129.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/154.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/162.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/166.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/178.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/192.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/195.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/212.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/222.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/224.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/228.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/248.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/262.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/267.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/279.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/282.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/306.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/315.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/screw/train/good/316.png
-    category: screw
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/001.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/002.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/037.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/041.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/050.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/064.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/066.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/083.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/093.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/109.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/110.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/113.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/119.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/122.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/130.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/131.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/149.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/154.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/177.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/199.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/200.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/201.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/tile/train/good/222.png
-    category: tile
-    split: validation
-    label: good
-  - path: data/raw/mvtec/toothbrush/train/good/005.png
-    category: toothbrush
-    split: validation
-    label: good
-  - path: data/raw/mvtec/toothbrush/train/good/007.png
-    category: toothbrush
-    split: validation
-    label: good
-  - path: data/raw/mvtec/toothbrush/train/good/023.png
-    category: toothbrush
-    split: validation
-    label: good
-  - path: data/raw/mvtec/toothbrush/train/good/027.png
-    category: toothbrush
-    split: validation
-    label: good
-  - path: data/raw/mvtec/toothbrush/train/good/036.png
-    category: toothbrush
-    split: validation
-    label: good
-  - path: data/raw/mvtec/toothbrush/train/good/038.png
-    category: toothbrush
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/005.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/018.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/022.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/028.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/032.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/042.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/047.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/051.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/072.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/075.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/110.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/116.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/130.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/133.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/140.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/143.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/168.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/177.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/179.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/200.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/transistor/train/good/204.png
-    category: transistor
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/001.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/004.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/007.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/019.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/043.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/047.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/048.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/065.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/072.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/086.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/113.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/119.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/126.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/143.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/145.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/146.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/176.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/178.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/184.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/190.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/192.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/219.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/229.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/236.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/wood/train/good/243.png
-    category: wood
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/003.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/014.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/017.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/018.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/031.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/062.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/073.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/084.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/097.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/121.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/123.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/130.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/132.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/135.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/151.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/153.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/158.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/166.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/174.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/196.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/203.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/206.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/208.png
-    category: zipper
-    split: validation
-    label: good
-  - path: data/raw/mvtec/zipper/train/good/223.png
-    category: zipper
-    split: validation
-    label: good
+validation_entries: []
 test_entries:
   - path: data/raw/mvtec/bottle/test/broken_large/000.png
     category: bottle
@@ -21424,14 +21425,7 @@ test_entries:
     category: zipper
     split: test
     label: squeezed_teeth
-total_train_count: 3267
-total_validation_count: 362
+total_train_count: 3629
+total_validation_count: 0
 total_test_count: 1725
 overlap_check_status: pass
-validation_strategy: deterministic_stratified_holdout_from_training_entries
-validation_source: mvtec training membership only; test membership is untouched
-validation_split_seed: 42
-validation_ratio: 0.1
-validation_grouping: category_and_label
-validation_limitation: MVTec training membership contains only good samples, so validation
-  labels reflect that source distribution.

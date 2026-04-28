@@ -6,6 +6,12 @@ dataset_id: mvtec_classification
 dataset_version: mvtec_1.0
 task_type: classification
 track_id: classification
+input_shape: [3, 224, 224]
+flattened_input_size: 150528
+class_count: 2
+hidden_layers: [128]
+activation: relu
+dropout: 0.0
 seed: 42
 save_artifact: true
 save_metadata: true

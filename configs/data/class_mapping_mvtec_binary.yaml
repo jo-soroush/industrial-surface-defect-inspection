@@ -1,0 +1,14 @@
+dataset_id: mvtec_classification
+dataset_version: mvtec_1.0
+task_type: classification
+target_definition: binary_good_vs_defect
+class_count: 2
+class_to_index:
+  good: 0
+  defect: 1
+index_to_class:
+  0: good
+  1: defect
+source_label_rule:
+  good: good remains good
+  non_good: any non-good manifest label maps to defect

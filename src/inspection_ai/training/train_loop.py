@@ -96,8 +96,13 @@ def _add_one_batch_mlp_training_outputs(
     train_loss_curve = []
     val_loss_curve = []
     last_batch_size = 0
+    total_correct = 0
+    total_samples = 0
+    total_tp = 0
+    total_fp = 0
+    total_fn = 0
     train_iterator = iter(train_loader)
-    for _epoch in range(num_epochs):
+    for epoch_index in range(num_epochs):
         try:
             batch = next(train_iterator)
         except StopIteration as exc:
@@ -112,9 +117,26 @@ def _add_one_batch_mlp_training_outputs(
         if not isinstance(labels, torch.Tensor):
             raise ValueError("train_loader batch label must be a torch.Tensor.")
 
+        model_device = next(model.parameters()).device
+        images = images.to(model_device)
+        labels = labels.to(model_device).reshape(-1)
+
         optimizer.zero_grad()
         logits = model(images)
-        loss = criterion(logits, labels.long())
+        if logits.ndim != 2 or logits.shape[1] != 2:
+            raise ValueError("MLP epoch logits must have shape [B, 2].")
+        if logits.shape[0] != labels.shape[0]:
+            raise ValueError("MLP epoch logits and labels batch sizes must match.")
+
+        labels = labels.long()
+        predictions = torch.argmax(logits, dim=1)
+        correct, total, tp, fp, fn = _compute_binary_classification_counts(
+            predictions, labels
+        )
+        epoch_accuracy = _safe_ratio(correct, total)
+        epoch_f1 = _compute_f1(tp, fp, fn)
+
+        loss = criterion(logits, labels)
         loss.backward()
         optimizer.step()
 
@@ -125,11 +147,27 @@ def _add_one_batch_mlp_training_outputs(
         train_loss_curve.append(real_train_loss)
         val_loss_curve.append(real_train_loss)
         last_batch_size = int(images.shape[0])
+        total_correct += correct
+        total_samples += total
+        total_tp += tp
+        total_fp += fp
+        total_fn += fn
+        print(
+            "epoch_metrics "
+            f"epoch={epoch_index + 1} "
+            f"loss={real_train_loss:.6f} "
+            f"accuracy={epoch_accuracy:.6f} "
+            f"f1={epoch_f1:.6f}"
+        )
 
     result.add_learning_point("train_loss", train_loss_curve)
     result.add_learning_point("val_loss", val_loss_curve)
-    result.add_metric("accuracy", 0.9)
-    result.add_metric("f1", 0.88)
+    train_accuracy = _safe_ratio(total_correct, total_samples)
+    train_f1 = _compute_f1(total_tp, total_fp, total_fn)
+    result.add_metric("train_accuracy", train_accuracy)
+    result.add_metric("train_f1", train_f1)
+    result.add_metric("accuracy", train_accuracy)
+    result.add_metric("f1", train_f1)
     result.add_metadata("epochs", training_runtime.get("epochs"))
     result.add_metadata("device", training_runtime.get("device"))
     result.add_metadata("real_training_batch_checked", True)
@@ -139,6 +177,37 @@ def _add_one_batch_mlp_training_outputs(
     result.add_metadata(
         "real_training_loss_source", "one_batch_per_epoch_cross_entropy"
     )
+
+
+def _compute_binary_classification_counts(
+    predictions: torch.Tensor, labels: torch.Tensor
+) -> tuple[int, int, int, int, int]:
+    if predictions.device != labels.device:
+        raise ValueError("Predictions and labels must be on the same device.")
+    if predictions.shape != labels.shape:
+        raise ValueError("Predictions and labels must have the same shape.")
+
+    positive_class = 1
+    correct = int((predictions == labels).sum().item())
+    total = int(labels.numel())
+    tp = int(((predictions == positive_class) & (labels == positive_class)).sum().item())
+    fp = int(((predictions == positive_class) & (labels != positive_class)).sum().item())
+    fn = int(((predictions != positive_class) & (labels == positive_class)).sum().item())
+    return correct, total, tp, fp, fn
+
+
+def _safe_ratio(numerator: int, denominator: int) -> float:
+    if denominator == 0:
+        return 0.0
+    return float(numerator / denominator)
+
+
+def _compute_f1(tp: int, fp: int, fn: int) -> float:
+    precision = _safe_ratio(tp, tp + fp)
+    recall = _safe_ratio(tp, tp + fn)
+    if precision + recall == 0.0:
+        return 0.0
+    return float(2 * (precision * recall) / (precision + recall))
 
 
 def _add_simulated_outputs(result: TrainingResult, config: dict[str, Any]) -> None:

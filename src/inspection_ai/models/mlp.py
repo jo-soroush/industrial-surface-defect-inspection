@@ -40,20 +40,13 @@ class MLPModel(nn.Module):
         self.class_count = class_count
         self.network = nn.Sequential(*layers)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor | dict[str, Any]:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Return raw logits for a batched image tensor.
 
         Expected tensor shape is ``[batch_size, channels, height, width]``. The
         output is raw logits shaped ``[batch_size, class_count]``; softmax is
         intentionally left to downstream evaluation or inference code.
         """
-        if isinstance(x, dict):
-            return {
-                "contract": "torch_mlp_forward",
-                "batch_size": 1,
-                "output_dimension": self.class_count,
-            }
-
         if not isinstance(x, torch.Tensor):
             raise TypeError("MLPModel.forward expects x to be a torch.Tensor.")
         if x.ndim < 2:

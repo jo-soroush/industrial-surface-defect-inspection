@@ -59,6 +59,17 @@ _REQUIRED_METRICS_BY_TASK_TYPE = {
     "object_detection": ("mAP",),
 }
 
+_TRACK_A_SUPERVISED_DATASET_ID = "mvtec_classification_supervised"
+_TRACK_A_SUPERVISED_RUN_CONFIG_ID = "mlp_train_supervised_v0_1_0"
+
+_REQUIRED_TRACK_A_SUPERVISED_CLASSIFICATION_METRICS = (
+    "train_accuracy",
+    "train_f1",
+    "val_loss",
+    "val_accuracy",
+    "val_f1",
+)
+
 
 def validate_training_result(result: TrainingResult) -> None:
     """Validate that a TrainingResult has the required structured payload."""
@@ -106,6 +117,9 @@ def validate_training_result(result: TrainingResult) -> None:
         if field not in metadata:
             raise ValueError(f"Training result metadata is missing field: {field}.")
 
+    if _is_track_a_supervised_classification_result(identity, metadata):
+        _validate_track_a_supervised_classification_metrics(metrics)
+
     _validate_timing_metadata(metadata)
     _validate_config_reproducibility_metadata(metadata)
     _validate_split_count_metadata(metadata)
@@ -137,6 +151,56 @@ def _validate_artifacts(artifacts: dict[Any, Any]) -> None:
         raise ValueError(
             "Training result artifact "
             f"{name} must be a path string or a dictionary with a string path field."
+        )
+
+
+def _is_track_a_supervised_classification_result(
+    identity: dict[str, Any], metadata: dict[str, Any]
+) -> bool:
+    return (
+        identity.get("task_type") == "classification"
+        and (
+            metadata.get("dataset_id") == _TRACK_A_SUPERVISED_DATASET_ID
+            or identity.get("run_config_id") == _TRACK_A_SUPERVISED_RUN_CONFIG_ID
+        )
+    )
+
+
+def _validate_track_a_supervised_classification_metrics(
+    metrics: dict[str, Any]
+) -> None:
+    for metric_name in _REQUIRED_TRACK_A_SUPERVISED_CLASSIFICATION_METRICS:
+        if metric_name not in metrics:
+            raise ValueError(
+                "Track A supervised classification metrics are missing required "
+                f"metric: {metric_name}."
+            )
+
+    for metric_name in ("train_accuracy", "train_f1", "val_accuracy", "val_f1"):
+        _validate_unit_interval_metric(metrics, metric_name)
+
+    _validate_non_negative_numeric_metric(metrics, "val_loss")
+
+
+def _validate_unit_interval_metric(metrics: dict[str, Any], field: str) -> None:
+    value = metrics[field]
+    if isinstance(value, bool) or not isinstance(value, Real):
+        raise ValueError(f"Training result metric {field} must be numeric.")
+    if value < 0.0 or value > 1.0:
+        raise ValueError(
+            f"Training result metric {field} must be between 0.0 and 1.0."
+        )
+
+
+def _validate_non_negative_numeric_metric(
+    metrics: dict[str, Any], field: str
+) -> None:
+    value = metrics[field]
+    if isinstance(value, bool) or not isinstance(value, Real):
+        raise ValueError(f"Training result metric {field} must be numeric.")
+    if value < 0.0:
+        raise ValueError(
+            f"Training result metric {field} must be greater than or equal to 0.0."
         )
 
 

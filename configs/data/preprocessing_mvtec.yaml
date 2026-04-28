@@ -4,7 +4,11 @@ dataset_version: mvtec_1.0
 rgb_conversion_policy: force_rgb
 allowed_image_modes:
   - RGB
-resize_policy: none
-normalization_policy: deferred_to_model_config
+resize_policy: fixed
+image_size: [224, 224]
+pixel_scale: zero_to_one_float32
+normalization_policy: imagenet
+normalization_mean: [0.485, 0.456, 0.406]
+normalization_std: [0.229, 0.224, 0.225]
 decode_failure_policy: reject
 invalid_image_policy: reject

@@ -103,6 +103,9 @@ def _build_track_a_candidate(
 
     evaluation = _load_validation_evaluation_artifact(metadata)
     macro_metrics = _require_dict(evaluation.get("macro_metrics"), "macro_metrics")
+    confusion_matrix = _validate_confusion_matrix(evaluation)
+    true_negatives, false_positives = confusion_matrix[0]
+    false_negatives, true_positives = confusion_matrix[1]
 
     candidate = {
         "model_name": _require_string(metadata.get("model_name"), "model_name"),
@@ -118,7 +121,15 @@ def _build_track_a_candidate(
         "val_accuracy": _require_number(metrics.get("val_accuracy"), "val_accuracy"),
         "val_f1": _require_number(metrics.get("val_f1"), "val_f1"),
         "macro_f1": _require_number(macro_metrics.get("f1"), "macro_f1"),
-        "confusion_matrix": _validate_confusion_matrix(evaluation),
+        "confusion_matrix": confusion_matrix,
+        "true_negatives": true_negatives,
+        "false_positives": false_positives,
+        "false_negatives": false_negatives,
+        "true_positives": true_positives,
+        "defect_recall": _safe_ratio(true_positives, true_positives + false_negatives),
+        "defect_precision": _safe_ratio(
+            true_positives, true_positives + false_positives
+        ),
         "training_result_path": training_result_path,
         "validation_evaluation_path": _require_string(
             metadata.get("validation_evaluation_path"),
@@ -222,6 +233,17 @@ def _apply_track_a_recommendation(
                 "Not selected because another candidate has higher macro_f1."
             )
 
+    selected_defect_count = selected["true_positives"] + selected["false_negatives"]
+    selected_status = "selected"
+    selected_reason = "Selected because it has the highest macro_f1."
+    if selected["defect_recall"] == 0.0 and selected_defect_count > 0:
+        selected_status = "review_required"
+        selected_reason = (
+            "Selected by macro_f1 but defect_recall is 0.0; manual review required."
+        )
+        selected["recommendation_status"] = selected_status
+        selected["recommendation_reason_short"] = selected_reason
+
     return {
         "model_name": selected["model_name"],
         "model_type": selected["model_type"],
@@ -229,10 +251,8 @@ def _apply_track_a_recommendation(
         "dataset_id": selected["dataset_id"],
         "run_id": selected["run_id"],
         "macro_f1": selected["macro_f1"],
-        "recommendation_status": "selected",
-        "recommendation_reason_short": (
-            "Selected because it has the highest macro_f1."
-        ),
+        "recommendation_status": selected_status,
+        "recommendation_reason_short": selected_reason,
     }
 
 
@@ -257,3 +277,9 @@ def _require_number(value: Any, field_name: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{field_name} must be numeric.")
     return float(value)
+
+
+def _safe_ratio(numerator: int, denominator: int) -> float:
+    if denominator == 0:
+        return 0.0
+    return float(numerator / denominator)

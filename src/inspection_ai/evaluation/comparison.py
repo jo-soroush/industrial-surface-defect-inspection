@@ -22,27 +22,31 @@ TRACK_A_RISK_SIGNAL = "defect_recall"
 
 
 def build_track_a_comparison(
-    mlp_training_result_path: str,
-    cnn_training_result_path: str,
+    training_result_paths: list[str],
 ) -> dict[str, Any]:
     """Build a side-effect-free Track A comparison from explicit artifacts."""
-    mlp_result = _load_training_result(mlp_training_result_path)
-    cnn_result = _load_training_result(cnn_training_result_path)
+    if not isinstance(training_result_paths, list) or len(training_result_paths) < 2:
+        raise ValueError("Track A comparison requires at least 2 TrainingResult paths.")
 
-    mlp_candidate = _build_track_a_candidate(mlp_result, mlp_training_result_path)
-    cnn_candidate = _build_track_a_candidate(cnn_result, cnn_training_result_path)
+    candidates = [
+        _build_track_a_candidate(
+            _load_training_result(training_result_path),
+            training_result_path,
+        )
+        for training_result_path in training_result_paths
+    ]
 
-    dataset_id = mlp_candidate["dataset_id"]
-    if dataset_id != cnn_candidate["dataset_id"]:
-        raise ValueError("Track A comparison requires matching dataset_id values.")
+    dataset_id = candidates[0]["dataset_id"]
+    for candidate in candidates[1:]:
+        if candidate["dataset_id"] != dataset_id:
+            raise ValueError("Track A comparison requires matching dataset_id values.")
 
-    candidates = [mlp_candidate, cnn_candidate]
     recommended_candidate = _apply_track_a_recommendation(candidates)
 
     return {
         "comparison_id": (
             "track_a_supervised_classification__"
-            f"{mlp_candidate['run_id']}__{cnn_candidate['run_id']}"
+            + "__".join(candidate["run_id"] for candidate in candidates)
         ),
         "dataset_id": dataset_id,
         "task_type": "classification",
@@ -219,11 +223,18 @@ def _validate_confusion_matrix(evaluation: dict[str, Any]) -> list[list[int]]:
 def _apply_track_a_recommendation(
     candidates: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    first, second = candidates
-    first_macro_f1 = first["macro_f1"]
-    second_macro_f1 = second["macro_f1"]
+    if len(candidates) < 2:
+        raise ValueError("Track A recommendation requires at least 2 candidates.")
 
-    if first_macro_f1 == second_macro_f1:
+    ranked_candidates = sorted(
+        candidates,
+        key=lambda candidate: candidate["macro_f1"],
+        reverse=True,
+    )
+    selected = ranked_candidates[0]
+    next_best = ranked_candidates[1]
+
+    if selected["macro_f1"] == next_best["macro_f1"]:
         reason = "Candidates are tied on macro_f1; manual review is required."
         for candidate in candidates:
             candidate["recommendation_status"] = "review_required"
@@ -234,7 +245,6 @@ def _apply_track_a_recommendation(
             "decision_explanation": reason,
         }
 
-    selected = first if first_macro_f1 > second_macro_f1 else second
     for candidate in candidates:
         if candidate is selected:
             candidate["recommendation_status"] = "selected"
@@ -250,7 +260,7 @@ def _apply_track_a_recommendation(
     selected_defect_count = selected["true_positives"] + selected["false_negatives"]
     selected_status = "selected"
     selected_reason = "Selected because it has the highest macro_f1."
-    macro_f1_difference = abs(first_macro_f1 - second_macro_f1)
+    macro_f1_difference = abs(selected["macro_f1"] - next_best["macro_f1"])
     if (
         macro_f1_difference < TRACK_A_MACRO_F1_NEAR_TIE_THRESHOLD
     ):
@@ -281,7 +291,7 @@ def _apply_track_a_recommendation(
         "recommendation_reason_short": selected_reason,
         "decision_explanation": _build_decision_explanation(
             selected=selected,
-            other=second if selected is first else first,
+            other=next_best,
             selected_reason=selected_reason,
         ),
     }

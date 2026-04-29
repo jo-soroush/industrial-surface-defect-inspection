@@ -18,14 +18,18 @@ def build_parser() -> argparse.ArgumentParser:
         description="Write a Track A supervised classification comparison artifact."
     )
     parser.add_argument(
+        "--training-result",
+        action="append",
+        default=[],
+        help="Path to a TrainingResult JSON artifact. Provide at least two.",
+    )
+    parser.add_argument(
         "--mlp-result",
-        required=True,
-        help="Path to the MLP TrainingResult JSON artifact.",
+        help="Legacy path to the MLP TrainingResult JSON artifact.",
     )
     parser.add_argument(
         "--cnn-result",
-        required=True,
-        help="Path to the CNN TrainingResult JSON artifact.",
+        help="Legacy path to the CNN TrainingResult JSON artifact.",
     )
     parser.add_argument(
         "--output-dir",
@@ -40,17 +44,9 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
 
-    mlp_result_path = Path(args.mlp_result)
-    cnn_result_path = Path(args.cnn_result)
-    if not mlp_result_path.is_file():
-        raise FileNotFoundError(f"MLP TrainingResult not found: {mlp_result_path}")
-    if not cnn_result_path.is_file():
-        raise FileNotFoundError(f"CNN TrainingResult not found: {cnn_result_path}")
+    training_result_paths = _resolve_training_result_paths(args)
 
-    comparison = build_track_a_comparison(
-        str(mlp_result_path),
-        str(cnn_result_path),
-    )
+    comparison = build_track_a_comparison(training_result_paths)
     comparison.setdefault("created_at", _utc_now_iso())
 
     output_dir = Path(args.output_dir)
@@ -61,13 +57,37 @@ def main() -> int:
 
     recommended_candidate = _require_recommended_candidate(comparison)
     print(f"comparison_artifact_path={output_path}")
-    print(f"recommended_model_type={recommended_candidate['model_type']}")
+    print(f"recommended_model_type={recommended_candidate.get('model_type')}")
     print(f"recommendation_status={recommended_candidate['recommendation_status']}")
     return 0
 
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _resolve_training_result_paths(args: Any) -> list[str]:
+    training_result_paths = list(args.training_result)
+    if args.mlp_result or args.cnn_result:
+        if not args.mlp_result or not args.cnn_result:
+            raise ValueError(
+                "Legacy comparison arguments require both --mlp-result and --cnn-result."
+            )
+        if training_result_paths:
+            raise ValueError(
+                "Use either --training-result or legacy --mlp-result/--cnn-result, not both."
+            )
+        training_result_paths = [args.mlp_result, args.cnn_result]
+
+    if len(training_result_paths) < 2:
+        raise ValueError("Track A comparison requires at least 2 TrainingResult paths.")
+
+    for path_value in training_result_paths:
+        path = Path(path_value)
+        if not path.is_file():
+            raise FileNotFoundError(f"TrainingResult not found: {path}")
+
+    return training_result_paths
 
 
 def _require_recommended_candidate(comparison: dict[str, Any]) -> dict[str, Any]:

@@ -59,18 +59,16 @@ def _add_training_outputs(
     result: TrainingResult, config: dict[str, Any], model: Any, data_loader: Any
 ) -> None:
     task_type = config["identity"]["task_type"]
-    model_identity = config.get("model_identity", {})
-    model_type = (
-        model_identity.get("model_type") if isinstance(model_identity, dict) else None
-    )
-    if model_type == "mlp" and task_type == "classification":
-        _add_one_batch_mlp_training_outputs(result, config, model, data_loader)
+    if task_type == "classification":
+        _add_one_batch_classification_training_outputs(
+            result, config, model, data_loader
+        )
         return
 
     _add_simulated_outputs(result, config)
 
 
-def _add_one_batch_mlp_training_outputs(
+def _add_one_batch_classification_training_outputs(
     result: TrainingResult, config: dict[str, Any], model: Any, data_loader: Any
 ) -> None:
     training_runtime = config.get("training_runtime", {})
@@ -127,10 +125,16 @@ def _add_one_batch_mlp_training_outputs(
 
         optimizer.zero_grad()
         logits = model(images)
+        if not isinstance(logits, torch.Tensor):
+            raise ValueError("Classification model must output logits as a torch.Tensor.")
         if logits.ndim != 2 or logits.shape[1] != 2:
-            raise ValueError("MLP epoch logits must have shape [B, 2].")
+            raise ValueError(
+                "Classification model must output logits with shape [B, 2]."
+            )
         if logits.shape[0] != labels.shape[0]:
-            raise ValueError("MLP epoch logits and labels batch sizes must match.")
+            raise ValueError(
+                "Classification model logits and labels batch sizes must match."
+            )
 
         labels = labels.long()
         predictions = torch.argmax(logits, dim=1)
@@ -146,7 +150,7 @@ def _add_one_batch_mlp_training_outputs(
 
         loss_value = loss.item()
         if isinstance(loss_value, bool) or not isinstance(loss_value, (int, float)):
-            raise ValueError("MLP epoch training loss must be numeric.")
+            raise ValueError("Classification epoch training loss must be numeric.")
         real_train_loss = float(loss_value)
         train_loss_curve.append(real_train_loss)
         last_batch_size = int(images.shape[0])
@@ -300,6 +304,10 @@ def _evaluate_classification_predictions(
             images = images.to(model_device)
             labels = labels.to(model_device).reshape(-1).long()
             logits = model(images)
+            if not isinstance(logits, torch.Tensor):
+                raise ValueError(
+                    "Classification model must output logits as a torch.Tensor."
+                )
             if logits.ndim != 2 or logits.shape[1] != 2:
                 raise ValueError("Validation logits must have shape [B, 2].")
             if logits.shape[0] != labels.shape[0]:
@@ -408,6 +416,10 @@ def _evaluate_binary_classification_batches(
             images = images.to(model_device)
             labels = labels.to(model_device).reshape(-1).long()
             logits = model(images)
+            if not isinstance(logits, torch.Tensor):
+                raise ValueError(
+                    "Classification model must output logits as a torch.Tensor."
+                )
             if logits.ndim != 2 or logits.shape[1] != 2:
                 raise ValueError("Validation logits must have shape [B, 2].")
             if logits.shape[0] != labels.shape[0]:
@@ -543,29 +555,31 @@ def _add_completion_metadata(
 def _add_forward_contract_metadata(
     result: TrainingResult, model: Any, config: dict[str, Any]
 ) -> None:
-    model_identity = config.get("model_identity")
-    model_type = (
-        model_identity.get("model_type") if isinstance(model_identity, dict) else None
-    )
-    if model_type != "mlp":
+    identity = config.get("identity")
+    task_type = identity.get("task_type") if isinstance(identity, dict) else None
+    if task_type != "classification":
         result.add_metadata("forward_contract_checked", False)
         return
 
     forward = getattr(model, "forward", None)
     if not callable(forward):
-        raise ValueError("MLP model must provide a callable forward method.")
+        raise ValueError("Classification model must provide a callable forward method.")
 
     contract_input = torch.zeros((1, 3, 224, 224), dtype=torch.float32)
     with torch.no_grad():
         forward_output = forward(contract_input)
 
     if not isinstance(forward_output, torch.Tensor):
-        raise ValueError("MLP forward contract output must be a torch.Tensor.")
+        raise ValueError(
+            "Classification model must output logits as a torch.Tensor."
+        )
     if list(forward_output.shape) != [1, 2]:
-        raise ValueError("MLP forward contract output shape must be [1, 2].")
+        raise ValueError(
+            "Classification model must output logits with shape [B, 2]."
+        )
 
     result.add_metadata("forward_contract_checked", True)
-    result.add_metadata("forward_contract_name", "torch_mlp_forward")
+    result.add_metadata("forward_contract_name", "torch_classification_forward")
     result.add_metadata("forward_contract_batch_size", 1)
     result.add_metadata("forward_contract_output_dimension", 2)
 

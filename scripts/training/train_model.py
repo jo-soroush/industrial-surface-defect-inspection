@@ -16,6 +16,10 @@ import yaml
 
 from inspection_ai.governance.run_registry_writer import append_run_registry_entry
 from inspection_ai.models.factory import create_model
+from inspection_ai.training.checkpointing import (
+    resolve_model_checkpoint_path,
+    save_checkpoint,
+)
 from inspection_ai.training.data_loading import build_data_loaders
 from inspection_ai.training.result_persistence import persist_training_result
 from inspection_ai.training.result_validation import validate_training_result
@@ -56,26 +60,42 @@ def load_config(config_path: str) -> dict[str, Any]:
 
 def handle_classification(config: dict[str, Any]) -> object:
     """Placeholder handler for classification training dispatch."""
-    model = create_model(config)
-    data_loaders = build_data_loaders(config)
-    result = run_training_loop(config=config, model=model, data_loader=data_loaders)
-    return result
+    return _run_training_with_checkpoint(config)
 
 
 def handle_anomaly_detection(config: dict[str, Any]) -> object:
     """Placeholder handler for anomaly-detection training dispatch."""
-    model = create_model(config)
-    data_loaders = build_data_loaders(config)
-    result = run_training_loop(config=config, model=model, data_loader=data_loaders)
-    return result
+    return _run_training_with_checkpoint(config)
 
 
 def handle_object_detection(config: dict[str, Any]) -> object:
     """Placeholder handler for object-detection training dispatch."""
+    return _run_training_with_checkpoint(config)
+
+
+def _run_training_with_checkpoint(config: dict[str, Any]) -> object:
+    """Run training and attach a governed model checkpoint artifact."""
     model = create_model(config)
     data_loaders = build_data_loaders(config)
     result = run_training_loop(config=config, model=model, data_loader=data_loaders)
+    _attach_model_checkpoint(result=result, model=model)
     return result
+
+
+def _attach_model_checkpoint(result: Any, model: Any) -> None:
+    state_dict = getattr(model, "state_dict", None)
+    if not callable(state_dict):
+        raise ValueError("Trained model must provide a callable state_dict method.")
+
+    checkpoint_path = resolve_model_checkpoint_path(result.identity["run_id"])
+    save_checkpoint(state_dict(), checkpoint_path)
+    result.add_artifact(
+        "model_artifact",
+        {
+            "path": str(checkpoint_path),
+            "type": "pytorch_state_dict",
+        },
+    )
 
 
 def extract_task_type(config: dict[str, Any]) -> str:

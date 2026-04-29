@@ -1,15 +1,18 @@
-"""Checkpointing boundary skeleton for Phase 3 training governance.
-
-This module defines the governed source location for future checkpoint path
-resolution and checkpoint-save policy handling. In the current step it
-establishes import-safe interfaces only and intentionally avoids any file-write
-behavior.
-"""
+"""Checkpointing boundary for governed training artifacts."""
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+
+import torch
+
+
+def resolve_model_checkpoint_path(run_id: str) -> Path:
+    """Return the governed model checkpoint path for a training run."""
+    if not isinstance(run_id, str) or not run_id:
+        raise ValueError("run_id must be a non-empty string.")
+    return Path("artifacts/models/checkpoints") / f"model_checkpoint__{run_id}.pt"
 
 
 def resolve_checkpoint_path(run_id: str, checkpoint_name: str) -> Path:
@@ -18,8 +21,14 @@ def resolve_checkpoint_path(run_id: str, checkpoint_name: str) -> Path:
 
 
 def save_checkpoint(model_state: Any, target_path: Path) -> None:
-    """Placeholder for future checkpoint persistence logic."""
-    raise NotImplementedError("save_checkpoint is not implemented yet.")
+    """Persist a model checkpoint without overwriting existing artifacts."""
+    if not isinstance(target_path, Path):
+        raise TypeError("target_path must be a pathlib.Path.")
+    if target_path.exists():
+        raise FileExistsError(f"Checkpoint already exists: {target_path}")
+
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model_state, target_path)
 
 
 class CheckpointPolicy:

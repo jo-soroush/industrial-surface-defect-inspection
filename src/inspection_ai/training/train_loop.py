@@ -248,6 +248,7 @@ def _write_classification_validation_evaluation_artifact(
         max_batches=max_batches,
     )
     payload = {
+        "artifact_type": "classification_validation_evaluation",
         "run_id": result.identity["run_id"],
         "dataset_id": dataset_id,
         "split": "validation",

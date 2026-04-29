@@ -44,6 +44,7 @@ def build_track_a_comparison(
     recommended_candidate = _apply_track_a_recommendation(candidates)
 
     return {
+        "artifact_type": "track_a_comparison",
         "comparison_id": (
             "track_a_supervised_classification__"
             + "__".join(candidate["run_id"] for candidate in candidates)

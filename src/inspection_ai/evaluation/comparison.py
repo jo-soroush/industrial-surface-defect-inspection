@@ -106,6 +106,14 @@ def _build_track_a_candidate(
     confusion_matrix = _validate_confusion_matrix(evaluation)
     true_negatives, false_positives = confusion_matrix[0]
     false_negatives, true_positives = confusion_matrix[1]
+    defect_recall = _safe_ratio(true_positives, true_positives + false_negatives)
+    defect_precision = _safe_ratio(true_positives, true_positives + false_positives)
+    warnings = _build_candidate_warnings(
+        defect_recall=defect_recall,
+        false_negatives=false_negatives,
+        true_positives=true_positives,
+    )
+    macro_f1 = _require_number(macro_metrics.get("f1"), "macro_f1")
 
     candidate = {
         "model_name": _require_string(metadata.get("model_name"), "model_name"),
@@ -120,16 +128,16 @@ def _build_track_a_candidate(
         "val_loss": _require_number(metrics.get("val_loss"), "val_loss"),
         "val_accuracy": _require_number(metrics.get("val_accuracy"), "val_accuracy"),
         "val_f1": _require_number(metrics.get("val_f1"), "val_f1"),
-        "macro_f1": _require_number(macro_metrics.get("f1"), "macro_f1"),
+        "macro_f1": macro_f1,
         "confusion_matrix": confusion_matrix,
         "true_negatives": true_negatives,
         "false_positives": false_positives,
         "false_negatives": false_negatives,
         "true_positives": true_positives,
-        "defect_recall": _safe_ratio(true_positives, true_positives + false_negatives),
-        "defect_precision": _safe_ratio(
-            true_positives, true_positives + false_positives
-        ),
+        "defect_recall": defect_recall,
+        "defect_precision": defect_precision,
+        "warnings": warnings,
+        "explanation": _build_candidate_explanation(macro_f1, defect_recall),
         "training_result_path": training_result_path,
         "validation_evaluation_path": _require_string(
             metadata.get("validation_evaluation_path"),
@@ -218,6 +226,7 @@ def _apply_track_a_recommendation(
         return {
             "recommendation_status": "review_required",
             "recommendation_reason_short": reason,
+            "decision_explanation": reason,
         }
 
     selected = first if first_macro_f1 > second_macro_f1 else second
@@ -253,6 +262,11 @@ def _apply_track_a_recommendation(
         "macro_f1": selected["macro_f1"],
         "recommendation_status": selected_status,
         "recommendation_reason_short": selected_reason,
+        "decision_explanation": _build_decision_explanation(
+            selected=selected,
+            other=second if selected is first else first,
+            selected_reason=selected_reason,
+        ),
     }
 
 
@@ -277,6 +291,52 @@ def _require_number(value: Any, field_name: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{field_name} must be numeric.")
     return float(value)
+
+
+def _build_candidate_warnings(
+    defect_recall: float,
+    false_negatives: int,
+    true_positives: int,
+) -> list[str]:
+    warnings = []
+    if defect_recall == 0.0 and true_positives + false_negatives > 0:
+        warnings.append("Model failed to detect any defects (defect_recall = 0.0)")
+    if false_negatives > true_positives:
+        warnings.append("High number of missed defects (false negatives)")
+    return warnings
+
+
+def _build_candidate_explanation(macro_f1: float, defect_recall: float) -> str:
+    return (
+        f"Model achieved macro_f1={macro_f1:.2f} with "
+        f"defect_recall={defect_recall:.2f}, indicating limited defect detection."
+    )
+
+
+def _build_decision_explanation(
+    selected: dict[str, Any],
+    other: dict[str, Any],
+    selected_reason: str,
+) -> str:
+    selected_name = str(selected["model_name"]).upper()
+    other_name = str(other["model_name"]).upper()
+    if selected["recommendation_status"] == "review_required":
+        return (
+            f"{selected_name} was selected by macro_f1 but requires manual review "
+            "because defect recall is 0.0."
+        )
+
+    other_risk_note = ""
+    if other["defect_recall"] == 0.0 and (
+        other["true_positives"] + other["false_negatives"]
+    ) > 0:
+        other_risk_note = f" {other_name} rejected due to zero defect detection."
+
+    return (
+        f"{selected_name} selected due to higher macro_f1 and "
+        f"defect_recall={selected['defect_recall']:.2f}. "
+        f"{selected_reason}{other_risk_note}"
+    )
 
 
 def _safe_ratio(numerator: int, denominator: int) -> float:

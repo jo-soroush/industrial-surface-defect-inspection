@@ -14,7 +14,7 @@ model_identity:
 dataset_binding:
   dataset_id: mvtec_anomaly
   dataset_version: mvtec_1.0
-  split_manifest_path: null
+  split_manifest_path: data/manifests/split_mvtec_anomaly.yaml
 
 preprocessing:
   preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml

@@ -15,6 +15,10 @@ from typing import Any
 
 
 TRACK_A_SUPERVISED_DATASET_ID = "mvtec_classification_supervised"
+TRACK_A_MINIMUM_DEFECT_RECALL = 0.50
+TRACK_A_MACRO_F1_NEAR_TIE_THRESHOLD = 0.02
+TRACK_A_SELECTION_METRIC = "macro_f1"
+TRACK_A_RISK_SIGNAL = "defect_recall"
 
 
 def build_track_a_comparison(
@@ -42,7 +46,8 @@ def build_track_a_comparison(
         ),
         "dataset_id": dataset_id,
         "task_type": "classification",
-        "selection_metric": "macro_f1",
+        "selection_metric": TRACK_A_SELECTION_METRIC,
+        "decision_policy": _build_track_a_decision_policy(),
         "candidate_count": len(candidates),
         "candidates": candidates,
         "recommended_candidate": recommended_candidate,
@@ -219,7 +224,7 @@ def _apply_track_a_recommendation(
     second_macro_f1 = second["macro_f1"]
 
     if first_macro_f1 == second_macro_f1:
-        reason = "Candidates have equal macro_f1; manual review is required."
+        reason = "Candidates are tied on macro_f1; manual review is required."
         for candidate in candidates:
             candidate["recommendation_status"] = "review_required"
             candidate["recommendation_reason_short"] = reason
@@ -245,10 +250,22 @@ def _apply_track_a_recommendation(
     selected_defect_count = selected["true_positives"] + selected["false_negatives"]
     selected_status = "selected"
     selected_reason = "Selected because it has the highest macro_f1."
-    if selected["defect_recall"] == 0.0 and selected_defect_count > 0:
+    macro_f1_difference = abs(first_macro_f1 - second_macro_f1)
+    if (
+        macro_f1_difference < TRACK_A_MACRO_F1_NEAR_TIE_THRESHOLD
+    ):
         selected_status = "review_required"
         selected_reason = (
-            "Selected by macro_f1 but defect_recall is 0.0; manual review required."
+            "Selected by macro_f1 but candidates are within the near-tie threshold; "
+            "manual review required."
+        )
+        selected["recommendation_status"] = selected_status
+        selected["recommendation_reason_short"] = selected_reason
+    elif selected["defect_recall"] < TRACK_A_MINIMUM_DEFECT_RECALL:
+        selected_status = "review_required"
+        selected_reason = (
+            "Selected by macro_f1 but defect_recall is below the policy threshold; "
+            "manual review required."
         )
         selected["recommendation_status"] = selected_status
         selected["recommendation_reason_short"] = selected_reason
@@ -293,6 +310,15 @@ def _require_number(value: Any, field_name: str) -> float:
     return float(value)
 
 
+def _build_track_a_decision_policy() -> dict[str, Any]:
+    return {
+        "minimum_defect_recall": TRACK_A_MINIMUM_DEFECT_RECALL,
+        "macro_f1_near_tie_threshold": TRACK_A_MACRO_F1_NEAR_TIE_THRESHOLD,
+        "selection_metric": TRACK_A_SELECTION_METRIC,
+        "risk_signal": TRACK_A_RISK_SIGNAL,
+    }
+
+
 def _build_candidate_warnings(
     defect_recall: float,
     false_negatives: int,
@@ -321,9 +347,14 @@ def _build_decision_explanation(
     selected_name = str(selected["model_name"]).upper()
     other_name = str(other["model_name"]).upper()
     if selected["recommendation_status"] == "review_required":
+        if selected["defect_recall"] < TRACK_A_MINIMUM_DEFECT_RECALL:
+            return (
+                f"{selected_name} was selected by macro_f1 but requires manual review "
+                "because defect recall is below the policy threshold."
+            )
         return (
             f"{selected_name} was selected by macro_f1 but requires manual review "
-            "because defect recall is 0.0."
+            "because candidates are within the near-tie threshold."
         )
 
     other_risk_note = ""

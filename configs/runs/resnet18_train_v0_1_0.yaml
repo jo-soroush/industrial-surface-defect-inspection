@@ -1,6 +1,6 @@
 identity:
   run_config_id: resnet18_train_v0_1_0
-  description: Resolved training run config for the ResNet18 classification baseline.
+  description: Resolved training run config for the ResNet18 supervised MVTec classification benchmark.
   task_type: classification
   is_experiment: true
   track_id: classification
@@ -12,9 +12,10 @@ model_identity:
   model_config_id: resnet18_config
 
 dataset_binding:
-  dataset_id: mvtec_classification
+  dataset_id: mvtec_classification_supervised
   dataset_version: mvtec_1.0
-  split_manifest_path: null
+  split_manifest_path: data/manifests/split_mvtec_classification_supervised.yaml
+  class_mapping_path: configs/data/class_mapping_mvtec_binary.yaml
 
 preprocessing:
   preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml

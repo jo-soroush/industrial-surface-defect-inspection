@@ -17,7 +17,7 @@ from inspection_ai.training.data_loading import build_data_loaders
 
 
 SUPPORTED_SPLITS = {"validation", "test"}
-SUPPORTED_MODEL_TYPES = {"mlp", "cnn"}
+SUPPORTED_MODEL_TYPES = {"mlp", "cnn", "resnet18"}
 MODEL_ARTIFACT_KEYS = (
     "model",
     "model_artifact",

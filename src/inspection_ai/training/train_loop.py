@@ -64,6 +64,9 @@ def _add_training_outputs(
             result, config, model, data_loader
         )
         return
+    if task_type == "anomaly_detection":
+        _add_autoencoder_anomaly_training_outputs(result, config, model, data_loader)
+        return
 
     _add_simulated_outputs(result, config)
 
@@ -494,6 +497,114 @@ def _compute_f1(tp: int, fp: int, fn: int) -> float:
     if precision + recall == 0.0:
         return 0.0
     return float(2 * (precision * recall) / (precision + recall))
+
+
+def _add_autoencoder_anomaly_training_outputs(
+    result: TrainingResult, config: dict[str, Any], model: Any, data_loader: Any
+) -> None:
+    training_runtime = config.get("training_runtime", {})
+    num_epochs = training_runtime.get("epochs")
+    if isinstance(num_epochs, bool) or not isinstance(num_epochs, int) or num_epochs < 1:
+        raise ValueError("Training config requires training_runtime.epochs >= 1.")
+
+    learning_rate = training_runtime.get("learning_rate")
+    if isinstance(learning_rate, bool) or not isinstance(learning_rate, (int, float)):
+        raise ValueError(
+            "Training config requires numeric training_runtime.learning_rate."
+        )
+
+    if not isinstance(data_loader, dict):
+        raise ValueError("data_loader must be a dictionary.")
+
+    train_loader = data_loader.get("train_loader")
+    if train_loader is None:
+        raise ValueError("data_loader is missing required train_loader.")
+
+    model.train()
+    optimizer = torch.optim.Adam(model.parameters(), lr=float(learning_rate))
+    criterion = torch.nn.MSELoss()
+
+    train_loss_curve = []
+    last_batch_size = 0
+    for epoch_index in range(num_epochs):
+        epoch_loss_total = 0.0
+        epoch_sample_count = 0
+        batch_count = 0
+
+        for batch in train_loader:
+            if not isinstance(batch, dict):
+                raise ValueError("train_loader batch must be a dictionary.")
+
+            images = batch.get("image")
+            if not isinstance(images, torch.Tensor):
+                raise ValueError("train_loader batch image must be a torch.Tensor.")
+
+            model_device = next(model.parameters()).device
+            images = images.to(model_device)
+
+            reconstruction = model(images)
+            if not isinstance(reconstruction, torch.Tensor):
+                raise ValueError(
+                    "Anomaly model must output reconstruction as a torch.Tensor."
+                )
+            if reconstruction.shape != images.shape:
+                raise ValueError(
+                    "Anomaly model reconstruction shape must match input image shape."
+                )
+
+            loss = criterion(reconstruction, images)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            loss_value = loss.item()
+            if isinstance(loss_value, bool) or not isinstance(loss_value, (int, float)):
+                raise ValueError("Anomaly epoch training loss must be numeric.")
+
+            sample_count = int(images.shape[0])
+            epoch_loss_total += float(loss_value) * sample_count
+            epoch_sample_count += sample_count
+            last_batch_size = sample_count
+            batch_count += 1
+
+        if batch_count == 0 or epoch_sample_count == 0:
+            raise ValueError("train_loader must provide at least one batch per epoch.")
+
+        real_train_loss = _safe_ratio_float(epoch_loss_total, epoch_sample_count)
+        train_loss_curve.append(real_train_loss)
+        print(
+            "epoch_metrics "
+            f"epoch={epoch_index + 1} "
+            f"reconstruction_loss={real_train_loss:.6f} "
+            f"batches={batch_count}"
+        )
+        print(
+            "validation_metrics "
+            f"epoch={epoch_index + 1} "
+            "skipped=true "
+            "reason=validation_loader_unavailable"
+        )
+
+    result.add_learning_point("train_loss", train_loss_curve)
+    result.add_learning_point("val_loss", [])
+    result.add_metric("reconstruction_loss", float(train_loss_curve[-1]))
+    result.add_metadata("epochs", training_runtime.get("epochs"))
+    result.add_metadata("device", training_runtime.get("device"))
+    result.add_metadata("real_training_batch_checked", True)
+    result.add_metadata("real_training_batch_size", last_batch_size)
+    result.add_metadata("real_training_batches_per_epoch", batch_count)
+    result.add_metadata("real_training_epoch_count", num_epochs)
+    result.add_metadata(
+        "real_training_loss_source", "full_epoch_mse_reconstruction_loss"
+    )
+    result.add_metadata("validation_evaluation_checked", False)
+    result.add_metadata(
+        "validation_evaluation_skip_reason", "validation_loader_unavailable"
+    )
+    result.add_metadata(
+        "validation_evaluation_artifact_skip_reason",
+        "validation_loader_unavailable",
+    )
 
 
 def _add_simulated_outputs(result: TrainingResult, config: dict[str, Any]) -> None:

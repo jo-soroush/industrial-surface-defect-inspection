@@ -1,4 +1,9 @@
-"""Artifact registry utilities for governed model artifact tracking."""
+"""Artifact registry utilities for governed model artifact tracking.
+
+Registry entries support local artifact references and external object-store
+references such as S3 URIs. The registry stores metadata only; it does not
+upload, download, or verify artifact file existence.
+"""
 
 from __future__ import annotations
 
@@ -9,6 +14,7 @@ import yaml
 
 
 ALLOWED_ARTIFACT_STATUSES = {"active", "archived", "failed", "deprecated"}
+ALLOWED_STORAGE_BACKENDS = {"local", "s3", "external", "unknown"}
 
 
 class ArtifactRegistry:
@@ -16,7 +22,9 @@ class ArtifactRegistry:
 
     The default registry structure is ``{"artifacts": []}``. Registry changes
     remain in memory until callers explicitly persist them with
-    ``save_registry``.
+    ``save_registry``. Artifact entries can reference local paths, S3 URIs, or
+    other external storage backends through ``storage_backend`` and
+    ``artifact_uri`` metadata.
     """
 
     def __init__(self, registry_path: str | Path) -> None:
@@ -89,7 +97,13 @@ class ArtifactRegistry:
         return registry
 
     def validate_artifact_entry(self, artifact_metadata: dict[str, Any]) -> None:
-        """Validate one artifact metadata entry."""
+        """Validate one artifact metadata entry.
+
+        ``artifact_path`` remains the repo-relative or logical artifact
+        reference. ``artifact_uri`` is optional for local and unknown storage,
+        required for S3 and external storage, and must use an ``s3://`` prefix
+        for S3 artifacts.
+        """
         if not isinstance(artifact_metadata, dict):
             raise ValueError("Artifact metadata must be a dictionary.")
 
@@ -99,6 +113,14 @@ class ArtifactRegistry:
         )
         _require_non_empty_string(
             artifact_metadata.get("artifact_hash"), "artifact_hash"
+        )
+        storage_backend = _require_non_empty_string(
+            artifact_metadata.get("storage_backend"), "storage_backend"
+        )
+        _validate_storage_reference(
+            storage_backend=storage_backend,
+            artifact_uri=artifact_metadata.get("artifact_uri"),
+            artifact_uri_present="artifact_uri" in artifact_metadata,
         )
 
         status = artifact_metadata.get("status")
@@ -148,3 +170,24 @@ def _require_non_empty_string(value: Any, field_name: str) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError(f"{field_name} must be a non-empty string.")
     return value
+
+
+def _validate_storage_reference(
+    storage_backend: str,
+    artifact_uri: Any,
+    artifact_uri_present: bool,
+) -> None:
+    if storage_backend not in ALLOWED_STORAGE_BACKENDS:
+        raise ValueError(
+            "storage_backend must be one of: "
+            f"{sorted(ALLOWED_STORAGE_BACKENDS)}."
+        )
+
+    if storage_backend in {"local", "unknown"}:
+        if artifact_uri_present and artifact_uri is not None:
+            _require_non_empty_string(artifact_uri, "artifact_uri")
+        return
+
+    artifact_uri_value = _require_non_empty_string(artifact_uri, "artifact_uri")
+    if storage_backend == "s3" and not artifact_uri_value.startswith("s3://"):
+        raise ValueError("artifact_uri must start with 's3://' for s3 storage.")

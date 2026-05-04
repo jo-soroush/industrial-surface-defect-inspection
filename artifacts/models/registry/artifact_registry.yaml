@@ -118,3 +118,20 @@ artifacts:
   artifact_size_bytes: 26426
   artifact_format: json
   status: active
+- artifact_id: track_b__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__posthoc_log
+  artifact_filename: track_b_posthoc_run_log__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json
+  artifact_path: artifacts/models/logs/track_b_posthoc_run_log__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_b_posthoc_run_log
+  run_id: b8ca43f5-0d53-4a42-ab37-b5fca9544a36
+  model_name: autoencoder
+  model_version: 0.1.0
+  dataset_id: mvtec_anomaly
+  dataset_version: mvtec_1.0
+  config_id: autoencoder_train_v0_1_0
+  created_at: '2026-05-04T14:13:57Z'
+  artifact_hash: 0dd6c8e59a2ed4dfc146b2ab825576d63bafc8328ddf1dcea5c8fd87f4d7c712
+  artifact_size_bytes: 1555
+  artifact_format: json
+  status: active

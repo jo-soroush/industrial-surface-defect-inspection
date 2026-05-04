@@ -267,7 +267,7 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: mlp_train_supervised_v0_1_0
   created_at: '2026-05-04T15:42:59Z'
-  artifact_hash: c4677506066e7d75e7b6f867207097866ca5b92b0d034fc98bcb9914c3c35a00
-  artifact_size_bytes: 7338
+  artifact_hash: b6353e73f849526573a3b6184fd7cdece5905588fac31fcfc55c039aa7551af8
+  artifact_size_bytes: 8268
   artifact_format: json
   status: active

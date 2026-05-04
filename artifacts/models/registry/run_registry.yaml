@@ -1,1 +1,15 @@
-runs: []
+runs:
+- run_id: b8ca43f5-0d53-4a42-ab37-b5fca9544a36
+  model_name: autoencoder
+  model_version: 0.1.0
+  dataset_id: mvtec_anomaly
+  dataset_version: mvtec_1.0
+  task_type: anomaly_detection
+  config_id: autoencoder_train_v0_1_0
+  started_at: '2026-04-30T10:07:31.021419Z'
+  ended_at: '2026-04-30T10:08:43.122144Z'
+  run_status: success
+  artifact_created: true
+  metadata_path: artifacts/models/analysis/training_results/training_result__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json
+  metrics_path: artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json
+  log_path: null

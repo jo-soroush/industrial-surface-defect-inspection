@@ -237,3 +237,20 @@ artifacts:
   artifact_size_bytes: 1102
   artifact_format: json
   status: active
+- artifact_id: track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__metadata_summary
+  artifact_filename: track_a_mlp_metadata_summary__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json
+  artifact_path: artifacts/models/metadata/track_a_mlp_metadata_summary__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_mlp_metadata_summary
+  run_id: 8ad7bdd9-5210-4432-8e65-8734b6aed0d8
+  model_name: mlp
+  model_version: 0.1.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: mlp_train_supervised_v0_1_0
+  created_at: '2026-05-04T15:34:32Z'
+  artifact_hash: 98530e8a578e42bb2eaab8284d535733fe086f4ce358a243369338173f8ec7f5
+  artifact_size_bytes: 8124
+  artifact_format: json
+  status: active

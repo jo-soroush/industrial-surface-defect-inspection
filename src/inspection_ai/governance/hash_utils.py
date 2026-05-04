@@ -1,20 +1,26 @@
-"""Hashing utility skeleton for Phase 3 governance.
-
-This module defines the minimal source boundary for content hashing used in
-artifact and run traceability. In Phase 3 it provides the future governed home
-for computing stable file hashes without coupling hashing behavior to model,
-training, or evaluation code.
-
-This module will eventually handle file hashing, integrity checks, and
-artifact-level identity support.
-"""
+"""Hashing utilities for artifact governance and traceability."""
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 
 def compute_hash(file_path: str) -> str:
-    """Return a placeholder hash value for the provided file path."""
+    """Return the SHA-256 hex digest for an artifact file.
+
+    The file is read in binary chunks so the function can be used for JSON,
+    YAML, model checkpoints, images, CSV files, and other artifact types.
+    """
     path = Path(file_path)
-    return str(path)
+    if not path.exists():
+        raise FileNotFoundError(f"Cannot compute hash; file does not exist: {path}")
+    if not path.is_file():
+        raise ValueError(f"Cannot compute hash; path is not a file: {path}")
+
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+
+    return digest.hexdigest()

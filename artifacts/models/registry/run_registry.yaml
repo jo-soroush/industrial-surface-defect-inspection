@@ -26,4 +26,4 @@ runs:
   artifact_created: true
   metadata_path: artifacts/models/analysis/training_results/training_result__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json
   metrics_path: artifacts/models/metrics/classification_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json
-  log_path: null
+  log_path: artifacts/models/logs/track_a_mlp_posthoc_run_log__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json

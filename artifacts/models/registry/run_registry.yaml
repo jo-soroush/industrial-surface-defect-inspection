@@ -12,4 +12,4 @@ runs:
   artifact_created: true
   metadata_path: artifacts/models/analysis/training_results/training_result__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json
   metrics_path: artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json
-  log_path: null
+  log_path: artifacts/models/logs/track_b_posthoc_run_log__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json

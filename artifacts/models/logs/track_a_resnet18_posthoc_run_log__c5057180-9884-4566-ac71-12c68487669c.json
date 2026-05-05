@@ -1,0 +1,99 @@
+{
+  "artifact_type": "track_a_resnet18_posthoc_run_log",
+  "config_id": "resnet18_train_v0_1_0",
+  "canonical_decision_path": "artifacts/models/comparisons/track_a_canonical_run_decision__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c.json",
+  "dataset_id": "mvtec_classification_supervised",
+  "dataset_version": "mvtec_1.0",
+  "duration_seconds": 7.724480625009164,
+  "ended_at": "2026-04-29T17:35:38.393716Z",
+  "evaluation_path": "artifacts/models/metrics/classification_validation_evaluation__c5057180-9884-4566-ac71-12c68487669c.json",
+  "generated_at": "2026-05-05T10:20:39Z",
+  "governance_notes": {
+    "canonical_decision_path": "artifacts/models/comparisons/track_a_canonical_run_decision__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c.json",
+    "canonical_status": "canonical_track_a_model_family_run",
+    "governance_status": "governed_with_known_limitations",
+    "metadata_generation_mode": "post_hoc_governance_log",
+    "metadata_summary_path": "artifacts/models/metadata/track_a_resnet18_metadata_summary__c5057180-9884-4566-ac71-12c68487669c.json",
+    "original_runtime_log_available": false,
+    "validation_evaluation_scope": 160
+  },
+  "checkpoint_path": "artifacts/models/checkpoints/model_checkpoint__c5057180-9884-4566-ac71-12c68487669c.pt",
+  "known_limitations": [
+    "This is a post-hoc governance log, not the original runtime log.",
+    "TrainingResult validation_sample_count is 803, while standalone validation evaluation artifact currently reports total_samples=160.",
+    "Full 803-sample validation evidence remains a required future step.",
+    "Standalone learning curves and confusion matrix artifacts are still missing for this canonical ResNet18 run.",
+    "Inventory artifact is still missing for this canonical ResNet18 run.",
+    "Explainability artifact is still missing for this canonical ResNet18 run."
+  ],
+  "log_generation_mode": "post_hoc",
+  "log_type": "post_hoc_run_log",
+  "metadata_summary_path": "artifacts/models/metadata/track_a_resnet18_metadata_summary__c5057180-9884-4566-ac71-12c68487669c.json",
+  "model_name": "resnet18",
+  "model_type": "resnet18",
+  "model_version": "0.1.0",
+  "original_runtime_log_available": false,
+  "post_hoc_reason": "No persisted runtime log was available for this canonical Track A ResNet18 run.",
+  "registry_sources": {
+    "artifact_registry": "artifacts/models/registry/artifact_registry.yaml",
+    "run_registry": "artifacts/models/registry/run_registry.yaml"
+  },
+  "run_id": "c5057180-9884-4566-ac71-12c68487669c",
+  "run_status": "success",
+  "sample_predictions_path": "artifacts/models/predictions/sample_predictions__c5057180-9884-4566-ac71-12c68487669c__validation.json",
+  "training_metrics": {
+    "accuracy": 0.65625,
+    "f1": 0.0,
+    "train_accuracy": 0.65625,
+    "train_f1": 0.0,
+    "val_accuracy": 0.28125,
+    "val_f1": 0.43902439024390244,
+    "val_loss": 66.58076477050781
+  },
+  "training_result_path": "artifacts/models/analysis/training_results/training_result__c5057180-9884-4566-ac71-12c68487669c.json",
+  "source_files": {
+    "artifact_registry": "artifacts/models/registry/artifact_registry.yaml",
+    "canonical_decision": "artifacts/models/comparisons/track_a_canonical_run_decision__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c.json",
+    "classification_evaluation": "artifacts/models/metrics/classification_validation_evaluation__c5057180-9884-4566-ac71-12c68487669c.json",
+    "checkpoint": "artifacts/models/checkpoints/model_checkpoint__c5057180-9884-4566-ac71-12c68487669c.pt",
+    "metadata_summary": "artifacts/models/metadata/track_a_resnet18_metadata_summary__c5057180-9884-4566-ac71-12c68487669c.json",
+    "run_config": "configs/runs/resnet18_train_v0_1_0.yaml",
+    "run_registry": "artifacts/models/registry/run_registry.yaml",
+    "sample_predictions": "artifacts/models/predictions/sample_predictions__c5057180-9884-4566-ac71-12c68487669c__validation.json",
+    "training_result": "artifacts/models/analysis/training_results/training_result__c5057180-9884-4566-ac71-12c68487669c.json"
+  },
+  "started_at": "2026-04-29T17:35:30.669072Z",
+  "task_type": "classification",
+  "track_id": "classification",
+  "validation_metrics": {
+    "confusion_matrix": [
+      [
+        0,
+        113
+      ],
+      [
+        0,
+        47
+      ]
+    ],
+    "macro_metrics": {
+      "f1": 0.22705314009661837,
+      "precision": 0.146875,
+      "recall": 0.5
+    },
+    "per_class": {
+      "class_0": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "class_1": {
+        "f1": 0.45410628019323673,
+        "precision": 0.29375,
+        "recall": 1.0
+      }
+    },
+    "split": "validation",
+    "total_samples": 160
+  }
+}

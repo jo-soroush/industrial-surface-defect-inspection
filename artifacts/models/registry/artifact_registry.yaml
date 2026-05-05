@@ -237,6 +237,40 @@ artifacts:
   artifact_size_bytes: 1102
   artifact_format: json
   status: active
+- artifact_id: track_a__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__posthoc_log
+  artifact_filename: track_a_cnn_posthoc_run_log__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json
+  artifact_path: artifacts/models/logs/track_a_cnn_posthoc_run_log__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_cnn_posthoc_run_log
+  run_id: 67e3746d-a4b0-481a-acd4-8f39a5c1b97b
+  model_name: cnn
+  model_version: 0.1.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: cnn_train_supervised_v0_1_0
+  created_at: '2026-05-05T10:20:39Z'
+  artifact_hash: 8299e3fd709f52de0e5cf49f4be1efcdaf86f7d499cdbd26b6dbfd1575ea5ea8
+  artifact_size_bytes: 5250
+  artifact_format: json
+  status: active
+- artifact_id: track_a__c5057180-9884-4566-ac71-12c68487669c__posthoc_log
+  artifact_filename: track_a_resnet18_posthoc_run_log__c5057180-9884-4566-ac71-12c68487669c.json
+  artifact_path: artifacts/models/logs/track_a_resnet18_posthoc_run_log__c5057180-9884-4566-ac71-12c68487669c.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_resnet18_posthoc_run_log
+  run_id: c5057180-9884-4566-ac71-12c68487669c
+  model_name: resnet18
+  model_version: 0.1.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: resnet18_train_v0_1_0
+  created_at: '2026-05-05T10:20:39Z'
+  artifact_hash: ad36e27340a83b162e2655cde665fcfda3f2b4a0443bfdeec94255e2231880f8
+  artifact_size_bytes: 4892
+  artifact_format: json
+  status: active
 - artifact_id: track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__metadata_summary
   artifact_filename: track_a_mlp_metadata_summary__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json
   artifact_path: artifacts/models/metadata/track_a_mlp_metadata_summary__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json

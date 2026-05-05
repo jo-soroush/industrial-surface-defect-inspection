@@ -4,23 +4,19 @@ identity:
   task_type: object_detection
   is_experiment: true
   track_id: detection
-
 model_identity:
   model_name: yolo
   model_type: yolo
   model_version: 0.1.0
   model_config_id: yolo_config
-
 dataset_binding:
   dataset_id: gc10det_detection
   dataset_version: gc10det_1.0
-  split_manifest_path: null
-
+  split_manifest_path: data/manifests/split_gc10det_detection.yaml
 preprocessing:
   preprocessing_policy_path: configs/data/preprocessing_gc10det.yaml
   preprocessing_version: preprocessing_policy_1.0
   augmentation_policy_version: null
-
 training_runtime:
   batch_size: 32
   learning_rate: 0.001
@@ -29,16 +25,13 @@ training_runtime:
   loss_function: detection_loss
   seed: 42
   device: auto
-
 checkpoint:
   enabled: true
   save_best: true
   save_last: true
-
 early_stopping:
   enabled: false
   patience: 5
-
 output_control:
   save_artifact: true
   save_metadata: true

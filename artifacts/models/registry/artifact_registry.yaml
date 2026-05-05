@@ -781,3 +781,20 @@ artifacts:
   artifact_size_bytes: 761
   artifact_format: json
   status: active
+- artifact_id: track_a__c5057180-9884-4566-ac71-12c68487669c__inventory
+  artifact_filename: track_a_artifact_inventory__c5057180-9884-4566-ac71-12c68487669c.json
+  artifact_path: artifacts/models/inventory/track_a_artifact_inventory__c5057180-9884-4566-ac71-12c68487669c.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_artifact_inventory
+  run_id: c5057180-9884-4566-ac71-12c68487669c
+  model_name: resnet18
+  model_version: 0.1.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: resnet18_train_v0_1_0
+  created_at: '2026-05-05T12:47:49Z'
+  artifact_hash: 99b05085b07d5a753da22354e687585e5e60f4278a01bf0d76c9b0bf2dc4dc95
+  artifact_size_bytes: 11196
+  artifact_format: json
+  status: active

@@ -301,8 +301,8 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: mlp_train_supervised_v0_1_0
   created_at: '2026-05-04T15:42:59Z'
-  artifact_hash: b6353e73f849526573a3b6184fd7cdece5905588fac31fcfc55c039aa7551af8
-  artifact_size_bytes: 8268
+  artifact_hash: 9d55061db3d2b88229ac178a0c223463c27d538b30722341ad29d986b0a9bd17
+  artifact_size_bytes: 10530
   artifact_format: json
   status: active
 - artifact_id: track_a__13bfe044-d0d9-4fea-b319-d8c1a96b6b63__training_result
@@ -471,8 +471,8 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: cnn_train_supervised_v0_1_0
   created_at: '2026-04-29T18:39:31.930824Z'
-  artifact_hash: 1eea9423e1d1e4b4e5e0bd2973013f3439e3cfe0b5d60cb2f118918b75123891
-  artifact_size_bytes: 2752
+  artifact_hash: a77b9ae5ea5bbd01ad9d073a0cc95c0661f399111164ceafcef75bdc2983f5e0
+  artifact_size_bytes: 3554
   artifact_format: json
   status: active
 - artifact_id: track_a__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__sample_predictions

@@ -1,0 +1,77 @@
+{
+  "artifact_type": "track_a_artifact_inventory",
+  "track_id": "track_a",
+  "task_type": "classification",
+  "run_id": "67e3746d-a4b0-481a-acd4-8f39a5c1b97b",
+  "dataset_id": "mvtec_classification_supervised",
+  "model_id": "cnn",
+  "config_id": "cnn_train_supervised_v0_1_0",
+  "created_at": "2026-04-29T18:39:31.930824Z",
+  "source_training_result": "artifacts/models/analysis/training_results/training_result__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+  "artifacts": {
+    "training_result": {
+      "path": "artifacts/models/analysis/training_results/training_result__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "exists": true,
+      "artifact_type": "TrainingResult",
+      "purpose": "Source of truth for the Track A classification run.",
+      "frontend_ready": true,
+      "required_for_frontend": true
+    },
+    "model_checkpoint": {
+      "path": "artifacts/models/checkpoints/model_checkpoint__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.pt",
+      "exists": true,
+      "artifact_type": "model_checkpoint",
+      "purpose": "Model checkpoint referenced by the TrainingResult.",
+      "frontend_ready": false,
+      "required_for_frontend": true
+    },
+    "sample_predictions": {
+      "path": "artifacts/models/predictions/sample_predictions__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json",
+      "exists": true,
+      "artifact_type": "sample_predictions",
+      "purpose": "Frontend sample-level prediction examples.",
+      "frontend_ready": true,
+      "required_for_frontend": false
+    },
+    "classification_heatmaps": {
+      "path": "artifacts/models/explainability/67e3746d-a4b0-481a-acd4-8f39a5c1b97b/classification_heatmaps__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "exists": true,
+      "artifact_type": "classification_heatmaps",
+      "purpose": "Frontend Grad-CAM heatmap and overlay references.",
+      "frontend_ready": true,
+      "required_for_frontend": false
+    },
+    "comparison": {
+      "path": "artifacts/models/comparisons/track_a_supervised_classification__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__86eae01e-5913-4a91-8167-916f221fcb39.json",
+      "exists": true,
+      "artifact_type": "track_a_comparison",
+      "purpose": "Track A model comparison and recommendation context.",
+      "frontend_ready": true,
+      "required_for_frontend": false
+    },
+    "evaluation_metrics": {
+      "path": "artifacts/models/metrics/classification_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "exists": true,
+      "artifact_type": "classification_validation_evaluation",
+      "purpose": "Validation evaluation metrics referenced by the TrainingResult.",
+      "frontend_ready": true,
+      "required_for_frontend": false
+    },
+    "classification_full_validation_evaluation": {
+      "path": "artifacts/models/metrics/classification_full_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "exists": true,
+      "artifact_type": "classification_full_validation_evaluation",
+      "purpose": "Full 803-sample validation evaluation metrics.",
+      "frontend_ready": true,
+      "required_for_frontend": false
+    },
+    "confusion_matrix_full_validation": {
+      "path": "artifacts/models/metrics/confusion_matrix_full_validation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json",
+      "exists": true,
+      "artifact_type": "confusion_matrix_full_validation",
+      "purpose": "Full 803-sample validation confusion matrix.",
+      "frontend_ready": true,
+      "required_for_frontend": false
+    }
+  }
+}

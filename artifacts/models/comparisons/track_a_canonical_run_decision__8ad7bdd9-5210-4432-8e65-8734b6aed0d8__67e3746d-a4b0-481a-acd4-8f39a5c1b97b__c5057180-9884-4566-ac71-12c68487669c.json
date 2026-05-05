@@ -1,0 +1,119 @@
+{
+  "artifact_type": "track_a_canonical_run_decision",
+  "decision_id": "track_a_canonical_run_decision__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c",
+  "decision_type": "canonical_track_a_run_selection",
+  "track_id": "classification",
+  "task_type": "classification",
+  "dataset_id": "mvtec_classification_supervised",
+  "dataset_version": "mvtec_1.0",
+  "decided_at": "2026-05-05T09:36:34Z",
+  "decision_status": "selected_with_known_limitations",
+  "canonical_runs": {
+    "mlp": {
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "selection_status": "canonical",
+      "selection_reason": "Already governed canonical MLP run."
+    },
+    "cnn": {
+      "run_id": "67e3746d-a4b0-481a-acd4-8f39a5c1b97b",
+      "selection_status": "canonical",
+      "selection_reason": "Same validation-evaluation result as rejected CNN candidate, stronger TrainingResult evidence, and equal artifact completeness."
+    },
+    "resnet18": {
+      "run_id": "c5057180-9884-4566-ac71-12c68487669c",
+      "selection_status": "canonical",
+      "selection_reason": "Same validation-evaluation result as rejected ResNet18 candidate, but more complete governed evidence because sample_predictions exists."
+    }
+  },
+  "selected_run_ids": [
+    "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+    "67e3746d-a4b0-481a-acd4-8f39a5c1b97b",
+    "c5057180-9884-4566-ac71-12c68487669c"
+  ],
+  "rejected_candidate_run_ids": {
+    "cnn": [
+      "13bfe044-d0d9-4fea-b319-d8c1a96b6b63"
+    ],
+    "resnet18": [
+      "86eae01e-5913-4a91-8167-916f221fcb39"
+    ]
+  },
+  "decision_criteria": [
+    "successful run status",
+    "validation metric evidence",
+    "artifact completeness",
+    "sample prediction availability",
+    "registry linkage completeness",
+    "known validation-count limitation documented separately from candidate choice"
+  ],
+  "evidence_sources": [
+    {
+      "path": "artifacts/models/registry/run_registry.yaml",
+      "purpose": "run_registry"
+    },
+    {
+      "path": "artifacts/models/registry/artifact_registry.yaml",
+      "purpose": "artifact_registry"
+    },
+    {
+      "path": "artifacts/models/metadata/track_a_mlp_metadata_summary__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "purpose": "mlp_metadata_summary"
+    },
+    {
+      "path": "artifacts/models/analysis/training_results/training_result__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "purpose": "mlp_training_result"
+    },
+    {
+      "path": "artifacts/models/metrics/classification_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "purpose": "mlp_validation_evaluation"
+    },
+    {
+      "path": "artifacts/models/analysis/training_results/training_result__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "purpose": "cnn_training_result"
+    },
+    {
+      "path": "artifacts/models/metrics/classification_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "purpose": "cnn_validation_evaluation"
+    },
+    {
+      "path": "artifacts/models/analysis/training_results/training_result__13bfe044-d0d9-4fea-b319-d8c1a96b6b63.json",
+      "purpose": "cnn_rejected_training_result"
+    },
+    {
+      "path": "artifacts/models/metrics/classification_validation_evaluation__13bfe044-d0d9-4fea-b319-d8c1a96b6b63.json",
+      "purpose": "cnn_rejected_validation_evaluation"
+    },
+    {
+      "path": "artifacts/models/analysis/training_results/training_result__c5057180-9884-4566-ac71-12c68487669c.json",
+      "purpose": "resnet18_training_result"
+    },
+    {
+      "path": "artifacts/models/metrics/classification_validation_evaluation__c5057180-9884-4566-ac71-12c68487669c.json",
+      "purpose": "resnet18_validation_evaluation"
+    },
+    {
+      "path": "artifacts/models/analysis/training_results/training_result__86eae01e-5913-4a91-8167-916f221fcb39.json",
+      "purpose": "resnet18_rejected_training_result"
+    },
+    {
+      "path": "artifacts/models/metrics/classification_validation_evaluation__86eae01e-5913-4a91-8167-916f221fcb39.json",
+      "purpose": "resnet18_rejected_validation_evaluation"
+    },
+    {
+      "path": "artifacts/models/comparisons/track_a_supervised_classification__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__86eae01e-5913-4a91-8167-916f221fcb39.json",
+      "purpose": "track_a_comparison"
+    }
+  ],
+  "known_limitations": [
+    "TrainingResult validation_sample_count is 803, while standalone validation evaluation artifacts currently report total_samples=160.",
+    "Full 803-sample validation evidence remains a required future step.",
+    "This decision does not resolve missing learning curves, confusion matrices, metadata summaries, or logs for CNN/ResNet18."
+  ],
+  "next_required_validation": [
+    "Generate full 803 validation evidence for canonical MLP, CNN, and ResNet18 runs.",
+    "Generate or register missing learning curves and confusion matrices for canonical CNN and ResNet18 runs.",
+    "Generate metadata summaries and post-hoc logs for canonical CNN and ResNet18 runs.",
+    "Re-audit Track A after canonical evidence completion."
+  ],
+  "governance_status": "governed_decision_record"
+}

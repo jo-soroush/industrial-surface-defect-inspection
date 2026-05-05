@@ -15,14 +15,19 @@
     "metadata_generation_mode": "post_hoc_governance_log",
     "metadata_summary_path": "artifacts/models/metadata/track_a_resnet18_metadata_summary__c5057180-9884-4566-ac71-12c68487669c.json",
     "original_runtime_log_available": false,
-    "validation_evaluation_scope": 160
+    "validation_evaluation_scope": {
+      "legacy_capped_total_samples": 160,
+      "full_validation_total_samples": 803
+    },
+    "full_validation_evidence_status": "available",
+    "full_validation_total_samples": 803,
+    "full_validation_count_match_status": "match"
   },
   "checkpoint_path": "artifacts/models/checkpoints/model_checkpoint__c5057180-9884-4566-ac71-12c68487669c.pt",
   "known_limitations": [
     "This is a post-hoc governance log, not the original runtime log.",
-    "TrainingResult validation_sample_count is 803, while standalone validation evaluation artifact currently reports total_samples=160.",
-    "Full 803-sample validation evidence remains a required future step.",
-    "Standalone learning curves and confusion matrix artifacts are still missing for this canonical ResNet18 run.",
+    "Legacy capped validation artifacts with total_samples=160 are preserved for historical context.",
+    "Standalone learning curves artifact is still missing for this canonical ResNet18 run.",
     "Inventory artifact is still missing for this canonical ResNet18 run.",
     "Explainability artifact is still missing for this canonical ResNet18 run."
   ],
@@ -60,7 +65,9 @@
     "run_config": "configs/runs/resnet18_train_v0_1_0.yaml",
     "run_registry": "artifacts/models/registry/run_registry.yaml",
     "sample_predictions": "artifacts/models/predictions/sample_predictions__c5057180-9884-4566-ac71-12c68487669c__validation.json",
-    "training_result": "artifacts/models/analysis/training_results/training_result__c5057180-9884-4566-ac71-12c68487669c.json"
+    "training_result": "artifacts/models/analysis/training_results/training_result__c5057180-9884-4566-ac71-12c68487669c.json",
+    "full_validation_evaluation": "artifacts/models/metrics/classification_full_validation_evaluation__c5057180-9884-4566-ac71-12c68487669c.json",
+    "full_validation_confusion_matrix": "artifacts/models/metrics/confusion_matrix_full_validation__c5057180-9884-4566-ac71-12c68487669c__validation.json"
   },
   "started_at": "2026-04-29T17:35:30.669072Z",
   "task_type": "classification",
@@ -95,5 +102,46 @@
     },
     "split": "validation",
     "total_samples": 160
+  },
+  "full_validation_evaluation_path": "artifacts/models/metrics/classification_full_validation_evaluation__c5057180-9884-4566-ac71-12c68487669c.json",
+  "full_validation_confusion_matrix_path": "artifacts/models/metrics/confusion_matrix_full_validation__c5057180-9884-4566-ac71-12c68487669c__validation.json",
+  "full_validation_metrics": {
+    "validation_scope": "full",
+    "split": "validation",
+    "total_samples": 803,
+    "expected_validation_sample_count": 803,
+    "count_match_status": "match",
+    "accuracy": 0.23785803237858033,
+    "confusion_matrix": [
+      [
+        1,
+        612
+      ],
+      [
+        0,
+        190
+      ]
+    ],
+    "per_class": {
+      "class_0": {
+        "precision": 1.0,
+        "recall": 0.0016313213703099511,
+        "f1": 0.0032573289902280136
+      },
+      "class_1": {
+        "precision": 0.23690773067331672,
+        "recall": 1.0,
+        "f1": 0.38306451612903225
+      }
+    },
+    "macro_metrics": {
+      "precision": 0.6184538653366584,
+      "recall": 0.5008156606851549,
+      "f1": 0.19316092255963013
+    },
+    "class_labels": [
+      "good",
+      "defect"
+    ]
   }
 }

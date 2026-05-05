@@ -53,7 +53,7 @@
       "f1": 0.41391941391941395
     }
   },
-  "artifact_count": 7,
+  "artifact_count": 9,
   "registered_artifacts": [
     {
       "artifact_id": "track_a__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__training_result",
@@ -170,6 +170,44 @@
       "status": "active"
     },
     {
+      "artifact_id": "track_a__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__classification_full_validation_evaluation",
+      "artifact_filename": "classification_full_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "artifact_path": "artifacts/models/metrics/classification_full_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "classification_full_validation_evaluation",
+      "run_id": "67e3746d-a4b0-481a-acd4-8f39a5c1b97b",
+      "model_name": "cnn",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "cnn_train_supervised_v0_1_0",
+      "created_at": "2026-05-05T11:57:34.332821Z",
+      "artifact_hash": "3e033ffdd6513920f0bddb6bbd3aac4c9a1361ab6173d96c967f60d350a7f2a9",
+      "artifact_size_bytes": 1011,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__confusion_matrix_full_validation",
+      "artifact_filename": "confusion_matrix_full_validation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json",
+      "artifact_path": "artifacts/models/metrics/confusion_matrix_full_validation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "confusion_matrix_full_validation",
+      "run_id": "67e3746d-a4b0-481a-acd4-8f39a5c1b97b",
+      "model_name": "cnn",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "cnn_train_supervised_v0_1_0",
+      "created_at": "2026-05-05T11:57:34.332821Z",
+      "artifact_hash": "3afa3fa33462d44043eeeb95745198c2ed406200c7e30ef9f31aa96f86447191",
+      "artifact_size_bytes": 762,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
       "artifact_filename": "track_a_cnn_metadata_summary__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
       "artifact_format": "json",
       "artifact_hash": "8c86ea1cc1de03b97fe21b1b39faccfae3350aa8d37ab65d48f1444eb3dbc0c7",
@@ -202,20 +240,66 @@
     "artifact_registry": "artifacts/models/registry/artifact_registry.yaml",
     "inventory": "artifacts/models/inventory/track_a_artifact_inventory__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
     "sample_predictions": "artifacts/models/predictions/sample_predictions__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json",
-    "explainability": "artifacts/models/explainability/67e3746d-a4b0-481a-acd4-8f39a5c1b97b/classification_heatmaps__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json"
+    "explainability": "artifacts/models/explainability/67e3746d-a4b0-481a-acd4-8f39a5c1b97b/classification_heatmaps__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+    "classification_full_validation_evaluation": "artifacts/models/metrics/classification_full_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+    "confusion_matrix_full_validation": "artifacts/models/metrics/confusion_matrix_full_validation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json"
   },
   "governance_notes": {
     "canonical_status": "canonical_track_a_model_family_run",
     "metadata_generation_mode": "post_hoc_governance_summary",
     "original_runtime_log_available": false,
-    "validation_evaluation_scope": 160,
+    "validation_evaluation_scope": {
+      "legacy_capped_total_samples": 160,
+      "full_validation_total_samples": 803
+    },
     "canonical_decision_path": "artifacts/models/comparisons/track_a_canonical_run_decision__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c.json",
-    "governance_status": "governed_with_known_limitations"
+    "governance_status": "governed_with_known_limitations",
+    "full_validation_evidence_status": "available",
+    "full_validation_total_samples": 803,
+    "full_validation_count_match_status": "match"
   },
   "known_limitations": [
-    "TrainingResult validation_sample_count is 803, while standalone validation evaluation artifact currently reports total_samples=160.",
-    "Full 803-sample validation evidence remains a required future step.",
-    "Standalone learning curves, confusion matrix, and post-hoc log artifacts are still missing for this canonical CNN run."
+    "Legacy capped validation artifacts with total_samples=160 are preserved for historical context.",
+    "Standalone learning curves artifact is still missing for this canonical CNN run."
   ],
-  "generated_at": "2026-05-05T10:06:29Z"
+  "generated_at": "2026-05-05T10:06:29Z",
+  "full_validation_metrics": {
+    "validation_scope": "full",
+    "split": "validation",
+    "total_samples": 803,
+    "expected_validation_sample_count": 803,
+    "count_match_status": "match",
+    "accuracy": 0.763387297633873,
+    "confusion_matrix": [
+      [
+        613,
+        0
+      ],
+      [
+        190,
+        0
+      ]
+    ],
+    "per_class": {
+      "class_0": {
+        "precision": 0.763387297633873,
+        "recall": 1.0,
+        "f1": 0.8658192090395481
+      },
+      "class_1": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "macro_metrics": {
+      "precision": 0.3816936488169365,
+      "recall": 0.5,
+      "f1": 0.43290960451977406
+    },
+    "class_labels": [
+      "good",
+      "defect"
+    ]
+  }
 }

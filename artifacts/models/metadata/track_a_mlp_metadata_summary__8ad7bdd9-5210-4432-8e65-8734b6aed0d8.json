@@ -1,0 +1,316 @@
+{
+  "artifact_type": "track_a_mlp_metadata_summary",
+  "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+  "track_id": "classification",
+  "task_type": "classification",
+  "model_name": "mlp",
+  "model_version": "0.1.0",
+  "model_type": "mlp",
+  "dataset_id": "mvtec_classification_supervised",
+  "dataset_version": "mvtec_1.0",
+  "config_id": "mlp_train_supervised_v0_1_0",
+  "run_status": "success",
+  "started_at": "2026-04-29T18:35:09.876546Z",
+  "ended_at": "2026-04-29T18:35:13.734319Z",
+  "duration_seconds": 3.857597958005499,
+  "training_metrics": {
+    "train_accuracy": 0.5,
+    "train_f1": 0.11111111111111112,
+    "accuracy": 0.5,
+    "f1": 0.11111111111111112,
+    "val_loss": 26.20699691772461,
+    "val_accuracy": 0.28125,
+    "val_f1": 0.43902439024390244
+  },
+  "validation_metrics": {
+    "split": "validation",
+    "total_samples": 160,
+    "confusion_matrix": [
+      [
+        42,
+        71
+      ],
+      [
+        21,
+        26
+      ]
+    ],
+    "per_class": {
+      "class_0": {
+        "precision": 0.6666666666666666,
+        "recall": 0.37168141592920356,
+        "f1": 0.4772727272727273
+      },
+      "class_1": {
+        "precision": 0.26804123711340205,
+        "recall": 0.5531914893617021,
+        "f1": 0.3611111111111111
+      }
+    },
+    "macro_metrics": {
+      "precision": 0.46735395189003437,
+      "recall": 0.46243645264545286,
+      "f1": 0.4191919191919192
+    }
+  },
+  "artifact_count": 10,
+  "registered_artifacts": [
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__training_result",
+      "artifact_filename": "training_result__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_path": "artifacts/models/analysis/training_results/training_result__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "TrainingResult",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-04-29T18:35:09.876546Z",
+      "artifact_hash": "7b29d527f619a3a67f096c1d053e793e44f950f28f382675851126f3c2bb43b8",
+      "artifact_size_bytes": 2241,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__model_checkpoint",
+      "artifact_filename": "model_checkpoint__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.pt",
+      "artifact_path": "artifacts/models/checkpoints/model_checkpoint__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.pt",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "model_checkpoint",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-04-29T18:35:09.876546Z",
+      "artifact_hash": "377455985e6bda936da271f214c83c9e703a25edb384fae4226a944b22296d88",
+      "artifact_size_bytes": 77075059,
+      "artifact_format": "pt",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__classification_evaluation",
+      "artifact_filename": "classification_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_path": "artifacts/models/metrics/classification_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "classification_validation_evaluation",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-04-29T18:35:09.876546Z",
+      "artifact_hash": "f9b7ad217fcf075f8d4c9dba3134490b18133bdcbf1ef3a2b9090ec9e7e5d49b",
+      "artifact_size_bytes": 716,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__posthoc_log",
+      "artifact_filename": "track_a_mlp_posthoc_run_log__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_path": "artifacts/models/logs/track_a_mlp_posthoc_run_log__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "track_a_mlp_posthoc_run_log",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-05-04T15:12:39Z",
+      "artifact_hash": "99aacfb8cdeeb9a50e808cd878fb3552cd62019541ec5c899949813b6c98d1ce",
+      "artifact_size_bytes": 2056,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__learning_curves",
+      "artifact_filename": "learning_curves__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_path": "artifacts/models/metrics/learning_curves__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "learning_curves",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-05-04T15:27:50Z",
+      "artifact_hash": "441e976a94fe90c65c42f7b8594e591748d83722d95b44bde8c25dbdba2040b1",
+      "artifact_size_bytes": 639,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__confusion_matrix",
+      "artifact_filename": "confusion_matrix__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__validation.json",
+      "artifact_path": "artifacts/models/metrics/confusion_matrix__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__validation.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "confusion_matrix",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-05-04T15:27:50Z",
+      "artifact_hash": "f5413c7fca6c32ce0b6cdd1699a900d265c36f0a356fe0014c8e8a49627f9dc4",
+      "artifact_size_bytes": 1102,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__classification_full_validation_evaluation",
+      "artifact_filename": "classification_full_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_path": "artifacts/models/metrics/classification_full_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "classification_full_validation_evaluation",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-05-05T11:54:29.339121Z",
+      "artifact_hash": "4617e1036fb650cc86cd855605bc8cad60f9566ce5b9393bbfd86e8f0e2eb4e7",
+      "artifact_size_bytes": 1090,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__confusion_matrix_full_validation",
+      "artifact_filename": "confusion_matrix_full_validation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__validation.json",
+      "artifact_path": "artifacts/models/metrics/confusion_matrix_full_validation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__validation.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "confusion_matrix_full_validation",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-05-05T11:54:29.339121Z",
+      "artifact_hash": "afe42742b27f4f49daa8d6a1e9709f0d13a1466a0fdef9b6410a383dd876b29c",
+      "artifact_size_bytes": 765,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__metadata_summary",
+      "artifact_filename": "track_a_mlp_metadata_summary__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_path": "artifacts/models/metadata/track_a_mlp_metadata_summary__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "track_a_mlp_metadata_summary",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-05-04T15:34:32Z",
+      "artifact_hash": "98530e8a578e42bb2eaab8284d535733fe086f4ce358a243369338173f8ec7f5",
+      "artifact_size_bytes": 8124,
+      "artifact_format": "json",
+      "status": "active"
+    },
+    {
+      "artifact_id": "track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__inventory",
+      "artifact_filename": "track_a_mlp_artifact_inventory__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_path": "artifacts/models/inventory/track_a_mlp_artifact_inventory__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "artifact_uri": null,
+      "storage_backend": "local",
+      "artifact_type": "track_a_mlp_artifact_inventory",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "model_name": "mlp",
+      "model_version": "0.1.0",
+      "dataset_id": "mvtec_classification_supervised",
+      "dataset_version": "mvtec_1.0",
+      "config_id": "mlp_train_supervised_v0_1_0",
+      "created_at": "2026-05-04T15:42:59Z",
+      "artifact_hash": "c4677506066e7d75e7b6f867207097866ca5b92b0d034fc98bcb9914c3c35a00",
+      "artifact_size_bytes": 7338,
+      "artifact_format": "json",
+      "status": "active"
+    }
+  ],
+  "paths": {
+    "training_result": "artifacts/models/analysis/training_results/training_result__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+    "checkpoint": "artifacts/models/checkpoints/model_checkpoint__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.pt",
+    "classification_evaluation": "artifacts/models/metrics/classification_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+    "learning_curves": "artifacts/models/metrics/learning_curves__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+    "confusion_matrix": "artifacts/models/metrics/confusion_matrix__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__validation.json",
+    "posthoc_log": "artifacts/models/logs/track_a_mlp_posthoc_run_log__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+    "run_registry": "artifacts/models/registry/run_registry.yaml",
+    "artifact_registry": "artifacts/models/registry/artifact_registry.yaml",
+    "classification_full_validation_evaluation": "artifacts/models/metrics/classification_full_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+    "confusion_matrix_full_validation": "artifacts/models/metrics/confusion_matrix_full_validation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__validation.json"
+  },
+  "governance_notes": {
+    "canonical_status": "governed-retrospective",
+    "original_runtime_log_available": false,
+    "metadata_generation_mode": "post_hoc_summary",
+    "validation_evaluation_scope": {
+      "legacy_capped_total_samples": 160,
+      "full_validation_total_samples": 803
+    },
+    "full_validation_evidence_status": "available",
+    "full_validation_total_samples": 803,
+    "full_validation_count_match_status": "match"
+  },
+  "generated_at": "2026-05-04T15:49:08Z",
+  "full_validation_metrics": {
+    "validation_scope": "full",
+    "split": "validation",
+    "total_samples": 803,
+    "expected_validation_sample_count": 803,
+    "count_match_status": "match",
+    "accuracy": 0.5828144458281445,
+    "confusion_matrix": [
+      [
+        408,
+        205
+      ],
+      [
+        130,
+        60
+      ]
+    ],
+    "per_class": {
+      "class_0": {
+        "precision": 0.758364312267658,
+        "recall": 0.6655791190864601,
+        "f1": 0.7089487402258905
+      },
+      "class_1": {
+        "precision": 0.22641509433962265,
+        "recall": 0.3157894736842105,
+        "f1": 0.2637362637362637
+      }
+    },
+    "macro_metrics": {
+      "precision": 0.4923897033036403,
+      "recall": 0.4906842963853353,
+      "f1": 0.4863425019810771
+    },
+    "class_labels": [
+      "good",
+      "defect"
+    ]
+  },
+  "known_limitations": [
+    "Legacy capped validation artifacts with total_samples=160 are preserved for historical context."
+  ]
+}

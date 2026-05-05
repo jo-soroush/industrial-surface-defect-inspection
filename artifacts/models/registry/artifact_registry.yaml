@@ -199,8 +199,8 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: mlp_train_supervised_v0_1_0
   created_at: '2026-05-04T15:12:39Z'
-  artifact_hash: 99aacfb8cdeeb9a50e808cd878fb3552cd62019541ec5c899949813b6c98d1ce
-  artifact_size_bytes: 2056
+  artifact_hash: a97823921dfc78eb47e70487072e463933d7937c50919e09caeff6300da8e3f4
+  artifact_size_bytes: 4024
   artifact_format: json
   status: active
 - artifact_id: track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__learning_curves
@@ -250,8 +250,8 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: cnn_train_supervised_v0_1_0
   created_at: '2026-05-05T10:20:39Z'
-  artifact_hash: 8299e3fd709f52de0e5cf49f4be1efcdaf86f7d499cdbd26b6dbfd1575ea5ea8
-  artifact_size_bytes: 5250
+  artifact_hash: ce7f62676e1a9a31b1bced470b893c09f03b66eeb7db46dc3f3425853c6ab1ce
+  artifact_size_bytes: 6733
   artifact_format: json
   status: active
 - artifact_id: track_a__c5057180-9884-4566-ac71-12c68487669c__posthoc_log
@@ -267,8 +267,8 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: resnet18_train_v0_1_0
   created_at: '2026-05-05T10:20:39Z'
-  artifact_hash: ad36e27340a83b162e2655cde665fcfda3f2b4a0443bfdeec94255e2231880f8
-  artifact_size_bytes: 4892
+  artifact_hash: 3fb0057f727932291ba5a4d22f88598b036ba06f1f8ca303fc9c3793831acc1f
+  artifact_size_bytes: 6431
   artifact_format: json
   status: active
 - artifact_id: track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__metadata_summary
@@ -284,8 +284,8 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: mlp_train_supervised_v0_1_0
   created_at: '2026-05-04T15:34:32Z'
-  artifact_hash: c297733b9bd72cef0cad2ef3c5142d1056699593982e8c7a6d02f2796207fcc4
-  artifact_size_bytes: 9984
+  artifact_hash: 88bb463d4b36dd86e9ac4f0c73103c0a1b6eb4a220584323af5f22c92d31722c
+  artifact_size_bytes: 13506
   artifact_format: json
   status: active
 - artifact_id: track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__inventory
@@ -658,8 +658,8 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: cnn_train_supervised_v0_1_0
   created_at: '2026-05-05T10:06:29Z'
-  artifact_hash: c5b9e74b7a02816428868db277778b046cfdbb7b4e98b14db2ecbe0d38f490f9
-  artifact_size_bytes: 10258
+  artifact_hash: 191967c2102ff66c64ef7228b073be9924a083d40c0e4cc64e8546acd2f086d1
+  artifact_size_bytes: 13419
   artifact_format: json
   status: active
 - artifact_id: track_a__c5057180-9884-4566-ac71-12c68487669c__metadata_summary
@@ -675,8 +675,8 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: resnet18_train_v0_1_0
   created_at: '2026-05-05T10:06:29Z'
-  artifact_hash: a83196c25d927c3af35d35568601f188e196eb1db3e1006b72a027d3a862179d
-  artifact_size_bytes: 8280
+  artifact_hash: c3f1fcb9c1a9385f9b747a25e64c508091eb6cc08a110b55fb97422db28eebf4
+  artifact_size_bytes: 11495
   artifact_format: json
   status: active
 - artifact_id: track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__classification_full_validation_evaluation

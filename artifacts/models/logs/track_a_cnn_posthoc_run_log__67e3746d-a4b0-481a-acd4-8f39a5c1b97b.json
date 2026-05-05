@@ -16,15 +16,20 @@
     "metadata_generation_mode": "post_hoc_governance_log",
     "metadata_summary_path": "artifacts/models/metadata/track_a_cnn_metadata_summary__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
     "original_runtime_log_available": false,
-    "validation_evaluation_scope": 160
+    "validation_evaluation_scope": {
+      "legacy_capped_total_samples": 160,
+      "full_validation_total_samples": 803
+    },
+    "full_validation_evidence_status": "available",
+    "full_validation_total_samples": 803,
+    "full_validation_count_match_status": "match"
   },
   "checkpoint_path": "artifacts/models/checkpoints/model_checkpoint__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.pt",
   "inventory_path": "artifacts/models/inventory/track_a_artifact_inventory__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
   "known_limitations": [
     "This is a post-hoc governance log, not the original runtime log.",
-    "TrainingResult validation_sample_count is 803, while standalone validation evaluation artifact currently reports total_samples=160.",
-    "Full 803-sample validation evidence remains a required future step.",
-    "Standalone learning curves and confusion matrix artifacts are still missing for this canonical CNN run."
+    "Legacy capped validation artifacts with total_samples=160 are preserved for historical context.",
+    "Standalone learning curves artifact is still missing for this canonical CNN run."
   ],
   "log_generation_mode": "post_hoc",
   "log_type": "post_hoc_run_log",
@@ -62,7 +67,9 @@
     "run_config": "configs/runs/cnn_train_supervised_v0_1_0.yaml",
     "run_registry": "artifacts/models/registry/run_registry.yaml",
     "sample_predictions": "artifacts/models/predictions/sample_predictions__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json",
-    "training_result": "artifacts/models/analysis/training_results/training_result__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json"
+    "training_result": "artifacts/models/analysis/training_results/training_result__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+    "full_validation_evaluation": "artifacts/models/metrics/classification_full_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+    "full_validation_confusion_matrix": "artifacts/models/metrics/confusion_matrix_full_validation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json"
   },
   "started_at": "2026-04-29T18:26:50.572411Z",
   "task_type": "classification",
@@ -97,5 +104,46 @@
     },
     "split": "validation",
     "total_samples": 160
+  },
+  "full_validation_evaluation_path": "artifacts/models/metrics/classification_full_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+  "full_validation_confusion_matrix_path": "artifacts/models/metrics/confusion_matrix_full_validation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json",
+  "full_validation_metrics": {
+    "validation_scope": "full",
+    "split": "validation",
+    "total_samples": 803,
+    "expected_validation_sample_count": 803,
+    "count_match_status": "match",
+    "accuracy": 0.763387297633873,
+    "confusion_matrix": [
+      [
+        613,
+        0
+      ],
+      [
+        190,
+        0
+      ]
+    ],
+    "per_class": {
+      "class_0": {
+        "precision": 0.763387297633873,
+        "recall": 1.0,
+        "f1": 0.8658192090395481
+      },
+      "class_1": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "macro_metrics": {
+      "precision": 0.3816936488169365,
+      "recall": 0.5,
+      "f1": 0.43290960451977406
+    },
+    "class_labels": [
+      "good",
+      "defect"
+    ]
   }
 }

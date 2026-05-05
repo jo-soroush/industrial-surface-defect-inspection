@@ -1,0 +1,122 @@
+{
+  "artifact_type": "track_a_mlp_posthoc_run_log",
+  "log_generation_mode": "post_hoc",
+  "original_runtime_log_available": false,
+  "post_hoc_reason": "No persisted runtime log was available for this Track A MLP run.",
+  "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+  "model_name": "mlp",
+  "model_version": "0.1.0",
+  "model_type": "mlp",
+  "dataset_id": "mvtec_classification_supervised",
+  "dataset_version": "mvtec_1.0",
+  "task_type": "classification",
+  "track_id": "classification",
+  "config_id": "mlp_train_supervised_v0_1_0",
+  "started_at": "2026-04-29T18:35:09.876546Z",
+  "ended_at": "2026-04-29T18:35:13.734319Z",
+  "duration_seconds": 3.857597958005499,
+  "run_status": "success",
+  "training_metrics": {
+    "train_accuracy": 0.5,
+    "train_f1": 0.11111111111111112,
+    "accuracy": 0.5,
+    "f1": 0.11111111111111112,
+    "val_loss": 26.20699691772461,
+    "val_accuracy": 0.28125,
+    "val_f1": 0.43902439024390244
+  },
+  "validation_metrics": {
+    "split": "validation",
+    "total_samples": 160,
+    "confusion_matrix": [
+      [
+        42,
+        71
+      ],
+      [
+        21,
+        26
+      ]
+    ],
+    "per_class": {
+      "class_0": {
+        "precision": 0.6666666666666666,
+        "recall": 0.37168141592920356,
+        "f1": 0.4772727272727273
+      },
+      "class_1": {
+        "precision": 0.26804123711340205,
+        "recall": 0.5531914893617021,
+        "f1": 0.3611111111111111
+      }
+    },
+    "macro_metrics": {
+      "precision": 0.46735395189003437,
+      "recall": 0.46243645264545286,
+      "f1": 0.4191919191919192
+    }
+  },
+  "source_files": {
+    "training_result": "artifacts/models/analysis/training_results/training_result__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+    "classification_evaluation": "artifacts/models/metrics/classification_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+    "run_config": "configs/runs/mlp_train_supervised_v0_1_0.yaml",
+    "run_registry": "artifacts/models/registry/run_registry.yaml",
+    "full_validation_evaluation": "artifacts/models/metrics/classification_full_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+    "full_validation_confusion_matrix": "artifacts/models/metrics/confusion_matrix_full_validation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__validation.json"
+  },
+  "generated_at": "2026-05-04T15:08:04Z",
+  "full_validation_evaluation_path": "artifacts/models/metrics/classification_full_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+  "full_validation_confusion_matrix_path": "artifacts/models/metrics/confusion_matrix_full_validation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__validation.json",
+  "full_validation_metrics": {
+    "validation_scope": "full",
+    "split": "validation",
+    "total_samples": 803,
+    "expected_validation_sample_count": 803,
+    "count_match_status": "match",
+    "accuracy": 0.5828144458281445,
+    "confusion_matrix": [
+      [
+        408,
+        205
+      ],
+      [
+        130,
+        60
+      ]
+    ],
+    "per_class": {
+      "class_0": {
+        "precision": 0.758364312267658,
+        "recall": 0.6655791190864601,
+        "f1": 0.7089487402258905
+      },
+      "class_1": {
+        "precision": 0.22641509433962265,
+        "recall": 0.3157894736842105,
+        "f1": 0.2637362637362637
+      }
+    },
+    "macro_metrics": {
+      "precision": 0.4923897033036403,
+      "recall": 0.4906842963853353,
+      "f1": 0.4863425019810771
+    },
+    "class_labels": [
+      "good",
+      "defect"
+    ]
+  },
+  "governance_notes": {
+    "full_validation_evidence_status": "available",
+    "full_validation_total_samples": 803,
+    "full_validation_count_match_status": "match",
+    "validation_evaluation_scope": {
+      "legacy_capped_total_samples": 160,
+      "full_validation_total_samples": 803
+    }
+  },
+  "known_limitations": [
+    "This is a post-hoc governance log, not the original runtime log.",
+    "Legacy capped validation artifacts with total_samples=160 are preserved for historical context."
+  ]
+}

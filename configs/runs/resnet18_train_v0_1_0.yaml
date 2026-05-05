@@ -10,6 +10,12 @@ model_identity:
   model_type: resnet18
   model_version: 0.1.0
   model_config_id: resnet18_config
+  pretrained_policy:
+    pretrained: false
+    pretrained_weights: null
+    weight_initialization_source: random_initialization
+    torchvision_weights: null
+    implementation_evidence: "src/inspection_ai/models/resnet18.py uses resnet18(weights=None)"
 
 dataset_binding:
   dataset_id: mvtec_classification_supervised

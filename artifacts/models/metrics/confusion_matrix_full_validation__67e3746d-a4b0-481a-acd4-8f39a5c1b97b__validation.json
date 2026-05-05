@@ -1,0 +1,30 @@
+{
+  "artifact_type": "confusion_matrix_full_validation",
+  "validation_scope": "full",
+  "generated_at": "2026-05-05T11:57:34.332821Z",
+  "run_id": "67e3746d-a4b0-481a-acd4-8f39a5c1b97b",
+  "dataset_id": "mvtec_classification_supervised",
+  "dataset_version": "mvtec_1.0",
+  "config_id": "cnn_train_supervised_v0_1_0",
+  "model_name": "cnn",
+  "model_version": "0.1.0",
+  "split": "validation",
+  "total_samples": 803,
+  "expected_validation_sample_count": 803,
+  "count_match_status": "match",
+  "matrix": [
+    [
+      613,
+      0
+    ],
+    [
+      190,
+      0
+    ]
+  ],
+  "labels": [
+    "good",
+    "defect"
+  ],
+  "source_evaluation_path": "artifacts/models/metrics/classification_full_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json"
+}

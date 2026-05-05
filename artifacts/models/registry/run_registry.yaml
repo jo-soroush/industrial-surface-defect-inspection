@@ -64,6 +64,7 @@ runs:
   artifact_created: true
   metadata_path: artifacts/models/analysis/training_results/training_result__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json
   metrics_path: artifacts/models/metrics/classification_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json
+  log_path: artifacts/models/logs/track_a_cnn_posthoc_run_log__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json
   checkpoint_path: artifacts/models/checkpoints/model_checkpoint__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.pt
   inventory_path: artifacts/models/inventory/track_a_artifact_inventory__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json
   sample_predictions_path: artifacts/models/predictions/sample_predictions__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json
@@ -84,6 +85,7 @@ runs:
   artifact_created: true
   metadata_path: artifacts/models/analysis/training_results/training_result__c5057180-9884-4566-ac71-12c68487669c.json
   metrics_path: artifacts/models/metrics/classification_validation_evaluation__c5057180-9884-4566-ac71-12c68487669c.json
+  log_path: artifacts/models/logs/track_a_resnet18_posthoc_run_log__c5057180-9884-4566-ac71-12c68487669c.json
   checkpoint_path: artifacts/models/checkpoints/model_checkpoint__c5057180-9884-4566-ac71-12c68487669c.pt
   sample_predictions_path: artifacts/models/predictions/sample_predictions__c5057180-9884-4566-ac71-12c68487669c__validation.json
 - run_id: 86eae01e-5913-4a91-8167-916f221fcb39

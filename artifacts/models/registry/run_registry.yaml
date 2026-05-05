@@ -34,12 +34,19 @@ runs:
   dataset_version: mvtec_1.0
   task_type: classification
   config_id: cnn_train_supervised_v0_1_0
+  config_path: configs/runs/cnn_train_supervised_v0_1_0.yaml
+  split_manifest_path: data/manifests/split_mvtec_classification_supervised.yaml
+  class_mapping_path: configs/data/class_mapping_mvtec_binary.yaml
+  preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
   started_at: '2026-04-29T12:58:14.189026Z'
   ended_at: '2026-04-29T12:58:19.231450Z'
   run_status: success
   artifact_created: true
   metadata_path: artifacts/models/analysis/training_results/training_result__13bfe044-d0d9-4fea-b319-d8c1a96b6b63.json
   metrics_path: artifacts/models/metrics/classification_validation_evaluation__13bfe044-d0d9-4fea-b319-d8c1a96b6b63.json
+  checkpoint_path: artifacts/models/checkpoints/model_checkpoint__13bfe044-d0d9-4fea-b319-d8c1a96b6b63.pt
+  inventory_path: artifacts/models/inventory/track_a_artifact_inventory__13bfe044-d0d9-4fea-b319-d8c1a96b6b63.json
+  sample_predictions_path: artifacts/models/predictions/sample_predictions__13bfe044-d0d9-4fea-b319-d8c1a96b6b63__validation.json
 - run_id: 67e3746d-a4b0-481a-acd4-8f39a5c1b97b
   model_name: cnn
   model_version: 0.1.0
@@ -47,12 +54,19 @@ runs:
   dataset_version: mvtec_1.0
   task_type: classification
   config_id: cnn_train_supervised_v0_1_0
+  config_path: configs/runs/cnn_train_supervised_v0_1_0.yaml
+  split_manifest_path: data/manifests/split_mvtec_classification_supervised.yaml
+  class_mapping_path: configs/data/class_mapping_mvtec_binary.yaml
+  preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
   started_at: '2026-04-29T18:26:50.572411Z'
   ended_at: '2026-04-29T18:26:55.236455Z'
   run_status: success
   artifact_created: true
   metadata_path: artifacts/models/analysis/training_results/training_result__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json
   metrics_path: artifacts/models/metrics/classification_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json
+  checkpoint_path: artifacts/models/checkpoints/model_checkpoint__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.pt
+  inventory_path: artifacts/models/inventory/track_a_artifact_inventory__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json
+  sample_predictions_path: artifacts/models/predictions/sample_predictions__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__validation.json
 - run_id: c5057180-9884-4566-ac71-12c68487669c
   model_name: resnet18
   model_version: 0.1.0
@@ -60,12 +74,18 @@ runs:
   dataset_version: mvtec_1.0
   task_type: classification
   config_id: resnet18_train_v0_1_0
+  config_path: configs/runs/resnet18_train_v0_1_0.yaml
+  split_manifest_path: data/manifests/split_mvtec_classification_supervised.yaml
+  class_mapping_path: configs/data/class_mapping_mvtec_binary.yaml
+  preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
   started_at: '2026-04-29T17:35:30.669072Z'
   ended_at: '2026-04-29T17:35:38.393716Z'
   run_status: success
   artifact_created: true
   metadata_path: artifacts/models/analysis/training_results/training_result__c5057180-9884-4566-ac71-12c68487669c.json
   metrics_path: artifacts/models/metrics/classification_validation_evaluation__c5057180-9884-4566-ac71-12c68487669c.json
+  checkpoint_path: artifacts/models/checkpoints/model_checkpoint__c5057180-9884-4566-ac71-12c68487669c.pt
+  sample_predictions_path: artifacts/models/predictions/sample_predictions__c5057180-9884-4566-ac71-12c68487669c__validation.json
 - run_id: 86eae01e-5913-4a91-8167-916f221fcb39
   model_name: resnet18
   model_version: 0.1.0
@@ -73,9 +93,14 @@ runs:
   dataset_version: mvtec_1.0
   task_type: classification
   config_id: resnet18_train_v0_1_0
+  config_path: configs/runs/resnet18_train_v0_1_0.yaml
+  split_manifest_path: data/manifests/split_mvtec_classification_supervised.yaml
+  class_mapping_path: configs/data/class_mapping_mvtec_binary.yaml
+  preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
   started_at: '2026-04-29T18:35:41.249838Z'
   ended_at: '2026-04-29T18:35:48.721850Z'
   run_status: success
   artifact_created: true
   metadata_path: artifacts/models/analysis/training_results/training_result__86eae01e-5913-4a91-8167-916f221fcb39.json
   metrics_path: artifacts/models/metrics/classification_validation_evaluation__86eae01e-5913-4a91-8167-916f221fcb39.json
+  checkpoint_path: artifacts/models/checkpoints/model_checkpoint__86eae01e-5913-4a91-8167-916f221fcb39.pt

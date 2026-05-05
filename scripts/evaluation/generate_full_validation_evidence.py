@@ -13,6 +13,13 @@ from typing import Any
 import torch
 import yaml
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_ROOT = REPO_ROOT / "src"
+for path in (SRC_ROOT, REPO_ROOT):
+    path_value = str(path)
+    if path_value not in sys.path:
+        sys.path.insert(0, path_value)
+
 from inspection_ai.models.factory import create_model
 from inspection_ai.training.data_loading import build_data_loaders
 

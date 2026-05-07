@@ -13,6 +13,7 @@ DEFAULT_RUN_CONFIG_PATH = Path("configs/runs/yolo_train_v0_1_0.yaml")
 DEFAULT_DATASET_YAML_PATH = Path("data/processed/gc10det_yolo/dataset.yaml")
 DEFAULT_REQUIREMENTS_PATH = Path("requirements.txt")
 DEFAULT_MODEL_CONFIG_PATH = Path("configs/models/yolo.yaml")
+DEFAULT_TRAINING_OUTPUT_ROOT = Path("artifacts/detection/yolo/runs")
 
 
 def _repo_relative(path: Path) -> str:
@@ -112,6 +113,28 @@ def _validate_model_config(model_config_path: Path) -> dict[str, Any]:
             "YOLO model config backend_status must be dependency_declared_lazy_loaded"
         )
     return model_config
+
+
+def _resolve_training_model_source(
+    model_config: dict[str, Any],
+    run_config: dict[str, Any],
+) -> str:
+    for candidate in (
+        model_config.get("training_model_source"),
+        model_config.get("model_source"),
+        model_config.get("base_model_source"),
+        run_config.get("training_model_source"),
+        run_config.get("model_source"),
+        run_config.get("base_model_source"),
+    ):
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+
+    raise ValueError(
+        "YOLO training requires a governed model source, but none is declared in "
+        "configs/models/yolo.yaml or configs/runs/yolo_train_v0_1_0.yaml. Add a "
+        "governed training_model_source before enabling --run-training."
+    )
 
 
 def _validate_dataset_yaml(
@@ -241,6 +264,93 @@ def _validate_manifest(manifest_path: Path) -> tuple[dict[str, Any], list[str], 
     return manifest, class_labels, expected_counts
 
 
+def _build_training_plan(
+    run_config: dict[str, Any],
+    model_config: dict[str, Any],
+    dataset_yaml_path: Path,
+    *,
+    epochs_override: int | None = None,
+    device_override: str | None = None,
+) -> dict[str, Any]:
+    training_runtime = run_config.get("training_runtime")
+    if not isinstance(training_runtime, dict):
+        raise ValueError("Run config missing dictionary section: training_runtime")
+
+    identity = run_config.get("identity")
+    if not isinstance(identity, dict):
+        raise ValueError("Run config missing dictionary section: identity")
+
+    output_name = str(identity.get("run_config_id", "yolo_training")).strip()
+
+    planned_epochs = epochs_override if epochs_override is not None else training_runtime.get("epochs")
+    planned_batch_size = training_runtime.get("batch_size")
+    planned_learning_rate = training_runtime.get("learning_rate")
+    planned_optimizer = training_runtime.get("optimizer")
+    planned_device = device_override if device_override is not None else training_runtime.get("device", "auto")
+
+    if planned_epochs is None:
+        raise ValueError("Run config training_runtime.epochs must be set")
+
+    return {
+        "output_project": _repo_relative(DEFAULT_TRAINING_OUTPUT_ROOT),
+        "output_name": output_name,
+        "dataset_yaml_path": _repo_relative(dataset_yaml_path),
+        "epochs": planned_epochs,
+        "batch_size": planned_batch_size,
+        "learning_rate": planned_learning_rate,
+        "optimizer": planned_optimizer,
+        "device": planned_device,
+        "model_source": model_config.get("training_model_source")
+        or model_config.get("model_source")
+        or model_config.get("base_model_source")
+        or run_config.get("training_model_source")
+        or run_config.get("model_source")
+        or run_config.get("base_model_source"),
+    }
+
+
+def _run_ultralytics_training(
+    run_config: dict[str, Any],
+    model_config: dict[str, Any],
+    dataset_yaml_path: Path,
+    *,
+    epochs_override: int | None = None,
+    device_override: str | None = None,
+) -> dict[str, Any]:
+    from inspection_ai.models.yolo_model import _load_ultralytics_yolo
+
+    training_plan = _build_training_plan(
+        run_config,
+        model_config,
+        dataset_yaml_path,
+        epochs_override=epochs_override,
+        device_override=device_override,
+    )
+    model_source = _resolve_training_model_source(model_config, run_config)
+    yolo_cls = _load_ultralytics_yolo()
+    model = yolo_cls(model_source)
+
+    train_kwargs: dict[str, Any] = {
+        "data": training_plan["dataset_yaml_path"],
+        "epochs": training_plan["epochs"],
+        "batch": training_plan["batch_size"],
+        "device": training_plan["device"],
+        "project": training_plan["output_project"],
+        "name": training_plan["output_name"],
+    }
+    if training_plan["learning_rate"] is not None:
+        train_kwargs["lr0"] = training_plan["learning_rate"]
+    if training_plan["optimizer"] is not None:
+        train_kwargs["optimizer"] = training_plan["optimizer"]
+
+    result = model.train(**train_kwargs)
+    return {
+        "training_plan": training_plan,
+        "model_source": model_source,
+        "result": result,
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Governed YOLO detection training boundary (validate-only)."
@@ -261,6 +371,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Validate the governed detection boundary without starting training.",
     )
     parser.add_argument(
+        "--run-training",
+        action="store_true",
+        help="Explicitly enable governed YOLO training execution.",
+    )
+    parser.add_argument(
         "--device",
         default=None,
         help="Optional device override recorded in the training plan only.",
@@ -276,6 +391,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = build_parser().parse_args()
+
+    if args.validate_only and args.run_training:
+        raise ValueError(
+            "Do not pass both --validate-only and --run-training. "
+            "Validate-only is the safe default."
+        )
 
     run_config_path = _resolve_repo_path(Path(args.run_config))
     dataset_yaml_path = _resolve_repo_path(Path(args.dataset_yaml))
@@ -294,18 +415,35 @@ def main() -> int:
     )
     ultralytics_available = _ultralytics_available()
 
-    training_runtime = run_config.get("training_runtime")
-    if not isinstance(training_runtime, dict):
-        raise ValueError("Run config missing dictionary section: training_runtime")
+    training_plan = _build_training_plan(
+        run_config,
+        model_config,
+        dataset_yaml_path,
+        epochs_override=args.epochs,
+        device_override=args.device,
+    )
 
-    planned_epochs = args.epochs if args.epochs is not None else training_runtime.get("epochs")
-    planned_batch_size = training_runtime.get("batch_size")
-    planned_learning_rate = training_runtime.get("learning_rate")
-    planned_optimizer = training_runtime.get("optimizer")
-    planned_device = args.device if args.device is not None else training_runtime.get("device", "auto")
-
-    if planned_epochs is None:
-        raise ValueError("Run config training_runtime.epochs must be set")
+    if args.run_training:
+        if not ultralytics_available:
+            raise RuntimeError(
+                "YOLO training was requested, but the 'ultralytics' package is not "
+                "available. Install the declared backend dependency before enabling "
+                "--run-training."
+            )
+        training_result = _run_ultralytics_training(
+            run_config,
+            model_config,
+            dataset_yaml_path,
+            epochs_override=args.epochs,
+            device_override=args.device,
+        )
+        print("execution_mode=run_training")
+        print("training_status=completed")
+        print("run_training_enabled=true")
+        print(f"training_output_project={training_result['training_plan']['output_project']}")
+        print(f"training_output_name={training_result['training_plan']['output_name']}")
+        print(f"training_model_source={training_result['model_source']}")
+        return 0
 
     split_counts = {
         "train": expected_counts["train"],
@@ -315,6 +453,7 @@ def main() -> int:
 
     print(f"execution_mode=validate_only")
     print(f"training_status=not_started")
+    print("run_training_enabled=false")
     print(f"run_config_path={_repo_relative(run_config_path)}")
     print(f"dataset_yaml_path={_repo_relative(dataset_yaml_path)}")
     print(f"dataset_id={manifest['dataset_id']}")
@@ -333,11 +472,14 @@ def main() -> int:
         f"test:{split_counts['test']}"
     )
     print(f"class_count={len(class_labels)}")
-    print(f"planned_epochs={planned_epochs}")
-    print(f"planned_batch_size={planned_batch_size}")
-    print(f"planned_learning_rate={planned_learning_rate}")
-    print(f"planned_optimizer={planned_optimizer}")
-    print(f"planned_device={planned_device}")
+    print(f"planned_epochs={training_plan['epochs']}")
+    print(f"planned_batch_size={training_plan['batch_size']}")
+    print(f"planned_learning_rate={training_plan['learning_rate']}")
+    print(f"planned_optimizer={training_plan['optimizer']}")
+    print(f"planned_device={training_plan['device']}")
+    print(f"planned_output_project={training_plan['output_project']}")
+    print(f"planned_output_name={training_plan['output_name']}")
+    print(f"planned_model_source={training_plan['model_source'] or 'unset'}")
     print(f"dataset_yaml_nc={dataset_yaml['nc']}")
     print(f"dataset_yaml_names={','.join(dataset_yaml['names'])}")
     print(

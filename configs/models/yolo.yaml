@@ -5,6 +5,12 @@ model_type: yolo
 backend: ultralytics
 backend_package: ultralytics
 backend_status: dependency_declared_lazy_loaded
+training_model_source: yolov8n.pt
+model_source_type: ultralytics_pretrained_weights
+pretrained: true
+pretrained_weights_source: ultralytics_model_zoo
+source_resolution_policy: download_if_missing
+model_source_status: declared_not_downloaded
 dataset_id: gc10det_detection
 dataset_version: gc10det_1.0
 task_type: object_detection

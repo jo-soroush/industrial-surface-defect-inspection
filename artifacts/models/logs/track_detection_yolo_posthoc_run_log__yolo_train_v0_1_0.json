@@ -1,0 +1,107 @@
+{
+  "log_type": "track_detection_yolo_posthoc_run_log",
+  "run_id": "yolo_train_v0_1_0",
+  "track_id": "detection",
+  "task_type": "object_detection",
+  "run_status": "success",
+  "execution_environment": "colab",
+  "timeline": [
+    {
+      "event": "governed_yolo_dataset_export_prepared",
+      "status": "completed",
+      "details": "GC10-DET was exported to YOLO format using the governed dataset export boundary."
+    },
+    {
+      "event": "colab_training_executed",
+      "status": "completed",
+      "details": "YOLO training was executed in Colab using the governed exported dataset and equivalent config values."
+    },
+    {
+      "event": "training_outputs_returned_to_local",
+      "status": "completed",
+      "details": "The Colab YOLO run directory was archived, downloaded, and restored under artifacts/detection/yolo/runs/yolo_train_v0_1_0."
+    },
+    {
+      "event": "artifact_inventory_created",
+      "status": "completed",
+      "details": "A governed artifact inventory was created with hashes, file sizes, required flags, and frontend-ready flags."
+    },
+    {
+      "event": "training_result_summary_created",
+      "status": "completed",
+      "details": "A governed training result summary was created from results.csv, args.yaml, inventory, and run outputs."
+    },
+    {
+      "event": "metadata_summary_created",
+      "status": "completed",
+      "details": "A governed metadata summary was created and linked to training result, inventory, metrics, checkpoints, and config identities."
+    },
+    {
+      "event": "registry_update",
+      "status": "pending",
+      "details": "Run and artifact registries have not been updated yet."
+    },
+    {
+      "event": "evaluation_summary",
+      "status": "pending",
+      "details": "Detection evaluation summary has not been created yet."
+    },
+    {
+      "event": "detection_reaudit",
+      "status": "pending",
+      "details": "Detection re-audit has not been performed yet."
+    }
+  ],
+  "runtime_summary": {
+    "model_source": "yolov8n.pt",
+    "backend": "ultralytics",
+    "epochs": 1,
+    "batch": 32,
+    "imgsz": 640,
+    "device": "0",
+    "optimizer": "auto",
+    "seed": 42,
+    "deterministic": true
+  },
+  "metrics_summary": {
+    "precision": 0.00477,
+    "recall": 0.54003,
+    "mAP50": 0.04518,
+    "mAP50_95": 0.01651
+  },
+  "artifact_references": {
+    "training_result_path": "artifacts/models/analysis/training_result__yolo_train_v0_1_0.json",
+    "artifact_inventory_path": "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_1_0.json",
+    "metadata_summary_path": "artifacts/models/metadata/track_detection_yolo_metadata_summary__yolo_train_v0_1_0.json",
+    "run_directory": "artifacts/detection/yolo/runs/yolo_train_v0_1_0",
+    "best_checkpoint_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/best.pt",
+    "last_checkpoint_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/last.pt",
+    "results_csv_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/results.csv",
+    "args_yaml_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/args.yaml"
+  },
+  "artifact_integrity": {
+    "training_result_sha256": "3128d377e70edcd52dc592db05d6e26f56c7e101044f81bee58a2a3d4f8b89c1",
+    "artifact_inventory_sha256": "13b778c2b2965a4b6854457258335986415beef82fcd67264ddd50400cf1e933",
+    "metadata_summary_sha256": "47f1edd8c431f4a56e386778d470744592d9d77ac7b63fe05a4402a485adff4f",
+    "best_checkpoint_sha256": "8b685969a36b3c683b3995eefbe25a1d0eac425c9a9a4c3e685b6e7c0d335ac5",
+    "last_checkpoint_sha256": "bbabc2252ace81f8fb733c9d4792c96e8c210b4de2c2a97dc38fa0411a6baa86",
+    "results_csv_sha256": "a2798745f1f49800ef562369e8162bafe4358b6460844f1bcda641910a09325c",
+    "args_yaml_sha256": "e3189fa7395841a692fdca988adbcbcbf7bbfc387f37d11cefb648d6d416a429"
+  },
+  "governance_status": {
+    "training_completed": true,
+    "artifact_inventory_created": true,
+    "training_result_created": true,
+    "metadata_summary_created": true,
+    "posthoc_log_created": true,
+    "registry_updated": false,
+    "evaluation_summary_created": false,
+    "detection_reaudit_completed": false
+  },
+  "known_limitations": [
+    "This posthoc log documents a 1-epoch YOLO training run executed in Colab.",
+    "Metrics are not final production-quality model performance.",
+    "Registry updates, evaluation summary, validation script, and Detection re-audit are handled in later steps."
+  ],
+  "created_at": "2026-05-10T20:28:37Z"
+}

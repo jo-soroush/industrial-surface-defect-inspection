@@ -1,0 +1,149 @@
+{
+  "evaluation_type": "detection_yolo_validation_evaluation",
+  "run_id": "yolo_train_v0_1_0",
+  "track_id": "detection",
+  "task_type": "object_detection",
+  "evaluation_split": "validation",
+  "evaluation_status": "completed",
+  "model_identity": {
+    "model_name": "yolo",
+    "model_type": "yolo",
+    "model_source": "yolov8n.pt",
+    "backend": "ultralytics"
+  },
+  "dataset_identity": {
+    "dataset_id": "gc10det_detection",
+    "dataset_version": "gc10det_1.0",
+    "validation_sample_count": 345,
+    "validation_bbox_count": 607,
+    "class_count": 10
+  },
+  "metrics": {
+    "precision": 0.00477,
+    "recall": 0.54003,
+    "mAP50": 0.04518,
+    "mAP50_95": 0.01651,
+    "val_box_loss": 2.39474,
+    "val_cls_loss": 3.56583,
+    "val_dfl_loss": 1.65128
+  },
+  "metric_interpretation": {
+    "performance_level": "low_initial_baseline",
+    "production_readiness": "not_ready",
+    "summary": "This 1-epoch YOLO run proves the governed training and artifact pipeline, but the validation metrics are too weak for production deployment.",
+    "recommendation_note": "Use this run as first governed Detection evidence only. Do not mark Detection PASS or recommend it for deployment yet."
+  },
+  "evidence_files": [
+    {
+      "artifact_role": "training_metrics_csv",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/results.csv",
+      "exists": true,
+      "size_bytes": 318,
+      "sha256": "a2798745f1f49800ef562369e8162bafe4358b6460844f1bcda641910a09325c",
+      "frontend_ready": true
+    },
+    {
+      "artifact_role": "training_args_yaml",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/args.yaml",
+      "exists": true,
+      "size_bytes": 1760,
+      "sha256": "e3189fa7395841a692fdca988adbcbcbf7bbfc387f37d11cefb648d6d416a429",
+      "frontend_ready": true
+    },
+    {
+      "artifact_role": "confusion_matrix_plot",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/confusion_matrix.png",
+      "exists": true,
+      "size_bytes": 212599,
+      "sha256": "8d3c16e3677f94ed2b6b15a854d18e971057cfa008b686f0e1f2a3b74ed09e09",
+      "frontend_ready": true
+    },
+    {
+      "artifact_role": "normalized_confusion_matrix_plot",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/confusion_matrix_normalized.png",
+      "exists": true,
+      "size_bytes": 203171,
+      "sha256": "204bff90dc1487d53530e21b827c249c313008eb1c56ed15661caa26ac6b78bf",
+      "frontend_ready": true
+    },
+    {
+      "artifact_role": "precision_recall_curve_plot",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/BoxPR_curve.png",
+      "exists": true,
+      "size_bytes": 174725,
+      "sha256": "21c9eed862d5d06adcf971dcb13c89d6eedc85d2012f1aef0359cf4974f334aa",
+      "frontend_ready": true
+    },
+    {
+      "artifact_role": "f1_curve_plot",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/BoxF1_curve.png",
+      "exists": true,
+      "size_bytes": 114900,
+      "sha256": "a7ba864853771271853c0e184e64afa2c25ecd939ec15424167c82bf7dd7c0a5",
+      "frontend_ready": true
+    },
+    {
+      "artifact_role": "precision_curve_plot",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/BoxP_curve.png",
+      "exists": true,
+      "size_bytes": 132361,
+      "sha256": "969717d7c61a549a04487b743468c7096e74fc08030e9307a1daac34dea3040c",
+      "frontend_ready": true
+    },
+    {
+      "artifact_role": "recall_curve_plot",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/BoxR_curve.png",
+      "exists": true,
+      "size_bytes": 129332,
+      "sha256": "1d57e938435bb36342f4935cf1ba698f90a9689bf3d208078aee313c1f363522",
+      "frontend_ready": true
+    },
+    {
+      "artifact_role": "validation_prediction_visualization",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/val_batch0_pred.jpg",
+      "exists": true,
+      "size_bytes": 166761,
+      "sha256": "07ce6af9b2ce0537f380ab1c10b51a7bc3aa5da0f8a9c68f7b3aeb04d13ab043",
+      "frontend_ready": false
+    },
+    {
+      "artifact_role": "validation_prediction_visualization",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/val_batch1_pred.jpg",
+      "exists": true,
+      "size_bytes": 200535,
+      "sha256": "3c8ce5239064b5b4148536e6ca193c785ef26c0f2d55f376d95b654a1237dd50",
+      "frontend_ready": false
+    },
+    {
+      "artifact_role": "validation_prediction_visualization",
+      "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/val_batch2_pred.jpg",
+      "exists": true,
+      "size_bytes": 180585,
+      "sha256": "38977758f569949470e206a08668b6d2a63a0254fe11643c3e4aa2a78a4180a2",
+      "frontend_ready": false
+    }
+  ],
+  "governance_references": {
+    "training_result_path": "artifacts/models/analysis/training_result__yolo_train_v0_1_0.json",
+    "artifact_inventory_path": "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_1_0.json",
+    "metadata_summary_path": "artifacts/models/metadata/track_detection_yolo_metadata_summary__yolo_train_v0_1_0.json",
+    "posthoc_log_path": "artifacts/models/logs/track_detection_yolo_posthoc_run_log__yolo_train_v0_1_0.json"
+  },
+  "governance_status": {
+    "training_completed": true,
+    "artifact_inventory_created": true,
+    "training_result_created": true,
+    "metadata_summary_created": true,
+    "posthoc_log_created": true,
+    "evaluation_summary_created": true,
+    "registry_updated": false,
+    "detection_reaudit_completed": false
+  },
+  "known_limitations": [
+    "This evaluation summarizes a 1-epoch YOLO baseline.",
+    "Metrics are not production-quality.",
+    "This file is evaluation evidence only and does not mark Detection PASS.",
+    "Registry updates and Detection re-audit are handled later."
+  ],
+  "created_at": "2026-05-10T20:32:06Z"
+}

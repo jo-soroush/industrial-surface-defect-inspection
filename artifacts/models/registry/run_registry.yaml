@@ -106,3 +106,23 @@ runs:
   metadata_path: artifacts/models/analysis/training_results/training_result__86eae01e-5913-4a91-8167-916f221fcb39.json
   metrics_path: artifacts/models/metrics/classification_validation_evaluation__86eae01e-5913-4a91-8167-916f221fcb39.json
   checkpoint_path: artifacts/models/checkpoints/model_checkpoint__86eae01e-5913-4a91-8167-916f221fcb39.pt
+- run_id: yolo_train_v0_1_0
+  model_name: yolo
+  model_version: 0.1.0
+  dataset_id: gc10det_detection
+  dataset_version: gc10det_1.0
+  task_type: object_detection
+  config_id: yolo_train_v0_1_0
+  config_path: configs/runs/yolo_train_v0_1_0.yaml
+  split_manifest_path: data/manifests/split_gc10det_detection.yaml
+  preprocessing_policy_path: configs/data/preprocessing_gc10det.yaml
+  started_at: null
+  ended_at: null
+  run_status: success
+  artifact_created: true
+  metadata_path: artifacts/models/analysis/training_result__yolo_train_v0_1_0.json
+  metrics_path: artifacts/models/metrics/detection_evaluation__yolo_train_v0_1_0__validation.json
+  log_path: artifacts/models/logs/track_detection_yolo_posthoc_run_log__yolo_train_v0_1_0.json
+  checkpoint_path: artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/best.pt
+  inventory_path: artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_1_0.json
+  metadata_summary_path: artifacts/models/metadata/track_detection_yolo_metadata_summary__yolo_train_v0_1_0.json

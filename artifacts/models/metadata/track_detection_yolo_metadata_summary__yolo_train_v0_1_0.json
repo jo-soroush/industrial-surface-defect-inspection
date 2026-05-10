@@ -1,0 +1,96 @@
+{
+  "metadata_type": "track_detection_yolo_metadata_summary",
+  "run_id": "yolo_train_v0_1_0",
+  "track_id": "detection",
+  "task_type": "object_detection",
+  "run_status": "success",
+  "execution_environment": "colab",
+  "model_identity": {
+    "model_name": "yolo",
+    "model_type": "yolo",
+    "model_source": "yolov8n.pt",
+    "backend": "ultralytics",
+    "pretrained": true
+  },
+  "dataset_identity": {
+    "dataset_id": "gc10det_detection",
+    "dataset_version": "gc10det_1.0",
+    "dataset_yaml_runtime_path": "/content/defectai_yolo_workspace/data/processed/gc10det_yolo/dataset_colab.yaml",
+    "local_dataset_yaml_path": "data/processed/gc10det_yolo/dataset.yaml",
+    "export_manifest_path": "data/processed/gc10det_yolo/export_manifest.yaml",
+    "split_counts": {
+      "train": 1610,
+      "validation": 345,
+      "test": 345
+    },
+    "class_count": 10
+  },
+  "config_identity": {
+    "run_config_path": "configs/runs/yolo_train_v0_1_0.yaml",
+    "model_config_path": "configs/models/yolo.yaml",
+    "config_id": "yolo_train_v0_1_0"
+  },
+  "training_parameters": {
+    "epochs": 1,
+    "batch": 32,
+    "imgsz": 640,
+    "seed": 42,
+    "device": "0",
+    "optimizer": "auto",
+    "deterministic": true
+  },
+  "planned_config_parameters": {
+    "epochs": 1,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "optimizer": "adam",
+    "loss_function": "detection_loss",
+    "seed": 42,
+    "device": "auto"
+  },
+  "metrics": {
+    "source_file": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/results.csv",
+    "row_count": 1,
+    "epoch": 1,
+    "time": 60.8785,
+    "precision": 0.00477,
+    "recall": 0.54003,
+    "mAP50": 0.04518,
+    "mAP50_95": 0.01651,
+    "train_box_loss": 2.17464,
+    "train_cls_loss": 3.96796,
+    "train_dfl_loss": 1.68209,
+    "val_box_loss": 2.39474,
+    "val_cls_loss": 3.56583,
+    "val_dfl_loss": 1.65128
+  },
+  "artifact_linkage": {
+    "training_result_path": "artifacts/models/analysis/training_result__yolo_train_v0_1_0.json",
+    "artifact_inventory_path": "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_1_0.json",
+    "run_directory": "artifacts/detection/yolo/runs/yolo_train_v0_1_0",
+    "best_checkpoint_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/best.pt",
+    "last_checkpoint_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/last.pt",
+    "results_csv_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/results.csv",
+    "args_yaml_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/args.yaml"
+  },
+  "artifact_integrity": {
+    "training_result_sha256": "3128d377e70edcd52dc592db05d6e26f56c7e101044f81bee58a2a3d4f8b89c1",
+    "artifact_inventory_sha256": "13b778c2b2965a4b6854457258335986415beef82fcd67264ddd50400cf1e933",
+    "best_checkpoint_sha256": "8b685969a36b3c683b3995eefbe25a1d0eac425c9a9a4c3e685b6e7c0d335ac5",
+    "last_checkpoint_sha256": "bbabc2252ace81f8fb733c9d4792c96e8c210b4de2c2a97dc38fa0411a6baa86"
+  },
+  "governance_status": {
+    "training_result_created": true,
+    "artifact_inventory_created": true,
+    "metadata_summary_created": true,
+    "posthoc_log_created": false,
+    "registry_updated": false,
+    "evaluation_summary_created": false
+  },
+  "known_limitations": [
+    "This metadata summary describes a 1-epoch YOLO training run created in Colab.",
+    "Metrics are not final production-quality performance.",
+    "Posthoc log, registry updates, evaluation summary, and re-audit are handled in later steps."
+  ],
+  "created_at": "2026-05-10T20:22:22Z"
+}

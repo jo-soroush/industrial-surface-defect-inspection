@@ -1,0 +1,52 @@
+{
+  "audit_type": "detection_yolo_final_reaudit",
+  "run_id": "yolo_train_v0_1_0",
+  "track_id": "detection",
+  "task_type": "object_detection",
+  "audit_status": "governance_pass_model_not_ready",
+  "governance_status": {
+    "required_files_present": true,
+    "run_registry_entry_valid": true,
+    "artifact_registry_entries_valid": true,
+    "training_result_valid": true,
+    "artifact_inventory_valid": true,
+    "metadata_summary_valid": true,
+    "posthoc_log_valid": true,
+    "evaluation_summary_valid": true,
+    "hashes_and_sizes_valid": true,
+    "cross_file_consistency_valid": true,
+    "validation_script_status": "pass"
+  },
+  "model_performance_status": {
+    "production_readiness": "not_ready",
+    "performance_level": "low_initial_baseline",
+    "mAP50": 0.04518,
+    "mAP50_95": 0.01651,
+    "precision": 0.00477,
+    "recall": 0.54003,
+    "reason": "The governed YOLO pipeline is valid, but the 1-epoch validation metrics are too weak for production deployment."
+  },
+  "decision": {
+    "governance_pipeline_pass": true,
+    "model_production_ready": false,
+    "detection_track_final_pass": false,
+    "recommended_next_step": "Use this as governed first-run evidence only. Improve training duration, hyperparameters, data strategy, and evaluation before marking Detection as model-ready."
+  },
+  "evidence_references": {
+    "validator_script": "scripts/validation/validate_detection_artifacts.py",
+    "training_result_path": "artifacts/models/analysis/training_result__yolo_train_v0_1_0.json",
+    "artifact_inventory_path": "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_1_0.json",
+    "metadata_summary_path": "artifacts/models/metadata/track_detection_yolo_metadata_summary__yolo_train_v0_1_0.json",
+    "posthoc_log_path": "artifacts/models/logs/track_detection_yolo_posthoc_run_log__yolo_train_v0_1_0.json",
+    "evaluation_summary_path": "artifacts/models/metrics/detection_evaluation__yolo_train_v0_1_0__validation.json",
+    "run_registry_path": "artifacts/models/registry/run_registry.yaml",
+    "artifact_registry_path": "artifacts/models/registry/artifact_registry.yaml"
+  },
+  "known_limitations": [
+    "The audit confirms governance and evidence consistency, not production model quality.",
+    "The YOLO model was trained for only 1 epoch.",
+    "The validation metrics indicate a low initial baseline.",
+    "Further training and evaluation are required before Detection can be considered model-ready."
+  ],
+  "created_at": "2026-05-10T21:22:49Z"
+}

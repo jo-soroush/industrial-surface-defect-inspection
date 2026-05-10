@@ -1,0 +1,319 @@
+{
+  "result_type": "detection_yolo_training_result",
+  "run_id": "yolo_train_v0_1_0",
+  "track_id": "detection",
+  "task_type": "object_detection",
+  "training_status": "success",
+  "execution_environment": "colab",
+  "model": {
+    "model_name": "yolo",
+    "model_type": "yolo",
+    "model_source": "yolov8n.pt",
+    "backend": "ultralytics",
+    "pretrained": true
+  },
+  "dataset": {
+    "dataset_id": "gc10det_detection",
+    "dataset_version": "gc10det_1.0",
+    "dataset_yaml_runtime_path": "/content/defectai_yolo_workspace/data/processed/gc10det_yolo/dataset_colab.yaml",
+    "local_dataset_yaml_path": "data/processed/gc10det_yolo/dataset.yaml",
+    "export_manifest_path": "data/processed/gc10det_yolo/export_manifest.yaml",
+    "split_counts": {
+      "train": 1610,
+      "validation": 345,
+      "test": 345
+    },
+    "class_count": 10
+  },
+  "config": {
+    "run_config_path": "configs/runs/yolo_train_v0_1_0.yaml",
+    "model_config_path": "configs/models/yolo.yaml",
+    "config_id": "yolo_train_v0_1_0"
+  },
+  "training_parameters": {
+    "epochs": 1,
+    "batch": 32,
+    "imgsz": 640,
+    "seed": 42,
+    "device": "0",
+    "optimizer": "auto",
+    "deterministic": true
+  },
+  "planned_config_parameters": {
+    "epochs": 1,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "optimizer": "adam",
+    "loss_function": "detection_loss",
+    "seed": 42,
+    "device": "auto"
+  },
+  "run_args_summary": {
+    "source_file": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/args.yaml",
+    "task": "detect",
+    "mode": "train",
+    "model": "yolov8n.pt",
+    "data": "/content/defectai_yolo_workspace/data/processed/gc10det_yolo/dataset_colab.yaml",
+    "epochs": 1,
+    "batch": 32,
+    "imgsz": 640,
+    "device": "0",
+    "project": "/content/defectai_yolo_workspace/artifacts/detection/yolo/runs",
+    "name": "yolo_train_v0_1_0",
+    "pretrained": true,
+    "seed": 42,
+    "deterministic": true,
+    "optimizer": "auto",
+    "save_dir": "/content/defectai_yolo_workspace/artifacts/detection/yolo/runs/yolo_train_v0_1_0"
+  },
+  "metrics": {
+    "source_file": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/results.csv",
+    "row_count": 1,
+    "epoch": 1,
+    "time": 60.8785,
+    "precision": 0.00477,
+    "recall": 0.54003,
+    "mAP50": 0.04518,
+    "mAP50_95": 0.01651,
+    "train_box_loss": 2.17464,
+    "train_cls_loss": 3.96796,
+    "train_dfl_loss": 1.68209,
+    "val_box_loss": 2.39474,
+    "val_cls_loss": 3.56583,
+    "val_dfl_loss": 1.65128
+  },
+  "artifacts": {
+    "run_directory": "artifacts/detection/yolo/runs/yolo_train_v0_1_0",
+    "best_checkpoint_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/best.pt",
+    "best_checkpoint_sha256": "8b685969a36b3c683b3995eefbe25a1d0eac425c9a9a4c3e685b6e7c0d335ac5",
+    "best_checkpoint_size_bytes": 6220394,
+    "last_checkpoint_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/last.pt",
+    "last_checkpoint_sha256": "bbabc2252ace81f8fb733c9d4792c96e8c210b4de2c2a97dc38fa0411a6baa86",
+    "last_checkpoint_size_bytes": 6220394,
+    "results_csv_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/results.csv",
+    "results_csv_sha256": "a2798745f1f49800ef562369e8162bafe4358b6460844f1bcda641910a09325c",
+    "results_csv_size_bytes": 318,
+    "args_yaml_path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/args.yaml",
+    "args_yaml_sha256": "e3189fa7395841a692fdca988adbcbcbf7bbfc387f37d11cefb648d6d416a429",
+    "args_yaml_size_bytes": 1760,
+    "inventory_path": "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_1_0.json",
+    "inventory_sha256": "13b778c2b2965a4b6854457258335986415beef82fcd67264ddd50400cf1e933",
+    "inventory_size_bytes": 10048,
+    "inventory_status": "pass",
+    "inventory_artifact_count": 21,
+    "files": [
+      {
+        "artifact_role": "best_model_checkpoint",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/best.pt",
+        "exists": true,
+        "size_bytes": 6220394,
+        "sha256": "8b685969a36b3c683b3995eefbe25a1d0eac425c9a9a4c3e685b6e7c0d335ac5",
+        "required": true,
+        "frontend_ready": false
+      },
+      {
+        "artifact_role": "last_model_checkpoint",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/last.pt",
+        "exists": true,
+        "size_bytes": 6220394,
+        "sha256": "bbabc2252ace81f8fb733c9d4792c96e8c210b4de2c2a97dc38fa0411a6baa86",
+        "required": true,
+        "frontend_ready": false
+      },
+      {
+        "artifact_role": "training_metrics_csv",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/results.csv",
+        "exists": true,
+        "size_bytes": 318,
+        "sha256": "a2798745f1f49800ef562369e8162bafe4358b6460844f1bcda641910a09325c",
+        "required": true,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "training_args_yaml",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/args.yaml",
+        "exists": true,
+        "size_bytes": 1760,
+        "sha256": "e3189fa7395841a692fdca988adbcbcbf7bbfc387f37d11cefb648d6d416a429",
+        "required": true,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "detection_inventory",
+        "path": "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_1_0.json",
+        "exists": true,
+        "size_bytes": 10048,
+        "sha256": "13b778c2b2965a4b6854457258335986415beef82fcd67264ddd50400cf1e933",
+        "required": true,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "training_results_plot",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/results.png",
+        "exists": true,
+        "size_bytes": 139888,
+        "sha256": "6a3ec24909681e1b1cb9da6b7c70d994fb80380244699b5f7321b80e57f81396",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "confusion_matrix_plot",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/confusion_matrix.png",
+        "exists": true,
+        "size_bytes": 212599,
+        "sha256": "8d3c16e3677f94ed2b6b15a854d18e971057cfa008b686f0e1f2a3b74ed09e09",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "normalized_confusion_matrix_plot",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/confusion_matrix_normalized.png",
+        "exists": true,
+        "size_bytes": 203171,
+        "sha256": "204bff90dc1487d53530e21b827c249c313008eb1c56ed15661caa26ac6b78bf",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "precision_recall_curve_plot",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/BoxPR_curve.png",
+        "exists": true,
+        "size_bytes": 174725,
+        "sha256": "21c9eed862d5d06adcf971dcb13c89d6eedc85d2012f1aef0359cf4974f334aa",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "f1_curve_plot",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/BoxF1_curve.png",
+        "exists": true,
+        "size_bytes": 114900,
+        "sha256": "a7ba864853771271853c0e184e64afa2c25ecd939ec15424167c82bf7dd7c0a5",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "precision_curve_plot",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/BoxP_curve.png",
+        "exists": true,
+        "size_bytes": 132361,
+        "sha256": "969717d7c61a549a04487b743468c7096e74fc08030e9307a1daac34dea3040c",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "recall_curve_plot",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/BoxR_curve.png",
+        "exists": true,
+        "size_bytes": 129332,
+        "sha256": "1d57e938435bb36342f4935cf1ba698f90a9689bf3d208078aee313c1f363522",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "label_distribution_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/labels.jpg",
+        "exists": true,
+        "size_bytes": 198193,
+        "sha256": "cfb640ec7b0962eb20d199f8e48c361d014b5330d9d3dcd5cbbaeb1a9625d162",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "training_batch_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/train_batch0.jpg",
+        "exists": true,
+        "size_bytes": 271482,
+        "sha256": "e1ad51f80382a20d3f2436c129584cae260286f69cadbfe42c1d16d3f9554712",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "training_batch_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/train_batch1.jpg",
+        "exists": true,
+        "size_bytes": 310638,
+        "sha256": "23d810d8d28d6c39c7e49656743c621b619c48fde5d106baa83a32bda501b89a",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "training_batch_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/train_batch2.jpg",
+        "exists": true,
+        "size_bytes": 281217,
+        "sha256": "6e6cd7d8596364e538d7e7cd786ea015f1c0392e8e3113112666fb5d043d32ba",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "validation_label_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/val_batch0_labels.jpg",
+        "exists": true,
+        "size_bytes": 198941,
+        "sha256": "1dac19a7a55748c14cf356b92dd666968ccfa9cd17498b5636027f2388adb92b",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "validation_label_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/val_batch1_labels.jpg",
+        "exists": true,
+        "size_bytes": 256259,
+        "sha256": "c016ebd85e6248e87e444276a9616717af85b0a885f9fc5d630c26c343f0020f",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "validation_label_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/val_batch2_labels.jpg",
+        "exists": true,
+        "size_bytes": 213602,
+        "sha256": "86765a0e44435c75df8f75624b929724ef9c3452aacd4197a9ae5b6c47b8684f",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "validation_prediction_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/val_batch0_pred.jpg",
+        "exists": true,
+        "size_bytes": 166761,
+        "sha256": "07ce6af9b2ce0537f380ab1c10b51a7bc3aa5da0f8a9c68f7b3aeb04d13ab043",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "validation_prediction_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/val_batch1_pred.jpg",
+        "exists": true,
+        "size_bytes": 200535,
+        "sha256": "3c8ce5239064b5b4148536e6ca193c785ef26c0f2d55f376d95b654a1237dd50",
+        "required": false,
+        "frontend_ready": true
+      },
+      {
+        "artifact_role": "validation_prediction_visualization",
+        "path": "artifacts/detection/yolo/runs/yolo_train_v0_1_0/val_batch2_pred.jpg",
+        "exists": true,
+        "size_bytes": 180585,
+        "sha256": "38977758f569949470e206a08668b6d2a63a0254fe11643c3e4aa2a78a4180a2",
+        "required": false,
+        "frontend_ready": true
+      }
+    ]
+  },
+  "governance": {
+    "artifact_inventory_created": true,
+    "registry_updated": false,
+    "metadata_summary_created": false,
+    "posthoc_log_created": false,
+    "evaluation_summary_created": false
+  },
+  "known_limitations": [
+    "This is a 1-epoch governed YOLO execution intended to prove the training pipeline and produce first detection artifacts.",
+    "Metrics are not final production-quality model performance.",
+    "Execution was performed in Colab using the governed dataset export and equivalent config values.",
+    "Registry updates and metadata summaries are handled in later governance steps."
+  ],
+  "created_at": "2026-05-10T20:08:22Z"
+}

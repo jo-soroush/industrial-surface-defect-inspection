@@ -471,7 +471,7 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: cnn_train_supervised_v0_1_0
   created_at: '2026-04-29T18:39:31.930824Z'
-  artifact_hash: a77b9ae5ea5bbd01ad9d073a0cc95c0661f399111164ceafcef75bdc2983f5e0
+  artifact_hash: b759430adb75336b6a96543a1df49e140022918ab3299c042507bef59bca837e
   artifact_size_bytes: 3554
   artifact_format: json
   status: active

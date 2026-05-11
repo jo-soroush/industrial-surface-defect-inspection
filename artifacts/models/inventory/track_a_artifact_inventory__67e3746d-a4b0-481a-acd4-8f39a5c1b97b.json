@@ -42,7 +42,7 @@
       "required_for_frontend": false
     },
     "comparison": {
-      "path": "artifacts/models/comparisons/track_a_supervised_classification__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__86eae01e-5913-4a91-8167-916f221fcb39.json",
+      "path": "artifacts/models/comparisons/track_a_supervised_classification__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c.json",
       "exists": true,
       "artifact_type": "track_a_comparison",
       "purpose": "Track A model comparison and recommendation context.",

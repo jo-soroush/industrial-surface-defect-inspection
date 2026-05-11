@@ -556,8 +556,8 @@ artifacts:
   dataset_version: mvtec_1.0
   config_id: resnet18_train_v0_1_0
   created_at: '2026-04-29T17:35:30.669072Z'
-  artifact_hash: 7a71fae66fe21169ab35398ff5494258ea3a932a0f34676f55f8b9b49fa75416
-  artifact_size_bytes: 558
+  artifact_hash: c877ced50eb15a46c635175112a075b69629424d5769b401d37cb3b477e18938
+  artifact_size_bytes: 618
   artifact_format: json
   status: active
 - artifact_id: track_a__c5057180-9884-4566-ac71-12c68487669c__sample_predictions

@@ -951,3 +951,20 @@ artifacts:
   artifact_size_bytes: 1760
   artifact_format: yaml
   status: active
+- artifact_id: track_a__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c__comparison
+  artifact_filename: track_a_supervised_classification__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c.json
+  artifact_path: artifacts/models/comparisons/track_a_supervised_classification__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_comparison
+  run_id: null
+  model_name: null
+  model_version: null
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: null
+  created_at: '2026-05-11T20:55:23.004607Z'
+  artifact_hash: 3ca16152f351a728f2f6969ba5e102ee52b09fd05b8edcbdd0fc399798cdc7a1
+  artifact_size_bytes: 5295
+  artifact_format: json
+  status: active

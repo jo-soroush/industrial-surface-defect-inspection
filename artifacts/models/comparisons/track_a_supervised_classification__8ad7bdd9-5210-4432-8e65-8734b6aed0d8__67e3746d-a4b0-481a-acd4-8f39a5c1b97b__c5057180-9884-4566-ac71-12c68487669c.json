@@ -1,0 +1,136 @@
+{
+  "artifact_type": "track_a_comparison",
+  "comparison_id": "track_a_supervised_classification__8ad7bdd9-5210-4432-8e65-8734b6aed0d8__67e3746d-a4b0-481a-acd4-8f39a5c1b97b__c5057180-9884-4566-ac71-12c68487669c",
+  "dataset_id": "mvtec_classification_supervised",
+  "task_type": "classification",
+  "selection_metric": "macro_f1",
+  "decision_policy": {
+    "minimum_defect_recall": 0.5,
+    "macro_f1_near_tie_threshold": 0.02,
+    "selection_metric": "macro_f1",
+    "risk_signal": "defect_recall"
+  },
+  "candidate_count": 3,
+  "candidates": [
+    {
+      "model_name": "mlp",
+      "model_type": "mlp",
+      "run_config_id": "mlp_train_supervised_v0_1_0",
+      "dataset_id": "mvtec_classification_supervised",
+      "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+      "train_accuracy": 0.5,
+      "train_f1": 0.11111111111111112,
+      "val_loss": 26.20699691772461,
+      "val_accuracy": 0.28125,
+      "val_f1": 0.43902439024390244,
+      "macro_f1": 0.4191919191919192,
+      "confusion_matrix": [
+        [
+          42,
+          71
+        ],
+        [
+          21,
+          26
+        ]
+      ],
+      "true_negatives": 42,
+      "false_positives": 71,
+      "false_negatives": 21,
+      "true_positives": 26,
+      "defect_recall": 0.5531914893617021,
+      "defect_precision": 0.26804123711340205,
+      "warnings": [],
+      "explanation": "Model achieved macro_f1=0.42 with defect_recall=0.55, indicating limited defect detection.",
+      "training_result_path": "artifacts/models/analysis/training_results/training_result__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "validation_evaluation_path": "artifacts/models/metrics/classification_validation_evaluation__8ad7bdd9-5210-4432-8e65-8734b6aed0d8.json",
+      "recommendation_status": "review_required",
+      "recommendation_reason_short": "Selected by macro_f1 but candidates are within the near-tie threshold; manual review required."
+    },
+    {
+      "model_name": "cnn",
+      "model_type": "cnn",
+      "run_config_id": "cnn_train_supervised_v0_1_0",
+      "dataset_id": "mvtec_classification_supervised",
+      "run_id": "67e3746d-a4b0-481a-acd4-8f39a5c1b97b",
+      "train_accuracy": 0.875,
+      "train_f1": 0.0,
+      "val_loss": 0.6264706254005432,
+      "val_accuracy": 0.71875,
+      "val_f1": 0.0,
+      "macro_f1": 0.41391941391941395,
+      "confusion_matrix": [
+        [
+          113,
+          0
+        ],
+        [
+          47,
+          0
+        ]
+      ],
+      "true_negatives": 113,
+      "false_positives": 0,
+      "false_negatives": 47,
+      "true_positives": 0,
+      "defect_recall": 0.0,
+      "defect_precision": 0.0,
+      "warnings": [
+        "Model failed to detect any defects (defect_recall = 0.0)",
+        "High number of missed defects (false negatives)"
+      ],
+      "explanation": "Model achieved macro_f1=0.41 with defect_recall=0.00, indicating limited defect detection.",
+      "training_result_path": "artifacts/models/analysis/training_results/training_result__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "validation_evaluation_path": "artifacts/models/metrics/classification_validation_evaluation__67e3746d-a4b0-481a-acd4-8f39a5c1b97b.json",
+      "recommendation_status": "not_selected",
+      "recommendation_reason_short": "Not selected because another candidate has higher macro_f1."
+    },
+    {
+      "model_name": "resnet18",
+      "model_type": "resnet18",
+      "run_config_id": "resnet18_train_v0_1_0",
+      "dataset_id": "mvtec_classification_supervised",
+      "run_id": "c5057180-9884-4566-ac71-12c68487669c",
+      "train_accuracy": 0.65625,
+      "train_f1": 0.0,
+      "val_loss": 66.58076477050781,
+      "val_accuracy": 0.28125,
+      "val_f1": 0.43902439024390244,
+      "macro_f1": 0.22705314009661837,
+      "confusion_matrix": [
+        [
+          0,
+          113
+        ],
+        [
+          0,
+          47
+        ]
+      ],
+      "true_negatives": 0,
+      "false_positives": 113,
+      "false_negatives": 0,
+      "true_positives": 47,
+      "defect_recall": 1.0,
+      "defect_precision": 0.29375,
+      "warnings": [],
+      "explanation": "Model achieved macro_f1=0.23 with defect_recall=1.00, indicating limited defect detection.",
+      "training_result_path": "artifacts/models/analysis/training_results/training_result__c5057180-9884-4566-ac71-12c68487669c.json",
+      "validation_evaluation_path": "artifacts/models/metrics/classification_validation_evaluation__c5057180-9884-4566-ac71-12c68487669c.json",
+      "recommendation_status": "not_selected",
+      "recommendation_reason_short": "Not selected because another candidate has higher macro_f1."
+    }
+  ],
+  "recommended_candidate": {
+    "model_name": "mlp",
+    "model_type": "mlp",
+    "run_config_id": "mlp_train_supervised_v0_1_0",
+    "dataset_id": "mvtec_classification_supervised",
+    "run_id": "8ad7bdd9-5210-4432-8e65-8734b6aed0d8",
+    "macro_f1": 0.4191919191919192,
+    "recommendation_status": "review_required",
+    "recommendation_reason_short": "Selected by macro_f1 but candidates are within the near-tie threshold; manual review required.",
+    "decision_explanation": "MLP was selected by macro_f1 but requires manual review because candidates are within the near-tie threshold."
+  },
+  "created_at": "2026-05-11T20:55:23.004607Z"
+}

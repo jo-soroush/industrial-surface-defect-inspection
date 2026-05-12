@@ -1,0 +1,45 @@
+identity:
+  run_config_id: yolo_train_v0_2_0
+  description: Stronger governed YOLO object-detection baseline after the v0.1.0 one-epoch readiness run.
+  task_type: object_detection
+  is_experiment: true
+  track_id: detection
+model_identity:
+  model_name: yolo
+  model_type: yolo
+  model_version: 0.2.0
+  model_config_id: yolo_config
+training_model_source: yolov8n.pt
+dataset_binding:
+  dataset_id: gc10det_detection
+  dataset_version: gc10det_1.0
+  split_manifest_path: data/manifests/split_gc10det_detection.yaml
+preprocessing:
+  preprocessing_policy_path: configs/data/preprocessing_gc10det.yaml
+  preprocessing_version: preprocessing_policy_1.0
+  augmentation_policy_version: null
+training_runtime:
+  batch_size: 16
+  learning_rate: 0.01
+  epochs: 50
+  optimizer: auto
+  loss_function: detection_loss
+  seed: 42
+  device: auto
+checkpoint:
+  enabled: true
+  save_best: true
+  save_last: true
+early_stopping:
+  enabled: false
+  patience: 10
+output_control:
+  save_artifact: true
+  save_metadata: true
+  save_logs: true
+  save_metrics: true
+notes:
+  - This config prepares a stronger governed Detection/YOLO baseline and does not mark the model production-ready.
+  - The training script currently uses data/processed/gc10det_yolo/dataset.yaml unless --dataset-yaml is supplied.
+  - The training script currently writes under artifacts/detection/yolo/runs with the run_config_id as the run name.
+  - Image size remains governed by the training boundary/runtime defaults until the training script is parameterized for imgsz.

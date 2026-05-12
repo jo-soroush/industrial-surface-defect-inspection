@@ -14,81 +14,75 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RUN_ID = "yolo_train_v0_1_0"
+DEFAULT_RUN_ID = "yolo_train_v0_1_0"
 TRACK_ID = "detection"
 TASK_TYPE = "object_detection"
 MODEL_NAME = "yolo"
 MODEL_TYPE = "yolo"
 DATASET_ID = "gc10det_detection"
 DATASET_VERSION = "gc10det_1.0"
-RUN_DIR = REPO_ROOT / "artifacts/detection/yolo/runs" / RUN_ID
-TRAINING_RESULT_PATH = REPO_ROOT / "artifacts/models/analysis" / f"training_result__{RUN_ID}.json"
-INVENTORY_PATH = (
-    REPO_ROOT / "artifacts/models/inventory" / f"track_detection_artifact_inventory__{RUN_ID}.json"
-)
-METADATA_SUMMARY_PATH = (
-    REPO_ROOT
-    / "artifacts/models/metadata"
-    / f"track_detection_yolo_metadata_summary__{RUN_ID}.json"
-)
-POSTHOC_LOG_PATH = (
-    REPO_ROOT
-    / "artifacts/models/logs"
-    / f"track_detection_yolo_posthoc_run_log__{RUN_ID}.json"
-)
-RESULTS_CSV_PATH = RUN_DIR / "results.csv"
-ARGS_YAML_PATH = RUN_DIR / "args.yaml"
 EXPORT_MANIFEST_PATH = REPO_ROOT / "data/processed/gc10det_yolo/export_manifest.yaml"
 DATASET_YAML_PATH = REPO_ROOT / "data/processed/gc10det_yolo/dataset.yaml"
-OUTPUT_PATH = (
-    REPO_ROOT
-    / "artifacts/models/metrics"
-    / f"detection_evaluation__{RUN_ID}__validation.json"
-)
-EVIDENCE_FILE_SPECS = [
-    ("training_metrics_csv", RESULTS_CSV_PATH, True),
-    ("training_args_yaml", ARGS_YAML_PATH, True),
-    ("confusion_matrix_plot", RUN_DIR / "confusion_matrix.png", True),
-    (
-        "normalized_confusion_matrix_plot",
-        RUN_DIR / "confusion_matrix_normalized.png",
-        True,
-    ),
-    ("precision_recall_curve_plot", RUN_DIR / "BoxPR_curve.png", True),
-    ("f1_curve_plot", RUN_DIR / "BoxF1_curve.png", True),
-    ("precision_curve_plot", RUN_DIR / "BoxP_curve.png", True),
-    ("recall_curve_plot", RUN_DIR / "BoxR_curve.png", True),
-    ("validation_prediction_visualization", RUN_DIR / "val_batch0_pred.jpg", False),
-    ("validation_prediction_visualization", RUN_DIR / "val_batch1_pred.jpg", False),
-    ("validation_prediction_visualization", RUN_DIR / "val_batch2_pred.jpg", False),
-]
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Build a governed Detection/YOLO validation evaluation summary JSON."
     )
+    parser.add_argument("--run-id", default=DEFAULT_RUN_ID)
+    parser.add_argument("--run-dir", default=None)
+    parser.add_argument("--training-result", default=None)
+    parser.add_argument("--artifact-inventory", default=None)
+    parser.add_argument("--metadata-summary", default=None)
+    parser.add_argument("--posthoc-log", default=None)
+    parser.add_argument("--run-config", default=None)
+    parser.add_argument("--output-path", default=None)
     return parser
 
 
 def main() -> int:
-    build_parser().parse_args()
+    args = build_parser().parse_args()
+    run_id = args.run_id
+    run_dir = Path(args.run_dir or REPO_ROOT / "artifacts/detection/yolo/runs" / run_id)
+    training_result_path = Path(
+        args.training_result
+        or REPO_ROOT / "artifacts/models/analysis" / f"training_result__{run_id}.json"
+    )
+    inventory_path = Path(
+        args.artifact_inventory
+        or REPO_ROOT / "artifacts/models/inventory" / f"track_detection_artifact_inventory__{run_id}.json"
+    )
+    metadata_summary_path = Path(
+        args.metadata_summary
+        or REPO_ROOT / "artifacts/models/metadata" / f"track_detection_yolo_metadata_summary__{run_id}.json"
+    )
+    posthoc_log_path = Path(
+        args.posthoc_log
+        or REPO_ROOT / "artifacts/models/logs" / f"track_detection_yolo_posthoc_run_log__{run_id}.json"
+    )
+    run_config_path = Path(args.run_config or REPO_ROOT / "configs/runs" / f"{run_id}.yaml")
+    results_csv_path = run_dir / "results.csv"
+    output_path = Path(
+        args.output_path
+        or REPO_ROOT / "artifacts/models/metrics" / f"detection_evaluation__{run_id}__validation.json"
+    )
 
-    training_result = _load_json_file(TRAINING_RESULT_PATH, "training result summary")
-    inventory = _load_json_file(INVENTORY_PATH, "artifact inventory")
-    metadata_summary = _load_json_file(METADATA_SUMMARY_PATH, "metadata summary")
-    posthoc_log = _load_json_file(POSTHOC_LOG_PATH, "posthoc run log")
-    run_config = _load_yaml_file(REPO_ROOT / "configs/runs/yolo_train_v0_1_0.yaml", "run config")
+    training_result = _load_json_file(training_result_path, "training result summary")
+    inventory = _load_json_file(inventory_path, "artifact inventory")
+    metadata_summary = _load_json_file(metadata_summary_path, "metadata summary")
+    posthoc_log = _load_json_file(posthoc_log_path, "posthoc run log")
+    run_config = _load_yaml_file(run_config_path, "run config")
     model_config = _load_yaml_file(REPO_ROOT / "configs/models/yolo.yaml", "model config")
     export_manifest = _load_yaml_file(EXPORT_MANIFEST_PATH, "export manifest")
     dataset_yaml = _load_yaml_file(DATASET_YAML_PATH, "dataset yaml")
 
-    results_csv_rows = _load_csv_rows(RESULTS_CSV_PATH)
+    results_csv_rows = _load_csv_rows(results_csv_path)
     if not results_csv_rows:
-        raise ValueError(f"results.csv does not contain any data rows: {_repo_relative(RESULTS_CSV_PATH)}")
+        raise ValueError(f"results.csv does not contain any data rows: {_repo_relative(results_csv_path)}")
     final_row = results_csv_rows[-1]
 
     _validate_inputs(
+        run_id=run_id,
         training_result=training_result,
         inventory=inventory,
         metadata_summary=metadata_summary,
@@ -100,10 +94,10 @@ def main() -> int:
         final_row=final_row,
     )
 
-    evidence_files = _build_evidence_files()
+    evidence_files = _build_evidence_files(run_dir)
     evaluation = {
         "evaluation_type": "detection_yolo_validation_evaluation",
-        "run_id": RUN_ID,
+        "run_id": run_id,
         "track_id": TRACK_ID,
         "task_type": TASK_TYPE,
         "evaluation_split": "validation",
@@ -144,10 +138,10 @@ def main() -> int:
         },
         "evidence_files": evidence_files,
         "governance_references": {
-            "training_result_path": _repo_relative(TRAINING_RESULT_PATH),
-            "artifact_inventory_path": _repo_relative(INVENTORY_PATH),
-            "metadata_summary_path": _repo_relative(METADATA_SUMMARY_PATH),
-            "posthoc_log_path": _repo_relative(POSTHOC_LOG_PATH),
+            "training_result_path": _repo_relative(training_result_path),
+            "artifact_inventory_path": _repo_relative(inventory_path),
+            "metadata_summary_path": _repo_relative(metadata_summary_path),
+            "posthoc_log_path": _repo_relative(posthoc_log_path),
         },
         "governance_status": {
             "training_completed": True,
@@ -168,11 +162,11 @@ def main() -> int:
         "created_at": _utc_now_iso(),
     }
 
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_PATH.open("w", encoding="utf-8") as handle:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as handle:
         json.dump(evaluation, handle, indent=2, sort_keys=False)
 
-    print(f"output_path={OUTPUT_PATH}")
+    print(f"output_path={output_path}")
     print(f"evaluation_status={evaluation['evaluation_status']}")
     print(f"precision={evaluation['metrics']['precision']}")
     print(f"recall={evaluation['metrics']['recall']}")
@@ -183,6 +177,7 @@ def main() -> int:
 
 
 def _validate_inputs(
+    run_id: str,
     training_result: dict[str, Any],
     inventory: dict[str, Any],
     metadata_summary: dict[str, Any],
@@ -197,7 +192,7 @@ def _validate_inputs(
         raise ValueError("training result summary result_type mismatch.")
     if training_result.get("training_status") != "success":
         raise ValueError("training result summary training_status must be success.")
-    if training_result.get("run_id") != RUN_ID:
+    if training_result.get("run_id") != run_id:
         raise ValueError("training result summary run_id mismatch.")
     if training_result.get("track_id") != TRACK_ID:
         raise ValueError("training result summary track_id mismatch.")
@@ -208,7 +203,7 @@ def _validate_inputs(
         raise ValueError("artifact inventory type mismatch.")
     if inventory.get("inventory_status") != "pass":
         raise ValueError("artifact inventory_status must be pass.")
-    if inventory.get("run_id") != RUN_ID:
+    if inventory.get("run_id") != run_id:
         raise ValueError("artifact inventory run_id mismatch.")
     if inventory.get("track_id") != TRACK_ID:
         raise ValueError("artifact inventory track_id mismatch.")
@@ -219,7 +214,7 @@ def _validate_inputs(
         raise ValueError("metadata summary type mismatch.")
     if metadata_summary.get("run_status") != "success":
         raise ValueError("metadata summary run_status must be success.")
-    if metadata_summary.get("run_id") != RUN_ID:
+    if metadata_summary.get("run_id") != run_id:
         raise ValueError("metadata summary run_id mismatch.")
     if metadata_summary.get("track_id") != TRACK_ID:
         raise ValueError("metadata summary track_id mismatch.")
@@ -236,7 +231,7 @@ def _validate_inputs(
 
     if posthoc_log.get("log_type") != "track_detection_yolo_posthoc_run_log":
         raise ValueError("posthoc log type mismatch.")
-    if posthoc_log.get("run_id") != RUN_ID:
+    if posthoc_log.get("run_id") != run_id:
         raise ValueError("posthoc log run_id mismatch.")
     if posthoc_log.get("track_id") != TRACK_ID:
         raise ValueError("posthoc log track_id mismatch.")
@@ -258,8 +253,9 @@ def _validate_inputs(
         raise ValueError("run config track_id mismatch.")
     if model_config.get("backend") != "ultralytics":
         raise ValueError("model config backend must be ultralytics.")
-    if model_config.get("training_model_source") != "yolov8n.pt":
-        raise ValueError("model config training_model_source must be yolov8n.pt.")
+    model_source = run_config.get("training_model_source") or model_config.get("training_model_source")
+    if not isinstance(model_source, str) or not model_source.strip():
+        raise ValueError("a governed YOLO training model source must be declared.")
     if export_manifest.get("dataset_id") != DATASET_ID:
         raise ValueError("export manifest dataset_id mismatch.")
     if export_manifest.get("dataset_version") != DATASET_VERSION:
@@ -299,9 +295,26 @@ def _validate_inputs(
         raise ValueError("posthoc log metrics_summary must match results.csv metrics.")
 
 
-def _build_evidence_files() -> list[dict[str, Any]]:
+def _build_evidence_files(run_dir: Path) -> list[dict[str, Any]]:
+    evidence_file_specs = [
+        ("training_metrics_csv", run_dir / "results.csv", True),
+        ("training_args_yaml", run_dir / "args.yaml", True),
+        ("confusion_matrix_plot", run_dir / "confusion_matrix.png", True),
+        (
+            "normalized_confusion_matrix_plot",
+            run_dir / "confusion_matrix_normalized.png",
+            True,
+        ),
+        ("precision_recall_curve_plot", run_dir / "BoxPR_curve.png", True),
+        ("f1_curve_plot", run_dir / "BoxF1_curve.png", True),
+        ("precision_curve_plot", run_dir / "BoxP_curve.png", True),
+        ("recall_curve_plot", run_dir / "BoxR_curve.png", True),
+        ("validation_prediction_visualization", run_dir / "val_batch0_pred.jpg", False),
+        ("validation_prediction_visualization", run_dir / "val_batch1_pred.jpg", False),
+        ("validation_prediction_visualization", run_dir / "val_batch2_pred.jpg", False),
+    ]
     evidence: list[dict[str, Any]] = []
-    for artifact_role, path, frontend_ready in EVIDENCE_FILE_SPECS:
+    for artifact_role, path, frontend_ready in evidence_file_specs:
         if not path.is_file():
             if frontend_ready:
                 raise FileNotFoundError(f"Required evidence file not found: {_repo_relative(path)}")

@@ -14,66 +14,89 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RUN_ID = "yolo_train_v0_1_0"
+DEFAULT_RUN_ID = "yolo_train_v0_1_0"
 TRACK_ID = "detection"
 TASK_TYPE = "object_detection"
 MODEL_NAME = "yolo"
 MODEL_TYPE = "yolo"
 DATASET_ID = "gc10det_detection"
 DATASET_VERSION = "gc10det_1.0"
-RUN_DIR = REPO_ROOT / "artifacts/detection/yolo/runs" / RUN_ID
-TRAINING_RESULT_PATH = REPO_ROOT / "artifacts/models/analysis" / f"training_result__{RUN_ID}.json"
-INVENTORY_PATH = (
-    REPO_ROOT / "artifacts/models/inventory" / f"track_detection_artifact_inventory__{RUN_ID}.json"
-)
-METADATA_SUMMARY_PATH = (
-    REPO_ROOT
-    / "artifacts/models/metadata"
-    / f"track_detection_yolo_metadata_summary__{RUN_ID}.json"
-)
-RESULTS_CSV_PATH = RUN_DIR / "results.csv"
-ARGS_YAML_PATH = RUN_DIR / "args.yaml"
-BEST_CHECKPOINT_PATH = RUN_DIR / "weights" / "best.pt"
-LAST_CHECKPOINT_PATH = RUN_DIR / "weights" / "last.pt"
-OUTPUT_PATH = (
-    REPO_ROOT
-    / "artifacts/models/logs"
-    / f"track_detection_yolo_posthoc_run_log__{RUN_ID}.json"
-)
-
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Build a governed Detection/YOLO posthoc run log JSON."
     )
+    parser.add_argument("--run-id", default=DEFAULT_RUN_ID)
+    parser.add_argument("--run-dir", default=None)
+    parser.add_argument("--training-result", default=None)
+    parser.add_argument("--artifact-inventory", default=None)
+    parser.add_argument("--metadata-summary", default=None)
+    parser.add_argument("--output-path", default=None)
     return parser
 
 
 def main() -> int:
-    build_parser().parse_args()
+    args = build_parser().parse_args()
+    run_id = args.run_id
+    run_dir = Path(args.run_dir or REPO_ROOT / "artifacts/detection/yolo/runs" / run_id)
+    training_result_path = Path(
+        args.training_result
+        or REPO_ROOT / "artifacts/models/analysis" / f"training_result__{run_id}.json"
+    )
+    inventory_path = Path(
+        args.artifact_inventory
+        or REPO_ROOT / "artifacts/models/inventory" / f"track_detection_artifact_inventory__{run_id}.json"
+    )
+    metadata_summary_path = Path(
+        args.metadata_summary
+        or REPO_ROOT / "artifacts/models/metadata" / f"track_detection_yolo_metadata_summary__{run_id}.json"
+    )
+    results_csv_path = run_dir / "results.csv"
+    args_yaml_path = run_dir / "args.yaml"
+    best_checkpoint_path = run_dir / "weights" / "best.pt"
+    last_checkpoint_path = run_dir / "weights" / "last.pt"
+    output_path = Path(
+        args.output_path
+        or REPO_ROOT / "artifacts/models/logs" / f"track_detection_yolo_posthoc_run_log__{run_id}.json"
+    )
 
-    training_result = _load_json_file(TRAINING_RESULT_PATH, "training result summary")
-    inventory = _load_json_file(INVENTORY_PATH, "artifact inventory")
-    metadata_summary = _load_json_file(METADATA_SUMMARY_PATH, "metadata summary")
+    training_result = _load_json_file(training_result_path, "training result summary")
+    inventory = _load_json_file(inventory_path, "artifact inventory")
+    metadata_summary = _load_json_file(metadata_summary_path, "metadata summary")
 
-    results_csv_rows = _load_csv_rows(RESULTS_CSV_PATH)
+    results_csv_rows = _load_csv_rows(results_csv_path)
     if not results_csv_rows:
-        raise ValueError(f"results.csv does not contain any data rows: {_repo_relative(RESULTS_CSV_PATH)}")
+        raise ValueError(f"results.csv does not contain any data rows: {_repo_relative(results_csv_path)}")
     final_metrics_row = results_csv_rows[-1]
-    run_args = _load_yaml_file(ARGS_YAML_PATH, "YOLO args")
+    run_args = _load_yaml_file(args_yaml_path, "YOLO args")
 
     _validate_required_files(
         (
-            TRAINING_RESULT_PATH,
-            INVENTORY_PATH,
-            METADATA_SUMMARY_PATH,
-            RESULTS_CSV_PATH,
-            ARGS_YAML_PATH,
-            BEST_CHECKPOINT_PATH,
-            LAST_CHECKPOINT_PATH,
+            training_result_path,
+            inventory_path,
+            metadata_summary_path,
+            results_csv_path,
+            args_yaml_path,
+            best_checkpoint_path,
+            last_checkpoint_path,
         )
     )
-    _validate_payloads(training_result, inventory, metadata_summary, final_metrics_row, run_args)
+    _validate_payloads(
+        run_id,
+        run_dir,
+        training_result_path,
+        inventory_path,
+        metadata_summary_path,
+        results_csv_path,
+        args_yaml_path,
+        best_checkpoint_path,
+        last_checkpoint_path,
+        training_result,
+        inventory,
+        metadata_summary,
+        final_metrics_row,
+        run_args,
+    )
 
     runtime_summary = {
         "model_source": training_result["model"]["model_source"],
@@ -96,7 +119,7 @@ def main() -> int:
 
     posthoc_log = {
         "log_type": "track_detection_yolo_posthoc_run_log",
-        "run_id": RUN_ID,
+        "run_id": run_id,
         "track_id": TRACK_ID,
         "task_type": TASK_TYPE,
         "run_status": training_result["training_status"],
@@ -115,7 +138,7 @@ def main() -> int:
             {
                 "event": "training_outputs_returned_to_local",
                 "status": "completed",
-                "details": "The Colab YOLO run directory was archived, downloaded, and restored under artifacts/detection/yolo/runs/yolo_train_v0_1_0.",
+                "details": f"The Colab YOLO run directory was archived, downloaded, and restored under artifacts/detection/yolo/runs/{run_id}.",
             },
             {
                 "event": "artifact_inventory_created",
@@ -151,23 +174,23 @@ def main() -> int:
         "runtime_summary": runtime_summary,
         "metrics_summary": metrics_summary,
         "artifact_references": {
-            "training_result_path": _repo_relative(TRAINING_RESULT_PATH),
-            "artifact_inventory_path": _repo_relative(INVENTORY_PATH),
-            "metadata_summary_path": _repo_relative(METADATA_SUMMARY_PATH),
-            "run_directory": _repo_relative(RUN_DIR),
-            "best_checkpoint_path": _repo_relative(BEST_CHECKPOINT_PATH),
-            "last_checkpoint_path": _repo_relative(LAST_CHECKPOINT_PATH),
-            "results_csv_path": _repo_relative(RESULTS_CSV_PATH),
-            "args_yaml_path": _repo_relative(ARGS_YAML_PATH),
+            "training_result_path": _repo_relative(training_result_path),
+            "artifact_inventory_path": _repo_relative(inventory_path),
+            "metadata_summary_path": _repo_relative(metadata_summary_path),
+            "run_directory": _repo_relative(run_dir),
+            "best_checkpoint_path": _repo_relative(best_checkpoint_path),
+            "last_checkpoint_path": _repo_relative(last_checkpoint_path),
+            "results_csv_path": _repo_relative(results_csv_path),
+            "args_yaml_path": _repo_relative(args_yaml_path),
         },
         "artifact_integrity": {
-            "training_result_sha256": _sha256(TRAINING_RESULT_PATH),
-            "artifact_inventory_sha256": _sha256(INVENTORY_PATH),
-            "metadata_summary_sha256": _sha256(METADATA_SUMMARY_PATH),
-            "best_checkpoint_sha256": _sha256(BEST_CHECKPOINT_PATH),
-            "last_checkpoint_sha256": _sha256(LAST_CHECKPOINT_PATH),
-            "results_csv_sha256": _sha256(RESULTS_CSV_PATH),
-            "args_yaml_sha256": _sha256(ARGS_YAML_PATH),
+            "training_result_sha256": _sha256(training_result_path),
+            "artifact_inventory_sha256": _sha256(inventory_path),
+            "metadata_summary_sha256": _sha256(metadata_summary_path),
+            "best_checkpoint_sha256": _sha256(best_checkpoint_path),
+            "last_checkpoint_sha256": _sha256(last_checkpoint_path),
+            "results_csv_sha256": _sha256(results_csv_path),
+            "args_yaml_sha256": _sha256(args_yaml_path),
         },
         "governance_status": {
             "training_completed": True,
@@ -187,11 +210,11 @@ def main() -> int:
         "created_at": _utc_now_iso(),
     }
 
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_PATH.open("w", encoding="utf-8") as handle:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as handle:
         json.dump(posthoc_log, handle, indent=2, sort_keys=False)
 
-    print(f"output_path={OUTPUT_PATH}")
+    print(f"output_path={output_path}")
     print(f"run_status={posthoc_log['run_status']}")
     print(f"mAP50={metrics_summary['mAP50']}")
     print(f"mAP50_95={metrics_summary['mAP50_95']}")
@@ -200,6 +223,15 @@ def main() -> int:
 
 
 def _validate_payloads(
+    run_id: str,
+    run_dir: Path,
+    training_result_path: Path,
+    inventory_path: Path,
+    metadata_summary_path: Path,
+    results_csv_path: Path,
+    args_yaml_path: Path,
+    best_checkpoint_path: Path,
+    last_checkpoint_path: Path,
     training_result: dict[str, Any],
     inventory: dict[str, Any],
     metadata_summary: dict[str, Any],
@@ -210,7 +242,7 @@ def _validate_payloads(
         raise ValueError("training result summary result_type mismatch.")
     if training_result.get("training_status") != "success":
         raise ValueError("training result summary training_status must be success.")
-    if training_result.get("run_id") != RUN_ID:
+    if training_result.get("run_id") != run_id:
         raise ValueError("training result summary run_id mismatch.")
     if training_result.get("track_id") != TRACK_ID:
         raise ValueError("training result summary track_id mismatch.")
@@ -229,7 +261,7 @@ def _validate_payloads(
         raise ValueError("artifact inventory type mismatch.")
     if inventory.get("inventory_status") != "pass":
         raise ValueError("artifact inventory_status must be pass.")
-    if inventory.get("run_id") != RUN_ID:
+    if inventory.get("run_id") != run_id:
         raise ValueError("artifact inventory run_id mismatch.")
     if inventory.get("track_id") != TRACK_ID:
         raise ValueError("artifact inventory track_id mismatch.")
@@ -248,7 +280,7 @@ def _validate_payloads(
         raise ValueError("metadata summary type mismatch.")
     if metadata_summary.get("run_status") != "success":
         raise ValueError("metadata summary run_status must be success.")
-    if metadata_summary.get("run_id") != RUN_ID:
+    if metadata_summary.get("run_id") != run_id:
         raise ValueError("metadata summary run_id mismatch.")
     if metadata_summary.get("track_id") != TRACK_ID:
         raise ValueError("metadata summary track_id mismatch.")
@@ -265,17 +297,17 @@ def _validate_payloads(
     if governance.get("evaluation_summary_created") is not False:
         raise ValueError("metadata summary governance flag evaluation_summary_created must be false.")
 
-    if not RUN_DIR.is_dir():
-        raise FileNotFoundError(f"YOLO run directory not found: {_repo_relative(RUN_DIR)}")
+    if not run_dir.is_dir():
+        raise FileNotFoundError(f"YOLO run directory not found: {_repo_relative(run_dir)}")
     _validate_required_files(
         (
-            TRAINING_RESULT_PATH,
-            INVENTORY_PATH,
-            METADATA_SUMMARY_PATH,
-            RESULTS_CSV_PATH,
-            ARGS_YAML_PATH,
-            BEST_CHECKPOINT_PATH,
-            LAST_CHECKPOINT_PATH,
+            training_result_path,
+            inventory_path,
+            metadata_summary_path,
+            results_csv_path,
+            args_yaml_path,
+            best_checkpoint_path,
+            last_checkpoint_path,
         )
     )
 

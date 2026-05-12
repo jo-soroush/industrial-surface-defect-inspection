@@ -15,12 +15,6 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RUN_ID = "yolo_train_v0_1_0"
-DEFAULT_RUN_DIR = REPO_ROOT / "artifacts/detection/yolo/runs" / DEFAULT_RUN_ID
-DEFAULT_INVENTORY_PATH = (
-    REPO_ROOT / "artifacts/models/inventory" / f"track_detection_artifact_inventory__{DEFAULT_RUN_ID}.json"
-)
-DEFAULT_OUTPUT_PATH = REPO_ROOT / "artifacts/models/analysis" / f"training_result__{DEFAULT_RUN_ID}.json"
-DEFAULT_RUN_CONFIG_PATH = REPO_ROOT / "configs/runs/yolo_train_v0_1_0.yaml"
 DEFAULT_MODEL_CONFIG_PATH = REPO_ROOT / "configs/models/yolo.yaml"
 DEFAULT_EXPORT_MANIFEST_PATH = REPO_ROOT / "data/processed/gc10det_yolo/export_manifest.yaml"
 DEFAULT_DATASET_YAML_PATH = REPO_ROOT / "data/processed/gc10det_yolo/dataset.yaml"
@@ -31,18 +25,28 @@ def build_parser() -> argparse.ArgumentParser:
         description="Build a governed Detection/YOLO training result summary JSON."
     )
     parser.add_argument(
+        "--run-id",
+        default=DEFAULT_RUN_ID,
+        help="Governed Detection/YOLO run id.",
+    )
+    parser.add_argument(
+        "--run-config",
+        default=None,
+        help="Path to the governed YOLO run config.",
+    )
+    parser.add_argument(
         "--run-dir",
-        default=str(DEFAULT_RUN_DIR),
+        default=None,
         help="Path to the YOLO training run directory.",
     )
     parser.add_argument(
         "--inventory-path",
-        default=str(DEFAULT_INVENTORY_PATH),
+        default=None,
         help="Path to the governed Detection inventory JSON.",
     )
     parser.add_argument(
         "--output-path",
-        default=str(DEFAULT_OUTPUT_PATH),
+        default=None,
         help="Path to the training result summary JSON to write.",
     )
     return parser
@@ -51,16 +55,24 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = build_parser().parse_args()
 
-    run_dir = Path(args.run_dir)
-    inventory_path = Path(args.inventory_path)
-    output_path = Path(args.output_path)
+    run_id = args.run_id
+    run_dir = Path(args.run_dir or REPO_ROOT / "artifacts/detection/yolo/runs" / run_id)
+    inventory_path = Path(
+        args.inventory_path
+        or REPO_ROOT / "artifacts/models/inventory" / f"track_detection_artifact_inventory__{run_id}.json"
+    )
+    output_path = Path(
+        args.output_path
+        or REPO_ROOT / "artifacts/models/analysis" / f"training_result__{run_id}.json"
+    )
+    run_config_path = Path(args.run_config or REPO_ROOT / "configs/runs" / f"{run_id}.yaml")
 
     if not run_dir.is_dir():
         raise FileNotFoundError(
             f"YOLO run directory not found: {_repo_relative(run_dir)}"
         )
 
-    run_config = _load_yaml_file(DEFAULT_RUN_CONFIG_PATH, "run config")
+    run_config = _load_yaml_file(run_config_path, "run config")
     model_config = _load_yaml_file(DEFAULT_MODEL_CONFIG_PATH, "model config")
     export_manifest = _load_yaml_file(DEFAULT_EXPORT_MANIFEST_PATH, "export manifest")
     dataset_yaml = _load_yaml_file(DEFAULT_DATASET_YAML_PATH, "dataset yaml")
@@ -72,6 +84,10 @@ def main() -> int:
     last_checkpoint_path = _require_file(run_dir / "weights" / "last.pt", "weights/last.pt")
 
     _validate_config(run_config, model_config, export_manifest, dataset_yaml, inventory)
+    model_source = (
+        run_config.get("training_model_source")
+        or model_config.get("training_model_source")
+    )
 
     metrics_summary = _build_metrics_summary(results_csv_path)
     run_args = _load_yaml_file(args_yaml_path, "YOLO args")
@@ -88,7 +104,7 @@ def main() -> int:
 
     summary = {
         "result_type": "detection_yolo_training_result",
-        "run_id": DEFAULT_RUN_ID,
+        "run_id": run_id,
         "track_id": "detection",
         "task_type": "object_detection",
         "training_status": "success",
@@ -96,7 +112,7 @@ def main() -> int:
         "model": {
             "model_name": "yolo",
             "model_type": "yolo",
-            "model_source": model_config["training_model_source"],
+            "model_source": model_source,
             "backend": model_config["backend"],
             "pretrained": model_config.get("pretrained"),
         },
@@ -110,7 +126,7 @@ def main() -> int:
             "class_count": dataset_yaml["nc"],
         },
         "config": {
-            "run_config_path": _repo_relative(DEFAULT_RUN_CONFIG_PATH),
+            "run_config_path": _repo_relative(run_config_path),
             "model_config_path": _repo_relative(DEFAULT_MODEL_CONFIG_PATH),
             "config_id": run_config["identity"]["run_config_id"],
         },
@@ -197,8 +213,12 @@ def _validate_config(
         raise ValueError("YOLO model config backend must be ultralytics.")
     if model_config.get("backend_package") != "ultralytics":
         raise ValueError("YOLO model config backend_package must be ultralytics.")
-    if model_config.get("training_model_source") != "yolov8n.pt":
-        raise ValueError("YOLO model config training_model_source must be yolov8n.pt.")
+    model_source = (
+        run_config.get("training_model_source")
+        or model_config.get("training_model_source")
+    )
+    if not isinstance(model_source, str) or not model_source.strip():
+        raise ValueError("a governed YOLO training model source must be declared.")
     if model_config.get("dataset_id") != "gc10det_detection":
         raise ValueError("YOLO model config dataset_id must be gc10det_detection.")
     if model_config.get("dataset_version") != "gc10det_1.0":

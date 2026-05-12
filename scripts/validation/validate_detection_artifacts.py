@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
@@ -11,131 +13,96 @@ from typing import Any
 import yaml
 
 
-RUN_ID = "yolo_train_v0_1_0"
+DEFAULT_RUN_ID = "yolo_train_v0_1_0"
 TRACK_ID = "detection"
 TASK_TYPE = "object_detection"
 MODEL_NAME = "yolo"
 MODEL_VERSION = "0.1.0"
 DATASET_ID = "gc10det_detection"
 DATASET_VERSION = "gc10det_1.0"
-CONFIG_ID = "yolo_train_v0_1_0"
 
-EXPECTED_METRICS = {
-    "precision": 0.00477,
-    "recall": 0.54003,
-    "mAP50": 0.04518,
-    "mAP50_95": 0.01651,
-}
 
-RUN_REGISTRY_PATH = Path("artifacts/models/registry/run_registry.yaml")
-ARTIFACT_REGISTRY_PATH = Path("artifacts/models/registry/artifact_registry.yaml")
-TRAINING_RESULT_PATH = Path(
-    "artifacts/models/analysis/training_result__yolo_train_v0_1_0.json"
-)
-ARTIFACT_INVENTORY_PATH = Path(
-    "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_1_0.json"
-)
-METADATA_SUMMARY_PATH = Path(
-    "artifacts/models/metadata/track_detection_yolo_metadata_summary__yolo_train_v0_1_0.json"
-)
-POSTHOC_LOG_PATH = Path(
-    "artifacts/models/logs/track_detection_yolo_posthoc_run_log__yolo_train_v0_1_0.json"
-)
-EVALUATION_SUMMARY_PATH = Path(
-    "artifacts/models/metrics/detection_evaluation__yolo_train_v0_1_0__validation.json"
-)
-BEST_CHECKPOINT_PATH = Path(
-    "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/best.pt"
-)
-LAST_CHECKPOINT_PATH = Path(
-    "artifacts/detection/yolo/runs/yolo_train_v0_1_0/weights/last.pt"
-)
-RESULTS_CSV_PATH = Path("artifacts/detection/yolo/runs/yolo_train_v0_1_0/results.csv")
-ARGS_YAML_PATH = Path("artifacts/detection/yolo/runs/yolo_train_v0_1_0/args.yaml")
+@dataclass(frozen=True)
+class ValidationContext:
+    run_id: str
+    config_id: str
+    model_version: str
+    run_registry_path: Path
+    artifact_registry_path: Path
+    training_result_path: Path
+    artifact_inventory_path: Path
+    metadata_summary_path: Path
+    posthoc_log_path: Path
+    evaluation_summary_path: Path
+    best_checkpoint_path: Path
+    last_checkpoint_path: Path
+    results_csv_path: Path
+    args_yaml_path: Path
+    expected_artifacts: dict[str, dict[str, Any]]
 
-REQUIRED_FILES = {
-    "run_registry": RUN_REGISTRY_PATH,
-    "artifact_registry": ARTIFACT_REGISTRY_PATH,
-    "training_result": TRAINING_RESULT_PATH,
-    "artifact_inventory": ARTIFACT_INVENTORY_PATH,
-    "metadata_summary": METADATA_SUMMARY_PATH,
-    "posthoc_log": POSTHOC_LOG_PATH,
-    "evaluation_summary": EVALUATION_SUMMARY_PATH,
-    "best_checkpoint": BEST_CHECKPOINT_PATH,
-    "last_checkpoint": LAST_CHECKPOINT_PATH,
-    "results_csv": RESULTS_CSV_PATH,
-    "args_yaml": ARGS_YAML_PATH,
-}
 
-EXPECTED_RUN_REFERENCES = {
-    "metadata_path": TRAINING_RESULT_PATH,
-    "metrics_path": EVALUATION_SUMMARY_PATH,
-    "log_path": POSTHOC_LOG_PATH,
-    "checkpoint_path": BEST_CHECKPOINT_PATH,
-    "inventory_path": ARTIFACT_INVENTORY_PATH,
-    "metadata_summary_path": METADATA_SUMMARY_PATH,
-}
-
-EXPECTED_ARTIFACTS = {
-    "track_detection__yolo_train_v0_1_0__training_result": {
-        "path": TRAINING_RESULT_PATH,
-        "type": "detection_yolo_training_result",
-        "format": "json",
-    },
-    "track_detection__yolo_train_v0_1_0__validation_evaluation": {
-        "path": EVALUATION_SUMMARY_PATH,
-        "type": "detection_yolo_validation_evaluation",
-        "format": "json",
-    },
-    "track_detection__yolo_train_v0_1_0__artifact_inventory": {
-        "path": ARTIFACT_INVENTORY_PATH,
-        "type": "track_detection_yolo_artifact_inventory",
-        "format": "json",
-    },
-    "track_detection__yolo_train_v0_1_0__metadata_summary": {
-        "path": METADATA_SUMMARY_PATH,
-        "type": "track_detection_yolo_metadata_summary",
-        "format": "json",
-    },
-    "track_detection__yolo_train_v0_1_0__posthoc_log": {
-        "path": POSTHOC_LOG_PATH,
-        "type": "track_detection_yolo_posthoc_run_log",
-        "format": "json",
-    },
-    "track_detection__yolo_train_v0_1_0__best_checkpoint": {
-        "path": BEST_CHECKPOINT_PATH,
-        "type": "yolo_best_checkpoint",
-        "format": "pt",
-    },
-    "track_detection__yolo_train_v0_1_0__last_checkpoint": {
-        "path": LAST_CHECKPOINT_PATH,
-        "type": "yolo_last_checkpoint",
-        "format": "pt",
-    },
-    "track_detection__yolo_train_v0_1_0__training_metrics_csv": {
-        "path": RESULTS_CSV_PATH,
-        "type": "yolo_training_metrics_csv",
-        "format": "csv",
-    },
-    "track_detection__yolo_train_v0_1_0__training_args": {
-        "path": ARGS_YAML_PATH,
-        "type": "yolo_training_args",
-        "format": "yaml",
-    },
-}
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Validate governed Detection/YOLO artifacts end-to-end."
+    )
+    parser.add_argument("--run-id", default=DEFAULT_RUN_ID)
+    parser.add_argument("--config-id", default=None)
+    parser.add_argument("--model-version", default=MODEL_VERSION)
+    parser.add_argument(
+        "--run-registry",
+        default="artifacts/models/registry/run_registry.yaml",
+    )
+    parser.add_argument(
+        "--artifact-registry",
+        default="artifacts/models/registry/artifact_registry.yaml",
+    )
+    parser.add_argument(
+        "--detection-runs-root",
+        default="artifacts/detection/yolo/runs",
+    )
+    parser.add_argument(
+        "--training-result",
+        default=None,
+        help="Override path to the Detection/YOLO training result summary.",
+    )
+    parser.add_argument(
+        "--artifact-inventory",
+        default=None,
+        help="Override path to the Detection/YOLO artifact inventory.",
+    )
+    parser.add_argument(
+        "--metadata-summary",
+        default=None,
+        help="Override path to the Detection/YOLO metadata summary.",
+    )
+    parser.add_argument(
+        "--posthoc-log",
+        default=None,
+        help="Override path to the Detection/YOLO post-hoc log.",
+    )
+    parser.add_argument(
+        "--evaluation-summary",
+        default=None,
+        help="Override path to the Detection/YOLO validation evaluation summary.",
+    )
+    return parser
 
 
 def main() -> int:
-    _validate_required_files()
+    args = build_parser().parse_args()
+    ctx = _build_context(args)
 
-    run_registry = _validate_run_registry()
-    artifact_registry_entries = _validate_artifact_registry()
-    training_result = _validate_training_result()
-    artifact_inventory = _validate_artifact_inventory()
-    metadata_summary = _validate_metadata_summary()
-    posthoc_log = _validate_posthoc_log()
-    evaluation_summary = _validate_evaluation_summary()
+    _validate_required_files(ctx)
+
+    run_registry = _validate_run_registry(ctx)
+    artifact_registry_entries = _validate_artifact_registry(ctx)
+    training_result = _validate_training_result(ctx)
+    artifact_inventory = _validate_artifact_inventory(ctx)
+    metadata_summary = _validate_metadata_summary(ctx)
+    posthoc_log = _validate_posthoc_log(ctx)
+    evaluation_summary = _validate_evaluation_summary(ctx)
     _validate_cross_file_consistency(
+        ctx,
         run_registry,
         artifact_registry_entries,
         training_result,
@@ -143,6 +110,12 @@ def main() -> int:
         metadata_summary,
         posthoc_log,
         evaluation_summary,
+    )
+
+    metrics = _require_dict(evaluation_summary.get("metrics"), "evaluation_summary.metrics")
+    interpretation = _require_dict(
+        evaluation_summary.get("metric_interpretation"),
+        "evaluation_summary.metric_interpretation",
     )
 
     print("validation_status=pass")
@@ -154,25 +127,136 @@ def main() -> int:
     print("posthoc_log_status=pass")
     print("evaluation_summary_status=pass")
     print("cross_file_consistency_status=pass")
-    print(f"run_id={RUN_ID}")
-    print(f"mAP50={EXPECTED_METRICS['mAP50']}")
-    print(f"mAP50_95={EXPECTED_METRICS['mAP50_95']}")
-    print("production_readiness=not_ready")
+    print(f"run_id={ctx.run_id}")
+    print(f"mAP50={metrics.get('mAP50')}")
+    print(f"mAP50_95={metrics.get('mAP50_95')}")
+    print(f"production_readiness={interpretation.get('production_readiness')}")
     return 0
 
 
-def _validate_required_files() -> None:
-    for name, path in REQUIRED_FILES.items():
+def _build_context(args: argparse.Namespace) -> ValidationContext:
+    run_id = _require_non_empty_string(args.run_id, "run_id")
+    config_id = args.config_id or run_id
+    run_dir = Path(args.detection_runs_root) / run_id
+    training_result_path = Path(
+        args.training_result
+        or f"artifacts/models/analysis/training_result__{run_id}.json"
+    )
+    artifact_inventory_path = Path(
+        args.artifact_inventory
+        or f"artifacts/models/inventory/track_detection_artifact_inventory__{run_id}.json"
+    )
+    metadata_summary_path = Path(
+        args.metadata_summary
+        or f"artifacts/models/metadata/track_detection_yolo_metadata_summary__{run_id}.json"
+    )
+    posthoc_log_path = Path(
+        args.posthoc_log
+        or f"artifacts/models/logs/track_detection_yolo_posthoc_run_log__{run_id}.json"
+    )
+    evaluation_summary_path = Path(
+        args.evaluation_summary
+        or f"artifacts/models/metrics/detection_evaluation__{run_id}__validation.json"
+    )
+    best_checkpoint_path = run_dir / "weights" / "best.pt"
+    last_checkpoint_path = run_dir / "weights" / "last.pt"
+    results_csv_path = run_dir / "results.csv"
+    args_yaml_path = run_dir / "args.yaml"
+
+    expected_artifacts = {
+        f"track_detection__{run_id}__training_result": {
+            "path": training_result_path,
+            "type": "detection_yolo_training_result",
+            "format": "json",
+        },
+        f"track_detection__{run_id}__validation_evaluation": {
+            "path": evaluation_summary_path,
+            "type": "detection_yolo_validation_evaluation",
+            "format": "json",
+        },
+        f"track_detection__{run_id}__artifact_inventory": {
+            "path": artifact_inventory_path,
+            "type": "track_detection_yolo_artifact_inventory",
+            "format": "json",
+        },
+        f"track_detection__{run_id}__metadata_summary": {
+            "path": metadata_summary_path,
+            "type": "track_detection_yolo_metadata_summary",
+            "format": "json",
+        },
+        f"track_detection__{run_id}__posthoc_log": {
+            "path": posthoc_log_path,
+            "type": "track_detection_yolo_posthoc_run_log",
+            "format": "json",
+        },
+        f"track_detection__{run_id}__best_checkpoint": {
+            "path": best_checkpoint_path,
+            "type": "yolo_best_checkpoint",
+            "format": "pt",
+        },
+        f"track_detection__{run_id}__last_checkpoint": {
+            "path": last_checkpoint_path,
+            "type": "yolo_last_checkpoint",
+            "format": "pt",
+        },
+        f"track_detection__{run_id}__training_metrics_csv": {
+            "path": results_csv_path,
+            "type": "yolo_training_metrics_csv",
+            "format": "csv",
+        },
+        f"track_detection__{run_id}__training_args": {
+            "path": args_yaml_path,
+            "type": "yolo_training_args",
+            "format": "yaml",
+        },
+    }
+
+    return ValidationContext(
+        run_id=run_id,
+        config_id=config_id,
+        model_version=args.model_version,
+        run_registry_path=Path(args.run_registry),
+        artifact_registry_path=Path(args.artifact_registry),
+        training_result_path=training_result_path,
+        artifact_inventory_path=artifact_inventory_path,
+        metadata_summary_path=metadata_summary_path,
+        posthoc_log_path=posthoc_log_path,
+        evaluation_summary_path=evaluation_summary_path,
+        best_checkpoint_path=best_checkpoint_path,
+        last_checkpoint_path=last_checkpoint_path,
+        results_csv_path=results_csv_path,
+        args_yaml_path=args_yaml_path,
+        expected_artifacts=expected_artifacts,
+    )
+
+
+def _validate_required_files(ctx: ValidationContext) -> None:
+    required_files = {
+        "run_registry": ctx.run_registry_path,
+        "artifact_registry": ctx.artifact_registry_path,
+        "training_result": ctx.training_result_path,
+        "artifact_inventory": ctx.artifact_inventory_path,
+        "metadata_summary": ctx.metadata_summary_path,
+        "posthoc_log": ctx.posthoc_log_path,
+        "evaluation_summary": ctx.evaluation_summary_path,
+        "best_checkpoint": ctx.best_checkpoint_path,
+        "last_checkpoint": ctx.last_checkpoint_path,
+        "results_csv": ctx.results_csv_path,
+        "args_yaml": ctx.args_yaml_path,
+    }
+    for name, path in required_files.items():
         _require_file(path, name)
 
 
-def _validate_run_registry() -> dict[str, Any]:
-    registry = _load_yaml_file(RUN_REGISTRY_PATH, "run registry")
+def _validate_run_registry(ctx: ValidationContext) -> dict[str, Any]:
+    registry = _load_yaml_file(ctx.run_registry_path, "run registry")
     runs = _require_list(registry.get("runs"), "run_registry.runs")
-    matches = [run for run in runs if isinstance(run, dict) and run.get("run_id") == RUN_ID]
+    matches = [
+        run for run in runs if isinstance(run, dict) and run.get("run_id") == ctx.run_id
+    ]
     if len(matches) != 1:
         raise ValueError(
-            f"run_registry must contain exactly one run_id {RUN_ID}; found {len(matches)}."
+            f"run_registry must contain exactly one run_id {ctx.run_id}; found {len(matches)}."
         )
     run = matches[0]
     _require_fields(
@@ -180,16 +264,24 @@ def _validate_run_registry() -> dict[str, Any]:
         "run_registry.run",
         {
             "model_name": MODEL_NAME,
-            "model_version": MODEL_VERSION,
+            "model_version": ctx.model_version,
             "dataset_id": DATASET_ID,
             "dataset_version": DATASET_VERSION,
             "task_type": TASK_TYPE,
-            "config_id": CONFIG_ID,
+            "config_id": ctx.config_id,
             "run_status": "success",
             "artifact_created": True,
         },
     )
-    for key, expected_path in EXPECTED_RUN_REFERENCES.items():
+    expected_references = {
+        "metadata_path": ctx.training_result_path,
+        "metrics_path": ctx.evaluation_summary_path,
+        "log_path": ctx.posthoc_log_path,
+        "checkpoint_path": ctx.best_checkpoint_path,
+        "inventory_path": ctx.artifact_inventory_path,
+        "metadata_summary_path": ctx.metadata_summary_path,
+    }
+    for key, expected_path in expected_references.items():
         actual = Path(_require_string(run.get(key), f"run_registry.run.{key}"))
         if actual != expected_path:
             raise ValueError(
@@ -199,12 +291,12 @@ def _validate_run_registry() -> dict[str, Any]:
     return run
 
 
-def _validate_artifact_registry() -> dict[str, dict[str, Any]]:
-    registry = _load_yaml_file(ARTIFACT_REGISTRY_PATH, "artifact registry")
+def _validate_artifact_registry(ctx: ValidationContext) -> dict[str, dict[str, Any]]:
+    registry = _load_yaml_file(ctx.artifact_registry_path, "artifact registry")
     artifacts = _require_list(registry.get("artifacts"), "artifact_registry.artifacts")
     validated_entries: dict[str, dict[str, Any]] = {}
 
-    for artifact_id, expected in EXPECTED_ARTIFACTS.items():
+    for artifact_id, expected in ctx.expected_artifacts.items():
         matches = [
             artifact
             for artifact in artifacts
@@ -220,12 +312,12 @@ def _validate_artifact_registry() -> dict[str, dict[str, Any]]:
             entry,
             f"artifact_registry.{artifact_id}",
             {
-                "run_id": RUN_ID,
+                "run_id": ctx.run_id,
                 "model_name": MODEL_NAME,
-                "model_version": MODEL_VERSION,
+                "model_version": ctx.model_version,
                 "dataset_id": DATASET_ID,
                 "dataset_version": DATASET_VERSION,
-                "config_id": CONFIG_ID,
+                "config_id": ctx.config_id,
                 "status": "active",
                 "artifact_path": str(expected_path),
                 "artifact_type": expected["type"],
@@ -244,14 +336,14 @@ def _validate_artifact_registry() -> dict[str, dict[str, Any]]:
     return validated_entries
 
 
-def _validate_training_result() -> dict[str, Any]:
-    payload = _load_json_file(TRAINING_RESULT_PATH, "training result")
+def _validate_training_result(ctx: ValidationContext) -> dict[str, Any]:
+    payload = _load_json_file(ctx.training_result_path, "training result")
     _require_fields(
         payload,
         "training_result",
         {
             "result_type": "detection_yolo_training_result",
-            "run_id": RUN_ID,
+            "run_id": ctx.run_id,
             "track_id": TRACK_ID,
             "task_type": TASK_TYPE,
             "training_status": "success",
@@ -259,7 +351,7 @@ def _validate_training_result() -> dict[str, Any]:
         },
     )
     metrics = _require_dict(payload.get("metrics"), "training_result.metrics")
-    _require_metric_values(metrics, "training_result.metrics")
+    _require_required_metrics(metrics, "training_result.metrics")
     artifacts = _require_dict(payload.get("artifacts"), "training_result.artifacts")
     _require_equal(
         artifacts.get("inventory_status"),
@@ -280,14 +372,14 @@ def _validate_training_result() -> dict[str, Any]:
     return payload
 
 
-def _validate_artifact_inventory() -> dict[str, Any]:
-    payload = _load_json_file(ARTIFACT_INVENTORY_PATH, "artifact inventory")
+def _validate_artifact_inventory(ctx: ValidationContext) -> dict[str, Any]:
+    payload = _load_json_file(ctx.artifact_inventory_path, "artifact inventory")
     _require_fields(
         payload,
         "artifact_inventory",
         {
             "inventory_type": "track_detection_yolo_artifact_inventory",
-            "run_id": RUN_ID,
+            "run_id": ctx.run_id,
             "track_id": TRACK_ID,
             "task_type": TASK_TYPE,
             "inventory_status": "pass",
@@ -316,14 +408,14 @@ def _validate_artifact_inventory() -> dict[str, Any]:
     return payload
 
 
-def _validate_metadata_summary() -> dict[str, Any]:
-    payload = _load_json_file(METADATA_SUMMARY_PATH, "metadata summary")
+def _validate_metadata_summary(ctx: ValidationContext) -> dict[str, Any]:
+    payload = _load_json_file(ctx.metadata_summary_path, "metadata summary")
     _require_fields(
         payload,
         "metadata_summary",
         {
             "metadata_type": "track_detection_yolo_metadata_summary",
-            "run_id": RUN_ID,
+            "run_id": ctx.run_id,
             "track_id": TRACK_ID,
             "task_type": TASK_TYPE,
             "run_status": "success",
@@ -345,14 +437,14 @@ def _validate_metadata_summary() -> dict[str, Any]:
     return payload
 
 
-def _validate_posthoc_log() -> dict[str, Any]:
-    payload = _load_json_file(POSTHOC_LOG_PATH, "posthoc log")
+def _validate_posthoc_log(ctx: ValidationContext) -> dict[str, Any]:
+    payload = _load_json_file(ctx.posthoc_log_path, "posthoc log")
     _require_fields(
         payload,
         "posthoc_log",
         {
             "log_type": "track_detection_yolo_posthoc_run_log",
-            "run_id": RUN_ID,
+            "run_id": ctx.run_id,
             "track_id": TRACK_ID,
             "task_type": TASK_TYPE,
             "run_status": "success",
@@ -378,14 +470,14 @@ def _validate_posthoc_log() -> dict[str, Any]:
     return payload
 
 
-def _validate_evaluation_summary() -> dict[str, Any]:
-    payload = _load_json_file(EVALUATION_SUMMARY_PATH, "evaluation summary")
+def _validate_evaluation_summary(ctx: ValidationContext) -> dict[str, Any]:
+    payload = _load_json_file(ctx.evaluation_summary_path, "evaluation summary")
     _require_fields(
         payload,
         "evaluation_summary",
         {
             "evaluation_type": "detection_yolo_validation_evaluation",
-            "run_id": RUN_ID,
+            "run_id": ctx.run_id,
             "track_id": TRACK_ID,
             "task_type": TASK_TYPE,
             "evaluation_split": "validation",
@@ -393,18 +485,14 @@ def _validate_evaluation_summary() -> dict[str, Any]:
         },
     )
     metrics = _require_dict(payload.get("metrics"), "evaluation_summary.metrics")
-    _require_metric_values(metrics, "evaluation_summary.metrics")
+    _require_required_metrics(metrics, "evaluation_summary.metrics")
     interpretation = _require_dict(
         payload.get("metric_interpretation"),
         "evaluation_summary.metric_interpretation",
     )
-    _require_fields(
-        interpretation,
-        "evaluation_summary.metric_interpretation",
-        {
-            "performance_level": "low_initial_baseline",
-            "production_readiness": "not_ready",
-        },
+    _require_string(
+        interpretation.get("production_readiness"),
+        "evaluation_summary.metric_interpretation.production_readiness",
     )
     evidence_files = _require_list(
         payload.get("evidence_files"), "evaluation_summary.evidence_files"
@@ -446,6 +534,7 @@ def _validate_evaluation_summary() -> dict[str, Any]:
 
 
 def _validate_cross_file_consistency(
+    ctx: ValidationContext,
     run_registry: dict[str, Any],
     artifact_registry_entries: dict[str, dict[str, Any]],
     training_result: dict[str, Any],
@@ -462,21 +551,23 @@ def _validate_cross_file_consistency(
         "evaluation_summary": evaluation_summary,
     }
     for name, payload in evidence_files.items():
-        _require_equal(payload.get("run_id"), RUN_ID, f"{name}.run_id")
+        _require_equal(payload.get("run_id"), ctx.run_id, f"{name}.run_id")
         if "track_id" in payload:
             _require_equal(payload.get("track_id"), TRACK_ID, f"{name}.track_id")
         if "task_type" in payload:
             _require_equal(payload.get("task_type"), TASK_TYPE, f"{name}.task_type")
 
-    _require_equal(run_registry.get("run_id"), RUN_ID, "run_registry.run_id")
+    _require_equal(run_registry.get("run_id"), ctx.run_id, "run_registry.run_id")
     for artifact_id, entry in artifact_registry_entries.items():
-        _require_equal(entry.get("run_id"), RUN_ID, f"artifact_registry.{artifact_id}.run_id")
+        _require_equal(
+            entry.get("run_id"), ctx.run_id, f"artifact_registry.{artifact_id}.run_id"
+        )
 
     training_metrics = _require_dict(training_result.get("metrics"), "training_result.metrics")
     metadata_metrics = _require_dict(metadata_summary.get("metrics"), "metadata_summary.metrics")
     posthoc_metrics = _require_dict(posthoc_log.get("metrics_summary"), "posthoc_log.metrics_summary")
     evaluation_metrics = _require_dict(evaluation_summary.get("metrics"), "evaluation_summary.metrics")
-    for metric_name in EXPECTED_METRICS:
+    for metric_name in ("precision", "recall", "mAP50", "mAP50_95"):
         baseline = training_metrics.get(metric_name)
         for source_name, metrics in (
             ("metadata_summary", metadata_metrics),
@@ -493,44 +584,44 @@ def _validate_cross_file_consistency(
         metadata_summary,
         "metadata_summary.artifact_integrity.best_checkpoint_sha256",
         ("artifact_integrity", "best_checkpoint_sha256"),
-        BEST_CHECKPOINT_PATH,
+        ctx.best_checkpoint_path,
     )
     _validate_integrity_hash(
         metadata_summary,
         "metadata_summary.artifact_integrity.last_checkpoint_sha256",
         ("artifact_integrity", "last_checkpoint_sha256"),
-        LAST_CHECKPOINT_PATH,
+        ctx.last_checkpoint_path,
     )
     _validate_integrity_hash(
         posthoc_log,
         "posthoc_log.artifact_integrity.best_checkpoint_sha256",
         ("artifact_integrity", "best_checkpoint_sha256"),
-        BEST_CHECKPOINT_PATH,
+        ctx.best_checkpoint_path,
     )
     _validate_integrity_hash(
         posthoc_log,
         "posthoc_log.artifact_integrity.last_checkpoint_sha256",
         ("artifact_integrity", "last_checkpoint_sha256"),
-        LAST_CHECKPOINT_PATH,
+        ctx.last_checkpoint_path,
     )
 
     _require_artifact_reference(
         posthoc_log,
         ("artifact_references", "best_checkpoint_path"),
-        BEST_CHECKPOINT_PATH,
+        ctx.best_checkpoint_path,
         "posthoc_log.artifact_references.best_checkpoint_path",
     )
     _require_artifact_reference(
         posthoc_log,
         ("artifact_references", "last_checkpoint_path"),
-        LAST_CHECKPOINT_PATH,
+        ctx.last_checkpoint_path,
         "posthoc_log.artifact_references.last_checkpoint_path",
     )
 
     registry_paths = {
         Path(entry["artifact_path"]) for entry in artifact_registry_entries.values()
     }
-    expected_paths = {config["path"] for config in EXPECTED_ARTIFACTS.values()}
+    expected_paths = {config["path"] for config in ctx.expected_artifacts.values()}
     if registry_paths != expected_paths:
         raise ValueError("artifact_registry governed paths do not match expected paths.")
 
@@ -569,9 +660,12 @@ def _validate_file_integrity(
     _require_equal(expected_sha256, _sha256(path), f"{field_name}.sha256")
 
 
-def _require_metric_values(metrics: dict[str, Any], field_name: str) -> None:
-    for metric_name, expected_value in EXPECTED_METRICS.items():
-        _require_equal(metrics.get(metric_name), expected_value, f"{field_name}.{metric_name}")
+def _require_required_metrics(metrics: dict[str, Any], field_name: str) -> None:
+    for metric_name in ("precision", "recall", "mAP50", "mAP50_95"):
+        if metric_name not in metrics:
+            raise ValueError(f"{field_name}.{metric_name} is required.")
+        if not isinstance(metrics[metric_name], (int, float)):
+            raise ValueError(f"{field_name}.{metric_name} must be numeric.")
 
 
 def _load_json_file(path: Path, artifact_name: str) -> dict[str, Any]:
@@ -638,6 +732,10 @@ def _require_string(value: Any, field_name: str) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError(f"{field_name} must be a non-empty string.")
     return value
+
+
+def _require_non_empty_string(value: Any, field_name: str) -> str:
+    return _require_string(value, field_name).strip()
 
 
 def _require_path(value: Any, field_name: str) -> Path:

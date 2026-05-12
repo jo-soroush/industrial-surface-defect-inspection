@@ -13,45 +13,69 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RUN_ID = "yolo_train_v0_1_0"
-RUN_DIR = REPO_ROOT / "artifacts/detection/yolo/runs" / RUN_ID
-TRAINING_RESULT_PATH = REPO_ROOT / "artifacts/models/analysis" / f"training_result__{RUN_ID}.json"
-INVENTORY_PATH = (
-    REPO_ROOT / "artifacts/models/inventory" / f"track_detection_artifact_inventory__{RUN_ID}.json"
-)
-RUN_CONFIG_PATH = REPO_ROOT / "configs/runs/yolo_train_v0_1_0.yaml"
+DEFAULT_RUN_ID = "yolo_train_v0_1_0"
 MODEL_CONFIG_PATH = REPO_ROOT / "configs/models/yolo.yaml"
 EXPORT_MANIFEST_PATH = REPO_ROOT / "data/processed/gc10det_yolo/export_manifest.yaml"
 DATASET_YAML_PATH = REPO_ROOT / "data/processed/gc10det_yolo/dataset.yaml"
-OUTPUT_PATH = (
-    REPO_ROOT
-    / "artifacts/models/metadata"
-    / f"track_detection_yolo_metadata_summary__{RUN_ID}.json"
-)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Build a governed Detection/YOLO metadata summary JSON."
     )
+    parser.add_argument("--run-id", default=DEFAULT_RUN_ID)
+    parser.add_argument("--run-dir", default=None)
+    parser.add_argument("--training-result", default=None)
+    parser.add_argument("--artifact-inventory", default=None)
+    parser.add_argument("--run-config", default=None)
+    parser.add_argument("--output-path", default=None)
     return parser
 
 
 def main() -> int:
-    build_parser().parse_args()
+    args = build_parser().parse_args()
+    run_id = args.run_id
+    run_dir = Path(args.run_dir or REPO_ROOT / "artifacts/detection/yolo/runs" / run_id)
+    training_result_path = Path(
+        args.training_result
+        or REPO_ROOT / "artifacts/models/analysis" / f"training_result__{run_id}.json"
+    )
+    inventory_path = Path(
+        args.artifact_inventory
+        or REPO_ROOT / "artifacts/models/inventory" / f"track_detection_artifact_inventory__{run_id}.json"
+    )
+    run_config_path = Path(args.run_config or REPO_ROOT / "configs/runs" / f"{run_id}.yaml")
+    output_path = Path(
+        args.output_path
+        or REPO_ROOT
+        / "artifacts/models/metadata"
+        / f"track_detection_yolo_metadata_summary__{run_id}.json"
+    )
 
-    training_result = _load_json_file(TRAINING_RESULT_PATH, "training result summary")
-    inventory = _load_json_file(INVENTORY_PATH, "artifact inventory")
-    run_config = _load_yaml_file(RUN_CONFIG_PATH, "run config")
+    training_result = _load_json_file(training_result_path, "training result summary")
+    inventory = _load_json_file(inventory_path, "artifact inventory")
+    run_config = _load_yaml_file(run_config_path, "run config")
     model_config = _load_yaml_file(MODEL_CONFIG_PATH, "model config")
     export_manifest = _load_yaml_file(EXPORT_MANIFEST_PATH, "export manifest")
     dataset_yaml = _load_yaml_file(DATASET_YAML_PATH, "dataset yaml")
 
-    _validate_inputs(training_result, inventory, run_config, model_config, export_manifest, dataset_yaml)
+    _validate_inputs(
+        run_id,
+        run_dir,
+        training_result_path,
+        inventory_path,
+        run_config_path,
+        training_result,
+        inventory,
+        run_config,
+        model_config,
+        export_manifest,
+        dataset_yaml,
+    )
 
     summary = {
         "metadata_type": "track_detection_yolo_metadata_summary",
-        "run_id": RUN_ID,
+        "run_id": run_id,
         "track_id": "detection",
         "task_type": "object_detection",
         "run_status": training_result["training_status"],
@@ -81,17 +105,17 @@ def main() -> int:
         "planned_config_parameters": training_result["planned_config_parameters"],
         "metrics": training_result["metrics"],
         "artifact_linkage": {
-            "training_result_path": _repo_relative(TRAINING_RESULT_PATH),
-            "artifact_inventory_path": _repo_relative(INVENTORY_PATH),
-            "run_directory": _repo_relative(RUN_DIR),
+            "training_result_path": _repo_relative(training_result_path),
+            "artifact_inventory_path": _repo_relative(inventory_path),
+            "run_directory": _repo_relative(run_dir),
             "best_checkpoint_path": training_result["artifacts"]["best_checkpoint_path"],
             "last_checkpoint_path": training_result["artifacts"]["last_checkpoint_path"],
             "results_csv_path": training_result["artifacts"]["results_csv_path"],
             "args_yaml_path": training_result["artifacts"]["args_yaml_path"],
         },
         "artifact_integrity": {
-            "training_result_sha256": _sha256(TRAINING_RESULT_PATH),
-            "artifact_inventory_sha256": _sha256(INVENTORY_PATH),
+            "training_result_sha256": _sha256(training_result_path),
+            "artifact_inventory_sha256": _sha256(inventory_path),
             "best_checkpoint_sha256": training_result["artifacts"]["best_checkpoint_sha256"],
             "last_checkpoint_sha256": training_result["artifacts"]["last_checkpoint_sha256"],
         },
@@ -111,11 +135,11 @@ def main() -> int:
         "created_at": _utc_now_iso(),
     }
 
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_PATH.open("w", encoding="utf-8") as handle:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as handle:
         json.dump(summary, handle, indent=2, sort_keys=False)
 
-    print(f"output_path={OUTPUT_PATH}")
+    print(f"output_path={output_path}")
     print(f"run_status={summary['run_status']}")
     print(f"mAP50={summary['metrics']['mAP50']}")
     print(f"mAP50_95={summary['metrics']['mAP50_95']}")
@@ -124,6 +148,11 @@ def main() -> int:
 
 
 def _validate_inputs(
+    run_id: str,
+    run_dir: Path,
+    training_result_path: Path,
+    inventory_path: Path,
+    run_config_path: Path,
     training_result: dict[str, Any],
     inventory: dict[str, Any],
     run_config: dict[str, Any],
@@ -135,7 +164,7 @@ def _validate_inputs(
         raise ValueError("training result summary result_type mismatch.")
     if training_result.get("training_status") != "success":
         raise ValueError("training result summary training_status must be success.")
-    if training_result.get("run_id") != RUN_ID:
+    if training_result.get("run_id") != run_id:
         raise ValueError("training result summary run_id mismatch.")
     if training_result.get("track_id") != "detection":
         raise ValueError("training result summary track_id must be detection.")
@@ -154,12 +183,12 @@ def _validate_inputs(
         raise ValueError("inventory type mismatch.")
     if inventory.get("inventory_status") != "pass":
         raise ValueError("inventory_status must be pass.")
-    if inventory.get("run_id") != RUN_ID:
+    if inventory.get("run_id") != run_id:
         raise ValueError("inventory run_id mismatch.")
 
-    if not RUN_DIR.is_dir():
-        raise FileNotFoundError(f"YOLO run directory not found: {_repo_relative(RUN_DIR)}")
-    for required_path in (TRAINING_RESULT_PATH, INVENTORY_PATH, RUN_CONFIG_PATH, MODEL_CONFIG_PATH, EXPORT_MANIFEST_PATH, DATASET_YAML_PATH):
+    if not run_dir.is_dir():
+        raise FileNotFoundError(f"YOLO run directory not found: {_repo_relative(run_dir)}")
+    for required_path in (training_result_path, inventory_path, run_config_path, MODEL_CONFIG_PATH, EXPORT_MANIFEST_PATH, DATASET_YAML_PATH):
         if not required_path.is_file():
             raise FileNotFoundError(f"Required file not found: {_repo_relative(required_path)}")
 
@@ -176,8 +205,12 @@ def _validate_inputs(
     if run_config["model_identity"].get("model_type") != "yolo":
         raise ValueError("run config model_type must be yolo.")
 
-    if model_config.get("training_model_source") != "yolov8n.pt":
-        raise ValueError("model config training_model_source must be yolov8n.pt.")
+    model_source = (
+        run_config.get("training_model_source")
+        or model_config.get("training_model_source")
+    )
+    if not isinstance(model_source, str) or not model_source.strip():
+        raise ValueError("a governed YOLO training model source must be declared.")
     if model_config.get("backend") != "ultralytics":
         raise ValueError("model config backend must be ultralytics.")
 

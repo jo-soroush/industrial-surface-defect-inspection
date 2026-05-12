@@ -120,19 +120,19 @@ def _resolve_training_model_source(
     run_config: dict[str, Any],
 ) -> str:
     for candidate in (
-        model_config.get("training_model_source"),
-        model_config.get("model_source"),
-        model_config.get("base_model_source"),
         run_config.get("training_model_source"),
         run_config.get("model_source"),
         run_config.get("base_model_source"),
+        model_config.get("training_model_source"),
+        model_config.get("model_source"),
+        model_config.get("base_model_source"),
     ):
         if isinstance(candidate, str) and candidate.strip():
             return candidate.strip()
 
     raise ValueError(
         "YOLO training requires a governed model source, but none is declared in "
-        "configs/models/yolo.yaml or configs/runs/yolo_train_v0_1_0.yaml. Add a "
+        "the selected run config or configs/models/yolo.yaml. Add a "
         "governed training_model_source before enabling --run-training."
     )
 
@@ -300,12 +300,12 @@ def _build_training_plan(
         "learning_rate": planned_learning_rate,
         "optimizer": planned_optimizer,
         "device": planned_device,
-        "model_source": model_config.get("training_model_source")
-        or model_config.get("model_source")
-        or model_config.get("base_model_source")
-        or run_config.get("training_model_source")
+        "model_source": run_config.get("training_model_source")
         or run_config.get("model_source")
-        or run_config.get("base_model_source"),
+        or run_config.get("base_model_source")
+        or model_config.get("training_model_source")
+        or model_config.get("model_source")
+        or model_config.get("base_model_source"),
     }
 
 

@@ -8,12 +8,20 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import sys
 from typing import Any
 
 import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from inspection_ai.evaluation.detection_readiness_policy import (  # noqa: E402
+    DEFAULT_BASELINE_METRICS,
+    evaluate_detection_readiness,
+)
+
 DEFAULT_RUN_ID = "yolo_train_v0_1_0"
 TRACK_ID = "detection"
 TASK_TYPE = "object_detection"
@@ -95,6 +103,25 @@ def main() -> int:
     )
 
     evidence_files = _build_evidence_files(run_dir)
+    metrics = {
+        "precision": _coerce_float(final_row["metrics/precision(B)"], "metrics/precision(B)"),
+        "recall": _coerce_float(final_row["metrics/recall(B)"], "metrics/recall(B)"),
+        "mAP50": _coerce_float(final_row["metrics/mAP50(B)"], "metrics/mAP50(B)"),
+        "mAP50_95": _coerce_float(final_row["metrics/mAP50-95(B)"], "metrics/mAP50-95(B)"),
+        "val_box_loss": _coerce_float(final_row["val/box_loss"], "val/box_loss"),
+        "val_cls_loss": _coerce_float(final_row["val/cls_loss"], "val/cls_loss"),
+        "val_dfl_loss": _coerce_float(final_row["val/dfl_loss"], "val/dfl_loss"),
+    }
+    readiness_policy = evaluate_detection_readiness(
+        metrics,
+        baseline_metrics=DEFAULT_BASELINE_METRICS,
+        evidence_flags={
+            "test_evaluation_exists": False,
+            "class_level_metrics_exist": False,
+            "visual_review_completed": False,
+            "audit_approved": False,
+        },
+    )
     evaluation = {
         "evaluation_type": "detection_yolo_validation_evaluation",
         "run_id": run_id,
@@ -115,27 +142,8 @@ def main() -> int:
             "validation_bbox_count": export_manifest["bbox_counts_by_split"]["validation"],
             "class_count": dataset_yaml["nc"],
         },
-        "metrics": {
-            "precision": _coerce_float(final_row["metrics/precision(B)"], "metrics/precision(B)"),
-            "recall": _coerce_float(final_row["metrics/recall(B)"], "metrics/recall(B)"),
-            "mAP50": _coerce_float(final_row["metrics/mAP50(B)"], "metrics/mAP50(B)"),
-            "mAP50_95": _coerce_float(final_row["metrics/mAP50-95(B)"], "metrics/mAP50-95(B)"),
-            "val_box_loss": _coerce_float(final_row["val/box_loss"], "val/box_loss"),
-            "val_cls_loss": _coerce_float(final_row["val/cls_loss"], "val/cls_loss"),
-            "val_dfl_loss": _coerce_float(final_row["val/dfl_loss"], "val/dfl_loss"),
-        },
-        "metric_interpretation": {
-            "performance_level": "low_initial_baseline",
-            "production_readiness": "not_ready",
-            "summary": (
-                "This 1-epoch YOLO run proves the governed training and artifact pipeline, "
-                "but the validation metrics are too weak for production deployment."
-            ),
-            "recommendation_note": (
-                "Use this run as first governed Detection evidence only. Do not mark "
-                "Detection PASS or recommend it for deployment yet."
-            ),
-        },
+        "metrics": metrics,
+        "metric_interpretation": readiness_policy,
         "evidence_files": evidence_files,
         "governance_references": {
             "training_result_path": _repo_relative(training_result_path),

@@ -14,6 +14,14 @@ import yaml
 
 
 DEFAULT_RUN_ID = "yolo_train_v0_1_0"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from inspection_ai.evaluation.detection_readiness_policy import (  # noqa: E402
+    DEFAULT_BASELINE_METRICS,
+    evaluate_detection_readiness,
+)
+
 TRACK_ID = "detection"
 TASK_TYPE = "object_detection"
 
@@ -95,13 +103,38 @@ def main() -> int:
         evaluation_summary.get("metric_interpretation"),
         "evaluation_summary.metric_interpretation",
     )
+    readiness_policy = evaluate_detection_readiness(
+        metrics,
+        baseline_metrics=DEFAULT_BASELINE_METRICS,
+        evidence_flags={
+            "test_evaluation_exists": False,
+            "class_level_metrics_exist": False,
+            "visual_review_completed": False,
+            "audit_approved": False,
+        },
+    )
+    production_readiness = interpretation.get(
+        "production_readiness",
+        readiness_policy["production_readiness"],
+    )
+    model_production_ready = production_readiness == "production_ready"
+    detection_track_final_pass = model_production_ready
+    audit_status = (
+        "governance_pass_model_ready_candidate"
+        if production_readiness == "model_ready_candidate"
+        else "governance_pass_model_not_ready"
+        if production_readiness in {"not_ready", "improved_baseline", "review_required"}
+        else "governance_pass_model_production_ready"
+        if production_readiness == "production_ready"
+        else "governance_pass_model_review_required"
+    )
 
     report = {
         "audit_type": "detection_yolo_final_reaudit",
         "run_id": run_id,
         "track_id": TRACK_ID,
         "task_type": TASK_TYPE,
-        "audit_status": "governance_pass_model_not_ready",
+        "audit_status": audit_status,
         "governance_status": {
             "required_files_present": True,
             "run_registry_entry_valid": True,
@@ -116,25 +149,35 @@ def main() -> int:
             "validation_script_status": validator_status["validation_status"],
         },
         "model_performance_status": {
-            "production_readiness": interpretation["production_readiness"],
-            "performance_level": interpretation["performance_level"],
+            "production_readiness": production_readiness,
+            "performance_level": interpretation.get(
+                "performance_level",
+                readiness_policy["performance_level"],
+            ),
+            "readiness_status": interpretation.get(
+                "readiness_status",
+                readiness_policy["readiness_status"],
+            ),
+            "readiness_level": interpretation.get(
+                "readiness_level",
+                readiness_policy["readiness_level"],
+            ),
             "mAP50": metrics["mAP50"],
             "mAP50_95": metrics["mAP50_95"],
             "precision": metrics["precision"],
             "recall": metrics["recall"],
-            "reason": (
-                "The governed YOLO pipeline is valid, but the 1-epoch validation "
-                "metrics are too weak for production deployment."
+            "reason": interpretation.get(
+                "decision_reason",
+                readiness_policy["decision_reason"],
             ),
+            "readiness_policy": readiness_policy,
         },
         "decision": {
             "governance_pipeline_pass": True,
-            "model_production_ready": False,
-            "detection_track_final_pass": False,
+            "model_production_ready": model_production_ready,
+            "detection_track_final_pass": detection_track_final_pass,
             "recommended_next_step": (
-                "Use this as governed first-run evidence only. Improve training "
-                "duration, hyperparameters, data strategy, and evaluation before "
-                "marking Detection as model-ready."
+                readiness_policy["recommendation_note"]
             ),
         },
         "evidence_references": {
@@ -149,9 +192,9 @@ def main() -> int:
         },
         "known_limitations": [
             "The audit confirms governance and evidence consistency, not production model quality.",
-            "The YOLO model was trained for only 1 epoch.",
-            "The validation metrics indicate a low initial baseline.",
-            "Further training and evaluation are required before Detection can be considered model-ready.",
+            "Validation metrics alone do not guarantee industrial deployment readiness.",
+            "Production readiness requires test evaluation, class-level review, visual review, and audit approval.",
+            "Further training and evaluation are required before unsupported production-ready claims.",
         ],
         "created_at": _utc_timestamp(),
     }
@@ -257,14 +300,20 @@ def _validate_loaded_evidence(
         evaluation_summary.get("metric_interpretation"),
         "evaluation_summary.metric_interpretation",
     )
-    _require_equal(
-        interpretation.get("production_readiness"),
+    readiness_status = interpretation.get("production_readiness")
+    if readiness_status not in {
         "not_ready",
-        "evaluation_summary.metric_interpretation.production_readiness",
-    )
-    _require_equal(
+        "improved_baseline",
+        "review_required",
+        "model_ready_candidate",
+        "production_ready",
+    }:
+        raise ValueError(
+            "evaluation_summary.metric_interpretation.production_readiness "
+            f"has unsupported value: {readiness_status!r}."
+        )
+    _require_string(
         interpretation.get("performance_level"),
-        "low_initial_baseline",
         "evaluation_summary.metric_interpretation.performance_level",
     )
 
@@ -345,6 +394,12 @@ def _require_equal(actual: Any, expected: Any, field_name: str) -> None:
 def _require_number(value: Any, field_name: str) -> None:
     if not isinstance(value, (int, float)):
         raise ValueError(f"{field_name} must be numeric; found {value!r}.")
+
+
+def _require_string(value: Any, field_name: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{field_name} must be a non-empty string.")
+    return value
 
 
 if __name__ == "__main__":

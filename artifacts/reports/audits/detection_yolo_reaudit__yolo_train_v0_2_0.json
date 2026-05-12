@@ -1,0 +1,113 @@
+{
+  "audit_type": "detection_yolo_final_reaudit",
+  "run_id": "yolo_train_v0_2_0",
+  "track_id": "detection",
+  "task_type": "object_detection",
+  "audit_status": "governance_pass_model_not_ready",
+  "governance_status": {
+    "required_files_present": true,
+    "run_registry_entry_valid": true,
+    "artifact_registry_entries_valid": true,
+    "training_result_valid": true,
+    "artifact_inventory_valid": true,
+    "metadata_summary_valid": true,
+    "posthoc_log_valid": true,
+    "evaluation_summary_valid": true,
+    "hashes_and_sizes_valid": true,
+    "cross_file_consistency_valid": true,
+    "validation_script_status": "pass"
+  },
+  "model_performance_status": {
+    "production_readiness": "review_required",
+    "performance_level": "review_required",
+    "readiness_status": "review_required",
+    "readiness_level": "review_required",
+    "mAP50": 0.415,
+    "mAP50_95": 0.2017,
+    "precision": 0.36791,
+    "recall": 0.51132,
+    "reason": "Some metrics are promising, but the balance or evidence is not sufficient for model-ready status.",
+    "readiness_policy": {
+      "production_readiness": "review_required",
+      "readiness_status": "review_required",
+      "readiness_level": "review_required",
+      "performance_level": "review_required",
+      "decision_reason": "Some metrics are promising, but the balance or evidence is not sufficient for model-ready status.",
+      "summary": "Some metrics are promising, but the balance or evidence is not sufficient for model-ready status.",
+      "recommendation_note": "Review metric balance, class-level results, and qualitative outputs before promotion.",
+      "blocking_reasons": [],
+      "improvement_signals": [
+        "mAP50 improved meaningfully over baseline.",
+        "mAP50_95 improved meaningfully over baseline.",
+        "recall is above the model-ready candidate floor."
+      ],
+      "metric_thresholds": {
+        "not_ready_max_mAP50": 0.1,
+        "not_ready_max_mAP50_95": 0.03,
+        "extremely_low_precision": 0.05,
+        "meaningful_mAP50_delta": 0.05,
+        "meaningful_mAP50_95_delta": 0.02,
+        "review_required_mAP50": 0.25,
+        "model_ready_candidate_mAP50": 0.5,
+        "model_ready_candidate_mAP50_95": 0.25,
+        "model_ready_candidate_precision": 0.4,
+        "model_ready_candidate_recall": 0.4,
+        "production_ready_mAP50": 0.7,
+        "production_ready_mAP50_95": 0.45,
+        "production_ready_precision": 0.6,
+        "production_ready_recall": 0.6
+      },
+      "baseline_comparison": {
+        "precision": {
+          "baseline": 0.00477,
+          "current": 0.36791,
+          "delta": 0.36314
+        },
+        "recall": {
+          "baseline": 0.54003,
+          "current": 0.51132,
+          "delta": -0.028710000000000013
+        },
+        "mAP50": {
+          "baseline": 0.04518,
+          "current": 0.415,
+          "delta": 0.36982
+        },
+        "mAP50_95": {
+          "baseline": 0.01651,
+          "current": 0.2017,
+          "delta": 0.18519
+        },
+        "meaningful_mAP50_improvement": true,
+        "meaningful_mAP50_95_improvement": true
+      },
+      "notes": [
+        "Readiness is based on governed validation metrics and required evidence flags.",
+        "Production readiness requires stronger evidence than validation metrics alone."
+      ]
+    }
+  },
+  "decision": {
+    "governance_pipeline_pass": true,
+    "model_production_ready": false,
+    "detection_track_final_pass": false,
+    "recommended_next_step": "Review metric balance, class-level results, and qualitative outputs before promotion."
+  },
+  "evidence_references": {
+    "validator_script": "scripts/validation/validate_detection_artifacts.py",
+    "training_result_path": "artifacts/models/analysis/training_result__yolo_train_v0_2_0.json",
+    "artifact_inventory_path": "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_2_0.json",
+    "metadata_summary_path": "artifacts/models/metadata/track_detection_yolo_metadata_summary__yolo_train_v0_2_0.json",
+    "posthoc_log_path": "artifacts/models/logs/track_detection_yolo_posthoc_run_log__yolo_train_v0_2_0.json",
+    "evaluation_summary_path": "artifacts/models/metrics/detection_evaluation__yolo_train_v0_2_0__validation.json",
+    "run_registry_path": "artifacts/models/registry/run_registry.yaml",
+    "artifact_registry_path": "artifacts/models/registry/artifact_registry.yaml"
+  },
+  "known_limitations": [
+    "The audit confirms governance and evidence consistency, not production model quality.",
+    "Validation metrics alone do not guarantee industrial deployment readiness.",
+    "Production readiness requires test evaluation, class-level review, visual review, and audit approval.",
+    "Further training and evaluation are required before unsupported production-ready claims."
+  ],
+  "created_at": "2026-05-12T12:48:45Z"
+}

@@ -1,0 +1,53 @@
+=== Training Run Evidence ===
+run_id=yolo_train_v0_2_0
+trained_at_colab_time=Tue May 12 11:49:13 AM UTC 2026
+
+=== GPU ===
+Tue May 12 11:49:13 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.82.07              Driver Version: 580.82.07      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-40GB          Off |   00000000:00:04.0 Off |                    0 |
+| N/A   31C    P0             45W /  400W |       0MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+=== Python / Torch / Ultralytics / NumPy ===
+python_version= 3.12.13 (main, Mar  4 2026, 09:23:07) [GCC 11.4.0]
+torch_version= 2.10.0+cu128
+torch_cuda_version= 12.8
+cuda_available= True
+cuda_device_count= 1
+cuda_device_name= NVIDIA A100-SXM4-40GB
+ultralytics_version= 8.4.48
+numpy_version= 2.0.2
+
+=== Final results.csv row ===
+rows= 50
+epoch=50
+time=532.444
+train/box_loss=1.29891
+train/cls_loss=0.8877
+train/dfl_loss=1.18993
+metrics/precision(B)=0.36791
+metrics/recall(B)=0.51132
+metrics/mAP50(B)=0.415
+metrics/mAP50-95(B)=0.2017
+val/box_loss=2.02502
+val/cls_loss=1.61027
+val/dfl_loss=1.55443
+lr/pg0=2.12772e-05
+lr/pg1=2.12772e-05
+lr/pg2=2.12772e-05

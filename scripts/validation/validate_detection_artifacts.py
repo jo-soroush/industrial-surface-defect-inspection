@@ -384,11 +384,15 @@ def _validate_artifact_inventory(ctx: ValidationContext) -> dict[str, Any]:
             "task_type": TASK_TYPE,
             "inventory_status": "pass",
             "required_files_status": "pass",
-            "artifact_count": 21,
         },
     )
+    artifact_count = payload.get("artifact_count")
+    if isinstance(artifact_count, bool) or not isinstance(artifact_count, int):
+        raise ValueError("artifact_inventory.artifact_count must be a positive integer.")
+    if artifact_count <= 0:
+        raise ValueError("artifact_inventory.artifact_count must be a positive integer.")
     artifacts = _require_list(payload.get("artifacts"), "artifact_inventory.artifacts")
-    if len(artifacts) != payload.get("artifact_count"):
+    if len(artifacts) != artifact_count:
         raise ValueError("artifact_inventory.artifacts length must match artifact_count.")
     for index, artifact in enumerate(artifacts):
         entry = _require_dict(artifact, f"artifact_inventory.artifacts[{index}]")

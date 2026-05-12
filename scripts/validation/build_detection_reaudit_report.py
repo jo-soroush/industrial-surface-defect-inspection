@@ -14,6 +14,7 @@ import yaml
 
 
 DEFAULT_RUN_ID = "yolo_train_v0_1_0"
+DEFAULT_MODEL_VERSION = "0.1.0"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
@@ -35,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Build the final governed Detection/YOLO re-audit report."
     )
     parser.add_argument("--run-id", default=DEFAULT_RUN_ID)
+    parser.add_argument("--model-version", default=DEFAULT_MODEL_VERSION)
     parser.add_argument("--training-result", default=None)
     parser.add_argument("--artifact-inventory", default=None)
     parser.add_argument("--metadata-summary", default=None)
@@ -76,7 +78,7 @@ def main() -> int:
         or f"artifacts/reports/audits/detection_yolo_reaudit__{run_id}.json"
     )
 
-    validator_status = _run_validator(run_id)
+    validator_status = _run_validator(run_id, args.model_version)
 
     evaluation_summary = _load_json_file(evaluation_summary_path, "evaluation summary")
     training_result = _load_json_file(training_result_path, "training result")
@@ -229,10 +231,17 @@ def main() -> int:
     return 0
 
 
-def _run_validator(run_id: str) -> dict[str, str]:
+def _run_validator(run_id: str, model_version: str) -> dict[str, str]:
     _require_file(VALIDATOR_SCRIPT, "validator_script")
     completed = subprocess.run(
-        [sys.executable, str(VALIDATOR_SCRIPT), "--run-id", run_id],
+        [
+            sys.executable,
+            str(VALIDATOR_SCRIPT),
+            "--run-id",
+            run_id,
+            "--model-version",
+            model_version,
+        ],
         check=False,
         capture_output=True,
         text=True,

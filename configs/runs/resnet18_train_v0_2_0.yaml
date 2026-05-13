@@ -1,0 +1,54 @@
+identity:
+  run_config_id: resnet18_train_v0_2_0
+  description: Strong full-epoch training run config for the ResNet18 supervised MVTec classification benchmark.
+  task_type: classification
+  is_experiment: false
+  track_id: classification
+
+model_identity:
+  model_name: resnet18
+  model_type: resnet18
+  model_version: 0.2.0
+  model_config_id: resnet18_config
+  pretrained_policy:
+    pretrained: false
+    pretrained_weights: null
+    weight_initialization_source: random_initialization
+    torchvision_weights: null
+    implementation_evidence: "src/inspection_ai/models/resnet18.py uses resnet18(weights=None)"
+
+dataset_binding:
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  split_manifest_path: data/manifests/split_mvtec_classification_supervised.yaml
+  class_mapping_path: configs/data/class_mapping_mvtec_binary.yaml
+
+preprocessing:
+  preprocessing_policy_path: configs/data/preprocessing_mvtec.yaml
+  preprocessing_version: preprocessing_policy_1.0
+  augmentation_policy_version: null
+
+training_runtime:
+  batch_size: 32
+  learning_rate: 0.001
+  epochs: 20
+  optimizer: adam
+  loss_function: cross_entropy
+  seed: 42
+  device: auto
+  full_epoch_training: true
+
+checkpoint:
+  enabled: true
+  save_best: true
+  save_last: true
+
+early_stopping:
+  enabled: false
+  patience: 5
+
+output_control:
+  save_artifact: true
+  save_metadata: true
+  save_logs: true
+  save_metrics: true

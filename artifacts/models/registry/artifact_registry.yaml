@@ -1121,3 +1121,163 @@ artifacts:
   artifact_size_bytes: 5295
   artifact_format: json
   status: active
+- artifact_id: track_a__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc__track_a_cnn_v0_2_0_training_result
+  artifact_filename: training_result__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_path: artifacts/models/analysis/training_results/training_result__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: TrainingResult
+  run_id: 9837d33d-71ba-4d2d-9aed-ff1f5da6adbc
+  model_name: cnn
+  model_type: cnn
+  model_version: 0.2.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: cnn_train_supervised_v0_2_0
+  run_config_id: cnn_train_supervised_v0_2_0
+  created_at: '2026-05-13T10:00:53.996249Z'
+  artifact_hash: d3253bd19f19704f0538ecf56a8da7b948dbb9a057805fbb94945d91bfaeb4e2
+  artifact_size_bytes: 5430
+  artifact_format: json
+  status: active
+  model_quality_status: FAIL
+  production_ready: false
+  purpose: Structured TrainingResult for the controlled Track A CNN v0.2.0 full-epoch
+    run.
+- artifact_id: track_a__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc__track_a_cnn_v0_2_0_model_checkpoint
+  artifact_filename: model_checkpoint__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.pt
+  artifact_path: artifacts/models/checkpoints/model_checkpoint__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.pt
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: model_checkpoint
+  run_id: 9837d33d-71ba-4d2d-9aed-ff1f5da6adbc
+  model_name: cnn
+  model_type: cnn
+  model_version: 0.2.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: cnn_train_supervised_v0_2_0
+  run_config_id: cnn_train_supervised_v0_2_0
+  created_at: '2026-05-13T10:00:53.996249Z'
+  artifact_hash: 36acd18092099c18a08d30ba505426c5bf61131f35ec15b3babf27f8eb9c37ac
+  artifact_size_bytes: 99487
+  artifact_format: pt
+  status: active
+  model_quality_status: FAIL
+  production_ready: false
+  purpose: PyTorch state_dict checkpoint produced by the controlled Track A CNN v0.2.0
+    run.
+- artifact_id: track_a__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc__track_a_cnn_v0_2_0_validation_evaluation
+  artifact_filename: classification_validation_evaluation__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_path: artifacts/models/metrics/classification_validation_evaluation__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: classification_validation_evaluation
+  run_id: 9837d33d-71ba-4d2d-9aed-ff1f5da6adbc
+  model_name: cnn
+  model_type: cnn
+  model_version: 0.2.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: cnn_train_supervised_v0_2_0
+  run_config_id: cnn_train_supervised_v0_2_0
+  created_at: '2026-05-13T10:00:53.996249Z'
+  artifact_hash: eee0b23b439d09afbd3f67ff67a6737f4b91dda5d5c1e3cea2fe011862680d53
+  artifact_size_bytes: 637
+  artifact_format: json
+  status: active
+  model_quality_status: FAIL
+  production_ready: false
+  purpose: Validation evaluation showing failed defect-class performance for this
+    run.
+- artifact_id: track_a__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc__track_a_cnn_v0_2_0_runtime_log
+  artifact_filename: training_runtime_log__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_path: artifacts/models/logs/training_runtime_log__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: training_runtime_log
+  run_id: 9837d33d-71ba-4d2d-9aed-ff1f5da6adbc
+  model_name: cnn
+  model_type: cnn
+  model_version: 0.2.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: cnn_train_supervised_v0_2_0
+  run_config_id: cnn_train_supervised_v0_2_0
+  created_at: '2026-05-13T10:00:53.996249Z'
+  artifact_hash: 21c6d5149508d64f4a70b280ffc84bb59991e25956088d89d00a374caa26b443
+  artifact_size_bytes: 4169
+  artifact_format: json
+  status: active
+  model_quality_status: FAIL
+  production_ready: false
+  purpose: Original stdout/stderr runtime capture for the controlled Track A CNN v0.2.0
+    run.
+- artifact_id: track_a__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc__track_a_cnn_v0_2_0_inventory
+  artifact_filename: track_a_cnn_v0_2_0_artifact_inventory__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_path: artifacts/models/inventory/track_a_cnn_v0_2_0_artifact_inventory__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_cnn_v0_2_0_artifact_inventory
+  run_id: 9837d33d-71ba-4d2d-9aed-ff1f5da6adbc
+  model_name: cnn
+  model_type: cnn
+  model_version: 0.2.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: cnn_train_supervised_v0_2_0
+  run_config_id: cnn_train_supervised_v0_2_0
+  created_at: '2026-05-13T10:00:53.996249Z'
+  artifact_hash: 8459d1b601e705fa57efec546d63471c5a542df52aa5b2022cad193237513a0a
+  artifact_size_bytes: 3651
+  artifact_format: json
+  status: active
+  model_quality_status: FAIL
+  production_ready: false
+  purpose: Governed artifact inventory for the failed-quality authentic CNN v0.2.0
+    run.
+- artifact_id: track_a__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc__track_a_cnn_v0_2_0_metadata_summary
+  artifact_filename: track_a_cnn_v0_2_0_metadata_summary__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_path: artifacts/models/metadata/track_a_cnn_v0_2_0_metadata_summary__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_cnn_v0_2_0_metadata_summary
+  run_id: 9837d33d-71ba-4d2d-9aed-ff1f5da6adbc
+  model_name: cnn
+  model_type: cnn
+  model_version: 0.2.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: cnn_train_supervised_v0_2_0
+  run_config_id: cnn_train_supervised_v0_2_0
+  created_at: '2026-05-13T10:00:53.996249Z'
+  artifact_hash: 5a2426d68a4f41649cdfb45d88f927ca5aa6bda0080f71d3b88d3bcd89daee15
+  artifact_size_bytes: 3351
+  artifact_format: json
+  status: active
+  model_quality_status: FAIL
+  production_ready: false
+  purpose: Metadata summary for the failed-quality authentic CNN v0.2.0 run.
+- artifact_id: track_a__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc__track_a_cnn_v0_2_0_quality_decision
+  artifact_filename: track_a_cnn_v0_2_0_quality_decision__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_path: artifacts/models/analysis/track_a_cnn_v0_2_0_quality_decision__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_cnn_v0_2_0_quality_decision
+  run_id: 9837d33d-71ba-4d2d-9aed-ff1f5da6adbc
+  model_name: cnn
+  model_type: cnn
+  model_version: 0.2.0
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: cnn_train_supervised_v0_2_0
+  run_config_id: cnn_train_supervised_v0_2_0
+  created_at: '2026-05-13T10:00:53.996249Z'
+  artifact_hash: 28f9e4d11155074176be74955a54b01f54e9a017a1fe497d4c44c74161193cca
+  artifact_size_bytes: 1925
+  artifact_format: json
+  status: active
+  model_quality_status: FAIL
+  production_ready: false
+  purpose: Explicit model-quality rejection decision for the authentic CNN v0.2.0
+    run.

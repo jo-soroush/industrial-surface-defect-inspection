@@ -146,3 +146,19 @@ runs:
   checkpoint_path: artifacts/detection/yolo/runs/yolo_train_v0_2_0/weights/best.pt
   inventory_path: artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_2_0.json
   metadata_summary_path: artifacts/models/metadata/track_detection_yolo_metadata_summary__yolo_train_v0_2_0.json
+- run_id: 9837d33d-71ba-4d2d-9aed-ff1f5da6adbc
+  task_type: classification
+  model_type: cnn
+  run_config_id: cnn_train_supervised_v0_2_0
+  created_at: '2026-05-13T10:00:53.996249Z'
+  status: completed
+  result_path: artifacts/models/analysis/training_results/training_result__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  runtime_log_path: artifacts/models/logs/training_runtime_log__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  metadata_summary_path: artifacts/models/metadata/track_a_cnn_v0_2_0_metadata_summary__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  artifact_inventory_path: artifacts/models/inventory/track_a_cnn_v0_2_0_artifact_inventory__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  quality_decision_path: artifacts/models/analysis/track_a_cnn_v0_2_0_quality_decision__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  checkpoint_path: artifacts/models/checkpoints/model_checkpoint__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.pt
+  validation_evaluation_path: artifacts/models/metrics/classification_validation_evaluation__9837d33d-71ba-4d2d-9aed-ff1f5da6adbc.json
+  training_authenticity_status: REAL_FULL_EPOCH_TRAINING_CONFIRMED
+  model_quality_status: failed
+  production_ready: false

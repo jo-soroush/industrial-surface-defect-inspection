@@ -1390,8 +1390,8 @@ artifacts:
   config_id: cnn_train_supervised_v0_3_0
   run_config_id: cnn_train_supervised_v0_3_0
   created_at: '2026-05-13T11:33:11.313250Z'
-  artifact_hash: e34c971909ddd82a59221d58ce2808a0ab319e8cd4c3f448244240a3929b2a1f
-  artifact_size_bytes: 3874
+  artifact_hash: 7d75d0d5b16c662a42cad2cb1b3eba8267e021d3066e85d0450fc0cda2559bee
+  artifact_size_bytes: 4402
   artifact_format: json
   status: active
   model_quality_status: REVIEW_REQUIRED
@@ -1413,8 +1413,8 @@ artifacts:
   config_id: cnn_train_supervised_v0_3_0
   run_config_id: cnn_train_supervised_v0_3_0
   created_at: '2026-05-13T11:33:11.313250Z'
-  artifact_hash: 5ae8a873ccfb32a65476aa1b64ed6aa2a1dbbb174d894c7f243a40d0a681537c
-  artifact_size_bytes: 4999
+  artifact_hash: bed1ed63ddffa259ad3937143bbbd7a8b3658c2f51f0df854b0cb62012f9fed8
+  artifact_size_bytes: 5694
   artifact_format: json
   status: active
   model_quality_status: REVIEW_REQUIRED
@@ -1436,9 +1436,30 @@ artifacts:
   config_id: cnn_train_supervised_v0_3_0
   run_config_id: cnn_train_supervised_v0_3_0
   created_at: '2026-05-13T11:33:11.313250Z'
-  artifact_hash: 21f414a10ba7e329c9ef6d06aa0171d296f10356fd3760d1c5af0cbb598e79c7
-  artifact_size_bytes: 3417
+  artifact_hash: e99391f2b19e8d2ad72d853a90f86c8eb3ea3a0e68ac6c10fbaea871469d36d1
+  artifact_size_bytes: 4206
   artifact_format: json
   status: active
   model_quality_status: REVIEW_REQUIRED
   production_ready: false
+- artifact_id: track_a__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d__cnn_v0_3_0_threshold_analysis
+  artifact_filename: track_a_threshold_analysis__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d__validation.json
+  artifact_path: artifacts/models/error_analysis/track_a_threshold_analysis__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d__validation.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_threshold_analysis
+  run_id: e170a2a3-52fc-48d4-8e24-e3da35e4ce4d
+  model_name: cnn
+  model_type: cnn
+  model_version: 0.3.0
+  task_type: classification
+  track_id: classification
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: cnn_train_supervised_v0_3_0
+  run_config_id: cnn_train_supervised_v0_3_0
+  created_at: '2026-05-13T17:50:12.402511Z'
+  artifact_hash: a08e34a8089c3381a7c186f96fb097f7aee1ac6a5b2b2c3f4ad202d3bc30268e
+  artifact_size_bytes: 6383
+  artifact_format: json
+  status: active

@@ -173,6 +173,7 @@ runs:
   metadata_summary_path: artifacts/models/metadata/track_a_cnn_v0_3_0_metadata_summary__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
   artifact_inventory_path: artifacts/models/inventory/track_a_cnn_v0_3_0_artifact_inventory__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
   quality_decision_path: artifacts/models/analysis/track_a_cnn_v0_3_0_quality_decision__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
+  threshold_analysis_path: artifacts/models/error_analysis/track_a_threshold_analysis__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d__validation.json
   checkpoint_path: artifacts/models/checkpoints/model_checkpoint__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.pt
   validation_evaluation_path: artifacts/models/metrics/classification_validation_evaluation__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
   training_authenticity_status: REAL_FULL_EPOCH_CLASS_WEIGHTED_TRAINING_CONFIRMED

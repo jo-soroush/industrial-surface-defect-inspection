@@ -14,7 +14,7 @@
   "production_ready": false,
   "recommendation_status": "review_required",
   "deployment_candidate": false,
-  "artifact_count": 6,
+  "artifact_count": 7,
   "self_hash_note": "The inventory file's own hash is registered in artifact_registry.yaml to avoid embedding a self-referential hash inside the file.",
   "artifacts": [
     {
@@ -83,6 +83,18 @@
       "path": "artifacts/models/analysis/track_a_cnn_v0_3_0_quality_decision__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
       "sha256": "21f414a10ba7e329c9ef6d06aa0171d296f10356fd3760d1c5af0cbb598e79c7",
       "size_bytes": 3417,
+      "run_id": "e170a2a3-52fc-48d4-8e24-e3da35e4ce4d",
+      "model_type": "cnn",
+      "model_version": "0.3.0",
+      "track_id": "classification",
+      "status": "active"
+    },
+    {
+      "artifact_name": "threshold_analysis",
+      "artifact_type": "track_a_threshold_analysis",
+      "path": "artifacts/models/error_analysis/track_a_threshold_analysis__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d__validation.json",
+      "sha256": "a08e34a8089c3381a7c186f96fb097f7aee1ac6a5b2b2c3f4ad202d3bc30268e",
+      "size_bytes": 6383,
       "run_id": "e170a2a3-52fc-48d4-8e24-e3da35e4ce4d",
       "model_type": "cnn",
       "model_version": "0.3.0",

@@ -156,7 +156,18 @@
     "runtime_log": "artifacts/models/logs/training_runtime_log__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
     "inventory": "artifacts/models/inventory/track_a_cnn_v0_3_0_artifact_inventory__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
     "metadata_summary": "artifacts/models/metadata/track_a_cnn_v0_3_0_metadata_summary__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
-    "quality_decision": "artifacts/models/analysis/track_a_cnn_v0_3_0_quality_decision__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json"
+    "quality_decision": "artifacts/models/analysis/track_a_cnn_v0_3_0_quality_decision__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
+    "threshold_analysis": "artifacts/models/error_analysis/track_a_threshold_analysis__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d__validation.json"
+  },
+  "threshold_analysis_path": "artifacts/models/error_analysis/track_a_threshold_analysis__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d__validation.json",
+  "threshold_analysis": {
+    "baseline_false_negative": 41,
+    "baseline_false_positive": 333,
+    "baseline_threshold": 0.5,
+    "interpretation": "Threshold 0.6 reduces false positives but severely reduces defect recall, so CNN v0.3 remains REVIEW_REQUIRED and production_ready=false.",
+    "recommended_false_negative": 151,
+    "recommended_false_positive": 44,
+    "recommended_threshold": 0.6
   },
   "runtime_log": {
     "artifact_type": "training_runtime_log",

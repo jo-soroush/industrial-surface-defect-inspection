@@ -85,6 +85,36 @@
     "improved_defect_recall": true,
     "improved_macro_f1": true
   },
+  "threshold_analysis_path": "artifacts/models/error_analysis/track_a_threshold_analysis__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d__validation.json",
+  "threshold_analysis": {
+    "baseline_threshold": 0.5,
+    "baseline_confusion_matrix": [
+      [
+        280,
+        333
+      ],
+      [
+        41,
+        149
+      ]
+    ],
+    "recommended_threshold": 0.6,
+    "recommended_confusion_matrix": [
+      [
+        569,
+        44
+      ],
+      [
+        151,
+        39
+      ]
+    ],
+    "baseline_false_positive": 333,
+    "baseline_false_negative": 41,
+    "recommended_false_positive": 44,
+    "recommended_false_negative": 151,
+    "interpretation": "Threshold tuning reduces false positives at 0.6 but drops defect recall sharply, so it does not solve the model quality gap."
+  },
   "safe_wording": "Track A CNN v0.3.0 completed real controlled 20-epoch full-epoch class-weighted training with original runtime logs. Compared with CNN v0.2.0, defect recall improved from 0.0 to 0.7842 and macro F1 improved from 0.4329 to 0.5215. However, the model is not production-ready because it produces many false positives, with 333 good validation samples predicted as defect.",
   "forbidden_wording": [
     "Track A CNN v0.3.0 is production-ready.",

@@ -7,7 +7,10 @@ pretrained_policy:
   pretrained_weights: null
   weight_initialization_source: random_initialization
   torchvision_weights: null
-  implementation_evidence: "src/inspection_ai/models/resnet18.py uses resnet18(weights=None)"
+  supported_torchvision_weights:
+    - IMAGENET1K_V1
+    - DEFAULT
+  implementation_evidence: "src/inspection_ai/models/resnet18.py resolves pretrained_policy and uses torchvision ResNet18 weights when enabled"
 dataset_id: mvtec_classification_supervised
 dataset_version: mvtec_1.0
 task_type: classification

@@ -181,3 +181,26 @@ runs:
   production_ready: false
   recommendation_status: review_required
   deployment_candidate: false
+- run_id: c3b74a5c-34ce-4654-9e5d-915c886ec9f6
+  task_type: classification
+  model_type: mlp
+  run_config_id: mlp_train_supervised_v0_2_0
+  created_at: '2026-05-13T19:10:36.503279Z'
+  status: completed
+  result_path: artifacts/models/analysis/training_results/training_result__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.json
+  model_name: mlp
+  model_version: 0.2.0
+  checkpoint_path: artifacts/models/checkpoints/model_checkpoint__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.pt
+  runtime_log_path: artifacts/models/logs/training_runtime_log__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.json
+  validation_evaluation_path: artifacts/models/metrics/classification_validation_evaluation__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.json
+  prediction_level_analysis_path: artifacts/models/error_analysis/track_a_mlp_0.2.0_prediction_level_analysis__c3b74a5c-34ce-4654-9e5d-915c886ec9f6__validation.json
+  threshold_analysis_path: artifacts/models/error_analysis/track_a_threshold_analysis__c3b74a5c-34ce-4654-9e5d-915c886ec9f6__validation.json
+  artifact_inventory_path: artifacts/models/inventory/track_a_mlp_v0_2_0_artifact_inventory__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.json
+  metadata_summary_path: artifacts/models/metadata/track_a_mlp_v0_2_0_metadata_summary__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.json
+  quality_decision_path: artifacts/models/analysis/track_a_mlp_v0_2_0_quality_decision__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.json
+  training_authenticity_status: REAL_FULL_EPOCH_TRAINING_CONFIRMED
+  model_quality_status: baseline_only
+  production_ready: false
+  deployment_candidate: false
+  recommendation_status: baseline_only
+  started_at: '2026-05-13T19:10:36.503279Z'

@@ -1,0 +1,291 @@
+{
+  "artifact_type": "track_a_threshold_analysis",
+  "run_id": "c3b74a5c-34ce-4654-9e5d-915c886ec9f6",
+  "source_prediction_level_analysis_path": "artifacts/models/error_analysis/track_a_mlp_0.2.0_prediction_level_analysis__c3b74a5c-34ce-4654-9e5d-915c886ec9f6__validation.json",
+  "split": "validation",
+  "decision_score": "probability_defect",
+  "threshold_rule": "predict defect if probability_defect >= threshold",
+  "thresholds": [
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8
+  ],
+  "per_threshold": [
+    {
+      "threshold": 0.3,
+      "true_negative": 507,
+      "false_positive": 106,
+      "false_negative": 114,
+      "true_positive": 76,
+      "precision": 0.4175824175824176,
+      "recall": 0.4,
+      "f1": 0.40860215053763443,
+      "macro_f1": 0.6151600704065806,
+      "accuracy": 0.726027397260274,
+      "confusion_matrix": [
+        [
+          507,
+          106
+        ],
+        [
+          114,
+          76
+        ]
+      ]
+    },
+    {
+      "threshold": 0.35,
+      "true_negative": 523,
+      "false_positive": 90,
+      "false_negative": 123,
+      "true_positive": 67,
+      "precision": 0.4267515923566879,
+      "recall": 0.3526315789473684,
+      "f1": 0.3861671469740634,
+      "macro_f1": 0.6084926282924328,
+      "accuracy": 0.7347447073474471,
+      "confusion_matrix": [
+        [
+          523,
+          90
+        ],
+        [
+          123,
+          67
+        ]
+      ]
+    },
+    {
+      "threshold": 0.4,
+      "true_negative": 577,
+      "false_positive": 36,
+      "false_negative": 145,
+      "true_positive": 45,
+      "precision": 0.5555555555555556,
+      "recall": 0.23684210526315788,
+      "f1": 0.33210332103321033,
+      "macro_f1": 0.5982613983443206,
+      "accuracy": 0.7745952677459527,
+      "confusion_matrix": [
+        [
+          577,
+          36
+        ],
+        [
+          145,
+          45
+        ]
+      ]
+    },
+    {
+      "threshold": 0.45,
+      "true_negative": 588,
+      "false_positive": 25,
+      "false_negative": 150,
+      "true_positive": 40,
+      "precision": 0.6153846153846154,
+      "recall": 0.21052631578947367,
+      "f1": 0.3137254901960784,
+      "macro_f1": 0.5920959057198009,
+      "accuracy": 0.7820672478206725,
+      "confusion_matrix": [
+        [
+          588,
+          25
+        ],
+        [
+          150,
+          40
+        ]
+      ]
+    },
+    {
+      "threshold": 0.5,
+      "true_negative": 593,
+      "false_positive": 20,
+      "false_negative": 156,
+      "true_positive": 34,
+      "precision": 0.6296296296296297,
+      "recall": 0.17894736842105263,
+      "f1": 0.27868852459016397,
+      "macro_f1": 0.5747333959221012,
+      "accuracy": 0.7808219178082192,
+      "confusion_matrix": [
+        [
+          593,
+          20
+        ],
+        [
+          156,
+          34
+        ]
+      ]
+    },
+    {
+      "threshold": 0.55,
+      "true_negative": 599,
+      "false_positive": 14,
+      "false_negative": 158,
+      "true_positive": 32,
+      "precision": 0.6956521739130435,
+      "recall": 0.16842105263157894,
+      "f1": 0.2711864406779661,
+      "macro_f1": 0.5728194977112459,
+      "accuracy": 0.7858032378580324,
+      "confusion_matrix": [
+        [
+          599,
+          14
+        ],
+        [
+          158,
+          32
+        ]
+      ]
+    },
+    {
+      "threshold": 0.6,
+      "true_negative": 602,
+      "false_positive": 11,
+      "false_negative": 162,
+      "true_positive": 28,
+      "precision": 0.717948717948718,
+      "recall": 0.14736842105263157,
+      "f1": 0.2445414847161572,
+      "macro_f1": 0.5594530226776138,
+      "accuracy": 0.7845579078455791,
+      "confusion_matrix": [
+        [
+          602,
+          11
+        ],
+        [
+          162,
+          28
+        ]
+      ]
+    },
+    {
+      "threshold": 0.65,
+      "true_negative": 604,
+      "false_positive": 9,
+      "false_negative": 165,
+      "true_positive": 25,
+      "precision": 0.7352941176470589,
+      "recall": 0.13157894736842105,
+      "f1": 0.22321428571428573,
+      "macro_f1": 0.5486548997312384,
+      "accuracy": 0.7833125778331258,
+      "confusion_matrix": [
+        [
+          604,
+          9
+        ],
+        [
+          165,
+          25
+        ]
+      ]
+    },
+    {
+      "threshold": 0.7,
+      "true_negative": 607,
+      "false_positive": 6,
+      "false_negative": 171,
+      "true_positive": 19,
+      "precision": 0.76,
+      "recall": 0.1,
+      "f1": 0.17674418604651165,
+      "macro_f1": 0.5247488004280005,
+      "accuracy": 0.7795765877957659,
+      "confusion_matrix": [
+        [
+          607,
+          6
+        ],
+        [
+          171,
+          19
+        ]
+      ]
+    },
+    {
+      "threshold": 0.75,
+      "true_negative": 608,
+      "false_positive": 5,
+      "false_negative": 172,
+      "true_positive": 18,
+      "precision": 0.782608695652174,
+      "recall": 0.09473684210526316,
+      "f1": 0.16901408450704225,
+      "macro_f1": 0.5209750968120279,
+      "accuracy": 0.7795765877957659,
+      "confusion_matrix": [
+        [
+          608,
+          5
+        ],
+        [
+          172,
+          18
+        ]
+      ]
+    },
+    {
+      "threshold": 0.8,
+      "true_negative": 611,
+      "false_positive": 2,
+      "false_negative": 173,
+      "true_positive": 17,
+      "precision": 0.8947368421052632,
+      "recall": 0.08947368421052632,
+      "f1": 0.16267942583732056,
+      "macro_f1": 0.5187054967411371,
+      "accuracy": 0.7820672478206725,
+      "confusion_matrix": [
+        [
+          611,
+          2
+        ],
+        [
+          173,
+          17
+        ]
+      ]
+    }
+  ],
+  "recommended_threshold": 0.3,
+  "recommendation_reason": "Selected threshold 0.30 because it maximized macro F1 (0.615160); ties were broken by higher defect recall, then fewer false positives, then proximity to 0.5.",
+  "baseline_threshold": 0.5,
+  "baseline_metrics": {
+    "threshold": 0.5,
+    "true_negative": 593,
+    "false_positive": 20,
+    "false_negative": 156,
+    "true_positive": 34,
+    "precision": 0.6296296296296297,
+    "recall": 0.17894736842105263,
+    "f1": 0.27868852459016397,
+    "macro_f1": 0.5747333959221012,
+    "accuracy": 0.7808219178082192,
+    "confusion_matrix": [
+      [
+        593,
+        20
+      ],
+      [
+        156,
+        34
+      ]
+    ]
+  },
+  "created_at": "2026-05-13T19:49:47.640131Z"
+}

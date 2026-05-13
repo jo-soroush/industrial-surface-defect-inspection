@@ -1,0 +1,93 @@
+{
+  "artifact_type": "track_a_mlp_v0_2_0_artifact_inventory",
+  "run_id": "c3b74a5c-34ce-4654-9e5d-915c886ec9f6",
+  "run_config_id": "mlp_train_supervised_v0_2_0",
+  "model_name": "mlp",
+  "model_type": "mlp",
+  "model_version": "0.2.0",
+  "task_type": "classification",
+  "track_id": "classification",
+  "dataset_id": "mvtec_classification_supervised",
+  "dataset_version": "mvtec_1.0",
+  "training_authenticity_status": "REAL_FULL_EPOCH_TRAINING_CONFIRMED",
+  "model_quality_status": "BASELINE_ONLY",
+  "production_ready": false,
+  "recommendation_status": "baseline_only",
+  "deployment_candidate": false,
+  "artifact_count": 6,
+  "self_hash_note": "The inventory file's own hash is registered in artifact_registry.yaml to avoid embedding a self-referential hash inside the file.",
+  "artifacts": [
+    {
+      "artifact_name": "training_result",
+      "artifact_type": "TrainingResult",
+      "path": "artifacts/models/analysis/training_results/training_result__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.json",
+      "sha256": "c9531baa2afee5e65c67c6ee68fc9a278918c44587ba75147e9b037be96d5bcb",
+      "size_bytes": 6134,
+      "run_id": "c3b74a5c-34ce-4654-9e5d-915c886ec9f6",
+      "model_type": "mlp",
+      "model_version": "0.2.0",
+      "track_id": "classification",
+      "status": "active"
+    },
+    {
+      "artifact_name": "checkpoint",
+      "artifact_type": "model_checkpoint",
+      "path": "artifacts/models/checkpoints/model_checkpoint__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.pt",
+      "sha256": "ce879d7a7a3c84d8a0047c50dc89f5737e4c5528364736016972362c3cfbda5c",
+      "size_bytes": 77075059,
+      "run_id": "c3b74a5c-34ce-4654-9e5d-915c886ec9f6",
+      "model_type": "mlp",
+      "model_version": "0.2.0",
+      "track_id": "classification",
+      "status": "active"
+    },
+    {
+      "artifact_name": "runtime_log",
+      "artifact_type": "training_runtime_log",
+      "path": "artifacts/models/logs/training_runtime_log__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.json",
+      "sha256": "d26f116c75e3b9a33be5739cec12938d8ab2866b8010c7f96b8234604427dd29",
+      "size_bytes": 4172,
+      "run_id": "c3b74a5c-34ce-4654-9e5d-915c886ec9f6",
+      "model_type": "mlp",
+      "model_version": "0.2.0",
+      "track_id": "classification",
+      "status": "active"
+    },
+    {
+      "artifact_name": "validation_evaluation",
+      "artifact_type": "classification_validation_evaluation",
+      "path": "artifacts/models/metrics/classification_validation_evaluation__c3b74a5c-34ce-4654-9e5d-915c886ec9f6.json",
+      "sha256": "5781ff598abd156f577c497fb7e41a040dd5b8c5f64293a1d7aac0bf9149fbc5",
+      "size_bytes": 715,
+      "run_id": "c3b74a5c-34ce-4654-9e5d-915c886ec9f6",
+      "model_type": "mlp",
+      "model_version": "0.2.0",
+      "track_id": "classification",
+      "status": "active"
+    },
+    {
+      "artifact_name": "prediction_level_analysis",
+      "artifact_type": "track_a_prediction_level_error_analysis",
+      "path": "artifacts/models/error_analysis/track_a_mlp_0.2.0_prediction_level_analysis__c3b74a5c-34ce-4654-9e5d-915c886ec9f6__validation.json",
+      "sha256": "7eac995cf2f1517e06b130270632bc5dcf5b19f0a2be80d60b9371640f5dd492",
+      "size_bytes": 321346,
+      "run_id": "c3b74a5c-34ce-4654-9e5d-915c886ec9f6",
+      "model_type": "mlp",
+      "model_version": "0.2.0",
+      "track_id": "classification",
+      "status": "active"
+    },
+    {
+      "artifact_name": "threshold_analysis",
+      "artifact_type": "track_a_threshold_analysis",
+      "path": "artifacts/models/error_analysis/track_a_threshold_analysis__c3b74a5c-34ce-4654-9e5d-915c886ec9f6__validation.json",
+      "sha256": "31499eb06bfd2eeb07079cbc9932be2eb6c86c2ff608df7c49c928b023ed2464",
+      "size_bytes": 6393,
+      "run_id": "c3b74a5c-34ce-4654-9e5d-915c886ec9f6",
+      "model_type": "mlp",
+      "model_version": "0.2.0",
+      "track_id": "classification",
+      "status": "active"
+    }
+  ]
+}

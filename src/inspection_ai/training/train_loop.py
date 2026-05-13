@@ -15,6 +15,7 @@ import time
 from typing import Any
 
 import torch
+import yaml
 
 from inspection_ai.training.training_result import TrainingResult
 
@@ -60,6 +61,11 @@ def _add_training_outputs(
 ) -> None:
     task_type = config["identity"]["task_type"]
     if task_type == "classification":
+        if _full_epoch_classification_enabled(config):
+            _add_full_epoch_classification_training_outputs(
+                result, config, model, data_loader
+            )
+            return
         _add_one_batch_classification_training_outputs(
             result, config, model, data_loader
         )
@@ -69,6 +75,13 @@ def _add_training_outputs(
         return
 
     _add_simulated_outputs(result, config)
+
+
+def _full_epoch_classification_enabled(config: dict[str, Any]) -> bool:
+    training_runtime = config.get("training_runtime", {})
+    if not isinstance(training_runtime, dict):
+        return False
+    return training_runtime.get("full_epoch_training") is True
 
 
 def _add_one_batch_classification_training_outputs(
@@ -238,17 +251,225 @@ def _add_one_batch_classification_training_outputs(
     )
 
 
+def _add_full_epoch_classification_training_outputs(
+    result: TrainingResult, config: dict[str, Any], model: Any, data_loader: Any
+) -> None:
+    training_runtime = config.get("training_runtime", {})
+    num_epochs = training_runtime.get("epochs")
+    if isinstance(num_epochs, bool) or not isinstance(num_epochs, int) or num_epochs < 1:
+        raise ValueError("Training config requires training_runtime.epochs >= 1.")
+
+    learning_rate = training_runtime.get("learning_rate")
+    if isinstance(learning_rate, bool) or not isinstance(learning_rate, (int, float)):
+        raise ValueError(
+            "Training config requires numeric training_runtime.learning_rate."
+        )
+
+    if not isinstance(data_loader, dict):
+        raise ValueError("data_loader must be a dictionary.")
+
+    train_loader = data_loader.get("train_loader")
+    if train_loader is None:
+        raise ValueError("data_loader is missing required train_loader.")
+    validation_loader = data_loader.get("validation_loader")
+    expected_class_count = _resolve_expected_class_count(config, model)
+
+    model.train()
+    optimizer = torch.optim.Adam(model.parameters(), lr=float(learning_rate))
+    criterion = torch.nn.CrossEntropyLoss()
+
+    train_loss_curve = []
+    train_accuracy_curve = []
+    train_f1_curve = []
+    val_loss_curve = []
+    val_accuracy_curve = []
+    val_f1_curve = []
+    train_batches_per_epoch = []
+    validation_batches_per_epoch = []
+    last_batch_size = 0
+    final_train_metrics = None
+    final_validation_metrics = None
+
+    for epoch_index in range(num_epochs):
+        epoch_loss_total = 0.0
+        epoch_correct = 0
+        epoch_samples = 0
+        epoch_tp = 0
+        epoch_fp = 0
+        epoch_fn = 0
+        batch_count = 0
+
+        model.train()
+        for batch in train_loader:
+            if not isinstance(batch, dict):
+                raise ValueError("train_loader batch must be a dictionary.")
+
+            images = batch.get("image")
+            labels = batch.get("label")
+            if not isinstance(images, torch.Tensor):
+                raise ValueError("train_loader batch image must be a torch.Tensor.")
+            if not isinstance(labels, torch.Tensor):
+                raise ValueError("train_loader batch label must be a torch.Tensor.")
+
+            model_device = next(model.parameters()).device
+            images = images.to(model_device)
+            labels = labels.to(model_device).reshape(-1).long()
+
+            optimizer.zero_grad()
+            logits = model(images)
+            _validate_classification_logits(
+                logits, labels, expected_class_count, "training"
+            )
+
+            loss = criterion(logits, labels)
+            loss.backward()
+            optimizer.step()
+
+            loss_value = loss.item()
+            if isinstance(loss_value, bool) or not isinstance(loss_value, (int, float)):
+                raise ValueError("Classification epoch training loss must be numeric.")
+
+            predictions = torch.argmax(logits, dim=1)
+            correct, sample_count, tp, fp, fn = _compute_binary_classification_counts(
+                predictions, labels
+            )
+            epoch_loss_total += float(loss_value) * sample_count
+            epoch_correct += correct
+            epoch_samples += sample_count
+            epoch_tp += tp
+            epoch_fp += fp
+            epoch_fn += fn
+            last_batch_size = int(images.shape[0])
+            batch_count += 1
+
+        if batch_count == 0 or epoch_samples == 0:
+            raise ValueError("train_loader must provide at least one batch per epoch.")
+
+        train_loss = _safe_ratio_float(epoch_loss_total, epoch_samples)
+        train_accuracy = _safe_ratio(epoch_correct, epoch_samples)
+        train_f1 = _compute_f1(epoch_tp, epoch_fp, epoch_fn)
+        train_loss_curve.append(train_loss)
+        train_accuracy_curve.append(train_accuracy)
+        train_f1_curve.append(train_f1)
+        train_batches_per_epoch.append(batch_count)
+        final_train_metrics = {
+            "loss": train_loss,
+            "accuracy": train_accuracy,
+            "f1": train_f1,
+            "batch_count": batch_count,
+        }
+        print(
+            "epoch_metrics "
+            f"epoch={epoch_index + 1} "
+            f"loss={train_loss:.6f} "
+            f"accuracy={train_accuracy:.6f} "
+            f"f1={train_f1:.6f} "
+            f"batches={batch_count}"
+        )
+
+        if validation_loader is not None:
+            final_validation_metrics = _evaluate_binary_classification_batches(
+                model=model,
+                data_loader=validation_loader,
+                criterion=criterion,
+                max_batches=None,
+                expected_class_count=expected_class_count,
+            )
+            val_loss_curve.append(final_validation_metrics["loss"])
+            val_accuracy_curve.append(final_validation_metrics["accuracy"])
+            val_f1_curve.append(final_validation_metrics["f1"])
+            validation_batches_per_epoch.append(final_validation_metrics["batch_count"])
+            print(
+                "validation_metrics "
+                f"epoch={epoch_index + 1} "
+                f"loss={final_validation_metrics['loss']:.6f} "
+                f"accuracy={final_validation_metrics['accuracy']:.6f} "
+                f"f1={final_validation_metrics['f1']:.6f} "
+                f"batches={final_validation_metrics['batch_count']}"
+            )
+        else:
+            validation_batches_per_epoch.append(0)
+            print(
+                "validation_metrics "
+                f"epoch={epoch_index + 1} "
+                "skipped=true "
+                "reason=validation_loader_unavailable"
+            )
+
+    if final_train_metrics is None:
+        raise RuntimeError("Full-epoch classification training did not produce metrics.")
+
+    result.add_learning_point("train_loss", train_loss_curve)
+    result.add_learning_point("val_loss", val_loss_curve)
+    result.add_learning_point("train_accuracy", train_accuracy_curve)
+    result.add_learning_point("train_f1", train_f1_curve)
+    result.add_learning_point("val_accuracy", val_accuracy_curve)
+    result.add_learning_point("val_f1", val_f1_curve)
+    result.add_metric("train_loss", final_train_metrics["loss"])
+    result.add_metric("train_accuracy", final_train_metrics["accuracy"])
+    result.add_metric("train_f1", final_train_metrics["f1"])
+    result.add_metric("accuracy", final_train_metrics["accuracy"])
+    result.add_metric("f1", final_train_metrics["f1"])
+
+    if final_validation_metrics is not None:
+        result.add_metric("val_loss", final_validation_metrics["loss"])
+        result.add_metric("val_accuracy", final_validation_metrics["accuracy"])
+        result.add_metric("val_f1", final_validation_metrics["f1"])
+        result.add_metadata("validation_evaluation_checked", True)
+        result.add_metadata(
+            "validation_evaluation_batch_count",
+            final_validation_metrics["batch_count"],
+        )
+        evaluation_path = _write_classification_validation_evaluation_artifact(
+            result=result,
+            model=model,
+            data_loader=validation_loader,
+            dataset_id=data_loader.get("dataset_id"),
+            max_batches=None,
+            expected_class_count=expected_class_count,
+        )
+        result.add_metadata("validation_evaluation_path", str(evaluation_path))
+    else:
+        result.add_metadata("validation_evaluation_checked", False)
+        result.add_metadata(
+            "validation_evaluation_skip_reason", "validation_loader_unavailable"
+        )
+        result.add_metadata(
+            "validation_evaluation_artifact_skip_reason",
+            "validation_loader_unavailable",
+        )
+
+    result.add_metadata("epochs", training_runtime.get("epochs"))
+    result.add_metadata("device", training_runtime.get("device"))
+    result.add_metadata("training_mode", "full_epoch")
+    result.add_metadata("full_epoch_training", True)
+    result.add_metadata("real_training_batch_checked", True)
+    result.add_metadata("real_training_batch_size", last_batch_size)
+    result.add_metadata("real_training_batches_per_epoch", train_batches_per_epoch[-1])
+    result.add_metadata("real_training_train_batches_per_epoch", train_batches_per_epoch)
+    result.add_metadata(
+        "real_training_validation_batches_per_epoch",
+        validation_batches_per_epoch,
+    )
+    result.add_metadata("real_training_epoch_count", num_epochs)
+    result.add_metadata(
+        "real_training_loss_source", "full_epoch_cross_entropy"
+    )
+
+
 def _write_classification_validation_evaluation_artifact(
     result: TrainingResult,
     model: Any,
     data_loader: Any,
     dataset_id: Any,
-    max_batches: int,
+    max_batches: int | None,
+    expected_class_count: int = 2,
 ) -> Path:
     evaluation = _evaluate_classification_predictions(
         model=model,
         data_loader=data_loader,
         max_batches=max_batches,
+        expected_class_count=expected_class_count,
     )
     payload = {
         "artifact_type": "classification_validation_evaluation",
@@ -276,9 +497,12 @@ def _write_classification_validation_evaluation_artifact(
 def _evaluate_classification_predictions(
     model: Any,
     data_loader: Any,
-    max_batches: int,
+    max_batches: int | None,
+    expected_class_count: int = 2,
 ) -> dict[str, Any]:
-    if isinstance(max_batches, bool) or max_batches < 1:
+    if max_batches is not None and (
+        isinstance(max_batches, bool) or max_batches < 1
+    ):
         raise ValueError("Classification evaluation requires max_batches >= 1.")
 
     was_training = model.training
@@ -293,7 +517,7 @@ def _evaluate_classification_predictions(
 
     with torch.no_grad():
         for batch in data_loader:
-            if batch_count >= max_batches:
+            if max_batches is not None and batch_count >= max_batches:
                 break
             if not isinstance(batch, dict):
                 raise ValueError("validation_loader batch must be a dictionary.")
@@ -308,16 +532,9 @@ def _evaluate_classification_predictions(
             images = images.to(model_device)
             labels = labels.to(model_device).reshape(-1).long()
             logits = model(images)
-            if not isinstance(logits, torch.Tensor):
-                raise ValueError(
-                    "Classification model must output logits as a torch.Tensor."
-                )
-            if logits.ndim != 2 or logits.shape[1] != 2:
-                raise ValueError("Validation logits must have shape [B, 2].")
-            if logits.shape[0] != labels.shape[0]:
-                raise ValueError(
-                    "Validation logits and labels batch sizes must match."
-                )
+            _validate_classification_logits(
+                logits, labels, expected_class_count, "validation"
+            )
 
             predictions = torch.argmax(logits, dim=1)
             if predictions.device != labels.device:
@@ -386,9 +603,12 @@ def _evaluate_binary_classification_batches(
     model: Any,
     data_loader: Any,
     criterion: torch.nn.Module,
-    max_batches: int,
+    max_batches: int | None,
+    expected_class_count: int = 2,
 ) -> dict[str, float | int]:
-    if isinstance(max_batches, bool) or max_batches < 1:
+    if max_batches is not None and (
+        isinstance(max_batches, bool) or max_batches < 1
+    ):
         raise ValueError("Validation evaluation requires max_batches >= 1.")
 
     was_training = model.training
@@ -405,7 +625,7 @@ def _evaluate_binary_classification_batches(
 
     with torch.no_grad():
         for batch in data_loader:
-            if batch_count >= max_batches:
+            if max_batches is not None and batch_count >= max_batches:
                 break
             if not isinstance(batch, dict):
                 raise ValueError("validation_loader batch must be a dictionary.")
@@ -420,16 +640,9 @@ def _evaluate_binary_classification_batches(
             images = images.to(model_device)
             labels = labels.to(model_device).reshape(-1).long()
             logits = model(images)
-            if not isinstance(logits, torch.Tensor):
-                raise ValueError(
-                    "Classification model must output logits as a torch.Tensor."
-                )
-            if logits.ndim != 2 or logits.shape[1] != 2:
-                raise ValueError("Validation logits must have shape [B, 2].")
-            if logits.shape[0] != labels.shape[0]:
-                raise ValueError(
-                    "Validation logits and labels batch sizes must match."
-                )
+            _validate_classification_logits(
+                logits, labels, expected_class_count, "validation"
+            )
 
             loss = criterion(logits, labels)
             loss_value = loss.item()
@@ -460,6 +673,76 @@ def _evaluate_binary_classification_batches(
         "f1": _compute_f1(total_tp, total_fp, total_fn),
         "batch_count": batch_count,
     }
+
+
+def _resolve_expected_class_count(config: dict[str, Any], model: Any) -> int:
+    model_class_count = getattr(model, "class_count", None)
+    if _is_positive_int(model_class_count):
+        return int(model_class_count)
+
+    config_class_count = config.get("class_count")
+    if _is_positive_int(config_class_count):
+        return int(config_class_count)
+
+    model_identity = config.get("model_identity")
+    if isinstance(model_identity, dict):
+        model_config_id = model_identity.get("model_config_id")
+        if isinstance(model_config_id, str) and model_config_id:
+            model_config = _load_model_config(model_config_id)
+            model_config_class_count = model_config.get("class_count")
+            if _is_positive_int(model_config_class_count):
+                return int(model_config_class_count)
+
+    raise ValueError(
+        "Full-epoch classification training requires an expected class count "
+        "from model.class_count or governed model config class_count."
+    )
+
+
+def _load_model_config(model_config_id: str) -> dict[str, Any]:
+    config_dir = Path("configs/models")
+    for path in sorted(config_dir.glob("*.yaml")):
+        try:
+            with path.open("r", encoding="utf-8") as handle:
+                candidate = yaml.safe_load(handle)
+        except yaml.YAMLError as exc:
+            raise ValueError(f"Model config YAML is invalid: {path}") from exc
+        if isinstance(candidate, dict) and candidate.get("config_id") == model_config_id:
+            return candidate
+    raise FileNotFoundError(
+        f"Unable to find governed model config with config_id: {model_config_id}"
+    )
+
+
+def _is_positive_int(value: Any) -> bool:
+    return not isinstance(value, bool) and isinstance(value, int) and value > 0
+
+
+def _validate_classification_logits(
+    logits: Any,
+    labels: torch.Tensor,
+    expected_class_count: int,
+    context: str,
+) -> None:
+    if not _is_positive_int(expected_class_count):
+        raise ValueError("expected_class_count must be a positive integer.")
+    if not isinstance(logits, torch.Tensor):
+        raise ValueError(f"Classification {context} output must be a torch.Tensor.")
+    if logits.ndim != 2:
+        raise ValueError(
+            f"Classification {context} logits must be 2D with shape "
+            f"[B, {expected_class_count}]; got ndim={logits.ndim}."
+        )
+    actual_class_count = int(logits.shape[1])
+    if actual_class_count != expected_class_count:
+        raise ValueError(
+            f"Classification {context} logits class dimension mismatch: "
+            f"expected {expected_class_count}, got {actual_class_count}."
+        )
+    if logits.shape[0] != labels.shape[0]:
+        raise ValueError(
+            f"Classification {context} logits and labels batch sizes must match."
+        )
 
 
 def _compute_binary_classification_counts(

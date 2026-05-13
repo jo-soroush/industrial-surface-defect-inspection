@@ -275,8 +275,15 @@ def _add_full_epoch_classification_training_outputs(
     expected_class_count = _resolve_expected_class_count(config, model)
 
     model.train()
+    model_device = next(model.parameters()).device
     optimizer = torch.optim.Adam(model.parameters(), lr=float(learning_rate))
-    criterion = torch.nn.CrossEntropyLoss()
+    class_weighting = _resolve_class_weighting(
+        config=config,
+        train_loader=train_loader,
+        expected_class_count=expected_class_count,
+        device=model_device,
+    )
+    criterion = torch.nn.CrossEntropyLoss(weight=class_weighting["weight_tensor"])
 
     train_loss_curve = []
     train_accuracy_curve = []
@@ -443,6 +450,17 @@ def _add_full_epoch_classification_training_outputs(
     result.add_metadata("device", training_runtime.get("device"))
     result.add_metadata("training_mode", "full_epoch")
     result.add_metadata("full_epoch_training", True)
+    result.add_metadata(
+        "class_weighting_enabled", class_weighting["enabled"]
+    )
+    if class_weighting["enabled"]:
+        result.add_metadata(
+            "class_weighting_strategy", class_weighting["strategy"]
+        )
+        result.add_metadata(
+            "class_weighting_class_counts", class_weighting["class_counts"]
+        )
+        result.add_metadata("class_weighting_weights", class_weighting["weights"])
     result.add_metadata("real_training_batch_checked", True)
     result.add_metadata("real_training_batch_size", last_batch_size)
     result.add_metadata("real_training_batches_per_epoch", train_batches_per_epoch[-1])
@@ -673,6 +691,95 @@ def _evaluate_binary_classification_batches(
         "f1": _compute_f1(total_tp, total_fp, total_fn),
         "batch_count": batch_count,
     }
+
+
+def _resolve_class_weighting(
+    *,
+    config: dict[str, Any],
+    train_loader: Any,
+    expected_class_count: int,
+    device: torch.device,
+) -> dict[str, Any]:
+    training_runtime = config.get("training_runtime", {})
+    class_weighting = (
+        training_runtime.get("class_weighting")
+        if isinstance(training_runtime, dict)
+        else None
+    )
+    if not isinstance(class_weighting, dict) or class_weighting.get("enabled") is not True:
+        return {
+            "enabled": False,
+            "strategy": None,
+            "class_counts": None,
+            "weights": None,
+            "weight_tensor": None,
+        }
+
+    strategy = class_weighting.get("strategy")
+    if strategy != "inverse_class_frequency":
+        raise ValueError(
+            "Unsupported training_runtime.class_weighting.strategy for "
+            f"full-epoch classification: {strategy!r}."
+        )
+
+    if iter(train_loader) is train_loader:
+        raise ValueError(
+            "Class weighting requires a re-iterable train_loader; got a one-shot "
+            "iterator."
+        )
+
+    class_counts = _count_classification_labels(
+        train_loader=train_loader,
+        expected_class_count=expected_class_count,
+    )
+    if any(count <= 0 for count in class_counts):
+        raise ValueError(
+            "Class weighting requires at least one training sample for every "
+            f"class; got counts={class_counts}."
+        )
+
+    total_count = sum(class_counts)
+    weights = [
+        float(total_count / (expected_class_count * class_count))
+        for class_count in class_counts
+    ]
+    weight_tensor = torch.tensor(weights, dtype=torch.float32, device=device)
+    return {
+        "enabled": True,
+        "strategy": strategy,
+        "class_counts": class_counts,
+        "weights": weights,
+        "weight_tensor": weight_tensor,
+    }
+
+
+def _count_classification_labels(
+    *, train_loader: Any, expected_class_count: int
+) -> list[int]:
+    class_counts = [0 for _ in range(expected_class_count)]
+    batch_count = 0
+    for batch in train_loader:
+        if not isinstance(batch, dict):
+            raise ValueError("train_loader batch must be a dictionary.")
+
+        labels = batch.get("label")
+        if not isinstance(labels, torch.Tensor):
+            raise ValueError("train_loader batch label must be a torch.Tensor.")
+
+        labels = labels.reshape(-1).long().cpu()
+        for label in labels.tolist():
+            if not isinstance(label, int) or label < 0 or label >= expected_class_count:
+                raise ValueError(
+                    "Class weighting found label outside expected class range "
+                    f"0..{expected_class_count - 1}: {label!r}."
+                )
+            class_counts[label] += 1
+        batch_count += 1
+
+    if batch_count == 0 or sum(class_counts) == 0:
+        raise ValueError("Class weighting requires a non-empty train_loader.")
+
+    return class_counts
 
 
 def _resolve_expected_class_count(config: dict[str, Any], model: Any) -> int:

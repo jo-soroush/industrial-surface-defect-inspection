@@ -25,6 +25,7 @@ from inspection_ai.training.data_loading import build_data_loaders  # noqa: E402
 
 
 ALLOWED_SPLITS = {"validation"}
+ALLOWED_MODEL_TYPES = {"mlp", "cnn", "resnet18"}
 CLASS_LABEL_NAMES = {0: "good", 1: "defect"}
 DECISION_RULE = "argmax_softmax"
 DEFAULT_THRESHOLD = 0.5
@@ -118,8 +119,14 @@ def main() -> int:
     _validate_training_result(training_result, metadata, identity, artifacts, run_config)
     _validate_validation_evaluation(validation_evaluation, run_id, metadata)
 
+    model_type = _require_string(_model_type(run_config), "model_identity.model_type")
+    model_version = _require_string(_model_version(run_config), "model_identity.model_version")
+    if model_type not in ALLOWED_MODEL_TYPES:
+        raise ValueError(
+            f"Unsupported Track A model type '{model_type}'. Allowed values: {sorted(ALLOWED_MODEL_TYPES)}."
+        )
     planned_output_path = output_dir / (
-        f"track_a_cnn_v0_3_0_prediction_level_analysis__{run_id}.json"
+        f"track_a_{model_type}_{model_version}_prediction_level_analysis__{run_id}__{args.split}.json"
     )
 
     if args.dry_run:
@@ -311,8 +318,8 @@ def _generate_prediction_level_analysis(
         "artifact_type": "track_a_prediction_level_error_analysis",
         "run_id": run_id,
         "run_config_id": _run_config_id(run_config),
-        "model_type": run_config.get("model_identity", {}).get("model_type"),
-        "model_version": run_config.get("model_identity", {}).get("model_version"),
+        "model_type": model_type,
+        "model_version": model_version,
         "dataset_id": run_config.get("dataset_binding", {}).get("dataset_id"),
         "split": "validation",
         "decision_rule": DECISION_RULE,
@@ -377,20 +384,19 @@ def _validate_training_result(
 ) -> None:
     if identity.get("task_type") != "classification":
         raise ValueError("TrainingResult task_type must be classification.")
-    if identity.get("model_type") != "cnn":
-        raise ValueError("TrainingResult model_type must be cnn.")
-    if identity.get("run_config_id") != "cnn_train_supervised_v0_3_0":
-        raise ValueError("TrainingResult run_config_id must be cnn_train_supervised_v0_3_0.")
-    if metadata.get("model_version") != "0.3.0":
-        raise ValueError("TrainingResult model_version must be 0.3.0.")
+    model_type = identity.get("model_type")
+    if model_type not in ALLOWED_MODEL_TYPES:
+        raise ValueError(
+            f"TrainingResult model_type must be one of {sorted(ALLOWED_MODEL_TYPES)}."
+        )
+    if not isinstance(identity.get("run_config_id"), str) or not identity.get("run_config_id"):
+        raise ValueError("TrainingResult run_config_id must be a non-empty string.")
+    if not isinstance(metadata.get("model_version"), str) or not metadata.get("model_version"):
+        raise ValueError("TrainingResult model_version must be a non-empty string.")
     if metadata.get("training_mode") != "full_epoch":
         raise ValueError("TrainingResult training_mode must be full_epoch.")
     if metadata.get("full_epoch_training") is not True:
         raise ValueError("TrainingResult full_epoch_training must be true.")
-    if metadata.get("class_weighting_enabled") is not True:
-        raise ValueError("TrainingResult class_weighting_enabled must be true.")
-    if metadata.get("class_weighting_strategy") != "inverse_class_frequency":
-        raise ValueError("TrainingResult class_weighting_strategy must be inverse_class_frequency.")
     if metadata.get("validation_sample_count") != 803:
         raise ValueError("TrainingResult validation_sample_count must be 803.")
     if metadata.get("train_sample_count") != 3748:
@@ -398,8 +404,8 @@ def _validate_training_result(
     model_artifact = artifacts.get("model_artifact")
     if not isinstance(model_artifact, dict) or not model_artifact.get("path"):
         raise ValueError("TrainingResult must reference a model_artifact checkpoint.")
-    if run_config.get("identity", {}).get("run_config_id") != "cnn_train_supervised_v0_3_0":
-        raise ValueError("Run config does not match cnn_train_supervised_v0_3_0.")
+    if run_config.get("identity", {}).get("run_config_id") != identity.get("run_config_id"):
+        raise ValueError("Run config does not match TrainingResult run_config_id.")
 
 
 def _validate_validation_evaluation(
@@ -600,6 +606,20 @@ def _run_config_id(config: dict[str, Any]) -> str:
 
 def _run_config_path(config: dict[str, Any]) -> str:
     return f"configs/runs/{_run_config_id(config)}.yaml"
+
+
+def _model_type(config: dict[str, Any]) -> Any:
+    model_identity = config.get("model_identity")
+    if not isinstance(model_identity, dict):
+        raise ValueError("Run config is missing model_identity.")
+    return model_identity.get("model_type")
+
+
+def _model_version(config: dict[str, Any]) -> Any:
+    model_identity = config.get("model_identity")
+    if not isinstance(model_identity, dict):
+        raise ValueError("Run config is missing model_identity.")
+    return model_identity.get("model_version")
 
 
 def _split_manifest_path(config: dict[str, Any]) -> str:

@@ -162,3 +162,21 @@ runs:
   training_authenticity_status: REAL_FULL_EPOCH_TRAINING_CONFIRMED
   model_quality_status: failed
   production_ready: false
+- run_id: e170a2a3-52fc-48d4-8e24-e3da35e4ce4d
+  task_type: classification
+  model_type: cnn
+  run_config_id: cnn_train_supervised_v0_3_0
+  created_at: '2026-05-13T11:33:11.313250Z'
+  status: completed
+  result_path: artifacts/models/analysis/training_results/training_result__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
+  runtime_log_path: artifacts/models/logs/training_runtime_log__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
+  metadata_summary_path: artifacts/models/metadata/track_a_cnn_v0_3_0_metadata_summary__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
+  artifact_inventory_path: artifacts/models/inventory/track_a_cnn_v0_3_0_artifact_inventory__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
+  quality_decision_path: artifacts/models/analysis/track_a_cnn_v0_3_0_quality_decision__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
+  checkpoint_path: artifacts/models/checkpoints/model_checkpoint__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.pt
+  validation_evaluation_path: artifacts/models/metrics/classification_validation_evaluation__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json
+  training_authenticity_status: REAL_FULL_EPOCH_CLASS_WEIGHTED_TRAINING_CONFIRMED
+  model_quality_status: review_required
+  production_ready: false
+  recommendation_status: review_required
+  deployment_candidate: false

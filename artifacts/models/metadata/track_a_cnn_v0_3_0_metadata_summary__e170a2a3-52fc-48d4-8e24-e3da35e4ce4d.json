@@ -1,0 +1,176 @@
+{
+  "artifact_type": "track_a_cnn_v0_3_0_metadata_summary",
+  "run_id": "e170a2a3-52fc-48d4-8e24-e3da35e4ce4d",
+  "run_config_id": "cnn_train_supervised_v0_3_0",
+  "model_name": "cnn",
+  "model_type": "cnn",
+  "model_version": "0.3.0",
+  "task_type": "classification",
+  "track_id": "classification",
+  "dataset_id": "mvtec_classification_supervised",
+  "dataset_version": "mvtec_1.0",
+  "split_manifest_path": "data/manifests/split_mvtec_classification_supervised.yaml",
+  "preprocessing_version": "preprocessing_policy_1.0",
+  "training_authenticity_status": "REAL_FULL_EPOCH_CLASS_WEIGHTED_TRAINING_CONFIRMED",
+  "model_quality_status": "REVIEW_REQUIRED",
+  "production_ready": false,
+  "recommendation_status": "review_required",
+  "deployment_candidate": false,
+  "class_weighting_enabled": true,
+  "class_weighting_strategy": "inverse_class_frequency",
+  "class_weighting_class_counts": [
+    2868,
+    880
+  ],
+  "class_weighting_weights": [
+    0.6534170153417015,
+    2.1295454545454544
+  ],
+  "train_sample_count": 3748,
+  "validation_sample_count": 803,
+  "test_sample_count": 803,
+  "epochs": 20,
+  "train_batches_per_epoch": [
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118,
+    118
+  ],
+  "validation_batches_per_epoch": [
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26,
+    26
+  ],
+  "train_metrics": {
+    "train_loss": 0.6499258171659651,
+    "train_accuracy": 0.5552294557097118,
+    "train_f1": 0.43318599115946954
+  },
+  "validation_metrics": {
+    "val_loss": 0.6551045042788551,
+    "val_accuracy": 0.5342465753424658,
+    "val_f1": 0.44345238095238093,
+    "macro_metrics": {
+      "precision": 0.5907013870037874,
+      "recall": 0.6204902550012878,
+      "f1": 0.5215120577138779
+    }
+  },
+  "confusion_matrix": [
+    [
+      280,
+      333
+    ],
+    [
+      41,
+      149
+    ]
+  ],
+  "class_level_metrics": {
+    "class_0": {
+      "precision": 0.8722741433021807,
+      "recall": 0.4567699836867863,
+      "f1": 0.5995717344753747
+    },
+    "class_1": {
+      "precision": 0.3091286307053942,
+      "recall": 0.7842105263157895,
+      "f1": 0.44345238095238093
+    }
+  },
+  "comparison_to_v0_2_0": {
+    "previous_baseline": {
+      "run_id": "9837d33d-71ba-4d2d-9aed-ff1f5da6adbc",
+      "confusion_matrix": [
+        [
+          613,
+          0
+        ],
+        [
+          190,
+          0
+        ]
+      ],
+      "class_1_recall": 0.0,
+      "class_1_f1": 0.0,
+      "macro_f1": 0.43290960451977406,
+      "status": "failed_quality_baseline"
+    },
+    "current_run": {
+      "run_id": "e170a2a3-52fc-48d4-8e24-e3da35e4ce4d",
+      "confusion_matrix": [
+        [
+          280,
+          333
+        ],
+        [
+          41,
+          149
+        ]
+      ],
+      "class_1_recall": 0.7842105263157895,
+      "class_1_f1": 0.44345238095238093,
+      "macro_f1": 0.5215120577138779,
+      "status": "review_required"
+    },
+    "improved_defect_recall": true,
+    "improved_macro_f1": true
+  },
+  "evidence_paths": {
+    "training_result": "artifacts/models/analysis/training_results/training_result__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
+    "checkpoint": "artifacts/models/checkpoints/model_checkpoint__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.pt",
+    "validation_evaluation": "artifacts/models/metrics/classification_validation_evaluation__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
+    "runtime_log": "artifacts/models/logs/training_runtime_log__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
+    "inventory": "artifacts/models/inventory/track_a_cnn_v0_3_0_artifact_inventory__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
+    "metadata_summary": "artifacts/models/metadata/track_a_cnn_v0_3_0_metadata_summary__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json",
+    "quality_decision": "artifacts/models/analysis/track_a_cnn_v0_3_0_quality_decision__e170a2a3-52fc-48d4-8e24-e3da35e4ce4d.json"
+  },
+  "runtime_log": {
+    "artifact_type": "training_runtime_log",
+    "log_generation_mode": "original_runtime_capture",
+    "original_runtime_log_available": true,
+    "run_status": "success",
+    "duration_seconds": 1800.277741833008
+  },
+  "safe_wording": "Track A CNN v0.3.0 completed real controlled 20-epoch full-epoch class-weighted training with original runtime logs. Compared with CNN v0.2.0, defect recall improved from 0.0 to 0.7842 and macro F1 improved from 0.4329 to 0.5215. However, the model is not production-ready because it produces many false positives, with 333 good validation samples predicted as defect.",
+  "forbidden_wording": [
+    "Track A CNN v0.3.0 is production-ready.",
+    "Track A CNN v0.3.0 is the final deployment classifier.",
+    "Track A CNN v0.3.0 has solved Track A.",
+    "Track A CNN v0.3.0 is a reliable production defect classifier.",
+    "High defect recall alone proves model quality."
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "artifact_type": "track_a_cnn_quality_decision",
+  "run_id": "50993bc0-4dcd-48f3-a080-d6cbaf21d804",
+  "run_config_id": "cnn_train_supervised_v0_4_0",
+  "model_name": "cnn",
+  "model_type": "cnn",
+  "model_version": "0.4.0",
+  "decision": "failed_quality_all_good_collapse",
+  "model_quality_status": "FAILED_QUALITY",
+  "production_ready": false,
+  "deployment_candidate": false,
+  "recommendation_status": "rejected_failed_quality",
+  "training_authenticity_status": "REAL_FULL_EPOCH_TRAINING_CONFIRMED",
+  "reason_summary": "At threshold 0.5 the model predicts all validation samples as good, yielding zero defect recall and zero defect F1. Threshold 0.3 improves recall to 0.22105263157894736 but introduces 98 false positives and remains unacceptable.",
+  "improvement_summary": "The run provides evidence for the Track A failure mode when class weighting is removed completely, but it does not produce an acceptable CNN candidate.",
+  "remaining_risks": [
+    "Defect recall is 0.0 at the default threshold.",
+    "Threshold tuning improves recall only partially and creates many false positives.",
+    "This model should not be used as a deployment candidate."
+  ],
+  "confusion_matrix": [
+    [
+      613,
+      0
+    ],
+    [
+      190,
+      0
+    ]
+  ],
+  "key_metrics": {
+    "val_accuracy": 0.763387297633873,
+    "val_f1": 0.0,
+    "class_0": {
+      "precision": 0.763387297633873,
+      "recall": 1.0,
+      "f1": 0.8658192090395481
+    },
+    "class_1": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "macro_metrics": {
+      "precision": 0.3816936488169365,
+      "recall": 0.5,
+      "f1": 0.43290960451977406
+    }
+  },
+  "threshold_analysis_path": "artifacts/models/error_analysis/track_a_threshold_analysis__50993bc0-4dcd-48f3-a080-d6cbaf21d804__validation.json",
+  "threshold_analysis": {
+    "baseline_threshold": 0.5,
+    "baseline_confusion_matrix": [
+      [
+        613,
+        0
+      ],
+      [
+        190,
+        0
+      ]
+    ],
+    "recommended_threshold": 0.3,
+    "recommended_confusion_matrix": [
+      [
+        515,
+        98
+      ],
+      [
+        148,
+        42
+      ]
+    ],
+    "baseline_false_positive": 0,
+    "baseline_false_negative": 190,
+    "recommended_false_positive": 98,
+    "recommended_false_negative": 148,
+    "interpretation": "Threshold tuning improves defect recall slightly but does not solve the model quality gap, so CNN v0.4 remains failed quality."
+  },
+  "safe_wording": "Track A CNN v0.4 completed real controlled 25-epoch full-epoch training with original runtime logs. At the default threshold the model collapses to predicting all validation samples as good, which yields zero defect recall and zero defect F1. Threshold tuning at 0.3 improves recall modestly but leaves the model failed-quality and not production-ready.",
+  "forbidden_wording": [
+    "Track A CNN v0.4 is production-ready.",
+    "Track A CNN v0.4 is the final deployment classifier.",
+    "Track A CNN v0.4 has solved Track A.",
+    "Track A CNN v0.4 is a reliable production defect classifier.",
+    "Threshold tuning alone proves model quality."
+  ],
+  "next_recommended_step": "Design CNN v0.5 using evidence from CNN v0.3 and CNN v0.4, avoiding both overly aggressive inverse class weighting and complete removal of imbalance handling."
+}

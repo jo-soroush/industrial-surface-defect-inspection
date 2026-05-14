@@ -1,0 +1,110 @@
+{
+  "artifact_type": "track_a_cnn_v0_4_0_metadata_summary",
+  "run_id": "50993bc0-4dcd-48f3-a080-d6cbaf21d804",
+  "run_config_id": "cnn_train_supervised_v0_4_0",
+  "model_name": "cnn",
+  "model_type": "cnn",
+  "model_version": "0.4.0",
+  "task_type": "classification",
+  "track_id": "classification",
+  "dataset_id": "mvtec_classification_supervised",
+  "dataset_version": "mvtec_1.0",
+  "split_manifest_path": "data/manifests/split_mvtec_classification_supervised.yaml",
+  "preprocessing_version": "preprocessing_policy_1.0",
+  "training_authenticity_status": "REAL_FULL_EPOCH_TRAINING_CONFIRMED",
+  "model_quality_status": "FAILED_QUALITY",
+  "production_ready": false,
+  "recommendation_status": "rejected_failed_quality",
+  "deployment_candidate": false,
+  "train_sample_count": 3748,
+  "validation_sample_count": 803,
+  "test_sample_count": 803,
+  "epochs": 25,
+  "train_metrics": {
+    "train_loss": 0.5303707925588879,
+    "train_accuracy": 0.7652081109925294,
+    "train_f1": 0.0
+  },
+  "validation_metrics": {
+    "val_loss": 0.5307628090399437,
+    "val_accuracy": 0.763387297633873,
+    "val_f1": 0.0,
+    "macro_metrics": {
+      "precision": 0.3816936488169365,
+      "recall": 0.5,
+      "f1": 0.43290960451977406
+    }
+  },
+  "confusion_matrix": [
+    [
+      613,
+      0
+    ],
+    [
+      190,
+      0
+    ]
+  ],
+  "class_level_metrics": {
+    "class_0": {
+      "precision": 0.763387297633873,
+      "recall": 1.0,
+      "f1": 0.8658192090395481
+    },
+    "class_1": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  "threshold_summary": {
+    "baseline_threshold": 0.5,
+    "recommended_threshold": 0.3,
+    "baseline_confusion_matrix": [
+      [
+        613,
+        0
+      ],
+      [
+        190,
+        0
+      ]
+    ],
+    "recommended_confusion_matrix": [
+      [
+        515,
+        98
+      ],
+      [
+        148,
+        42
+      ]
+    ],
+    "baseline_false_positive": 0,
+    "baseline_false_negative": 190,
+    "recommended_false_positive": 98,
+    "recommended_false_negative": 148,
+    "interpretation": "CNN v0.4 collapses to predicting all validation samples as good at the default threshold. Threshold tuning improves recall slightly but does not fix the model quality gap."
+  },
+  "evidence_paths": {
+    "training_result": "artifacts/models/analysis/training_results/training_result__50993bc0-4dcd-48f3-a080-d6cbaf21d804.json",
+    "checkpoint": "artifacts/models/checkpoints/model_checkpoint__50993bc0-4dcd-48f3-a080-d6cbaf21d804.pt",
+    "validation_evaluation": "artifacts/models/metrics/classification_validation_evaluation__50993bc0-4dcd-48f3-a080-d6cbaf21d804.json",
+    "runtime_log": "artifacts/models/logs/training_runtime_log__50993bc0-4dcd-48f3-a080-d6cbaf21d804.json",
+    "prediction_level_analysis": "artifacts/models/error_analysis/track_a_cnn_0.4.0_prediction_level_analysis__50993bc0-4dcd-48f3-a080-d6cbaf21d804__validation.json",
+    "threshold_analysis": "artifacts/models/error_analysis/track_a_threshold_analysis__50993bc0-4dcd-48f3-a080-d6cbaf21d804__validation.json",
+    "inventory": "artifacts/models/inventory/track_a_cnn_v0_4_0_artifact_inventory__50993bc0-4dcd-48f3-a080-d6cbaf21d804.json",
+    "metadata_summary": "artifacts/models/metadata/track_a_cnn_v0_4_0_metadata_summary__50993bc0-4dcd-48f3-a080-d6cbaf21d804.json",
+    "quality_decision": "artifacts/models/analysis/track_a_cnn_v0_4_0_quality_decision__50993bc0-4dcd-48f3-a080-d6cbaf21d804.json"
+  },
+  "threshold_analysis_path": "artifacts/models/error_analysis/track_a_threshold_analysis__50993bc0-4dcd-48f3-a080-d6cbaf21d804__validation.json",
+  "safe_wording": "Track A CNN v0.4 completed real controlled 25-epoch full-epoch training with original runtime logs. However, the model collapses to predicting all validation samples as good at the default threshold and remains failed-quality evidence, not a production-ready image model.",
+  "forbidden_wording": [
+    "Track A CNN v0.4 is production-ready.",
+    "Track A CNN v0.4 is the final deployment classifier.",
+    "Track A CNN v0.4 has solved Track A.",
+    "Track A CNN v0.4 is a reliable production defect classifier.",
+    "Threshold tuning alone proves model quality."
+  ],
+  "next_recommended_step": "Design CNN v0.5 using evidence from CNN v0.3 and CNN v0.4, avoiding both overly aggressive inverse class weighting and complete removal of imbalance handling."
+}

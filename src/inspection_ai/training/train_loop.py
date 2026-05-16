@@ -223,14 +223,6 @@ def _add_one_batch_classification_training_outputs(
         result.add_metadata(
             "validation_evaluation_batch_count", validation_metrics["batch_count"]
         )
-        evaluation_path = _write_classification_validation_evaluation_artifact(
-            result=result,
-            model=model,
-            data_loader=validation_loader,
-            dataset_id=data_loader.get("dataset_id"),
-            max_batches=5,
-        )
-        result.add_metadata("validation_evaluation_path", str(evaluation_path))
     else:
         result.add_metadata("validation_evaluation_checked", False)
         result.add_metadata(
@@ -427,15 +419,6 @@ def _add_full_epoch_classification_training_outputs(
             "validation_evaluation_batch_count",
             final_validation_metrics["batch_count"],
         )
-        evaluation_path = _write_classification_validation_evaluation_artifact(
-            result=result,
-            model=model,
-            data_loader=validation_loader,
-            dataset_id=data_loader.get("dataset_id"),
-            max_batches=None,
-            expected_class_count=expected_class_count,
-        )
-        result.add_metadata("validation_evaluation_path", str(evaluation_path))
     else:
         result.add_metadata("validation_evaluation_checked", False)
         result.add_metadata(
@@ -475,6 +458,109 @@ def _add_full_epoch_classification_training_outputs(
     )
 
 
+def build_classification_validation_evaluation_payload(
+    *,
+    result: TrainingResult,
+    dataset_id: Any,
+    evaluation: dict[str, Any],
+) -> dict[str, Any]:
+    """Build the governed validation evaluation artifact payload."""
+    if not isinstance(evaluation, dict):
+        raise ValueError("evaluation must be a dictionary.")
+
+    return {
+        "artifact_type": "classification_validation_evaluation",
+        "run_id": result.identity["run_id"],
+        "dataset_id": dataset_id,
+        "split": "validation",
+        "total_samples": evaluation["total_samples"],
+        "confusion_matrix": evaluation["confusion_matrix"],
+        "per_class": evaluation["per_class"],
+        "macro_metrics": evaluation["macro_metrics"],
+    }
+
+
+def write_classification_validation_evaluation_artifact(
+    *,
+    result: TrainingResult,
+    dataset_id: Any,
+    evaluation: dict[str, Any],
+    output_dir: Path | str = Path("artifacts/models/metrics"),
+) -> Path:
+    """Persist the governed validation evaluation artifact payload."""
+    payload = build_classification_validation_evaluation_payload(
+        result=result,
+        dataset_id=dataset_id,
+        evaluation=evaluation,
+    )
+
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    artifact_path = (
+        output_path / f"classification_validation_evaluation__{result.identity['run_id']}.json"
+    )
+    with artifact_path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+
+    return artifact_path
+
+
+def evaluate_classification_validation(
+    *,
+    config: dict[str, Any],
+    model: Any,
+    data_loader: dict[str, Any],
+    expected_class_count: int | None = None,
+) -> dict[str, Any]:
+    """Evaluate a classification model using the governed validation split."""
+    if not isinstance(data_loader, dict):
+        raise ValueError("data_loader must be a dictionary.")
+
+    train_loader = data_loader.get("train_loader")
+    if train_loader is None:
+        raise ValueError("data_loader is missing required train_loader.")
+    validation_loader = data_loader.get("validation_loader")
+    if validation_loader is None:
+        raise ValueError("data_loader is missing required validation_loader.")
+
+    if expected_class_count is None:
+        expected_class_count = _resolve_expected_class_count(config, model)
+
+    model_device = next(model.parameters()).device
+    class_weighting = _resolve_class_weighting(
+        config=config,
+        train_loader=train_loader,
+        expected_class_count=expected_class_count,
+        device=model_device,
+    )
+    criterion = torch.nn.CrossEntropyLoss(weight=class_weighting["weight_tensor"])
+
+    loss_metrics = _evaluate_binary_classification_batches(
+        model=model,
+        data_loader=validation_loader,
+        criterion=criterion,
+        max_batches=None,
+        expected_class_count=expected_class_count,
+    )
+    prediction_metrics = _evaluate_classification_predictions(
+        model=model,
+        data_loader=validation_loader,
+        max_batches=None,
+        expected_class_count=expected_class_count,
+    )
+
+    return {
+        "loss": loss_metrics["loss"],
+        "accuracy": loss_metrics["accuracy"],
+        "f1": loss_metrics["f1"],
+        "batch_count": loss_metrics["batch_count"],
+        "total_samples": prediction_metrics["total_samples"],
+        "confusion_matrix": prediction_metrics["confusion_matrix"],
+        "per_class": prediction_metrics["per_class"],
+        "macro_metrics": prediction_metrics["macro_metrics"],
+    }
+
+
 def _write_classification_validation_evaluation_artifact(
     result: TrainingResult,
     model: Any,
@@ -489,27 +575,11 @@ def _write_classification_validation_evaluation_artifact(
         max_batches=max_batches,
         expected_class_count=expected_class_count,
     )
-    payload = {
-        "artifact_type": "classification_validation_evaluation",
-        "run_id": result.identity["run_id"],
-        "dataset_id": dataset_id,
-        "split": "validation",
-        "total_samples": evaluation["total_samples"],
-        "confusion_matrix": evaluation["confusion_matrix"],
-        "per_class": evaluation["per_class"],
-        "macro_metrics": evaluation["macro_metrics"],
-    }
-
-    output_dir = Path("artifacts/models/metrics")
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = (
-        output_dir
-        / f"classification_validation_evaluation__{result.identity['run_id']}.json"
+    return write_classification_validation_evaluation_artifact(
+        result=result,
+        dataset_id=dataset_id,
+        evaluation=evaluation,
     )
-    with output_path.open("w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2)
-
-    return output_path
 
 
 def _evaluate_classification_predictions(

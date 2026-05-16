@@ -20,11 +20,13 @@ def resolve_checkpoint_path(run_id: str, checkpoint_name: str) -> Path:
     return Path("artifacts/models/checkpoints") / run_id / checkpoint_name
 
 
-def save_checkpoint(model_state: Any, target_path: Path) -> None:
-    """Persist a model checkpoint payload without overwriting existing artifacts."""
+def save_checkpoint(
+    model_state: Any, target_path: Path, *, overwrite: bool = False
+) -> None:
+    """Persist a model checkpoint payload, optionally overwriting an existing file."""
     if not isinstance(target_path, Path):
         raise TypeError("target_path must be a pathlib.Path.")
-    if target_path.exists():
+    if target_path.exists() and not overwrite:
         raise FileExistsError(f"Checkpoint already exists: {target_path}")
 
     target_path.parent.mkdir(parents=True, exist_ok=True)

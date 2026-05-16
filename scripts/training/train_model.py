@@ -35,7 +35,10 @@ from inspection_ai.training.data_loading import build_data_loaders
 from inspection_ai.training.result_persistence import persist_training_result
 from inspection_ai.training.result_validation import validate_training_result
 from inspection_ai.training.train_loop import (
+    build_classification_validation_evaluation_payload,
+    evaluate_classification_validation,
     replay_classification_validation,
+    write_classification_validation_evaluation_artifact,
     run_training_loop,
 )
 
@@ -112,6 +115,15 @@ def _run_training_with_checkpoint(config: dict[str, Any]) -> object:
     data_loaders = build_data_loaders(config)
     result = run_training_loop(config=config, model=model, data_loader=data_loaders)
     _attach_model_checkpoint(result=result, model=model)
+    checkpoint_state_dict, validation_evaluation = _materialize_official_validation_evaluation(
+        config=config,
+        result=result,
+    )
+    _finalize_model_checkpoint(
+        result=result,
+        model_state_dict=checkpoint_state_dict,
+        validation_evaluation=validation_evaluation,
+    )
     return result
 
 
@@ -121,20 +133,7 @@ def _attach_model_checkpoint(result: Any, model: Any) -> None:
         raise ValueError("Trained model must provide a callable state_dict method.")
 
     checkpoint_path = resolve_model_checkpoint_path(result.identity["run_id"])
-    validation_evaluation_path = _require_string(
-        result.metadata.get("validation_evaluation_path"),
-        "result.metadata.validation_evaluation_path",
-    )
-    validation_evaluation = _load_json_file(
-        Path(validation_evaluation_path), "validation evaluation"
-    )
-    checkpoint_payload = build_structured_checkpoint_payload(
-        model_state_dict=state_dict(),
-        result=result,
-        checkpoint_kind="final",
-        validation_evaluation=validation_evaluation,
-    )
-    save_checkpoint(checkpoint_payload, checkpoint_path)
+    save_checkpoint(state_dict(), checkpoint_path)
     result.add_artifact(
         "model_artifact",
         {
@@ -142,6 +141,69 @@ def _attach_model_checkpoint(result: Any, model: Any) -> None:
             "type": "pytorch_state_dict",
         },
     )
+
+
+def _materialize_official_validation_evaluation(
+    *, config: dict[str, Any], result: Any
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Replay validation from the saved checkpoint and persist the official artifact."""
+    model_artifact = _require_dict(result.artifacts.get("model_artifact"), "model_artifact")
+    checkpoint_path = Path(
+        _require_string(model_artifact.get("path"), "model_artifact.path")
+    )
+
+    replay_config = _build_checkpoint_replay_config(config)
+    replay_model = create_model(replay_config)
+    checkpoint_payload = load_checkpoint_payload(checkpoint_path)
+    state_dict = extract_model_state_dict(checkpoint_payload)
+    replay_model.load_state_dict(state_dict, strict=True)
+
+    data_loaders = build_data_loaders(replay_config)
+    official_validation = evaluate_classification_validation(
+        config=replay_config,
+        model=replay_model,
+        data_loader=data_loaders,
+    )
+    dataset_id = data_loaders.get("dataset_id")
+    if dataset_id is None:
+        raise ValueError("data_loader is missing required dataset_id.")
+
+    validation_payload = build_classification_validation_evaluation_payload(
+        result=result,
+        dataset_id=dataset_id,
+        evaluation=official_validation,
+    )
+    validation_path = write_classification_validation_evaluation_artifact(
+        result=result,
+        dataset_id=dataset_id,
+        evaluation=official_validation,
+    )
+    result.add_metric("val_loss", official_validation["loss"])
+    result.add_metric("val_accuracy", official_validation["accuracy"])
+    result.add_metric("val_f1", official_validation["f1"])
+    result.add_metadata("validation_evaluation_checked", True)
+    result.add_metadata(
+        "validation_evaluation_batch_count", official_validation["batch_count"]
+    )
+    result.add_metadata("validation_evaluation_path", str(validation_path))
+    return state_dict, validation_payload
+
+
+def _finalize_model_checkpoint(
+    *,
+    result: Any,
+    model_state_dict: Any,
+    validation_evaluation: dict[str, Any],
+) -> None:
+    """Rewrite the checkpoint as a structured governed payload."""
+    checkpoint_path = resolve_model_checkpoint_path(result.identity["run_id"])
+    checkpoint_payload = build_structured_checkpoint_payload(
+        model_state_dict=model_state_dict,
+        result=result,
+        checkpoint_kind="final",
+        validation_evaluation=validation_evaluation,
+    )
+    save_checkpoint(checkpoint_payload, checkpoint_path, overwrite=True)
 
 
 def extract_task_type(config: dict[str, Any]) -> str:

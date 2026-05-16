@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
+from copy import deepcopy
 import io
 import json
 from pathlib import Path
@@ -24,13 +25,19 @@ import yaml
 from inspection_ai.governance.run_registry_writer import append_run_registry_entry
 from inspection_ai.models.factory import create_model
 from inspection_ai.training.checkpointing import (
+    build_structured_checkpoint_payload,
+    extract_model_state_dict,
+    load_checkpoint_payload,
     resolve_model_checkpoint_path,
     save_checkpoint,
 )
 from inspection_ai.training.data_loading import build_data_loaders
 from inspection_ai.training.result_persistence import persist_training_result
 from inspection_ai.training.result_validation import validate_training_result
-from inspection_ai.training.train_loop import run_training_loop
+from inspection_ai.training.train_loop import (
+    replay_classification_validation,
+    run_training_loop,
+)
 
 ALLOWED_TASK_TYPES = {
     "classification",
@@ -114,7 +121,20 @@ def _attach_model_checkpoint(result: Any, model: Any) -> None:
         raise ValueError("Trained model must provide a callable state_dict method.")
 
     checkpoint_path = resolve_model_checkpoint_path(result.identity["run_id"])
-    save_checkpoint(state_dict(), checkpoint_path)
+    validation_evaluation_path = _require_string(
+        result.metadata.get("validation_evaluation_path"),
+        "result.metadata.validation_evaluation_path",
+    )
+    validation_evaluation = _load_json_file(
+        Path(validation_evaluation_path), "validation evaluation"
+    )
+    checkpoint_payload = build_structured_checkpoint_payload(
+        model_state_dict=state_dict(),
+        result=result,
+        checkpoint_kind="final",
+        validation_evaluation=validation_evaluation,
+    )
+    save_checkpoint(checkpoint_payload, checkpoint_path)
     result.add_artifact(
         "model_artifact",
         {
@@ -279,6 +299,7 @@ def main() -> int:
         with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
             result = dispatch_training(config)
             validate_training_result(result)
+            _validate_checkpoint_replay(config, result)
             result_path = persist_training_result(
                 result=result,
                 output_dir=Path("artifacts/models/analysis/training_results"),
@@ -326,6 +347,110 @@ def main() -> int:
         if log_path is not None:
             print(f"Runtime log saved: {log_path}", file=sys.stderr)
         raise
+
+
+def _validate_checkpoint_replay(config: dict[str, Any], result: Any) -> None:
+    """Ensure the saved checkpoint exactly reproduces the official validation eval."""
+    model_artifact = _require_dict(result.artifacts.get("model_artifact"), "model_artifact")
+    checkpoint_path = Path(
+        _require_string(model_artifact.get("path"), "model_artifact.path")
+    )
+    validation_evaluation_path = Path(
+        _require_string(
+            result.metadata.get("validation_evaluation_path"),
+            "result.metadata.validation_evaluation_path",
+        )
+    )
+    validation_evaluation = _load_json_file(
+        validation_evaluation_path, "validation evaluation"
+    )
+
+    replay_config = _build_checkpoint_replay_config(config)
+    replay_model = create_model(replay_config)
+    checkpoint_payload = load_checkpoint_payload(checkpoint_path)
+    state_dict = extract_model_state_dict(checkpoint_payload)
+    replay_model.load_state_dict(state_dict, strict=True)
+
+    data_loaders = build_data_loaders(replay_config)
+    validation_loader = data_loaders.get("validation_loader")
+    if validation_loader is None:
+        raise ValueError("validation_loader must exist for checkpoint verification.")
+
+    class_count = getattr(replay_model, "class_count", None)
+    if not isinstance(class_count, int) or class_count < 2:
+        raise ValueError("Replay model must expose a valid class_count.")
+
+    replay_metrics = replay_classification_validation(
+        model=replay_model,
+        data_loader=validation_loader,
+        expected_class_count=class_count,
+    )
+
+    expected_confusion_matrix = validation_evaluation.get("confusion_matrix")
+    if replay_metrics["confusion_matrix"] != expected_confusion_matrix:
+        print(f"checkpoint_replay_confusion_matrix={replay_metrics['confusion_matrix']}")
+        print(f"official_validation_confusion_matrix={expected_confusion_matrix}")
+        raise ValueError(
+            "Checkpoint replay confusion matrix does not match the official "
+            "validation evaluation."
+        )
+
+
+def _build_checkpoint_replay_config(config: dict[str, Any]) -> dict[str, Any]:
+    """Return an inference-safe copy for replay validation."""
+    model_identity = config.get("model_identity")
+    if not isinstance(model_identity, dict):
+        return config
+
+    if model_identity.get("model_type") != "resnet18":
+        return config
+
+    pretrained_policy = model_identity.get("pretrained_policy")
+    if not isinstance(pretrained_policy, dict) or pretrained_policy.get("pretrained") is not True:
+        return config
+
+    replay_config = deepcopy(config)
+    replay_model_identity = replay_config.get("model_identity")
+    if not isinstance(replay_model_identity, dict):
+        return config
+
+    replay_pretrained_policy = replay_model_identity.get("pretrained_policy")
+    if not isinstance(replay_pretrained_policy, dict):
+        return config
+    replay_pretrained_policy["pretrained"] = False
+    replay_model_identity["pretrained_policy"] = replay_pretrained_policy
+
+    top_level_pretrained_policy = replay_config.get("pretrained_policy")
+    if isinstance(top_level_pretrained_policy, dict):
+        top_level_pretrained_policy["pretrained"] = False
+        replay_config["pretrained_policy"] = top_level_pretrained_policy
+
+    return replay_config
+
+
+def _require_string(value: Any, field: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{field} must be a non-empty string.")
+    return value
+
+
+def _require_dict(value: Any, field: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ValueError(f"{field} must be a dictionary.")
+    return value
+
+
+def _load_json_file(path: Path, artifact_name: str) -> dict[str, Any]:
+    if not path.is_file():
+        raise FileNotFoundError(f"{artifact_name} JSON not found: {path}")
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{artifact_name} JSON is invalid: {path}") from exc
+    if not isinstance(payload, dict):
+        raise ValueError(f"{artifact_name} JSON must contain an object.")
+    return payload
 
 
 if __name__ == "__main__":

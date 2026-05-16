@@ -600,6 +600,20 @@ def _evaluate_classification_predictions(
     }
 
 
+def replay_classification_validation(
+    model: Any,
+    data_loader: Any,
+    expected_class_count: int = 2,
+) -> dict[str, Any]:
+    """Replay a full validation pass for governed checkpoint verification."""
+    return _evaluate_classification_predictions(
+        model=model,
+        data_loader=data_loader,
+        max_batches=None,
+        expected_class_count=expected_class_count,
+    )
+
+
 def _compute_class_metrics(
     true_positive: int, false_positive: int, false_negative: int
 ) -> dict[str, float]:

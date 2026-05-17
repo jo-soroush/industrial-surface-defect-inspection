@@ -105,13 +105,18 @@ def main() -> int:
     threshold_analysis = {
         "artifact_type": "track_a_threshold_analysis",
         "run_id": run_id,
+        "run_config_id": analysis.get("run_config_id"),
+        "model_type": analysis.get("model_type"),
+        "model_version": analysis.get("model_version"),
         "source_prediction_level_analysis_path": str(prediction_path),
+        "source_prediction_level_artifact": str(prediction_path),
         "split": split,
         "decision_score": "probability_defect",
         "threshold_rule": "predict defect if probability_defect >= threshold",
         "thresholds": thresholds,
         "per_threshold": rows,
         "recommended_threshold": recommended_row["threshold"],
+        "recommended_threshold_metrics": recommended_row,
         "recommendation_reason": _build_recommendation_reason(recommended_row),
         "baseline_threshold": 0.5,
         "baseline_metrics": baseline_row,
@@ -251,6 +256,13 @@ def _validate_prediction_level_analysis(
         raise ValueError(
             "prediction-level analysis total_samples must match the number of records."
         )
+
+    if not isinstance(payload.get("run_config_id"), str) or not payload.get("run_config_id"):
+        raise ValueError("prediction-level analysis run_config_id must be a non-empty string.")
+    if not isinstance(payload.get("model_type"), str) or not payload.get("model_type"):
+        raise ValueError("prediction-level analysis model_type must be a non-empty string.")
+    if not isinstance(payload.get("model_version"), str) or not payload.get("model_version"):
+        raise ValueError("prediction-level analysis model_version must be a non-empty string.")
 
     return payload
 

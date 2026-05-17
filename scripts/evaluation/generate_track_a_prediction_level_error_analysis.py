@@ -266,6 +266,9 @@ def _generate_prediction_level_analysis(
                     {
                         "sample_index": sample_index,
                         "image_path": image_path,
+                        "run_id": run_id,
+                        "model_type": model_type,
+                        "model_version": model_version,
                         "true_label": true_label_id,
                         "true_label_name": true_label_name,
                         "predicted_label": predicted_label_id,

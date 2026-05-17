@@ -2111,3 +2111,20 @@ artifacts:
   production_ready: false
   deployment_candidate: false
   recommendation_status: selected
+- artifact_id: track_a__c3b74a5c-34ce-4654-9e5d-915c886ec9f6__50993bc0-4dcd-48f3-a080-d6cbaf21d804__1bc92561-c5bf-48f2-8246-b8f3d5718ffe__comparison
+  artifact_filename: track_a_supervised_classification__c3b74a5c-34ce-4654-9e5d-915c886ec9f6__50993bc0-4dcd-48f3-a080-d6cbaf21d804__1bc92561-c5bf-48f2-8246-b8f3d5718ffe.json
+  artifact_path: artifacts/models/comparisons/track_a_supervised_classification__c3b74a5c-34ce-4654-9e5d-915c886ec9f6__50993bc0-4dcd-48f3-a080-d6cbaf21d804__1bc92561-c5bf-48f2-8246-b8f3d5718ffe.json
+  artifact_uri: null
+  storage_backend: local
+  artifact_type: track_a_comparison
+  run_id: null
+  model_name: null
+  model_version: null
+  dataset_id: mvtec_classification_supervised
+  dataset_version: mvtec_1.0
+  config_id: null
+  created_at: '2026-05-17T20:46:29.727063Z'
+  artifact_hash: 8934b57ed9014fb6049e7170a692fc71667a187d6e92f390a45c4aa137b58b46
+  artifact_size_bytes: 19017
+  artifact_format: json
+  status: active

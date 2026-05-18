@@ -24,11 +24,18 @@ This document records the current Phase 3 / Detection state so work can resume l
 - Track B / Autoencoder: PASS
   - governed production-canonical evidence exists
   - immediate autoencoder work now: NO
+- Notebook evidence:
+  - Track A notebook path: `notebooks/track_a_supervised_classification_mvtec.ipynb`
+  - Track B notebook path: `notebooks/track_b_anomaly_detection_mvtec_evidence.ipynb`
+  - Track A notebook refreshed and now consumes `artifacts/frontend/track_a/`
+  - Track B notebook refreshed and now consumes `artifacts/frontend/track_b/`
+  - notebook evidence update / quality pass: PASS for current demo-facing bundles
 - Detection / YOLO: PARTIAL / PAUSED
   - runtime/network blocker remains
   - detection evaluation and registry publication are still not complete
 - Frontend/dashboard data layer: PARTIAL
-- Notebook evidence update / quality pass: still needed
+  - Track A and Track B frontend-ready JSON bundles exist and are validated
+  - a full frontend/dashboard application is not separately validated here
 
 ## Completed Detection Work
 - GC10-DET governed split manifest created and committed
@@ -105,6 +112,7 @@ The current blocker is runtime and network related, not a missing governance fou
 - notebook design planning
 - post-training governance schema refinement
 - no training-dependent claims
+- no notebook rename was performed; the current Track A notebook filename is intentionally `notebooks/track_a_supervised_classification_mvtec.ipynb`
 
 ## Git / Commit Reference
 Latest relevant commits:

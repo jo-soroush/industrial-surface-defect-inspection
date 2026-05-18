@@ -9,6 +9,27 @@ This document records the current Phase 3 / Detection state so work can resume l
 - Detection / YOLO: PARTIAL / PAUSED
 - Global Phase 3: NOT PASS
 
+## Current Audited Project State
+- Track A Classification: PASS
+  - MLP v0.2.0: governed baseline-only comparison evidence
+  - CNN v0.4.0: governed failed-quality comparison evidence
+  - ResNet18 v0.4.0: governed strong candidate and selected Track A model
+  - Current strongest governed Track A candidate: ResNet18 v0.4.0
+  - Quality targets passed: yes
+  - Production-ready: no
+  - Deployment-candidate: no
+  - Recommended threshold: `0.65`
+  - Track A comparison artifact: PASS and registered
+  - MLP/CNN retraining now: NO
+- Track B / Autoencoder: PASS
+  - governed production-canonical evidence exists
+  - immediate autoencoder work now: NO
+- Detection / YOLO: PARTIAL / PAUSED
+  - runtime/network blocker remains
+  - detection evaluation and registry publication are still not complete
+- Frontend/dashboard data layer: PARTIAL
+- Notebook evidence update / quality pass: still needed
+
 ## Completed Detection Work
 - GC10-DET governed split manifest created and committed
 - YOLO backend dependency boundary created and committed
@@ -86,8 +107,13 @@ The current blocker is runtime and network related, not a missing governance fou
 - no training-dependent claims
 
 ## Git / Commit Reference
-The current recent commit is:
+Latest relevant commits:
 
-`3b0ea70 [docs] Add portable YOLO training execution runbook`
+- `5c8afc4 [governance] Register Track A comparison artifact`
+- `1664162 [governance] Register Track A ResNet18 governed package`
+- `149edd0 [evaluation] Add ResNet18 threshold analysis metadata`
+- `f24a5b2 [evaluation] Add row-level metadata to Track A predictions`
+- `a1fd686 [governance] Derive validation evidence from saved checkpoint`
+- `b9cd7da [governance] Add checkpoint replay validation gate`
 
-This was verified from the current `git log`.
+Older YOLO-specific roadmap work remains relevant, but the overall project state above is now the authoritative summary.

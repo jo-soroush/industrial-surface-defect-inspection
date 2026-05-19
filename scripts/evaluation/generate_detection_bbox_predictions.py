@@ -58,6 +58,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="Require the ultralytics backend to be importable in the active Python environment.",
     )
+    parser.add_argument(
+        "--write-artifact",
+        action="store_true",
+        default=False,
+        help="Enable the governed write-mode scaffold for the future bbox prediction export.",
+    )
+    parser.add_argument(
+        "--confirm-write",
+        action="store_true",
+        default=False,
+        help="Required confirmation flag for --write-artifact.",
+    )
     return parser
 
 
@@ -67,6 +79,7 @@ def main() -> int:
     split = _require_non_empty_string(args.split, "split")
     dry_run = bool(args.dry_run)
     smoke_result: dict[str, Any] | None = None
+    write_mode_report: dict[str, Any] | None = None
 
     run_dir = REPO_ROOT / "artifacts/detection/yolo/runs" / run_id
     weights_path = run_dir / "weights" / "best.pt"
@@ -239,6 +252,13 @@ def main() -> int:
                 "ultralytics import is required when --require-ultralytics is set."
             )
 
+        if args.write_artifact:
+            write_mode_report = _evaluate_write_mode_scaffold(
+                args=args,
+                split=split,
+                target_output_path=REPO_ROOT / future_contract["target_output_path"],
+            )
+
         print("# Detection BBox Prediction Export Writer Dry Run")
         print()
         print("## Required Inputs")
@@ -288,6 +308,43 @@ def main() -> int:
         for field_name in future_contract["top_level_fields"]:
             print(f"  - {field_name}")
         print()
+        if write_mode_report is not None:
+            print("## Write Mode Scaffold")
+            print(
+                f"- write_artifact requested: "
+                f"{'YES' if write_mode_report['write_artifact_requested'] else 'NO'}"
+            )
+            print(
+                f"- confirm_write provided: "
+                f"{'YES' if write_mode_report['confirm_write_provided'] else 'NO'}"
+            )
+            print(
+                f"- require_ultralytics provided: "
+                f"{'YES' if write_mode_report['require_ultralytics_provided'] else 'NO'}"
+            )
+            print(
+                f"- full validation split required: "
+                f"{'PASS' if write_mode_report['full_validation_split_required'] else 'FAIL'}"
+            )
+            print(
+                f"- partial limit rejected: "
+                f"{'PASS' if write_mode_report['partial_limit_rejected'] else 'FAIL'}"
+            )
+            print(
+                f"- smoke inference rejected: "
+                f"{'PASS' if write_mode_report['smoke_inference_rejected'] else 'FAIL'}"
+            )
+            print(
+                f"- target output path clear: "
+                f"{'FAIL' if write_mode_report['target_output_exists'] else 'PASS'}"
+            )
+            print(
+                f"- target parent directory exists: "
+                f"{'PASS' if write_mode_report['target_parent_directory_exists'] else 'FAIL'}"
+            )
+            print("- artifact writing implemented: NO")
+            print("- no files written: PASS")
+            print()
         if args.smoke_inference:
             with tempfile.TemporaryDirectory(prefix="ultralytics-smoke-") as temp_dir:
                 os.environ.setdefault("YOLO_CONFIG_DIR", temp_dir)
@@ -322,6 +379,10 @@ def main() -> int:
         print("## Final Verdict")
         if smoke_result is not None and not smoke_result["success"]:
             print("FAIL")
+            return 1
+        if write_mode_report is not None and not write_mode_report["success"]:
+            print("FAIL")
+            print(f"failure_reason={write_mode_report['failure_reason']}")
             return 1
         if ultralytics_import_available or args.smoke_inference:
             print("PASS")
@@ -479,6 +540,52 @@ def _build_future_contract(
             "bbox_count": 0,
             "prediction_rows": [],
         },
+    }
+
+
+def _evaluate_write_mode_scaffold(
+    *,
+    args: argparse.Namespace,
+    split: str,
+    target_output_path: Path,
+) -> dict[str, Any]:
+    requested = bool(args.write_artifact)
+    confirm = bool(args.confirm_write)
+    require_ultralytics = bool(args.require_ultralytics)
+    smoke_inference = bool(args.smoke_inference)
+    limit = args.limit
+
+    errors: list[str] = []
+    if not requested:
+        errors.append("write_artifact was not requested.")
+    if not confirm:
+        errors.append("--confirm-write is required with --write-artifact.")
+    if not require_ultralytics:
+        errors.append("--require-ultralytics is required with --write-artifact.")
+    if smoke_inference:
+        errors.append("--smoke-inference is not allowed with --write-artifact.")
+    if limit is not None:
+        errors.append("--limit is not allowed with --write-artifact.")
+    if split != DEFAULT_SPLIT:
+        errors.append("write mode requires the full validation split.")
+
+    parent_directory = target_output_path.parent
+    target_exists = target_output_path.exists()
+    parent_exists = parent_directory.exists()
+    if target_exists:
+        errors.append(f"target output already exists: {_repo_relative(target_output_path)}")
+
+    return {
+        "write_artifact_requested": requested,
+        "confirm_write_provided": confirm,
+        "require_ultralytics_provided": require_ultralytics,
+        "full_validation_split_required": split == DEFAULT_SPLIT,
+        "partial_limit_rejected": limit is None,
+        "smoke_inference_rejected": not smoke_inference,
+        "target_output_exists": target_exists,
+        "target_parent_directory_exists": parent_exists,
+        "success": not errors,
+        "failure_reason": "; ".join(errors) if errors else None,
     }
 
 

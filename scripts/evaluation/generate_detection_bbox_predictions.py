@@ -12,6 +12,8 @@ import importlib.util
 import json
 import os
 import tempfile
+from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -80,6 +82,7 @@ def main() -> int:
     dry_run = bool(args.dry_run)
     smoke_result: dict[str, Any] | None = None
     write_mode_report: dict[str, Any] | None = None
+    write_result: dict[str, Any] | None = None
 
     run_dir = REPO_ROOT / "artifacts/detection/yolo/runs" / run_id
     weights_path = run_dir / "weights" / "best.pt"
@@ -259,6 +262,28 @@ def main() -> int:
                 target_output_path=REPO_ROOT / future_contract["target_output_path"],
             )
 
+            if write_mode_report["success"] and args.confirm_write and args.require_ultralytics and not args.smoke_inference and args.limit is None:
+                with _ultralytics_runtime_isolation():
+                    write_result = _write_prediction_artifact(
+                        run_id=run_id,
+                        split=split,
+                        weights_path=weights_path,
+                        image_files=image_files,
+                        dataset_names=dataset_names,
+                        export_labels=export_labels,
+                        conf_threshold=args.conf_threshold,
+                        iou_threshold=args.iou_threshold,
+                        imgsz=imgsz,
+                        device=args.device,
+                        target_output_path=REPO_ROOT / future_contract["target_output_path"],
+                        source_artifact_paths=future_contract["contract"]["source_artifact_paths"],
+                    )
+                write_mode_report["target_output_exists"] = False
+                write_mode_report["artifact_writing_implemented"] = True
+                write_mode_report["no_files_written"] = False
+                write_mode_report["artifact_written"] = True
+                write_mode_report["artifact_path"] = write_result["artifact_path"]
+
         print("# Detection BBox Prediction Export Writer Dry Run")
         print()
         print("## Required Inputs")
@@ -342,14 +367,25 @@ def main() -> int:
                 f"- target parent directory exists: "
                 f"{'PASS' if write_mode_report['target_parent_directory_exists'] else 'FAIL'}"
             )
-            print("- artifact writing implemented: NO")
-            print("- no files written: PASS")
+            print(
+                f"- artifact writing implemented: "
+                f"{'YES' if write_mode_report.get('artifact_written') else 'NO'}"
+            )
+            if write_mode_report.get("artifact_written"):
+                print("## Artifact Write")
+                print(f"- target_output_path: {write_mode_report['artifact_path']}")
+                print(f"- images written: {write_result['images_written'] if write_result else 0}")
+                print(f"- bbox_count: {write_result['bbox_count'] if write_result else 0}")
+                print("- atomic write: PASS")
+                print("- post-write validation: PASS")
+                print("- registry update: NOT PERFORMED")
+                print("- frontend bundle: NOT PERFORMED")
+                print("- artifact meaning: export evidence only")
+            else:
+                print("- no files written: PASS")
             print()
         if args.smoke_inference:
-            with tempfile.TemporaryDirectory(prefix="ultralytics-smoke-") as temp_dir:
-                os.environ.setdefault("YOLO_CONFIG_DIR", temp_dir)
-                os.environ.setdefault("XDG_CONFIG_HOME", temp_dir)
-                os.environ.setdefault("HOME", temp_dir)
+            with _ultralytics_runtime_isolation():
                 smoke_result = _run_smoke_inference(
                     run_id=run_id,
                     split=split,
@@ -384,7 +420,10 @@ def main() -> int:
             print("FAIL")
             print(f"failure_reason={write_mode_report['failure_reason']}")
             return 1
-        if ultralytics_import_available or args.smoke_inference:
+        if write_result is not None and write_result["success"]:
+            print("PASS")
+            return 0
+        if ultralytics_import_available or args.smoke_inference or args.write_artifact:
             print("PASS")
         else:
             print("PASS_WITH_WARNINGS")
@@ -584,9 +623,210 @@ def _evaluate_write_mode_scaffold(
         "smoke_inference_rejected": not smoke_inference,
         "target_output_exists": target_exists,
         "target_parent_directory_exists": parent_exists,
+        "artifact_written": False,
+        "artifact_writing_implemented": False,
+        "no_files_written": True,
         "success": not errors,
         "failure_reason": "; ".join(errors) if errors else None,
     }
+
+
+@contextmanager
+def _ultralytics_runtime_isolation():
+    with tempfile.TemporaryDirectory(prefix="ultralytics-smoke-") as temp_dir:
+        original_env = {
+            key: os.environ.get(key)
+            for key in ("YOLO_CONFIG_DIR", "XDG_CONFIG_HOME", "HOME")
+        }
+        os.environ["YOLO_CONFIG_DIR"] = temp_dir
+        os.environ["XDG_CONFIG_HOME"] = temp_dir
+        os.environ["HOME"] = temp_dir
+        try:
+            yield
+        finally:
+            for key, value in original_env.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+
+
+def _write_prediction_artifact(
+    *,
+    run_id: str,
+    split: str,
+    weights_path: Path,
+    image_files: list[Path],
+    dataset_names: list[str],
+    export_labels: list[str],
+    conf_threshold: float,
+    iou_threshold: float,
+    imgsz: int,
+    device: str,
+    target_output_path: Path,
+    source_artifact_paths: list[str],
+) -> dict[str, Any]:
+    if importlib.util.find_spec("ultralytics") is None:
+        raise RuntimeError("ultralytics is required for artifact writing.")
+
+    from ultralytics import YOLO  # type: ignore
+
+    if target_output_path.exists():
+        raise FileExistsError(f"target output already exists: {_repo_relative(target_output_path)}")
+
+    target_output_path.parent.mkdir(parents=True, exist_ok=True)
+    class_names = {index: label for index, label in enumerate(dataset_names)}
+    if len(class_names) != len(export_labels):
+        raise ValueError("class label mapping mismatch for artifact writing.")
+
+    yolo = YOLO(str(weights_path))
+    prediction_rows: list[dict[str, Any]] = []
+    bbox_count = 0
+    total_images = len(image_files)
+    progress_step = 50
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", dir=target_output_path.parent, delete=False, suffix=".tmp"
+    ) as temp_handle:
+        temp_path = Path(temp_handle.name)
+    try:
+        for index, image_path in enumerate(image_files, start=1):
+            if index == 1 or index % progress_step == 0 or index == total_images:
+                print(f"- progress: {index}/{total_images}")
+            result = yolo.predict(
+                source=str(image_path),
+                conf=conf_threshold,
+                iou=iou_threshold,
+                imgsz=imgsz,
+                device=device,
+                verbose=False,
+            )
+            if not result:
+                prediction_rows.append(
+                    {
+                        "image_id": image_path.stem,
+                        "image_path": str(image_path),
+                        "image_width": None,
+                        "image_height": None,
+                        "predicted_box_count": 0,
+                        "defect_count": 0,
+                        "best_prediction": None,
+                        "warnings": ["no detections"],
+                        "errors": [],
+                        "boxes": [],
+                    }
+                )
+                continue
+
+            row = _build_prediction_row(
+                image_path=image_path,
+                result=result[0],
+                class_names=class_names,
+                dataset_names=dataset_names,
+            )
+            bbox_count += len(row["boxes"])
+            prediction_rows.append(row)
+
+        payload = {
+            "artifact_type": "detection_bbox_predictions",
+            "track_id": "detection",
+            "task_type": "object_detection",
+            "run_id": run_id,
+            "run_config_id": run_id,
+            "model_name": "yolo",
+            "model_type": "yolo",
+            "model_version": "0.2.0",
+            "dataset_id": "gc10det_detection",
+            "dataset_version": "gc10det_1.0",
+            "split": split,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "source_artifact_paths": source_artifact_paths,
+            "prediction_parameters": {
+                "artifact_write_mode": True,
+                "smoke_inference": False,
+                "limit": None,
+                "conf_threshold": conf_threshold,
+                "iou_threshold": iou_threshold,
+                "imgsz": imgsz,
+                "device": device,
+                "weights_path": _repo_relative(weights_path),
+                "source_backend": "ultralytics",
+                "source_model_source": "yolov8n.pt",
+            },
+            "image_count": len(prediction_rows),
+            "prediction_count": len(prediction_rows),
+            "bbox_count": bbox_count,
+            "prediction_rows": prediction_rows,
+        }
+
+        with temp_path.open("w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2, sort_keys=False)
+            handle.write("\n")
+
+        written_payload = _load_json(temp_path, "written bbox prediction export")
+        _validate_written_prediction_artifact(written_payload, prediction_rows, bbox_count)
+        temp_path.replace(target_output_path)
+    except Exception:
+        if temp_path.exists():
+            temp_path.unlink(missing_ok=True)
+        raise
+
+    written_size = target_output_path.stat().st_size
+    return {
+        "success": True,
+        "artifact_path": _repo_relative(target_output_path),
+        "images_written": len(prediction_rows),
+        "bbox_count": bbox_count,
+        "file_size": written_size,
+    }
+
+
+def _build_prediction_row(
+    *,
+    image_path: Path,
+    result: Any,
+    class_names: dict[int, str],
+    dataset_names: list[str],
+) -> dict[str, Any]:
+    boxes = getattr(result, "boxes", None)
+    image_height, image_width = _extract_image_shape(result, image_path)
+    if image_height is None or image_width is None:
+        raise ValueError(f"unable to determine image size for write-mode image: {image_path}")
+    extracted_boxes = [] if boxes is None else _extract_boxes(boxes, image_width, image_height, class_names, dataset_names)
+    extracted_count = len(extracted_boxes)
+    return {
+        "image_id": image_path.stem,
+        "image_path": str(image_path),
+        "image_width": image_width,
+        "image_height": image_height,
+        "predicted_box_count": extracted_count,
+        "defect_count": extracted_count,
+        "best_prediction": extracted_boxes[0] if extracted_boxes else None,
+        "warnings": ["no detections"] if extracted_count == 0 else [],
+        "errors": [],
+        "boxes": extracted_boxes,
+    }
+
+
+def _validate_written_prediction_artifact(
+    payload: dict[str, Any],
+    prediction_rows: list[dict[str, Any]],
+    bbox_count: int,
+) -> None:
+    required_fields = set(_future_top_level_fields())
+    missing = [field for field in required_fields if field not in payload]
+    if missing:
+        raise ValueError(f"written prediction artifact missing fields: {missing}")
+    if not isinstance(payload.get("prediction_rows"), list):
+        raise ValueError("written prediction artifact prediction_rows must be a list.")
+    if payload.get("image_count") != len(prediction_rows):
+        raise ValueError("written prediction artifact image_count mismatch.")
+    if payload.get("prediction_count") != len(prediction_rows):
+        raise ValueError("written prediction artifact prediction_count mismatch.")
+    if payload.get("bbox_count") != bbox_count:
+        raise ValueError("written prediction artifact bbox_count mismatch.")
+    if bbox_count != sum(len(row.get("boxes", [])) for row in prediction_rows):
+        raise ValueError("written prediction artifact box total mismatch.")
 
 
 def _run_smoke_inference(

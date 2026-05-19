@@ -19,7 +19,6 @@ DEFAULT_MODEL_CONFIG = REPO_ROOT / "configs/models/yolo.yaml"
 DEFAULT_DATASET_YAML = REPO_ROOT / "data/processed/gc10det_yolo/dataset.yaml"
 DEFAULT_EXPORT_MANIFEST = REPO_ROOT / "data/processed/gc10det_yolo/export_manifest.yaml"
 DEFAULT_SPLIT_MANIFEST = REPO_ROOT / "data/manifests/split_gc10det_detection.yaml"
-DEFAULT_CLASS_MAPPING = REPO_ROOT / "configs/data/class_mapping.yaml"
 DEFAULT_TRAINING_RESULT = REPO_ROOT / "artifacts/models/analysis/training_result__yolo_train_v0_2_0.json"
 DEFAULT_METADATA_SUMMARY = REPO_ROOT / "artifacts/models/metadata/track_detection_yolo_metadata_summary__yolo_train_v0_2_0.json"
 DEFAULT_ARTIFACT_INVENTORY = REPO_ROOT / "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_2_0.json"
@@ -56,7 +55,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dataset-yaml", default=str(DEFAULT_DATASET_YAML))
     parser.add_argument("--export-manifest", default=str(DEFAULT_EXPORT_MANIFEST))
     parser.add_argument("--split-manifest", default=str(DEFAULT_SPLIT_MANIFEST))
-    parser.add_argument("--class-mapping", default=str(DEFAULT_CLASS_MAPPING))
     parser.add_argument("--training-result", default=str(DEFAULT_TRAINING_RESULT))
     parser.add_argument("--metadata-summary", default=str(DEFAULT_METADATA_SUMMARY))
     parser.add_argument("--artifact-inventory", default=str(DEFAULT_ARTIFACT_INVENTORY))
@@ -79,7 +77,6 @@ def main() -> int:
         "data/manifests/split_gc10det_detection.yaml": Path(args.split_manifest),
         "configs/runs/yolo_train_v0_2_0.yaml": Path(args.run_config),
         "configs/models/yolo.yaml": Path(args.model_config),
-        "configs/data/class_mapping.yaml": Path(args.class_mapping),
         "artifacts/models/analysis/training_result__yolo_train_v0_2_0.json": Path(args.training_result),
         "artifacts/models/metadata/track_detection_yolo_metadata_summary__yolo_train_v0_2_0.json": Path(args.metadata_summary),
         "artifacts/models/inventory/track_detection_artifact_inventory__yolo_train_v0_2_0.json": Path(args.artifact_inventory),
@@ -106,7 +103,6 @@ def main() -> int:
         dataset_yaml = _load_yaml(Path(args.dataset_yaml), "dataset yaml")
         export_manifest = _load_yaml(Path(args.export_manifest), "export manifest")
         split_manifest = _load_yaml(Path(args.split_manifest), "split manifest")
-        class_mapping = _load_yaml(Path(args.class_mapping), "class mapping")
         training_result = _load_json(Path(args.training_result), "training result")
         metadata_summary = _load_json(Path(args.metadata_summary), "metadata summary")
         artifact_inventory = _load_json(Path(args.artifact_inventory), "artifact inventory")
@@ -122,7 +118,6 @@ def main() -> int:
                 _repo_relative(Path(args.dataset_yaml)),
                 _repo_relative(Path(args.export_manifest)),
                 _repo_relative(Path(args.split_manifest)),
-                _repo_relative(Path(args.class_mapping)),
                 _repo_relative(Path(args.training_result)),
                 _repo_relative(Path(args.metadata_summary)),
                 _repo_relative(Path(args.artifact_inventory)),
@@ -141,7 +136,6 @@ def main() -> int:
             dataset_yaml=dataset_yaml,
             export_manifest=export_manifest,
             split_manifest=split_manifest,
-            class_mapping=class_mapping,
             training_result=training_result,
             metadata_summary=metadata_summary,
             artifact_inventory=artifact_inventory,
@@ -173,6 +167,7 @@ def main() -> int:
         print("- run_id matches governed inputs: PASS")
         print("- model type matches governed inputs: PASS")
         print("- evaluation metrics include precision/recall/mAP50/mAP50-95: PASS")
+        print("- detection class labels align across dataset/export/split manifests: PASS")
         print("- metadata summary readable: PASS")
         print("- artifact inventory readable: PASS")
         print("- audit report readable: PASS")
@@ -221,7 +216,6 @@ def _validate_traceability(
     dataset_yaml: dict[str, Any],
     export_manifest: dict[str, Any],
     split_manifest: dict[str, Any],
-    class_mapping: dict[str, Any],
     training_result: dict[str, Any],
     metadata_summary: dict[str, Any],
     artifact_inventory: dict[str, Any],
@@ -260,6 +254,7 @@ def _validate_traceability(
 
     if dataset_yaml.get("nc") != 10:
         raise ValueError("dataset yaml nc must be 10.")
+    _validate_detection_class_labels(dataset_yaml, export_manifest, split_manifest)
     if export_manifest.get("dataset_id") != "gc10det_detection":
         raise ValueError("export manifest dataset id mismatch.")
     if export_manifest.get("dataset_version") != "gc10det_1.0":
@@ -268,8 +263,6 @@ def _validate_traceability(
         raise ValueError("split manifest dataset id mismatch.")
     if split_manifest.get("dataset_version") != "gc10det_1.0":
         raise ValueError("split manifest dataset version mismatch.")
-    if not isinstance(class_mapping.get("classes"), list) or not class_mapping["classes"]:
-        raise ValueError("class mapping must contain a non-empty classes list.")
 
     if training_result.get("run_id") != run_id:
         raise ValueError("training result run_id mismatch.")
@@ -313,6 +306,78 @@ def _validate_traceability(
         raise ValueError("metadata summary should not claim registry updated.")
     if evaluation_summary.get("governance_status", {}).get("registry_updated") is not False:
         raise ValueError("evaluation summary should not claim registry updated.")
+
+
+def _validate_detection_class_labels(
+    dataset_yaml: dict[str, Any],
+    export_manifest: dict[str, Any],
+    split_manifest: dict[str, Any],
+) -> None:
+    dataset_names = _normalize_detection_class_labels(dataset_yaml.get("names"), "dataset yaml names")
+    dataset_nc = dataset_yaml.get("nc")
+    if isinstance(dataset_nc, bool) or not isinstance(dataset_nc, int):
+        raise ValueError("dataset yaml nc must be an integer.")
+    if dataset_nc != len(dataset_names):
+        raise ValueError("dataset yaml nc must equal the number of normalized names.")
+
+    export_labels = _normalize_detection_class_labels(
+        export_manifest.get("class_labels"), "export manifest class_labels"
+    )
+    split_labels = _normalize_detection_class_labels(
+        split_manifest.get("class_labels"), "split manifest class_labels"
+    )
+    if len(export_labels) != len(set(export_labels)):
+        raise ValueError("export manifest class labels must not contain duplicates.")
+    if len(split_labels) != len(set(split_labels)):
+        raise ValueError("split manifest class labels must not contain duplicates.")
+    if len(dataset_names) != len(set(dataset_names)):
+        raise ValueError("dataset yaml names must not contain duplicates.")
+    if dataset_names != export_labels or dataset_names != split_labels:
+        raise ValueError("detection class labels must align across dataset, export, and split manifests.")
+
+    class_to_index = _require_dict(export_manifest.get("class_to_index"), "export manifest class_to_index")
+    if len(class_to_index) != len(dataset_names):
+        raise ValueError("class_to_index must cover every detection class label.")
+
+    mapped_ids: list[int] = []
+    for label in dataset_names:
+        if label not in class_to_index:
+            raise ValueError(f"class_to_index missing label: {label}")
+        index_value = class_to_index[label]
+        if isinstance(index_value, bool) or not isinstance(index_value, int):
+            raise ValueError(f"class_to_index must map label to an integer id: {label}")
+        mapped_ids.append(index_value)
+
+    if len(set(mapped_ids)) != len(mapped_ids):
+        raise ValueError("class_to_index must not contain duplicate class ids.")
+    if set(mapped_ids) != set(range(len(dataset_names))):
+        raise ValueError("class_to_index ids must cover exactly 0 through nc - 1.")
+
+
+def _normalize_detection_class_labels(value: Any, label: str) -> list[str]:
+    if isinstance(value, list):
+        labels = value
+    elif isinstance(value, dict):
+        if all(isinstance(key, int) or (isinstance(key, str) and str(key).isdigit()) for key in value.keys()):
+            labels = [value[key] for key in sorted(value.keys(), key=lambda item: int(item))]
+        elif all(isinstance(item, str) for item in value.keys()) and all(
+            isinstance(item, int) and not isinstance(item, bool) for item in value.values()
+        ):
+            labels = [key for key, _ in sorted(value.items(), key=lambda item: int(item[1]))]
+        else:
+            raise ValueError(f"{label} must be a list or an ordered mapping of labels.")
+    else:
+        raise ValueError(f"{label} must be a list or mapping.")
+
+    if not labels:
+        raise ValueError(f"{label} must not be empty.")
+
+    normalized: list[str] = []
+    for item in labels:
+        if not isinstance(item, str) or not item.strip():
+            raise ValueError(f"{label} must contain non-empty string labels.")
+        normalized.append(item.strip())
+    return normalized
 
 
 def args_has_missing_values(args_yaml: dict[str, Any]) -> bool:

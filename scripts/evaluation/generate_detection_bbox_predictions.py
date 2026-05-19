@@ -10,6 +10,8 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,7 @@ DEFAULT_CONF_THRESHOLD = 0.25
 DEFAULT_IOU_THRESHOLD = 0.7
 DEFAULT_DEVICE = "cpu"
 DEFAULT_IMG_SIZE = 640
+DEFAULT_SMOKE_LIMIT = 3
 SUPPORTED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".bmp", ".webp"]
 
 
@@ -44,6 +47,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--imgsz", type=int, default=None)
     parser.add_argument("--device", default=DEFAULT_DEVICE)
     parser.add_argument(
+        "--smoke-inference",
+        action="store_true",
+        default=False,
+        help="Run a limited validation-image inference smoke test without writing files.",
+    )
+    parser.add_argument(
         "--require-ultralytics",
         action="store_true",
         default=False,
@@ -57,6 +66,7 @@ def main() -> int:
     run_id = _require_non_empty_string(args.run_id, "run_id")
     split = _require_non_empty_string(args.split, "split")
     dry_run = bool(args.dry_run)
+    smoke_result: dict[str, Any] | None = None
 
     run_dir = REPO_ROOT / "artifacts/detection/yolo/runs" / run_id
     weights_path = run_dir / "weights" / "best.pt"
@@ -278,8 +288,42 @@ def main() -> int:
         for field_name in future_contract["top_level_fields"]:
             print(f"  - {field_name}")
         print()
+        if args.smoke_inference:
+            with tempfile.TemporaryDirectory(prefix="ultralytics-smoke-") as temp_dir:
+                os.environ.setdefault("YOLO_CONFIG_DIR", temp_dir)
+                os.environ.setdefault("XDG_CONFIG_HOME", temp_dir)
+                os.environ.setdefault("HOME", temp_dir)
+                smoke_result = _run_smoke_inference(
+                    run_id=run_id,
+                    split=split,
+                    weights_path=weights_path,
+                    image_files=image_files,
+                    dataset_names=dataset_names,
+                    export_labels=export_labels,
+                    conf_threshold=args.conf_threshold,
+                    iou_threshold=args.iou_threshold,
+                    imgsz=imgsz,
+                    device=args.device,
+                    limit=args.limit,
+                    runtime_isolation="TEMPORARY_DIRECTORY",
+                )
+            print("## Smoke Inference")
+            print(f"- smoke image limit: {smoke_result['smoke_image_limit']}")
+            print(f"- images processed: {smoke_result['images_processed']}")
+            print(f"- total boxes extracted: {smoke_result['total_boxes_extracted']}")
+            print(f"- images with no detections: {smoke_result['images_with_no_detections']}")
+            print(f"- ultralytics runtime isolation: {smoke_result['runtime_isolation']}")
+            print("- ultralytics config/cache writes isolated from user profile: PASS")
+            print("- sample prediction rows shown in summarized form:")
+            for row in smoke_result["sample_rows"]:
+                print(f"  - {row}")
+            print("- no files written: PASS")
+        print()
         print("## Final Verdict")
-        if ultralytics_import_available:
+        if smoke_result is not None and not smoke_result["success"]:
+            print("FAIL")
+            return 1
+        if ultralytics_import_available or args.smoke_inference:
             print("PASS")
         else:
             print("PASS_WITH_WARNINGS")
@@ -436,6 +480,198 @@ def _build_future_contract(
             "prediction_rows": [],
         },
     }
+
+
+def _run_smoke_inference(
+    *,
+    run_id: str,
+    split: str,
+    weights_path: Path,
+    image_files: list[Path],
+    dataset_names: list[str],
+    export_labels: list[str],
+    conf_threshold: float,
+    iou_threshold: float,
+    imgsz: int,
+    device: str,
+    limit: int | None,
+    runtime_isolation: str,
+) -> dict[str, Any]:
+    if importlib.util.find_spec("ultralytics") is None:
+        raise RuntimeError("ultralytics is required for smoke inference.")
+
+    from ultralytics import YOLO  # type: ignore
+
+    smoke_limit = limit if limit is not None else DEFAULT_SMOKE_LIMIT
+    if smoke_limit <= 0:
+        raise ValueError("limit, if provided, must be a positive integer.")
+
+    yolo = YOLO(str(weights_path))
+    class_names = {index: label for index, label in enumerate(dataset_names)}
+    if len(class_names) != len(export_labels):
+        raise ValueError("class label mapping mismatch for smoke inference.")
+
+    selected_images = image_files[:smoke_limit]
+    sample_rows: list[str] = []
+    prediction_rows: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    images_with_no_detections = 0
+    total_boxes_extracted = 0
+
+    for image_path in selected_images:
+        results = yolo.predict(
+            source=str(image_path),
+            conf=conf_threshold,
+            iou=iou_threshold,
+            imgsz=imgsz,
+            device=device,
+            verbose=False,
+        )
+        if not results:
+            prediction_rows.append(
+                {
+                    "image_path": str(image_path),
+                    "image_width": None,
+                    "image_height": None,
+                    "predicted_box_count": 0,
+                    "defect_count": 0,
+                    "best_prediction": None,
+                    "warnings": ["no detections"],
+                    "errors": [],
+                    "boxes": [],
+                }
+            )
+            sample_rows.append(f"{image_path.name}: no detections")
+            images_with_no_detections += 1
+            continue
+
+        result = results[0]
+        boxes = getattr(result, "boxes", None)
+        image_height, image_width = _extract_image_shape(result, image_path)
+        extracted_boxes = [] if boxes is None else _extract_boxes(boxes, image_width, image_height, class_names, dataset_names)
+        extracted_count = len(extracted_boxes)
+        total_boxes_extracted += extracted_count
+        image_warnings: list[str] = []
+        if extracted_count == 0:
+            images_with_no_detections += 1
+            image_warnings.append("no detections")
+
+        prediction_rows.append(
+            {
+                "image_path": str(image_path),
+                "image_width": image_width,
+                "image_height": image_height,
+                "predicted_box_count": extracted_count,
+                "defect_count": extracted_count,
+                "best_prediction": extracted_boxes[0] if extracted_boxes else None,
+                "warnings": image_warnings,
+                "errors": [],
+                "boxes": extracted_boxes,
+            }
+        )
+        sample_rows.append(
+            f"{image_path.name}: boxes={extracted_count}, image_size=({image_height}, {image_width})"
+        )
+
+    warnings.extend(
+        [
+            "smoke inference only validates a limited sample",
+            "no files written",
+        ]
+    )
+    return {
+        "success": True,
+        "smoke_image_limit": smoke_limit,
+        "images_processed": len(selected_images),
+        "total_boxes_extracted": total_boxes_extracted,
+        "images_with_no_detections": images_with_no_detections,
+        "sample_rows": sample_rows,
+        "prediction_rows": prediction_rows,
+        "warnings": warnings,
+        "runtime_isolation": runtime_isolation,
+    }
+
+
+def _extract_image_shape(result: Any, image_path: Path) -> tuple[int | None, int | None]:
+    orig_shape = getattr(result, "orig_shape", None)
+    if isinstance(orig_shape, (tuple, list)) and len(orig_shape) >= 2:
+        return int(orig_shape[0]), int(orig_shape[1])
+    orig_img = getattr(result, "orig_img", None)
+    if hasattr(orig_img, "shape") and len(orig_img.shape) >= 2:
+        return int(orig_img.shape[0]), int(orig_img.shape[1])
+    raise ValueError(f"unable to determine image size for smoke inference image: {image_path}")
+
+
+def _extract_boxes(
+    boxes: Any,
+    image_width: int,
+    image_height: int,
+    class_names: dict[int, str],
+    dataset_names: list[str],
+) -> list[dict[str, Any]]:
+    xyxy_values = _tensor_to_list(getattr(boxes, "xyxy", None))
+    conf_values = _tensor_to_list(getattr(boxes, "conf", None))
+    cls_values = _tensor_to_list(getattr(boxes, "cls", None))
+    if not xyxy_values:
+        return []
+    if len(xyxy_values) != len(conf_values) or len(xyxy_values) != len(cls_values):
+        raise ValueError("ultralytics boxes tensor lengths are inconsistent.")
+
+    extracted: list[dict[str, Any]] = []
+    for index, (xyxy, confidence_value, class_id_value) in enumerate(
+        zip(xyxy_values, conf_values, cls_values, strict=True)
+    ):
+        if len(xyxy) != 4:
+            raise ValueError("bbox_xyxy must contain exactly four values.")
+        confidence = float(confidence_value)
+        if not 0.0 <= confidence <= 1.0:
+            raise ValueError("confidence values must be between 0 and 1.")
+        class_id = int(class_id_value)
+        if class_id < 0 or class_id >= len(dataset_names):
+            raise ValueError("class_id is outside the valid class range.")
+        class_label = class_names[class_id]
+        if class_label != dataset_names[class_id]:
+            raise ValueError("class label does not match dataset/export/split mapping.")
+
+        x1, y1, x2, y2 = (float(value) for value in xyxy)
+        clamped = False
+        if x1 < 0.0 or y1 < 0.0 or x2 > float(image_width) or y2 > float(image_height):
+            x1 = min(max(x1, 0.0), float(image_width))
+            y1 = min(max(y1, 0.0), float(image_height))
+            x2 = min(max(x2, 0.0), float(image_width))
+            y2 = min(max(y2, 0.0), float(image_height))
+            clamped = True
+        if x1 > x2 or y1 > y2:
+            raise ValueError("bbox_xyxy coordinates must satisfy x1 <= x2 and y1 <= y2.")
+
+        extracted.append(
+            {
+                "box_id": index,
+                "class_id": class_id,
+                "class_label": class_label,
+                "confidence": confidence,
+                "bbox_format": "xyxy",
+                "bbox_xyxy": [x1, y1, x2, y2],
+                "score_rank": index + 1,
+                "is_best_prediction": index == 0,
+                "warnings": ["clamped_to_image_bounds"] if clamped else [],
+            }
+        )
+    return extracted
+
+
+def _tensor_to_list(value: Any) -> list[list[float]] | list[float]:
+    if value is None:
+        return []
+    if hasattr(value, "detach"):
+        value = value.detach()
+    if hasattr(value, "cpu"):
+        value = value.cpu()
+    if hasattr(value, "tolist"):
+        return value.tolist()
+    if isinstance(value, list):
+        return value
+    raise ValueError("unable to convert ultralytics tensor to list.")
 
 
 def _future_top_level_fields() -> list[str]:

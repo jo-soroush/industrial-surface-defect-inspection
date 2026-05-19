@@ -2145,3 +2145,20 @@ artifacts:
   status: active
   storage_backend: local
   created_at: '2026-05-19T12:11:35.881920+00:00'
+- artifact_id: track_detection__yolo_train_v0_2_0__per_image_summary_validation
+  artifact_type: detection_per_image_summary
+  artifact_filename: detection_per_image_summary__yolo_train_v0_2_0__validation.json
+  artifact_path: artifacts/models/predictions/detection_per_image_summary__yolo_train_v0_2_0__validation.json
+  artifact_uri: null
+  artifact_format: json
+  artifact_hash: ad0fe020f261ea188163158c7e08484040448974a63163682e973db5934060a6
+  artifact_size_bytes: 346672
+  run_id: yolo_train_v0_2_0
+  config_id: yolo_train_v0_2_0
+  model_name: yolo
+  model_version: 0.2.0
+  dataset_id: gc10det_detection
+  dataset_version: gc10det_1.0
+  status: active
+  storage_backend: local
+  created_at: '2026-05-19T12:47:37.830009+00:00'

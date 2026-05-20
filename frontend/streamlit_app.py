@@ -1318,21 +1318,38 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 def _render_upload_predict() -> None:
     """Render the Track A upload/predict page."""
-    st.subheader("Upload / Predict")
+    st.markdown("## Upload / Predict")
+    st.markdown(
+        "A local Track A classification prototype that sends one uploaded image to the FastAPI endpoint and returns the governed prediction result."
+    )
     st.warning(
         "Local prototype endpoint for Track A classification only. not production-ready. "
         "not deployment-safe. YOLO and anomaly upload/predict not implemented yet."
     )
-    st.write(
-        "Upload one image and call the existing FastAPI classification endpoint. "
-        "The page is intentionally limited to Track A classification only."
-    )
+    st.caption("Track A classification only")
 
-    api_base_url = st.text_input(
-        "API base URL",
-        value=API_DEFAULT_BASE_URL,
-        help="Base URL for POST /predict/classification.",
-    )
+    step_cols = st.columns(3)
+    with step_cols[0]:
+        st.metric("Step 1", "Choose image")
+        st.caption("PNG, JPG, JPEG, or WEBP")
+    with step_cols[1]:
+        st.metric("Step 2", "Confirm API URL")
+        st.caption("Default: http://localhost:8000")
+    with step_cols[2]:
+        st.metric("Step 3", "Run prediction")
+        st.caption("Track A classification only")
+
+    controls_cols = st.columns([1.2, 1])
+    with controls_cols[0]:
+        api_base_url = st.text_input(
+            "API base URL",
+            value=API_DEFAULT_BASE_URL,
+            help="Base URL for POST /predict/classification.",
+        )
+    with controls_cols[1]:
+        st.caption("Connection target")
+        st.code(f"POST {api_base_url.rstrip('/')}/predict/classification", language="text")
+
     uploaded_file = st.file_uploader(
         "Choose an image for Track A classification",
         type=list(UPLOAD_ALLOWED_EXTENSIONS),
@@ -1342,15 +1359,30 @@ def _render_upload_predict() -> None:
 
     if uploaded_file is not None:
         file_bytes = uploaded_file.getvalue()
-        st.caption(
-            f"Selected file: {uploaded_file.name} | "
-            f"Type: {uploaded_file.type or _infer_content_type(uploaded_file.name)} | "
-            f"Size: {len(file_bytes)} bytes"
-        )
-        st.image(file_bytes, caption=uploaded_file.name, use_container_width=True)
+        preview_cols = st.columns([1, 1.1])
+        with preview_cols[0]:
+            st.markdown("### Image preview")
+            st.image(file_bytes, caption=uploaded_file.name, use_container_width=True)
+            st.caption(
+                f"{uploaded_file.name} | "
+                f"{uploaded_file.type or _infer_content_type(uploaded_file.name)} | "
+                f"{len(file_bytes)} bytes"
+            )
+        with preview_cols[1]:
+            st.markdown("### Ready to predict")
+            _render_key_value_grid(
+                [
+                    ("Filename", uploaded_file.name),
+                    ("Content type", uploaded_file.type or _infer_content_type(uploaded_file.name)),
+                    ("File size bytes", len(file_bytes)),
+                ]
+            )
+            st.caption("This preview is local only and does not change the API contract.")
+    else:
+        st.info("Choose a single image to enable the prediction button.")
 
     predict_clicked = st.button(
-        "Predict Track A Classification",
+        "Predict Track A classification",
         type="primary",
         disabled=uploaded_file is None,
     )
@@ -1375,50 +1407,77 @@ def _render_upload_predict() -> None:
 
     st.success("Prediction completed.")
 
-    result_cols = st.columns(4)
+    result_cols = st.columns([1.1, 1])
     with result_cols[0]:
-        st.metric("Predicted label", _safe_text(payload.get("predicted_label")))
-    with result_cols[1]:
-        st.metric("Decision", _safe_text(payload.get("decision")))
-    with result_cols[2]:
-        st.metric("Good probability", _format_value(payload.get("probability_good")))
-    with result_cols[3]:
-        st.metric("Defect probability", _format_value(payload.get("probability_defect")))
+        st.markdown("### Prediction result")
+        visual_cols = st.columns(2)
+        with visual_cols[0]:
+            st.metric("Predicted label", _safe_text(payload.get("predicted_label")))
+        with visual_cols[1]:
+            st.metric("Decision", _safe_text(payload.get("decision")))
+        probability_good = float(payload.get("probability_good") or 0.0)
+        probability_defect = float(payload.get("probability_defect") or 0.0)
+        st.plotly_chart(
+            _build_donut_figure(
+                "Prediction confidence",
+                ["Good", "Defect"],
+                [probability_good, probability_defect],
+                ["#2ca02c", "#d62728"],
+            ),
+            use_container_width=True,
+        )
+        confidence_cols = st.columns(2)
+        with confidence_cols[0]:
+            st.metric("Probability good", _format_value(payload.get("probability_good")))
+        with confidence_cols[1]:
+            st.metric("Probability defect", _format_value(payload.get("probability_defect")))
+        st.caption("The chart shows how the model split confidence between good and defect.")
 
-    info_cols = st.columns(2)
-    with info_cols[0]:
-        st.caption("Model and run metadata")
+    with result_cols[1]:
+        st.markdown("### Model summary")
         _render_key_value_grid(
             [
                 ("Model", payload.get("model_name")),
                 ("Version", payload.get("model_version")),
-                ("Run ID", payload.get("run_id")),
                 ("Threshold", payload.get("threshold")),
-                ("Request ID", payload.get("request_id")),
-            ]
-        )
-    with info_cols[1]:
-        st.caption("Input metadata and safety limits")
-        input_meta = payload.get("input", {})
-        _render_key_value_grid(
-            [
-                ("Filename", input_meta.get("filename")),
-                ("Content type", input_meta.get("content_type")),
-                ("File size bytes", input_meta.get("file_size_bytes")),
                 ("Production ready", payload.get("production_ready")),
                 ("Deployment safe", payload.get("deployment_safe")),
             ]
         )
-        limitations = payload.get("limitations", [])
-        if limitations:
-            st.caption(" | ".join(str(item) for item in limitations))
+        st.caption(
+            "not production-ready | not deployment-safe | local prototype endpoint | Track A classification only"
+        )
 
-    with st.expander("Raw API response", expanded=False):
+    with st.expander("Technical details", expanded=False):
+        detail_cols = st.columns(2)
+        with detail_cols[0]:
+            _render_key_value_grid(
+                [
+                    ("Request ID", payload.get("request_id")),
+                    ("Run ID", payload.get("run_id")),
+                    ("Model name", payload.get("model_name")),
+                    ("Model version", payload.get("model_version")),
+                    ("Threshold", payload.get("threshold")),
+                ]
+            )
+        with detail_cols[1]:
+            input_meta = payload.get("input", {})
+            _render_key_value_grid(
+                [
+                    ("Filename", input_meta.get("filename")),
+                    ("Content type", input_meta.get("content_type")),
+                    ("File size bytes", input_meta.get("file_size_bytes")),
+                ]
+            )
+            limitations = payload.get("limitations", [])
+            if limitations:
+                st.caption("Limitations")
+                st.write(" | ".join(str(item) for item in limitations))
+        st.markdown("##### Raw API response")
         st.json(payload)
 
     st.caption(
-        "This page is limited to Track A classification. "
-        "YOLO and anomaly upload/predict are not implemented yet."
+        "This page is limited to Track A classification. YOLO and anomaly upload/predict are not implemented yet."
     )
 
 

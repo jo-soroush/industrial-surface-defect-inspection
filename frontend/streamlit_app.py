@@ -1044,15 +1044,15 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the YOLO / Detection page."""
-    st.subheader("YOLO Detection")
+    st.markdown("## YOLO Detection")
+    st.markdown(
+        "A governed object-detection evidence page for the validation bundle, designed for review rather than live deployment."
+    )
     st.warning(
-        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
-        "No live prediction on this page. No API upload/predict yet."
+        "Evidence/dashboard view only. not production-ready. not deployment-safe. "
+        "No live prediction on this YOLO evidence page. YOLO upload/predict not implemented yet."
     )
-    st.write(
-        "This page summarizes the governed YOLO / Detection bundle and keeps the "
-        "presentation focused on current evidence, not live inference."
-    )
+    st.caption("evidence/dashboard view only")
 
     if bundles is None:
         st.error("Detection evidence is unavailable because the frontend bundles failed to load.")
@@ -1070,104 +1070,190 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     recommendation = detection.get("frontend_detection_recommendation.json", {})
     manifest = detection.get("frontend_bundle_manifest.json", {})
 
-    st.markdown("### Detection Overview")
-    overview_cols = st.columns(4)
-    with overview_cols[0]:
-        st.metric("Images", _format_value(overview.get("image_count")))
-    with overview_cols[1]:
-        st.metric("Images with detections", _format_value(overview.get("image_with_detections_count")))
-    with overview_cols[2]:
-        st.metric("Total bboxes", _format_value(overview.get("total_bbox_count")))
-    with overview_cols[3]:
-        st.metric("Gallery samples", _format_value(overview.get("gallery_sample_count")))
-
     st.caption(
         "Run yolo_train_v0_2_0 | "
         f"Model: {_format_value(metadata.get('model_name'))} | "
         f"Version: {_format_value(metadata.get('model_version'))} | "
-        f"Dataset: {_format_value(metadata.get('dataset_id'))}"
+        f"Dataset: {_format_value(metadata.get('dataset_id'))} | "
+        f"Split: {_format_value(metadata.get('split'))}"
     )
 
-    st.markdown("### Metric Cards")
-    cards = metric_cards.get("cards", [])
-    if cards:
-        for start_idx in range(0, len(cards), 3):
-            row_cards = cards[start_idx : start_idx + 3]
-            cols = st.columns(len(row_cards))
-            for col, card in zip(cols, row_cards):
-                with col:
-                    st.metric(card.get("label", "Metric"), _format_value(card.get("value")))
-                    description = card.get("description")
-                    if description:
-                        st.caption(str(description))
-    else:
-        st.info("No detection metric cards available.")
-
-    tabs = st.tabs(["Summary", "Charts", "Evidence"])
-    with tabs[0]:
-        st.caption("Detection overview, metadata, and decision state")
-        _render_key_value_grid(
-            [
-                ("Images", overview.get("image_count")),
-                ("Images with detections", overview.get("image_with_detections_count")),
-                ("Total bboxes", overview.get("total_bbox_count")),
-                ("Review required", quality.get("review_required")),
-                ("Production ready", quality.get("production_ready")),
-                ("Deployment candidate", quality.get("deployment_candidate")),
-            ]
+    top_cols = st.columns(4)
+    with top_cols[0]:
+        st.metric("Images", _format_value(overview.get("image_count")))
+        st.caption("Validation images in the governed bundle")
+    with top_cols[1]:
+        st.metric("Total bboxes", _format_value(overview.get("total_bbox_count")))
+        st.caption("All predicted boxes counted across the split")
+    with top_cols[2]:
+        st.metric("Review decision", _format_value(quality.get("decision")))
+        st.caption(
+            f"Review required: {_format_value(quality.get('review_required'))} | "
+            f"Production ready: {_format_value(quality.get('production_ready'))}"
         )
-    with tabs[1]:
-        chart_cols = st.columns(2)
-        with chart_cols[0]:
-            st.caption("Confidence distribution")
-            confidence_rows = confidence_chart.get("confidence_bins", [])
-            if confidence_rows:
-                st.bar_chart(
-                    {
-                        row.get("label", f"bin_{idx}"): float(row.get("count", 0) or 0)
-                        for idx, row in enumerate(confidence_rows)
-                    }
-                )
-                st.caption(
-                    "Bins: " + ", ".join(_format_value(row.get("label")) for row in confidence_rows)
-                )
+    with top_cols[3]:
+        st.metric(
+            "Model / run",
+            f"{_format_value(metadata.get('model_name'))} {_format_value(metadata.get('model_version'))}",
+            help=f"Run { _format_value(metadata.get('run_id')) }",
+        )
+        st.caption("Governed validation evidence only")
+
+    summary_cols = st.columns(2)
+    with summary_cols[0]:
+        st.markdown("### What the bundle shows")
+        st.write(
+            "The YOLO bundle summarizes detection counts, confidence bands, class balance, and curated gallery samples for review."
+        )
+        st.metric(
+            "Images with detections",
+            _format_value(overview.get("image_with_detections_count")),
+            help=_format_value(overview.get("safe_summary")),
+        )
+    with summary_cols[1]:
+        st.markdown("### Sample gallery snapshot")
+        gallery_counts = sample_gallery.get("category_sample_counts", {})
+        gallery_snapshot_cols = st.columns(4)
+        snapshot_items = [
+            ("Gallery samples", sample_gallery.get("gallery_sample_count")),
+            ("No detections", gallery_counts.get("no_detection_examples")),
+            ("Multi detections", gallery_counts.get("multi_detection_examples")),
+            ("High confidence", gallery_counts.get("high_confidence_examples")),
+        ]
+        for col, (label, value) in zip(gallery_snapshot_cols, snapshot_items):
+            with col:
+                st.metric(label, _format_value(value))
+
+    st.markdown("### Visual evidence")
+    visual_cols = st.columns(2)
+    with visual_cols[0]:
+        confidence_rows = confidence_chart.get("confidence_bins", [])
+        if confidence_rows:
+            confidence_labels = [row.get("label", f"bin_{idx}") for idx, row in enumerate(confidence_rows)]
+            confidence_values = [float(row.get("count", 0) or 0) for row in confidence_rows]
+            confidence_colors = ["#1f77b4", "#ff9800", "#2ca02c", "#9e9e9e"][: len(confidence_labels)]
+            st.plotly_chart(
+                _build_donut_figure(
+                    confidence_chart.get("chart_title", "Confidence distribution"),
+                    confidence_labels,
+                    confidence_values,
+                    confidence_colors,
+                ),
+                use_container_width=True,
+            )
+            st.caption(
+                confidence_chart.get("chart_explanation")
+                or "Confidence distribution across predicted boxes."
+            )
+        else:
+            st.info("No confidence distribution data available for charting.")
+    with visual_cols[1]:
+        class_rows = class_summary.get("class_rows", [])
+        if class_rows:
+            class_labels = [row.get("class_label", f"class_{idx}") for idx, row in enumerate(class_rows)]
+            class_counts = [float(row.get("bbox_count", 0) or 0) for row in class_rows]
+            st.plotly_chart(
+                _build_grouped_bar_figure(
+                    "Class summary by bbox count",
+                    class_labels,
+                    {"BBox count": class_counts},
+                    {"BBox count": "#1f77b4"},
+                    "BBox count",
+                ),
+                use_container_width=True,
+            )
+            st.caption("Bar heights represent bbox counts per class.")
+        else:
+            st.info("No class summary data available for charting.")
+
+    st.markdown("### Decision summary")
+    decision_cols = st.columns(2)
+    with decision_cols[0]:
+        st.metric("Review status", _format_value(quality.get("decision")))
+        st.caption(
+            f"Production ready: {_format_value(quality.get('production_ready'))} | "
+            f"Deployment candidate: {_format_value(quality.get('deployment_candidate'))}"
+        )
+        st.caption(_format_value(quality.get("next_recommended_step")))
+    with decision_cols[1]:
+        st.metric("Frontend recommendation", _format_value(recommendation.get("recommendation_status")))
+        st.caption(_format_value(recommendation.get("next_step")))
+        st.caption(
+            "What it can claim: "
+            + ", ".join(
+                _format_value(value)
+                for value in recommendation.get("what_it_can_claim", [])
+            )
+        )
+
+    with st.expander("Technical evidence", expanded=False):
+        tech_tabs = st.tabs(["Metric cards", "Tables", "Artifact lineage", "Run notes"])
+        with tech_tabs[0]:
+            st.caption("Metric cards for the governed YOLO evidence bundle")
+            cards = metric_cards.get("cards", [])
+            if cards:
+                for start_idx in range(0, len(cards), 2):
+                    row_cards = cards[start_idx : start_idx + 2]
+                    cols = st.columns(len(row_cards))
+                    for col, card in zip(cols, row_cards):
+                        with col:
+                            st.metric(card.get("label", "Metric"), _format_value(card.get("value")))
+                            description = card.get("description")
+                            if description:
+                                st.caption(str(description))
             else:
-                st.info("No confidence distribution data available for charting.")
+                st.info("No detection metric cards available.")
+
+        with tech_tabs[1]:
+            table_cols = st.columns(2)
+            with table_cols[0]:
+                st.caption("Confidence distribution table")
+                confidence_rows = confidence_chart.get("confidence_bins", [])
+                _render_markdown_table(
+                    confidence_rows,
+                    [
+                        ("Band", "label"),
+                        ("Count", "count"),
+                        ("Share", "percentage"),
+                    ],
+                )
+            with table_cols[1]:
+                st.caption("Class summary table")
+                class_rows = class_summary.get("class_rows", [])
+                _render_markdown_table(
+                    class_rows,
+                    [
+                        ("Class", "class_label"),
+                        ("BBox count", "bbox_count"),
+                        ("Min confidence", "min_confidence"),
+                        ("Mean confidence", "mean_confidence"),
+                        ("Median confidence", "median_confidence"),
+                    ],
+                )
+
+            st.markdown("##### Sample gallery details")
+            gallery_rows = [
+                {
+                    "category": category.get("category_label"),
+                    "samples": category.get("sample_count"),
+                    "selection_rule": category.get("selection_rule"),
+                }
+                for category in sample_gallery.get("categories", [])
+                if isinstance(category, dict)
+            ]
             _render_markdown_table(
-                confidence_rows,
+                gallery_rows,
                 [
-                    ("Band", "label"),
-                    ("Count", "count"),
-                    ("Share", "percentage"),
+                    ("Category", "category"),
+                    ("Samples", "samples"),
+                    ("Selection rule", "selection_rule"),
                 ],
             )
-        with chart_cols[1]:
-            st.caption("Class summary")
-            class_rows = class_summary.get("class_rows", [])
-            if class_rows:
-                st.bar_chart(
-                    {
-                        row.get("class_label", f"class_{idx}"): float(row.get("bbox_count", 0) or 0)
-                        for idx, row in enumerate(class_rows)
-                    }
-                )
-                st.caption("Bar heights represent bbox counts per class.")
-            else:
-                st.info("No class summary data available for charting.")
-            _render_markdown_table(
-                class_rows,
-                [
-                    ("Class", "class_label"),
-                    ("BBox count", "bbox_count"),
-                    ("Min confidence", "min_confidence"),
-                    ("Mean confidence", "mean_confidence"),
-                    ("Median confidence", "median_confidence"),
-                ],
-            )
-    with tabs[2]:
-        st.caption("Evidence tables")
-        st.dataframe(
-            [
+
+        with tech_tabs[2]:
+            st.caption("artifact lineage")
+            st.caption("Artifact lineage and bundle files for the detection evidence layer")
+            source_rows = [
                 {
                     "artifact": item.get("artifact_type") or item.get("artifact_id"),
                     "path": item.get("artifact_path") or item.get("path"),
@@ -1175,119 +1261,58 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
                 }
                 for item in lineage.get("source_artifacts", [])
                 if isinstance(item, dict)
-            ],
-            use_container_width=True,
-        )
-
-    st.markdown("### Confidence Distribution")
-    confidence_rows = confidence_chart.get("confidence_bins", [])
-    if confidence_rows:
-        _render_markdown_table(
-            confidence_rows,
-            [
-                ("Band", "label"),
-                ("Count", "count"),
-                ("Share", "percentage"),
-            ],
-        )
-    else:
-        st.info("No confidence distribution data available.")
-
-    st.markdown("### Class Summary")
-    class_rows = class_summary.get("class_rows", [])
-    if class_rows:
-        _render_markdown_table(
-            class_rows,
-            [
-                ("Class", "class_label"),
-                ("BBox count", "bbox_count"),
-                ("Min confidence", "min_confidence"),
-                ("Mean confidence", "mean_confidence"),
-                ("Median confidence", "median_confidence"),
-            ],
-        )
-    else:
-        st.info("No class summary data available.")
-
-    st.markdown("### Sample Gallery Summary")
-    sample_cols = st.columns(2)
-    with sample_cols[0]:
-        st.metric("Gallery samples", _format_value(sample_gallery.get("gallery_sample_count")))
-        st.caption("This page shows summary metadata only; image rendering can be added later without changing the data contract.")
-    with sample_cols[1]:
-        category_counts = sample_gallery.get("category_sample_counts", {})
-        gallery_rows = [
-            {"category": label, "count": count}
-            for label, count in category_counts.items()
-        ]
-        _render_markdown_table(
-            gallery_rows,
-            [
-                ("Category", "category"),
-                ("Count", "count"),
-            ],
-        )
-
-    st.markdown("### Artifact Lineage And Decision")
-    lineage_cols = st.columns(2)
-    with lineage_cols[0]:
-        _render_key_value_grid(
-            [
-                ("Decision", quality.get("decision")),
-                ("Review required", quality.get("review_required")),
-                ("Production ready", quality.get("production_ready")),
-                ("Deployment candidate", quality.get("deployment_candidate")),
-                ("Next step", quality.get("next_recommended_step")),
             ]
-        )
-        st.caption(
-            f"Recommendation: {_format_value(recommendation.get('recommendation_status'))}"
-        )
-        st.caption(
-            f"Run: {_format_value(metadata.get('run_id'))} | "
-            f"Version: {_format_value(metadata.get('model_version'))}"
-        )
-    with lineage_cols[1]:
-        source_paths = lineage.get("source_artifacts", [])
-        lineage_rows = [
-            {
-                "artifact": item.get("artifact_type") or item.get("artifact_id"),
-                "path": item.get("artifact_path") or item.get("path"),
-                "hash": item.get("artifact_hash") or item.get("sha256"),
-            }
-            for item in source_paths
-            if isinstance(item, dict)
-        ]
-        _render_markdown_table(
-            lineage_rows,
-            [
-                ("Artifact", "artifact"),
-                ("Path", "path"),
-                ("Hash", "hash"),
-            ],
-        )
+            _render_markdown_table(
+                source_rows,
+                [
+                    ("Artifact", "artifact"),
+                    ("Path", "path"),
+                    ("Hash", "hash"),
+                ],
+            )
+            st.caption("bundle manifest")
+            st.markdown("##### Bundle manifest")
+            st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
+            _render_markdown_table(
+                [{"file": name} for name in manifest.get("bundle_files", [])],
+                [("File", "file")],
+            )
+            st.markdown("##### Evidence file list")
+            for filename in DETECTION_EVIDENCE_FILENAMES:
+                st.code(filename, language="text")
 
-    with st.expander("Detection bundle manifest", expanded=False):
-        st.caption("Bundle directory and generated file list")
-        st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
-        _render_markdown_table(
-            [
-                {"file": name}
-                for name in manifest.get("bundle_files", [])
-            ],
-            [
-                ("File", "file"),
-            ],
-        )
+        with tech_tabs[3]:
+            _render_key_value_grid(
+                [
+                    ("Run", metadata.get("run_id")),
+                    ("Dataset", metadata.get("dataset_id")),
+                    ("Review required", quality.get("review_required")),
+                    ("Production ready", quality.get("production_ready")),
+                    ("Deployment candidate", quality.get("deployment_candidate")),
+                ]
+            )
+            st.markdown("##### Quality decision")
+            st.write(
+                f"{_format_value(quality.get('decision'))} | "
+                f"{_format_value(quality.get('next_recommended_step'))}"
+            )
+            st.caption("frontend recommendation")
+            st.markdown("##### Frontend recommendation")
+            st.write(
+                f"{_format_value(recommendation.get('recommendation_status'))} | "
+                f"{_format_value(recommendation.get('next_step'))}"
+            )
+            st.caption(
+                "What it cannot claim: "
+                + ", ".join(
+                    _format_value(value)
+                    for value in recommendation.get("what_it_cannot_claim", [])
+                )
+            )
 
-    with st.expander("Detection evidence file list", expanded=False):
-        for filename in DETECTION_EVIDENCE_FILENAMES:
-            st.code(filename, language="text")
-
-    st.markdown("### Safe Interpretation")
+    st.markdown("### Safe interpretation")
     st.write(
-        "YOLO / Detection evidence layer COMPLETE. This page is a review-oriented dashboard view only "
-        "and does not claim production readiness or deployment safety."
+        "This YOLO / Detection evidence layer is review-oriented only and does not claim production readiness or deployment safety."
     )
 
 

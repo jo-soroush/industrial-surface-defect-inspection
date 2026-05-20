@@ -7,14 +7,11 @@ implement live prediction, API integration, Docker, or production features.
 
 from __future__ import annotations
 
+from typing import Any
+
 import streamlit as st
 
-from frontend.data_loader import (
-    DETECTION_BUNDLE_DIR,
-    TRACK_A_BUNDLE_DIR,
-    TRACK_B_BUNDLE_DIR,
-    load_all_frontend_bundles,
-)
+from frontend.data_loader import load_all_frontend_bundles
 
 
 PROJECT_TITLE = "Industrial Surface Defect Inspection Platform"
@@ -31,6 +28,15 @@ STATUS_LINES = [
 ]
 
 
+def _safe_text(value: Any, default: str = "Unavailable") -> str:
+    """Return a safe, concise display string for dashboard labels."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return "Yes" if value else "No"
+    return str(value)
+
+
 def _render_status_summary() -> None:
     """Render a compact project status summary."""
     cols = st.columns(2)
@@ -39,13 +45,19 @@ def _render_status_summary() -> None:
             st.metric(label, value)
 
 
-def _render_data_load_health() -> None:
+def _render_limitations_banner() -> None:
+    """Show the non-production limitations banner."""
+    st.warning(
+        "Evidence dashboard only. The project is not production-ready and not deployment-safe. "
+        "No live prediction and no API upload/predict yet."
+    )
+
+
+def _render_data_load_health(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render a small data-load health section."""
     st.subheader("Data Load Health")
-    try:
-        bundles = load_all_frontend_bundles()
-    except (FileNotFoundError, ValueError) as exc:
-        st.error(f"Frontend data contracts are not fully loadable: {exc}")
+    if bundles is None:
+        st.error("Frontend data contracts are not fully loadable.")
         return
 
     cols = st.columns(3)
@@ -60,32 +72,94 @@ def _render_data_load_health() -> None:
             st.caption(f"{len(bundle)} JSON files")
 
 
-def _render_limitations_banner() -> None:
-    """Show the non-production limitations banner."""
-    st.warning(
-        "Read-only evidence scaffold only. No production-ready claim, no deployment-safe "
-        "claim, no live upload/predict, and no API-backed inference yet."
-    )
-
-
-def _render_overview() -> None:
-    """Render the overview page."""
+def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
+    """Render the overview page content."""
     st.subheader("Overview")
     st.write(
         "This scaffold is a company-grade starting point for a demo dashboard that "
-        "will consume the existing JSON data contracts for Track A, Track B, and YOLO."
+        "consumes the existing JSON data contracts for Track A, Track B, and YOLO."
     )
-    st.write("Bundle directories:")
-    st.code(
-        "\n".join(
-            [
-                str(TRACK_A_BUNDLE_DIR),
-                str(TRACK_B_BUNDLE_DIR),
-                str(DETECTION_BUNDLE_DIR),
-            ]
-        ),
-        language="text",
-    )
+
+    if bundles is None:
+        st.error("Overview data is unavailable because one or more frontend bundles failed to load.")
+        return
+
+    track_a = bundles["track_a"]
+    track_b = bundles["track_b"]
+    detection = bundles["detection"]
+
+    st.markdown("### Current Project State")
+    state_cols = st.columns(3)
+    with state_cols[0]:
+        st.metric("Track A Classification", "PASS")
+    with state_cols[1]:
+        st.metric("Track B / Autoencoder", "PASS")
+    with state_cols[2]:
+        st.metric("YOLO / Detection evidence layer", "COMPLETE")
+
+    st.markdown("### Data Contract Health")
+    health_cols = st.columns(3)
+    with health_cols[0]:
+        st.metric("Track A bundle", f"{len(track_a)} files")
+    with health_cols[1]:
+        st.metric("Track B bundle", f"{len(track_b)} files")
+    with health_cols[2]:
+        st.metric("Detection bundle", f"{len(detection)} files")
+
+    st.markdown("### High-Level Evidence Summary")
+    summary_cols = st.columns(3)
+
+    track_a_reco = track_a.get("frontend_model_recommendation.json", {})
+    track_b_summary = track_b.get("frontend_anomaly_summary.json", {})
+    detection_overview = detection.get("detection_overview.json", {})
+
+    with summary_cols[0]:
+        st.metric(
+            "Track A selected model",
+            _safe_text(track_a_reco.get("selected_model_name")),
+            help=_safe_text(track_a_reco.get("selected_model_version")),
+        )
+        st.caption(
+            f"Run: {_safe_text(track_a_reco.get('selected_run_id'))} | "
+            f"Threshold: {_safe_text(track_a_reco.get('selected_threshold'))}"
+        )
+
+    with summary_cols[1]:
+        st.metric(
+            "Track B model",
+            _safe_text(track_b_summary.get("model_type")),
+            help=_safe_text(track_b_summary.get("model_version")),
+        )
+        key_metrics = track_b_summary.get("key_metrics", {})
+        st.caption(
+            " | ".join(
+                [
+                    f"Canonical status: {_safe_text(track_b_summary.get('canonical_status'))}",
+                    f"ROC AUC: {_safe_text(key_metrics.get('roc_auc'))}",
+                    f"Threshold: {_safe_text(key_metrics.get('threshold'))}",
+                ]
+            )
+        )
+
+    with summary_cols[2]:
+        st.metric(
+            "Detection images",
+            _safe_text(detection_overview.get("image_count")),
+            help=_safe_text(detection_overview.get("safe_summary")),
+        )
+        st.caption(
+            f"Total bboxes: {_safe_text(detection_overview.get('total_bbox_count'))} | "
+            f"Gallery samples: {_safe_text(detection_overview.get('gallery_sample_count'))}"
+        )
+
+    st.markdown("### Evidence Paths")
+    path_cols = st.columns(3)
+    with path_cols[0]:
+        st.code("artifacts/frontend/track_a/", language="text")
+    with path_cols[1]:
+        st.code("artifacts/frontend/track_b/", language="text")
+    with path_cols[2]:
+        st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
 
 
 def _render_track_a() -> None:
@@ -136,10 +210,17 @@ def main() -> None:
     st.title(PROJECT_TITLE)
     _render_limitations_banner()
     _render_status_summary()
-    _render_data_load_health()
+
+    try:
+        bundles = load_all_frontend_bundles()
+    except (FileNotFoundError, ValueError) as exc:
+        bundles = None
+        st.error(f"Frontend data contracts are not fully loadable: {exc}")
+
+    _render_data_load_health(bundles)
 
     pages = {
-        "Overview": _render_overview,
+        "Overview": lambda: _render_overview(bundles),
         "Track A Classification": _render_track_a,
         "Track B Anomaly Detection": _render_track_b,
         "YOLO Detection": _render_yolo,

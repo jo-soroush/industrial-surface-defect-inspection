@@ -86,7 +86,7 @@ def _render_limitations_banner() -> None:
     """Show the non-production limitations banner."""
     st.warning(
         "Evidence dashboard only. The project is not production-ready and not deployment-safe. "
-        "No live prediction and no API upload/predict yet."
+        "no live prediction and no API upload/predict yet."
     )
 
 
@@ -149,6 +149,39 @@ def _render_key_value_grid(items: list[tuple[str, Any]]) -> None:
     for idx, (label, value) in enumerate(items):
         with cols[idx % len(cols)]:
             st.metric(label, _format_value(value))
+
+
+def _render_series_chart(
+    rows: list[dict[str, Any]],
+    x_key: str,
+    y_keys: list[str],
+    chart_kind: str,
+    fallback_columns: list[tuple[str, str]],
+) -> None:
+    """Render a simple Streamlit chart or fall back to a table."""
+    numeric_rows = [row for row in rows if isinstance(row, dict)]
+    if not numeric_rows:
+        st.info("No chart data available.")
+        return
+
+    if chart_kind == "bar":
+        chart_data = {
+            row.get(x_key, f"row_{idx}"): float(row.get(y_keys[0], 0) or 0)
+            for idx, row in enumerate(numeric_rows)
+        }
+        st.bar_chart(chart_data)
+    elif chart_kind == "line":
+        chart_data = {
+            y_key: [float(row.get(y_key, 0) or 0) for row in numeric_rows]
+            for y_key in y_keys
+        }
+        st.line_chart(chart_data)
+    else:
+        st.info("No chart renderer available.")
+        return
+
+    with st.expander("Show table", expanded=False):
+        _render_markdown_table(numeric_rows, fallback_columns)
 
 
 def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
@@ -240,6 +273,36 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     with path_cols[2]:
         st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
 
+    with st.expander("Quick evidence details", expanded=False):
+        overview_tabs = st.tabs(["Track A", "Track B", "YOLO"])
+        with overview_tabs[0]:
+            st.caption("Track A selected model and comparison summary")
+            _render_key_value_grid(
+                [
+                    ("Selected model", track_a_reco.get("selected_model_name")),
+                    ("Version", track_a_reco.get("selected_model_version")),
+                    ("Threshold", track_a_reco.get("selected_threshold")),
+                ]
+            )
+        with overview_tabs[1]:
+            st.caption("Track B canonical status and threshold")
+            _render_key_value_grid(
+                [
+                    ("Model", track_b_summary.get("model_type")),
+                    ("Canonical status", track_b_summary.get("canonical_status")),
+                    ("Threshold", track_b_summary.get("key_metrics", {}).get("threshold")),
+                ]
+            )
+        with overview_tabs[2]:
+            st.caption("YOLO overview and manifest")
+            _render_key_value_grid(
+                [
+                    ("Images", detection_overview.get("image_count")),
+                    ("Total bboxes", detection_overview.get("total_bbox_count")),
+                    ("Bundle files", len(detection.get("frontend_bundle_manifest.json", {}).get("bundle_files", []))),
+                ]
+            )
+
 
 def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the Track A classification page."""
@@ -302,6 +365,63 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                         st.caption(str(detail))
     else:
         st.info("No Track A metric cards available.")
+
+    tabs = st.tabs(["Summary", "Charts", "Evidence"])
+    with tabs[0]:
+        st.caption("Selected model, threshold, and quality target")
+        _render_key_value_grid(
+            [
+                ("Selected model", recommendation.get("selected_model_name") or metric_cards.get("selected_model_name")),
+                ("Threshold", recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
+                ("Quality target", quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
+                ("Production ready", quality.get("production_ready")),
+                ("Deployment candidate", quality.get("deployment_candidate")),
+            ]
+        )
+    with tabs[1]:
+        chart_cols = st.columns(2)
+        with chart_cols[0]:
+            st.caption("Per-class metric view")
+            class_metric_rows = per_class.get("classes", [])
+            if class_metric_rows:
+                st.bar_chart(
+                    {
+                        row.get("label", f"class_{idx}"): float(row.get("precision", 0) or 0)
+                        for idx, row in enumerate(class_metric_rows)
+                    }
+                )
+            else:
+                st.info("No per-class data available for charting.")
+            _render_markdown_table(
+                class_metric_rows,
+                [
+                    ("Class", "label"),
+                    ("Precision", "precision"),
+                    ("Recall", "recall"),
+                    ("F1", "f1"),
+                ],
+            )
+        with chart_cols[1]:
+            st.caption("Threshold sweep line")
+            threshold_rows = threshold_curve.get("rows", [])
+            if threshold_rows:
+                st.line_chart(
+                    {
+                        "Macro F1": [float(row.get("macro_f1", 0) or 0) for row in threshold_rows],
+                        "Accuracy": [float(row.get("accuracy", 0) or 0) for row in threshold_rows],
+                        "Precision": [float(row.get("precision", 0) or 0) for row in threshold_rows],
+                        "Recall": [float(row.get("recall", 0) or 0) for row in threshold_rows],
+                    }
+                )
+                st.caption(
+                    "Thresholds: "
+                    + ", ".join(_format_value(row.get("threshold")) for row in threshold_rows)
+                )
+            else:
+                st.info("No threshold sweep data available for charting.")
+    with tabs[2]:
+        st.caption("Evidence tables")
+        st.dataframe(comparison.get("rows", []), use_container_width=True)
 
     st.markdown("### Comparison and Decision Summary")
     comparison_cols = st.columns([1.4, 1])
@@ -550,6 +670,73 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     else:
         st.info("No Track B metric cards available.")
 
+    tabs = st.tabs(["Summary", "Charts", "Evidence"])
+    with tabs[0]:
+        st.caption("Autoencoder summary, threshold, and quality decision")
+        _render_key_value_grid(
+            [
+                ("Model", frontend_summary.get("model_type") or metric_cards.get("model_type")),
+                ("Version", frontend_summary.get("model_version") or metric_cards.get("model_version")),
+                ("Threshold", frontend_summary.get("key_metrics", {}).get("threshold") or metric_cards.get("threshold")),
+                ("Canonical status", frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")),
+                ("Production ready", quality.get("production_ready")),
+                ("Deployment candidate", quality.get("deployment_candidate")),
+            ]
+        )
+    with tabs[1]:
+        chart_cols = st.columns(2)
+        with chart_cols[0]:
+            st.caption("Reconstruction loss")
+            reconstruction_rows = reconstruction.get("chart_rows", [])
+            if reconstruction_rows:
+                st.line_chart(
+                    {
+                        "Reconstruction loss": [float(row.get("reconstruction_loss", 0) or 0) for row in reconstruction_rows]
+                    }
+                )
+                st.caption(
+                    "Epochs: " + ", ".join(_format_value(row.get("epoch")) for row in reconstruction_rows)
+                )
+            else:
+                st.info("No reconstruction loss data available for charting.")
+            _render_markdown_table(
+                reconstruction_rows,
+                [
+                    ("Epoch", "epoch"),
+                    ("Reconstruction loss", "reconstruction_loss"),
+                ],
+            )
+        with chart_cols[1]:
+            st.caption("Threshold behavior")
+            threshold_rows = threshold_behavior.get("rows", [])
+            if threshold_rows:
+                st.bar_chart(
+                    {
+                        "Precision": [float(row.get("precision", 0) or 0) for row in threshold_rows],
+                        "Recall": [float(row.get("recall", 0) or 0) for row in threshold_rows],
+                        "F1": [float(row.get("f1", 0) or 0) for row in threshold_rows],
+                    }
+                )
+                st.caption(
+                    "Thresholds: " + ", ".join(_format_value(row.get("threshold")) for row in threshold_rows)
+                )
+            else:
+                st.info("No threshold behavior data available for charting.")
+            _render_markdown_table(
+                threshold_rows,
+                [
+                    ("Threshold", "threshold"),
+                    ("Precision", "precision"),
+                    ("Recall", "recall"),
+                    ("F1", "f1"),
+                    ("False Positives", "false_positive"),
+                    ("False Negatives", "false_negative"),
+                ],
+            )
+    with tabs[2]:
+        st.caption("Evidence tables")
+        st.dataframe(frontend_summary.get("key_metrics", {}), use_container_width=True)
+
     st.markdown("### Anomaly Summary And Decision")
     summary_cols = st.columns([1.3, 1])
     with summary_cols[0]:
@@ -718,6 +905,82 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
                         st.caption(str(description))
     else:
         st.info("No detection metric cards available.")
+
+    tabs = st.tabs(["Summary", "Charts", "Evidence"])
+    with tabs[0]:
+        st.caption("Detection overview, metadata, and decision state")
+        _render_key_value_grid(
+            [
+                ("Images", overview.get("image_count")),
+                ("Images with detections", overview.get("image_with_detections_count")),
+                ("Total bboxes", overview.get("total_bbox_count")),
+                ("Review required", quality.get("review_required")),
+                ("Production ready", quality.get("production_ready")),
+                ("Deployment candidate", quality.get("deployment_candidate")),
+            ]
+        )
+    with tabs[1]:
+        chart_cols = st.columns(2)
+        with chart_cols[0]:
+            st.caption("Confidence distribution")
+            confidence_rows = confidence_chart.get("confidence_bins", [])
+            if confidence_rows:
+                st.bar_chart(
+                    {
+                        row.get("label", f"bin_{idx}"): float(row.get("count", 0) or 0)
+                        for idx, row in enumerate(confidence_rows)
+                    }
+                )
+                st.caption(
+                    "Bins: " + ", ".join(_format_value(row.get("label")) for row in confidence_rows)
+                )
+            else:
+                st.info("No confidence distribution data available for charting.")
+            _render_markdown_table(
+                confidence_rows,
+                [
+                    ("Band", "label"),
+                    ("Count", "count"),
+                    ("Share", "percentage"),
+                ],
+            )
+        with chart_cols[1]:
+            st.caption("Class summary")
+            class_rows = class_summary.get("class_rows", [])
+            if class_rows:
+                st.bar_chart(
+                    {
+                        row.get("class_label", f"class_{idx}"): float(row.get("bbox_count", 0) or 0)
+                        for idx, row in enumerate(class_rows)
+                    }
+                )
+                st.caption("Bar heights represent bbox counts per class.")
+            else:
+                st.info("No class summary data available for charting.")
+            _render_markdown_table(
+                class_rows,
+                [
+                    ("Class", "class_label"),
+                    ("BBox count", "bbox_count"),
+                    ("Min confidence", "min_confidence"),
+                    ("Mean confidence", "mean_confidence"),
+                    ("Median confidence", "median_confidence"),
+                ],
+            )
+    with tabs[2]:
+        st.caption("Evidence tables")
+        st.dataframe(
+            [
+                {
+                    "artifact": item.get("artifact_type") or item.get("artifact_id"),
+                    "path": item.get("artifact_path") or item.get("path"),
+                    "hash": item.get("artifact_hash") or item.get("sha256"),
+                }
+                for item in lineage.get("source_artifacts", [])
+                if isinstance(item, dict)
+            ],
+            use_container_width=True,
+        )
 
     st.markdown("### Confidence Distribution")
     confidence_rows = confidence_chart.get("confidence_bins", [])

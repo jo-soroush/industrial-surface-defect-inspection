@@ -1,13 +1,13 @@
-# Phase 3 Detection Pause Status
+# Phase 3 Detection Status
 
 ## Purpose
-This document records the current Phase 3 / Detection state so work can resume later without confusion.
+This document records the current Phase 3 / Detection state so later roadmap work can resume without confusing completed YOLO evidence work with future frontend, API, notebook, or deployment phases.
 
 ## Current High-Level Status
 - Track A: PASS
 - Track B: PASS
-- Detection / YOLO: PARTIAL / PAUSED
-- Global Phase 3: NOT PASS
+- Detection / YOLO evidence layer: COMPLETE
+- Global Phase 3: evidence layers complete for the currently governed tracks; production readiness is not claimed
 
 ## Current Audited Project State
 - Track A Classification: PASS
@@ -30,14 +30,46 @@ This document records the current Phase 3 / Detection state so work can resume l
   - Track A notebook refreshed and now consumes `artifacts/frontend/track_a/`
   - Track B notebook refreshed and now consumes `artifacts/frontend/track_b/`
   - notebook evidence update / quality pass: PASS for current demo-facing bundles
-- Detection / YOLO: PARTIAL / PAUSED
-  - runtime/network blocker remains
-  - detection evaluation and registry publication are still not complete
+- Detection / YOLO evidence layer: COMPLETE
+  - governed YOLO detection evidence exists for `yolo_train_v0_2_0`
+  - detection structured artifacts exist locally under `artifacts/models/predictions/`
+  - inventory coverage exists for all governed detection structured artifacts
+  - artifact registry entries exist for all governed detection structured artifacts
+  - frontend-ready detection bundle generator exists as a data-contract/evidence builder
 - Frontend/dashboard data layer: PARTIAL
   - Track A and Track B frontend-ready JSON bundles exist and are validated
-  - a full frontend/dashboard application is not separately validated here
+  - Detection frontend-ready JSON bundle generation is supported by `scripts/evaluation/generate_detection_frontend_bundle.py`
+  - a real frontend/dashboard application is not started or validated here
 
-## Completed Detection Work
+## Completed Detection Evidence
+- Bbox prediction artifact:
+  - `artifacts/models/predictions/detection_bbox_predictions__yolo_train_v0_2_0__validation.json`
+- Bbox prediction inventory:
+  - `artifacts/models/inventory/track_detection_bbox_prediction_artifact_inventory__yolo_train_v0_2_0__validation.json`
+- Bbox prediction registry entry:
+  - `track_detection__yolo_train_v0_2_0__bbox_predictions_validation`
+- Per-image summary artifact:
+  - `artifacts/models/predictions/detection_per_image_summary__yolo_train_v0_2_0__validation.json`
+- Per-image summary inventory:
+  - `artifacts/models/inventory/track_detection_per_image_summary_artifact_inventory__yolo_train_v0_2_0__validation.json`
+- Per-image summary registry entry:
+  - `track_detection__yolo_train_v0_2_0__per_image_summary_validation`
+- Confidence distribution artifact:
+  - `artifacts/models/predictions/detection_confidence_distribution__yolo_train_v0_2_0__validation.json`
+- Confidence distribution inventory:
+  - `artifacts/models/inventory/track_detection_confidence_distribution_artifact_inventory__yolo_train_v0_2_0__validation.json`
+- Confidence distribution registry entry:
+  - `track_detection__yolo_train_v0_2_0__confidence_distribution_validation`
+- Sample gallery artifact:
+  - `artifacts/models/predictions/detection_sample_gallery__yolo_train_v0_2_0__validation.json`
+- Sample gallery inventory:
+  - `artifacts/models/inventory/track_detection_sample_gallery_artifact_inventory__yolo_train_v0_2_0__validation.json`
+- Sample gallery registry entry:
+  - `track_detection__yolo_train_v0_2_0__sample_gallery_validation`
+- Frontend-ready detection bundle generator:
+  - `scripts/evaluation/generate_detection_frontend_bundle.py`
+
+## Completed Detection Foundation Work
 - GC10-DET governed split manifest created and committed
 - YOLO backend dependency boundary created and committed
 - GC10-DET to YOLO dataset export boundary created and committed
@@ -46,82 +78,45 @@ This document records the current Phase 3 / Detection state so work can resume l
 - Governed YOLO pretrained model source declaration created and committed
 - Portable YOLO training execution runbook created and committed
 - Runbook mini re-audit passed
-- Detection post-training governance plan prepared in terminal response only
-- Detection artifact naming/schema plan prepared in terminal response only
 - Local raw GC10-DET evidence confirmed:
   - `data/raw/gc10det/img/` exists
   - `data/raw/gc10det/ann/` exists
   - image count: 2300
   - annotation count: 2300
 
-## Current Blocker
-The current blocker is runtime and network related, not a missing governance foundation.
+## Safety Boundary
+The Detection / YOLO status above is evidence/data-contract completion only.
 
-- Local YOLO runtime is blocked because `ultralytics` installation failed on weak network / incomplete download.
-- Colab is also unavailable right now because the internet connection is too weak for setup and upload work.
-- YOLO training is intentionally paused until the runtime situation improves.
+- No production-ready claim is made.
+- No deployment-safe claim is made.
+- The YOLO model is not marked production-ready.
+- The platform is not marked deployment-safe.
+- No real frontend/UI implementation has started in this status step.
+- No API endpoint implementation has started in this status step.
+- No notebook update has started in this status step.
+- Agent-layer work has not started in this status step.
 
-## What Is Intentionally Paused
-- local `pip install ultralytics`
-- Colab setup
-- Drive dataset upload
-- YOLO `--run-training`
-- detection evaluation
-- detection artifact registration
-- detection metadata/log/inventory generation
+Frontend implementation, API endpoints, notebook updates, and agent integration are later roadmap sections.
 
-## What Must Not Be Marked PASS Yet
-- Detection / YOLO must not be marked PASS
-- Global Phase 3 must not be marked PASS
-- training outputs do not exist yet
-- detection evaluation outputs do not exist yet
-- detection registry entries do not exist yet
+## Remaining Work Outside The YOLO Evidence Layer
+- real frontend/dashboard implementation
+- API endpoint implementation
+- notebook updates for Detection / YOLO evidence
+- agent or orchestration layer integration
+- production-readiness review
+- deployment-safety review
 
-## Remaining Detection Gaps
-- actual YOLO training run
-- detection evaluation writer
-- detection artifacts
-- detection registry entries
-- detection metadata/log/inventory
-- Detection re-audit
-
-## Resume Plan When Internet Is Better
-1. Choose runtime: local or Colab.
-2. If local, install `ultralytics` successfully.
-3. If Colab, prepare Drive workspace and raw GC10-DET data.
-4. Run exporter.
-5. Run validate-only boundary.
-6. Run `--run-training` only after validate-only passes.
-7. Preserve the full YOLO run directory.
-8. Bring outputs back if a remote runtime was used.
-9. Inspect outputs.
-10. Create detection training result summary.
-11. Create detection metadata summary.
-12. Create detection post-hoc log.
-13. Create detection artifact inventory.
-14. Register detection run/artifacts.
-15. Implement or run detection evaluation writer.
-16. Re-audit Detection.
-17. Re-audit global Phase 3.
-
-## Safe Offline Work While Paused
-- README / report improvement
-- architecture documentation
-- roadmap cleanup
-- frontend design planning
-- notebook design planning
-- post-training governance schema refinement
-- no training-dependent claims
-- no notebook rename was performed; the current Track A notebook filename is intentionally `notebooks/track_a_supervised_classification_mvtec.ipynb`
+These items are not blockers for marking the YOLO / Detection evidence layer complete.
 
 ## Git / Commit Reference
 Latest relevant commits:
 
-- `5c8afc4 [governance] Register Track A comparison artifact`
-- `1664162 [governance] Register Track A ResNet18 governed package`
-- `149edd0 [evaluation] Add ResNet18 threshold analysis metadata`
-- `f24a5b2 [evaluation] Add row-level metadata to Track A predictions`
-- `a1fd686 [governance] Derive validation evidence from saved checkpoint`
-- `b9cd7da [governance] Add checkpoint replay validation gate`
+- `efdbac8 [feature] Add detection frontend bundle generator`
+- `2d077b1 [governance] Register detection sample gallery artifact`
+- `c57e462 [feature] Add detection sample gallery registry publisher`
+- `6246fcb [feature] Add detection sample gallery inventory builder`
+- `0766841 [feature] Add detection sample gallery builder`
+- `522631b [governance] Register detection confidence distribution artifact`
+- `ae8cc12 [governance] Register detection per-image summary artifact`
 
-Older YOLO-specific roadmap work remains relevant, but the overall project state above is now the authoritative summary.
+Older YOLO-specific roadmap work remains relevant as historical context, but the overall project state above is now the authoritative Detection status summary.

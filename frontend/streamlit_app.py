@@ -7,14 +7,21 @@ implement live prediction, API integration, Docker, or production features.
 
 from __future__ import annotations
 
+import mimetypes
+from pathlib import Path
 from typing import Any
 
+import requests
 import streamlit as st
 
 from frontend.data_loader import load_all_frontend_bundles
 
 
 PROJECT_TITLE = "Industrial Surface Defect Inspection Platform"
+API_DEFAULT_BASE_URL = "http://localhost:8000"
+UPLOAD_ALLOWED_EXTENSIONS = ("png", "jpg", "jpeg", "webp")
+UPLOAD_ALLOWED_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
+UPLOAD_MAX_BYTES = 10 * 1024 * 1024
 
 TRACK_A_EVIDENCE_FILENAMES = (
     "metric_cards.json",
@@ -1095,11 +1102,108 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 
 def _render_upload_predict() -> None:
-    """Render the upload/predict page placeholder."""
+    """Render the Track A upload/predict page."""
     st.subheader("Upload / Predict")
+    st.warning(
+        "Local prototype endpoint for Track A classification only. not production-ready. "
+        "not deployment-safe. YOLO and anomaly upload/predict not implemented yet."
+    )
     st.write(
-        "Planned, not implemented yet. This page will later connect to a simple FastAPI backend "
-        "for upload/predict behavior."
+        "Upload one image and call the existing FastAPI classification endpoint. "
+        "The page is intentionally limited to Track A classification only."
+    )
+
+    api_base_url = st.text_input(
+        "API base URL",
+        value=API_DEFAULT_BASE_URL,
+        help="Base URL for POST /predict/classification.",
+    )
+    uploaded_file = st.file_uploader(
+        "Choose an image for Track A classification",
+        type=list(UPLOAD_ALLOWED_EXTENSIONS),
+        accept_multiple_files=False,
+        key="track_a_upload_file",
+    )
+
+    if uploaded_file is not None:
+        file_bytes = uploaded_file.getvalue()
+        st.caption(
+            f"Selected file: {uploaded_file.name} | "
+            f"Type: {uploaded_file.type or _infer_content_type(uploaded_file.name)} | "
+            f"Size: {len(file_bytes)} bytes"
+        )
+        st.image(file_bytes, caption=uploaded_file.name, use_container_width=True)
+
+    predict_clicked = st.button(
+        "Predict Track A Classification",
+        type="primary",
+        disabled=uploaded_file is None,
+    )
+
+    if predict_clicked and uploaded_file is not None:
+        try:
+            payload = _call_classification_api(api_base_url, uploaded_file)
+            st.session_state["track_a_upload_prediction"] = payload
+            st.session_state["track_a_upload_error"] = None
+        except Exception as exc:  # pragma: no cover - UI boundary
+            st.session_state["track_a_upload_prediction"] = None
+            st.session_state["track_a_upload_error"] = str(exc)
+
+    error_message = st.session_state.get("track_a_upload_error")
+    if error_message:
+        st.error(error_message)
+
+    payload = st.session_state.get("track_a_upload_prediction")
+    if not isinstance(payload, dict):
+        st.info("Upload an image and press Predict to call the Track A classification endpoint.")
+        return
+
+    st.success("Prediction completed.")
+
+    result_cols = st.columns(4)
+    with result_cols[0]:
+        st.metric("Predicted label", _safe_text(payload.get("predicted_label")))
+    with result_cols[1]:
+        st.metric("Decision", _safe_text(payload.get("decision")))
+    with result_cols[2]:
+        st.metric("Good probability", _format_value(payload.get("probability_good")))
+    with result_cols[3]:
+        st.metric("Defect probability", _format_value(payload.get("probability_defect")))
+
+    info_cols = st.columns(2)
+    with info_cols[0]:
+        st.caption("Model and run metadata")
+        _render_key_value_grid(
+            [
+                ("Model", payload.get("model_name")),
+                ("Version", payload.get("model_version")),
+                ("Run ID", payload.get("run_id")),
+                ("Threshold", payload.get("threshold")),
+                ("Request ID", payload.get("request_id")),
+            ]
+        )
+    with info_cols[1]:
+        st.caption("Input metadata and safety limits")
+        input_meta = payload.get("input", {})
+        _render_key_value_grid(
+            [
+                ("Filename", input_meta.get("filename")),
+                ("Content type", input_meta.get("content_type")),
+                ("File size bytes", input_meta.get("file_size_bytes")),
+                ("Production ready", payload.get("production_ready")),
+                ("Deployment safe", payload.get("deployment_safe")),
+            ]
+        )
+        limitations = payload.get("limitations", [])
+        if limitations:
+            st.caption(" | ".join(str(item) for item in limitations))
+
+    with st.expander("Raw API response", expanded=False):
+        st.json(payload)
+
+    st.caption(
+        "This page is limited to Track A classification. "
+        "YOLO and anomaly upload/predict are not implemented yet."
     )
 
 
@@ -1110,6 +1214,104 @@ def _render_limitations() -> None:
         "This scaffold is evidence-focused only. It does not train models, recompute metrics, "
         "create artifacts, update registries, or claim production or deployment readiness."
     )
+
+
+def _call_classification_api(api_base_url: str, uploaded_file: Any) -> dict[str, Any]:
+    """Call the Track A classification API with a local uploaded image."""
+    normalized_base_url = api_base_url.strip().rstrip("/")
+    if not normalized_base_url:
+        raise ValueError("API base URL must be a non-empty string.")
+
+    file_name = getattr(uploaded_file, "name", None) or "upload.png"
+    file_bytes = uploaded_file.getvalue()
+    if not file_bytes:
+        raise ValueError("Uploaded image is empty.")
+    if len(file_bytes) > UPLOAD_MAX_BYTES:
+        raise ValueError(
+            f"Uploaded image exceeds the {UPLOAD_MAX_BYTES} byte limit."
+        )
+
+    content_type = getattr(uploaded_file, "type", None) or _infer_content_type(file_name)
+    if content_type not in UPLOAD_ALLOWED_CONTENT_TYPES:
+        raise ValueError(
+            f"Unsupported content type: {content_type!r}. "
+            f"Allowed types are: {', '.join(sorted(UPLOAD_ALLOWED_CONTENT_TYPES))}."
+        )
+
+    endpoint = f"{normalized_base_url}/predict/classification"
+    try:
+        response = requests.post(
+            endpoint,
+            files={"file": (file_name, file_bytes, content_type)},
+            timeout=120,
+        )
+    except requests.RequestException as exc:
+        raise ConnectionError(f"Could not reach the API at {normalized_base_url}: {exc}") from exc
+
+    if response.status_code >= 400:
+        detail = _extract_api_error_detail(response)
+        raise RuntimeError(f"API request failed with status {response.status_code}: {detail}")
+
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise ValueError("API returned a non-JSON response.") from exc
+
+    if not isinstance(payload, dict):
+        raise ValueError("API returned an invalid response payload.")
+
+    required_keys = {
+        "request_id",
+        "model_name",
+        "model_version",
+        "run_id",
+        "threshold",
+        "predicted_label",
+        "predicted_label_id",
+        "probability_good",
+        "probability_defect",
+        "decision",
+        "production_ready",
+        "deployment_safe",
+        "input",
+        "live_prediction_enabled",
+        "upload_predict_enabled",
+        "limitations",
+    }
+    missing_keys = sorted(key for key in required_keys if key not in payload)
+    if missing_keys:
+        raise ValueError(
+            "API response is missing required fields: " + ", ".join(missing_keys)
+        )
+
+    return payload
+
+
+def _extract_api_error_detail(response: requests.Response) -> str:
+    """Return a readable error message from an API response."""
+    try:
+        payload = response.json()
+    except ValueError:
+        return response.text.strip() or "No error details were returned."
+
+    if isinstance(payload, dict):
+        detail = payload.get("detail")
+        if isinstance(detail, str) and detail:
+            return detail
+        return str(payload)
+    return str(payload)
+
+
+def _infer_content_type(filename: str) -> str:
+    """Infer an accepted image content type from the filename."""
+    suffix = Path(filename).suffix.lower()
+    if suffix == ".png":
+        return "image/png"
+    if suffix in {".jpg", ".jpeg"}:
+        return "image/jpeg"
+    if suffix == ".webp":
+        return "image/webp"
+    return mimetypes.guess_type(filename)[0] or "application/octet-stream"
 
 
 def main() -> None:

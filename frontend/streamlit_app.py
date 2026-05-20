@@ -117,6 +117,49 @@ def _render_data_load_health(bundles: dict[str, dict[str, Any]] | None) -> None:
             st.caption(f"{len(bundle)} JSON files")
 
 
+def _apply_light_visual_system() -> None:
+    """Apply a soft, light visual system for the premium dashboard."""
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background: linear-gradient(180deg, #f8fbff 0%, #edf3fb 100%);
+            color: #1f2937;
+        }
+        section[data-testid="stSidebar"] {
+            background: #f4f7fb;
+            border-right: 1px solid rgba(31, 41, 55, 0.08);
+        }
+        div[data-testid="stMetric"] {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 16px;
+            padding: 0.7rem 0.9rem;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        }
+        div[data-testid="stExpander"] {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.72);
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_sidebar_health(bundles: dict[str, dict[str, Any]] | None) -> None:
+    """Render compact bundle health in the sidebar."""
+    with st.sidebar.expander("Data Load Health", expanded=False):
+        if bundles is None:
+            st.error("Frontend data contracts are not fully loadable.")
+            return
+        st.caption("Loaded JSON files per governed bundle")
+        for key in ("track_a", "track_b", "detection"):
+            bundle = bundles[key]
+            st.metric(f"{key.replace('_', ' ').title()}", f"{len(bundle)} files")
+
+
 def _build_donut_figure(
     title: str,
     labels: list[str],
@@ -245,7 +288,7 @@ def _render_overview_status_chart() -> None:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
     )
-    st.plotly_chart(figure, use_container_width=True)
+    st.plotly_chart(figure, width="stretch")
 
 
 def _format_value(value: Any) -> str:
@@ -589,7 +632,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                         values,
                         palette,
                     ),
-                    use_container_width=True,
+                    width="stretch",
                 )
             else:
                 st.info("No error distribution data available.")
@@ -612,7 +655,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                         {"Precision": "#1f77b4", "Recall": "#ff9800", "F1": "#2ca02c"},
                         "Score",
                     ),
-                    use_container_width=True,
+                    width="stretch",
                 )
             else:
                 st.info("No per-class data available for charting.")
@@ -650,7 +693,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                     },
                     "Score",
                 ),
-                use_container_width=True,
+                width="stretch",
             )
             st.caption(
                 "Thresholds: "
@@ -881,7 +924,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                         {"Reconstruction loss": "#1f77b4"},
                         "Loss",
                     ),
-                    use_container_width=True,
+                    width="stretch",
                 )
                 st.caption("Epochs: " + ", ".join(_format_value(row.get("epoch")) for row in reconstruction_rows))
             else:
@@ -916,7 +959,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                         values,
                         palette,
                     ),
-                    use_container_width=True,
+                    width="stretch",
                 )
             else:
                 st.info("No anomaly score data available for charting.")
@@ -938,7 +981,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                         {"Precision": "#1f77b4", "Recall": "#ff9800", "F1": "#2ca02c"},
                         "Score",
                     ),
-                    use_container_width=True,
+                    width="stretch",
                 )
                 st.caption("Thresholds: " + ", ".join(_format_value(row.get("threshold")) for row in threshold_rows))
             else:
@@ -1139,7 +1182,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
                     confidence_values,
                     confidence_colors,
                 ),
-                use_container_width=True,
+                width="stretch",
             )
             st.caption(
                 confidence_chart.get("chart_explanation")
@@ -1160,7 +1203,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
                     {"BBox count": "#1f77b4"},
                     "BBox count",
                 ),
-                use_container_width=True,
+                width="stretch",
             )
             st.caption("Bar heights represent bbox counts per class.")
         else:
@@ -1326,7 +1369,8 @@ def _render_upload_predict() -> None:
         "Local prototype endpoint for Track A classification only. not production-ready. "
         "not deployment-safe. YOLO and anomaly upload/predict not implemented yet."
     )
-    st.caption("Track A classification only")
+    st.caption("Track A upload/predict only")
+    st.caption("YOLO/anomaly upload prediction not implemented yet")
 
     step_cols = st.columns(3)
     with step_cols[0]:
@@ -1362,7 +1406,7 @@ def _render_upload_predict() -> None:
         preview_cols = st.columns([1, 1.1])
         with preview_cols[0]:
             st.markdown("### Image preview")
-            st.image(file_bytes, caption=uploaded_file.name, use_container_width=True)
+            st.image(file_bytes, caption=uploaded_file.name, width="stretch")
             st.caption(
                 f"{uploaded_file.name} | "
                 f"{uploaded_file.type or _infer_content_type(uploaded_file.name)} | "
@@ -1424,7 +1468,7 @@ def _render_upload_predict() -> None:
                 [probability_good, probability_defect],
                 ["#2ca02c", "#d62728"],
             ),
-            use_container_width=True,
+            width="stretch",
         )
         confidence_cols = st.columns(2)
         with confidence_cols[0]:
@@ -1479,6 +1523,37 @@ def _render_upload_predict() -> None:
     st.caption(
         "This page is limited to Track A classification. YOLO and anomaly upload/predict are not implemented yet."
     )
+
+
+def _render_ai_assistant() -> None:
+    """Render the future AI Assistant placeholder page."""
+    st.markdown("## AI Assistant")
+    st.markdown(
+        "A planned, context-aware explanation surface that will sit beside charts, pages, and predictions."
+    )
+    st.info(
+        "Agent layer planned. no backend agent implemented yet. no fake AI. "
+        "Future explanations should use governed evidence, prediction responses, and safety docs."
+    )
+    st.write(
+        "This is a placeholder only. It does not chat, call an LLM, or generate explanations yet."
+    )
+    st.markdown("### Planned placements")
+    placement_cols = st.columns(3)
+    with placement_cols[0]:
+        st.metric("Explain this page", "Planned")
+        st.caption("Available from each page header")
+    with placement_cols[1]:
+        st.metric("Explain this chart", "Planned")
+        st.caption("Placed near charts and tables")
+    with placement_cols[2]:
+        st.metric("Explain this prediction", "Planned")
+        st.caption("Placed beside upload results")
+    with st.expander("Agent design notes", expanded=False):
+        st.caption("The future agent should use governed evidence, prediction outputs, and safety docs.")
+        st.write(
+            "Backend agent remains a future phase. This page is a design placeholder only."
+        )
 
 
 def _render_limitations() -> None:
@@ -1591,9 +1666,7 @@ def _infer_content_type(filename: str) -> str:
 def main() -> None:
     """Run the Streamlit application."""
     st.set_page_config(page_title=PROJECT_TITLE, layout="wide")
-    st.title(PROJECT_TITLE)
-    _render_limitations_banner()
-    _render_status_summary()
+    _apply_light_visual_system()
 
     try:
         bundles = load_all_frontend_bundles()
@@ -1601,7 +1674,7 @@ def main() -> None:
         bundles = None
         st.error(f"Frontend data contracts are not fully loadable: {exc}")
 
-    _render_data_load_health(bundles)
+    _render_sidebar_health(bundles)
 
     pages = {
         "Overview": lambda: _render_overview(bundles),
@@ -1610,10 +1683,14 @@ def main() -> None:
         "YOLO Detection": lambda: _render_yolo(bundles),
         "Upload / Predict": _render_upload_predict,
         "Limitations / Safety": _render_limitations,
+        "AI Assistant": _render_ai_assistant,
     }
 
     choice = st.sidebar.radio("Navigation", list(pages.keys()), index=0)
-    st.sidebar.caption("This scaffold is read-only and consumes existing evidence bundles in later phases.")
+    st.sidebar.info(
+        "This scaffold is read-only and consumes existing evidence bundles. "
+        "The future AI Assistant is a placeholder only."
+    )
     pages[choice]()
 
 

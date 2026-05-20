@@ -754,14 +754,13 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the Track B anomaly detection page."""
-    st.subheader("Track B Anomaly Detection")
-    st.warning(
-        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
-        "No live prediction on this page."
+    st.markdown("## Track B Anomaly Detection")
+    st.markdown(
+        "A governed autoencoder-based anomaly page for reviewing reconstruction behavior, anomaly scores, and quality decision evidence."
     )
-    st.write(
-        "This page summarizes the governed Track B autoencoder bundle and keeps the "
-        "presentation focused on evidence rather than live inference."
+    st.warning(
+        "Evidence/dashboard view only. not production-ready. not deployment-safe. "
+        "No live prediction on this Track B evidence page. Track B upload/predict not implemented yet."
     )
 
     if bundles is None:
@@ -778,10 +777,10 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     quality = track_b.get("quality_decision_summary.json", {})
     inventory = track_b.get("artifact_inventory_frontend.json", {})
 
-    top_cols = st.columns(3)
+    top_cols = st.columns(4)
     with top_cols[0]:
         st.metric(
-            "Model",
+            "Model / autoencoder",
             _format_value(frontend_summary.get("model_type") or metric_cards.get("model_type")),
             help=_format_value(frontend_summary.get("model_version") or metric_cards.get("model_version")),
         )
@@ -792,37 +791,78 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
         )
     with top_cols[2]:
         st.metric(
-            "Canonical status",
-            _format_value(frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")),
+            "Quality/status",
+            _format_value(quality.get("decision") or frontend_summary.get("canonical_status")),
+            help=_format_value(frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")),
+        )
+    with top_cols[3]:
+        st.metric(
+            "PR AUC",
+            "Unavailable",
             help="PR AUC is unavailable in governed evidence and is not fabricated.",
         )
 
-    st.markdown("### Metric Cards")
-    cards = metric_cards.get("cards", [])
-    if cards:
-        for start_idx in range(0, len(cards), 3):
-            row_cards = cards[start_idx : start_idx + 3]
-            cols = st.columns(len(row_cards))
-            for col, card in zip(cols, row_cards):
-                with col:
-                    st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
-                    detail = card.get("detail")
-                    if detail:
-                        st.caption(str(detail))
-    else:
-        st.info("No Track B metric cards available.")
-
     tabs = st.tabs(["Summary", "Charts", "Evidence"])
     with tabs[0]:
-        st.caption("Autoencoder summary, threshold, and quality decision")
+        st.caption("Summary cards and the key gallery snapshot.")
+        summary_cols = st.columns(4)
+        with summary_cols[0]:
+            st.metric("Canonical status", _format_value(frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")))
+        with summary_cols[1]:
+            st.metric("Production ready", _format_value(quality.get("production_ready")))
+        with summary_cols[2]:
+            st.metric("Deployment candidate", _format_value(quality.get("deployment_candidate")))
+        with summary_cols[3]:
+            st.metric("Next step", _format_value(quality.get("next_recommended_step")))
+
+        gallery_cols = st.columns(2)
+        with gallery_cols[0]:
+            st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
+            st.caption(
+                "The gallery remains summary-only here; image rendering can be added later without changing the governed data contract."
+            )
+        with gallery_cols[1]:
+            count_rows = [
+                {"error_type": label, "count": count}
+                for label, count in (
+                    ("true_positive", gallery.get("counts_by_error_type", {}).get("true_positive")),
+                    ("true_negative", gallery.get("counts_by_error_type", {}).get("true_negative")),
+                    ("false_positive", gallery.get("counts_by_error_type", {}).get("false_positive")),
+                    ("false_negative", gallery.get("counts_by_error_type", {}).get("false_negative")),
+                )
+                if count is not None
+            ]
+            _render_markdown_table(
+                count_rows,
+                [
+                    ("Error type", "error_type"),
+                    ("Count", "count"),
+                ],
+            )
+
+        with st.expander("Metric cards", expanded=False):
+            cards = metric_cards.get("cards", [])
+            if cards:
+                for start_idx in range(0, len(cards), 3):
+                    row_cards = cards[start_idx : start_idx + 3]
+                    cols = st.columns(len(row_cards))
+                    for col, card in zip(cols, row_cards):
+                        with col:
+                            st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
+                            detail = card.get("detail")
+                            if detail:
+                                st.caption(str(detail))
+            else:
+                st.info("No Track B metric cards available.")
+
+        st.markdown("### Quality decision")
         _render_key_value_grid(
             [
-                ("Model", frontend_summary.get("model_type") or metric_cards.get("model_type")),
-                ("Version", frontend_summary.get("model_version") or metric_cards.get("model_version")),
+                ("Model", frontend_summary.get("model_type")),
+                ("Version", frontend_summary.get("model_version")),
                 ("Threshold", frontend_summary.get("key_metrics", {}).get("threshold") or metric_cards.get("threshold")),
                 ("Canonical status", frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")),
-                ("Production ready", quality.get("production_ready")),
-                ("Deployment candidate", quality.get("deployment_candidate")),
+                ("PR AUC", "Unavailable"),
             ]
         )
     with tabs[1]:
@@ -831,39 +871,127 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             st.caption("Reconstruction loss")
             reconstruction_rows = reconstruction.get("chart_rows", [])
             if reconstruction_rows:
-                st.line_chart(
-                    {
-                        "Reconstruction loss": [float(row.get("reconstruction_loss", 0) or 0) for row in reconstruction_rows]
-                    }
+                epochs = [float(row.get("epoch", idx + 1) or idx + 1) for idx, row in enumerate(reconstruction_rows)]
+                losses = [float(row.get("reconstruction_loss", 0) or 0) for row in reconstruction_rows]
+                st.plotly_chart(
+                    _build_line_figure(
+                        "Track B reconstruction loss",
+                        epochs,
+                        {"Reconstruction loss": losses},
+                        {"Reconstruction loss": "#1f77b4"},
+                        "Loss",
+                    ),
+                    use_container_width=True,
                 )
-                st.caption(
-                    "Epochs: " + ", ".join(_format_value(row.get("epoch")) for row in reconstruction_rows)
-                )
+                st.caption("Epochs: " + ", ".join(_format_value(row.get("epoch")) for row in reconstruction_rows))
             else:
                 st.info("No reconstruction loss data available for charting.")
+            with st.expander("Reconstruction table", expanded=False):
+                _render_markdown_table(
+                    reconstruction_rows,
+                    [
+                        ("Epoch", "epoch"),
+                        ("Reconstruction loss", "reconstruction_loss"),
+                    ],
+                )
+        with chart_cols[1]:
+            st.caption("Anomaly score summary")
+            anomaly_rows = anomaly_summary.get("segments", [])
+            if anomaly_rows:
+                labels = [str(row.get("label", f"segment_{idx}")) for idx, row in enumerate(anomaly_rows)]
+                values = [float(row.get("count", 0) or 0) for row in anomaly_rows]
+                palette = []
+                for label in labels:
+                    lowered = label.lower()
+                    if "anomaly" in lowered or "high" in lowered:
+                        palette.append("#d62728")
+                    elif "normal" in lowered or "low" in lowered:
+                        palette.append("#2ca02c")
+                    else:
+                        palette.append("#1f77b4")
+                st.plotly_chart(
+                    _build_donut_figure(
+                        "Track B anomaly score distribution",
+                        labels,
+                        values,
+                        palette,
+                    ),
+                    use_container_width=True,
+                )
+            else:
+                st.info("No anomaly score data available for charting.")
+
+            st.caption("Threshold behavior")
+            threshold_rows = threshold_behavior.get("rows", [])
+            if threshold_rows:
+                thresholds = [float(row.get("threshold", 0) or 0) for row in threshold_rows]
+                series_map = {
+                    "Precision": [float(row.get("precision", 0) or 0) for row in threshold_rows],
+                    "Recall": [float(row.get("recall", 0) or 0) for row in threshold_rows],
+                    "F1": [float(row.get("f1", 0) or 0) for row in threshold_rows],
+                }
+                st.plotly_chart(
+                    _build_line_figure(
+                        "Track B threshold behavior",
+                        thresholds,
+                        series_map,
+                        {"Precision": "#1f77b4", "Recall": "#ff9800", "F1": "#2ca02c"},
+                        "Score",
+                    ),
+                    use_container_width=True,
+                )
+                st.caption("Thresholds: " + ", ".join(_format_value(row.get("threshold")) for row in threshold_rows))
+            else:
+                st.info("No threshold behavior data available for charting.")
+            with st.expander("Threshold table", expanded=False):
+                _render_markdown_table(
+                    threshold_rows,
+                    [
+                        ("Threshold", "threshold"),
+                        ("Precision", "precision"),
+                        ("Recall", "recall"),
+                        ("F1", "f1"),
+                        ("False Positives", "false_positive"),
+                        ("False Negatives", "false_negative"),
+                    ],
+                )
+    with tabs[2]:
+        st.caption("Detailed evidence and raw tables are kept inside expanders.")
+        st.caption("The anomaly score details are kept behind an expander.")
+        st.caption("PR AUC is unavailable in governed evidence and not fabricated.")
+        with st.expander("Metric cards", expanded=False):
+            cards = metric_cards.get("cards", [])
+            if cards:
+                for start_idx in range(0, len(cards), 3):
+                    row_cards = cards[start_idx : start_idx + 3]
+                    cols = st.columns(len(row_cards))
+                    for col, card in zip(cols, row_cards):
+                        with col:
+                            st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
+                            detail = card.get("detail")
+                            if detail:
+                                st.caption(str(detail))
+            else:
+                st.info("No Track B metric cards available.")
+        with st.expander("Anomaly score summary", expanded=False):
+            anomaly_rows = anomaly_summary.get("segments", [])
             _render_markdown_table(
-                reconstruction_rows,
+                anomaly_rows,
+                [
+                    ("Label", "label"),
+                    ("Count", "count"),
+                    ("Share", "percentage"),
+                ],
+            )
+        with st.expander("Reconstruction table", expanded=False):
+            _render_markdown_table(
+                reconstruction.get("chart_rows", []),
                 [
                     ("Epoch", "epoch"),
                     ("Reconstruction loss", "reconstruction_loss"),
                 ],
             )
-        with chart_cols[1]:
-            st.caption("Threshold behavior")
-            threshold_rows = threshold_behavior.get("rows", [])
-            if threshold_rows:
-                st.bar_chart(
-                    {
-                        "Precision": [float(row.get("precision", 0) or 0) for row in threshold_rows],
-                        "Recall": [float(row.get("recall", 0) or 0) for row in threshold_rows],
-                        "F1": [float(row.get("f1", 0) or 0) for row in threshold_rows],
-                    }
-                )
-                st.caption(
-                    "Thresholds: " + ", ".join(_format_value(row.get("threshold")) for row in threshold_rows)
-                )
-            else:
-                st.info("No threshold behavior data available for charting.")
+        with st.expander("Threshold table", expanded=False):
             _render_markdown_table(
                 threshold_rows,
                 [
@@ -875,116 +1003,43 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                     ("False Negatives", "false_negative"),
                 ],
             )
-    with tabs[2]:
-        st.caption("Evidence tables")
-        st.dataframe(frontend_summary.get("key_metrics", {}), use_container_width=True)
-
-    st.markdown("### Anomaly Summary And Decision")
-    summary_cols = st.columns([1.3, 1])
-    with summary_cols[0]:
-        st.caption("Frontend anomaly summary")
-        _render_key_value_grid(
-            [
-                ("Model", frontend_summary.get("model_type")),
-                ("Version", frontend_summary.get("model_version")),
-                ("Canonical status", frontend_summary.get("canonical_status")),
-                ("ROC AUC", frontend_summary.get("key_metrics", {}).get("roc_auc")),
-                ("Threshold", frontend_summary.get("key_metrics", {}).get("threshold")),
-                ("Next step", frontend_summary.get("next_step")),
+        with st.expander("Sample anomaly gallery details", expanded=False):
+            count_rows = [
+                {"error_type": label, "count": count}
+                for label, count in (
+                    ("true_positive", gallery.get("counts_by_error_type", {}).get("true_positive")),
+                    ("true_negative", gallery.get("counts_by_error_type", {}).get("true_negative")),
+                    ("false_positive", gallery.get("counts_by_error_type", {}).get("false_positive")),
+                    ("false_negative", gallery.get("counts_by_error_type", {}).get("false_negative")),
+                )
+                if count is not None
             ]
-        )
-        st.caption("Anomaly score summary")
-        _render_key_value_grid(
-            [
-                ("Score definition", anomaly_summary.get("score_definition")),
-                ("Threshold strategy", anomaly_summary.get("threshold_strategy")),
-                ("Threshold", anomaly_summary.get("threshold")),
-                ("Normal/anomaly separation", anomaly_summary.get("normal_vs_anomaly_score_separation")),
-            ]
-        )
-    with summary_cols[1]:
-        st.caption("Quality decision summary")
-        _render_key_value_grid(
-            [
-                ("Decision", quality.get("decision")),
-                ("Canonical status", quality.get("canonical_status")),
-                ("Model status", quality.get("model_quality_status")),
-                ("Production ready", quality.get("production_ready")),
-                ("Deployment candidate", quality.get("deployment_candidate")),
-                ("Threshold", quality.get("threshold")),
-                ("Next step", quality.get("next_recommended_step")),
-            ]
-        )
-
-    st.markdown("### Reconstruction And Threshold Behavior")
-    analysis_cols = st.columns(2)
-    with analysis_cols[0]:
-        st.caption("Reconstruction loss summary")
-        _render_markdown_table(
-            reconstruction.get("chart_rows", []),
-            [
-                ("Epoch", "epoch"),
-                ("Reconstruction loss", "reconstruction_loss"),
-            ],
-        )
-    with analysis_cols[1]:
-        st.caption("Threshold behavior")
-        _render_markdown_table(
-            threshold_behavior.get("rows", []),
-            [
-                ("Threshold", "threshold"),
-                ("Precision", "precision"),
-                ("Recall", "recall"),
-                ("F1", "f1"),
-                ("False Positives", "false_positive"),
-                ("False Negatives", "false_negative"),
-            ],
-        )
-
-    st.markdown("### Sample Gallery Summary")
-    gallery_cols = st.columns(2)
-    with gallery_cols[0]:
-        st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
-        st.caption(
-            "This page shows summary metadata only; image rendering can be added later without changing the data contract."
-        )
-    with gallery_cols[1]:
-        count_rows = [
-            {"error_type": label, "count": count}
-            for label, count in (
-                ("true_positive", gallery.get("counts_by_error_type", {}).get("true_positive")),
-                ("true_negative", gallery.get("counts_by_error_type", {}).get("true_negative")),
-                ("false_positive", gallery.get("counts_by_error_type", {}).get("false_positive")),
-                ("false_negative", gallery.get("counts_by_error_type", {}).get("false_negative")),
+            _render_markdown_table(
+                count_rows,
+                [
+                    ("Error type", "error_type"),
+                    ("Count", "count"),
+                ],
             )
-            if count is not None
-        ]
-        _render_markdown_table(
-            count_rows,
-            [
-                ("Error type", "error_type"),
-                ("Count", "count"),
-            ],
-        )
+        with st.expander("Artifact inventory", expanded=False):
+            _render_key_value_grid(
+                [
+                    ("Bundle files", inventory.get("bundle_artifact_count")),
+                    ("Source artifacts", inventory.get("source_artifact_count")),
+                    ("Threshold", frontend_summary.get("key_metrics", {}).get("threshold") or metric_cards.get("threshold")),
+                ]
+            )
+        with st.expander("Evidence file list", expanded=False):
+            for filename in TRACK_B_EVIDENCE_FILENAMES:
+                st.code(filename, language="text")
+        with st.expander("Evidence paths", expanded=False):
+            st.code("artifacts/frontend/track_b/", language="text")
+            st.write("Metric cards, anomaly summary, reconstruction loss, threshold behavior, quality summary, and inventory remain in the bundle.")
 
-    st.markdown("### Evidence Inventory")
-    inventory_cols = st.columns(3)
-    with inventory_cols[0]:
-        st.metric("Bundle files", _format_value(inventory.get("bundle_artifact_count")))
-    with inventory_cols[1]:
-        st.metric("Source artifacts", _format_value(inventory.get("source_artifact_count")))
-    with inventory_cols[2]:
-        st.metric("Selected threshold", _format_value(frontend_summary.get("key_metrics", {}).get("threshold") or metric_cards.get("threshold")))
-
-    st.caption("PR AUC is unavailable in governed evidence and not fabricated.")
-
-    with st.expander("Track B evidence file list", expanded=False):
-        for filename in TRACK_B_EVIDENCE_FILENAMES:
-            st.code(filename, language="text")
-
-    with st.expander("Track B evidence paths", expanded=False):
-        st.code("artifacts/frontend/track_b/", language="text")
-        st.write("Metric cards, anomaly summary, reconstruction loss, threshold behavior, quality summary, and inventory remain in the bundle.")
+    st.markdown("### Safe interpretation")
+    st.write(
+        "The Track B autoencoder remains governed evidence only, with PR AUC unavailable in the current evidence set."
+    )
 
 
 def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:

@@ -4,10 +4,10 @@ This directory contains the initial Streamlit frontend scaffold for the Industri
 
 ## Run Locally
 
-Install Streamlit if needed:
+Install the project requirements first:
 
 ```bash
-python -m pip install streamlit
+python -m pip install -r requirements.txt
 ```
 
 Then start the scaffold:

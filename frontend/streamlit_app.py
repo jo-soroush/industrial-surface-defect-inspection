@@ -8,6 +8,7 @@ implement live prediction, API integration, Docker, or production features.
 from __future__ import annotations
 
 import mimetypes
+import html
 from pathlib import Path
 from typing import Any
 
@@ -118,29 +119,177 @@ def _render_data_load_health(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 
 def _apply_light_visual_system() -> None:
-    """Apply a soft, light visual system for the premium dashboard."""
+    """Apply a soft dark navy / petroleum blue visual system for the premium dashboard."""
     st.markdown(
         """
         <style>
+        :root {
+            --premium-blue: #38bdf8;
+            --premium-teal: #14b8a6;
+            --premium-green: #22c55e;
+            --premium-orange: #fb923c;
+            --premium-red: #fb7185;
+            --premium-violet: #a78bfa;
+            --premium-gray: #94a3b8;
+        }
         .stApp {
-            background: linear-gradient(180deg, #f8fbff 0%, #edf3fb 100%);
-            color: #1f2937;
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 24%),
+                radial-gradient(circle at top right, rgba(167, 139, 250, 0.10), transparent 20%),
+                radial-gradient(circle at center, rgba(20, 184, 166, 0.08), transparent 18%),
+                linear-gradient(180deg, #08111d 0%, #0b1728 42%, #0f1f33 100%);
+            color: #e2e8f0;
+        }
+        main .block-container {
+            max-width: 1240px;
+            padding-top: 1.3rem;
+            padding-bottom: 2.2rem;
+        }
+        header[data-testid="stHeader"] {
+            background: linear-gradient(180deg, rgba(6, 12, 22, 0.92), rgba(8, 17, 29, 0.72));
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+        }
+        div[data-testid="stToolbar"] {
+            background: rgba(8, 17, 29, 0.7);
         }
         section[data-testid="stSidebar"] {
-            background: #f4f7fb;
-            border-right: 1px solid rgba(31, 41, 55, 0.08);
+            background:
+                linear-gradient(180deg, rgba(9, 17, 30, 0.98) 0%, rgba(11, 23, 40, 0.98) 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.14);
+            color: #e2e8f0;
+        }
+        section[data-testid="stSidebar"] [data-testid="stRadio"] {
+            margin-top: 0.25rem;
+        }
+        section[data-testid="stSidebar"] [data-testid="stRadio"] label {
+            display: block;
+            margin-bottom: 0.35rem;
+            padding: 0.48rem 0.72rem;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            color: #e2e8f0 !important;
+        }
+        section[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
+            background: rgba(30, 41, 59, 0.92);
+            border-color: rgba(56, 189, 248, 0.28);
+        }
+        section[data-testid="stSidebar"] [data-testid="stRadio"] [aria-checked="true"] {
+            background: rgba(16, 37, 58, 0.98);
+            border-color: rgba(56, 189, 248, 0.36);
+            box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.18);
+        }
+        section[data-testid="stSidebar"] * {
+            color: #e2e8f0;
+        }
+        section[data-testid="stSidebar"] [data-testid="stRadio"] label {
+            color: #e2e8f0 !important;
+        }
+        section[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
+            color: #ffffff !important;
         }
         div[data-testid="stMetric"] {
-            background: rgba(255, 255, 255, 0.92);
-            border: 1px solid rgba(148, 163, 184, 0.22);
-            border-radius: 16px;
-            padding: 0.7rem 0.9rem;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+            background:
+                linear-gradient(180deg, rgba(12, 20, 33, 0.96) 0%, rgba(18, 28, 46, 0.94) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-top: 5px solid var(--premium-blue);
+            border-radius: 20px;
+            padding: 0.85rem 1rem;
+            box-shadow: 0 18px 36px rgba(2, 6, 23, 0.3);
+        }
+        div[data-testid="stMetric"] label,
+        div[data-testid="stMetric"] p,
+        div[data-testid="stMetric"] span {
+            color: #cbd5e1 !important;
+        }
+        div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+            color: #f8fafc !important;
+            font-weight: 700;
         }
         div[data-testid="stExpander"] {
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 18px;
+            background: rgba(8, 15, 28, 0.72);
+            box-shadow: 0 12px 26px rgba(2, 6, 23, 0.2);
+        }
+        div[data-testid="stPlotlyChart"] {
+            background: rgba(9, 16, 29, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 18px;
+            padding: 0.55rem 0.6rem;
+            box-shadow: 0 16px 32px rgba(2, 6, 23, 0.24);
+        }
+        div[data-testid="stRadio"] label {
+            color: #e2e8f0 !important;
+            font-weight: 600;
+        }
+        .premium-card {
+            border-radius: 22px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-top: 6px solid var(--premium-blue);
+            background:
+                linear-gradient(180deg, rgba(11, 20, 35, 0.99), rgba(17, 29, 48, 0.96));
+            box-shadow: 0 22px 46px rgba(2, 6, 23, 0.34);
+            padding: 1rem 1rem 0.95rem;
+            margin-bottom: 0.9rem;
+        }
+        .premium-card--blue { border-top-color: var(--premium-blue); }
+        .premium-card--teal { border-top-color: var(--premium-teal); }
+        .premium-card--green { border-top-color: var(--premium-green); }
+        .premium-card--orange { border-top-color: var(--premium-orange); }
+        .premium-card--red { border-top-color: var(--premium-red); }
+        .premium-card--violet { border-top-color: var(--premium-violet); }
+        .premium-card--gray { border-top-color: var(--premium-gray); }
+        .premium-card__eyebrow {
+            color: #93c5fd;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+        .premium-card__title {
+            color: #f8fafc;
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 0.35rem;
+        }
+        .premium-card__body {
+            color: #eef4fb;
+            font-size: 0.96rem;
+            line-height: 1.55;
+        }
+        .premium-card__meta {
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            margin-top: 0.55rem;
+        }
+        .premium-pill {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.14);
+            color: #ccefff;
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            border-radius: 999px;
+            padding: 0.2rem 0.55rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-right: 0.35rem;
+        }
+        div[data-testid="stAlert"] {
+            background: rgba(8, 15, 28, 0.9);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 18px;
+        }
+        div[data-testid="stAlert"] p,
+        div[data-testid="stAlert"] span,
+        div[data-testid="stAlert"] div {
+            color: #e2e8f0 !important;
+        }
+        .stCaption, .stMarkdown, .stMarkdown p, .stMarkdown li {
+            color: #dbe4f0;
         }
         </style>
         """,
@@ -158,6 +307,89 @@ def _render_sidebar_health(bundles: dict[str, dict[str, Any]] | None) -> None:
         for key in ("track_a", "track_b", "detection"):
             bundle = bundles[key]
             st.metric(f"{key.replace('_', ' ').title()}", f"{len(bundle)} files")
+    st.sidebar.caption("Current page is highlighted in the navigation above.")
+
+
+def _render_hero_card(title: str, subtitle: str, safety: str, accent: str = "blue") -> None:
+    """Render a premium hero card for a page."""
+    st.markdown(
+        f"""
+        <div class="premium-card premium-card--{accent}">
+            <div class="premium-card__eyebrow">Premium dashboard</div>
+            <div class="premium-card__title">{html.escape(title)}</div>
+            <div class="premium-card__body">{html.escape(subtitle)}</div>
+            <div class="premium-card__meta">{html.escape(safety)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_agent_placeholder(
+    action_label: str,
+    summary: str,
+    note: str,
+    *,
+    key: str,
+    accent: str = "violet",
+) -> None:
+    """Render a visible but non-functional agent placeholder."""
+    st.markdown(
+        f"""
+        <div class="premium-card premium-card--{accent}">
+            <div class="premium-card__eyebrow">Agent layer planned</div>
+            <div class="premium-card__title">{html.escape(action_label)}</div>
+            <div class="premium-card__body">{html.escape(summary)}</div>
+            <div class="premium-card__meta">{html.escape(note)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.button(action_label, disabled=True, key=key)
+
+
+def _render_agent_callout(action_label: str, summary: str, note: str, *, accent: str = "violet") -> None:
+    """Render a compact premium agent callout without an action button."""
+    st.markdown(
+        f"""
+        <div class="premium-card premium-card--{accent}" style="margin-top:0.35rem;">
+            <div class="premium-card__eyebrow">Future AI explanation</div>
+            <div class="premium-card__title">{html.escape(action_label)}</div>
+            <div class="premium-card__body">{html.escape(summary)}</div>
+            <div class="premium-card__meta">{html.escape(note)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_premium_info_card(title: str, summary: str, note: str = "", accent: str = "blue") -> None:
+    """Render a compact premium information card."""
+    st.markdown(
+        f"""
+        <div class="premium-card premium-card--{accent}">
+            <div class="premium-card__eyebrow">Dashboard note</div>
+            <div class="premium-card__title">{html.escape(title)}</div>
+            <div class="premium-card__body">{html.escape(summary)}</div>
+            <div class="premium-card__meta">{html.escape(note)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_chart_placeholder(title: str, message: str, accent: str = "gray") -> None:
+    """Render a visible placeholder when chart data is unavailable."""
+    st.markdown(
+        f"""
+        <div class="premium-card premium-card--{accent}">
+            <div class="premium-card__eyebrow">Visual unavailable</div>
+            <div class="premium-card__title">{html.escape(title)}</div>
+            <div class="premium-card__body">{html.escape(message)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def _build_donut_figure(
@@ -182,12 +414,15 @@ def _build_donut_figure(
         ]
     )
     figure.update_layout(
-        title=title,
+        title=dict(text=title, font=dict(color="#f8fafc", size=18)),
         height=320,
         margin=dict(l=10, r=10, t=50, b=10),
         showlegend=True,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#e2e8f0", family="Inter, Segoe UI, Arial"),
+        legend=dict(font=dict(color="#e2e8f0")),
+        paper_bgcolor="rgba(8, 15, 28, 0.02)",
+        plot_bgcolor="rgba(8, 15, 28, 0.18)",
+        template="plotly_dark",
     )
     return figure
 
@@ -211,14 +446,27 @@ def _build_grouped_bar_figure(
             )
         )
     figure.update_layout(
-        title=title,
+        title=dict(text=title, font=dict(color="#f8fafc", size=18)),
         height=320,
         barmode="group",
         margin=dict(l=10, r=10, t=50, b=10),
         legend_title_text="Metric",
         yaxis_title=yaxis_title,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#e2e8f0", family="Inter, Segoe UI, Arial"),
+        legend=dict(font=dict(color="#e2e8f0")),
+        paper_bgcolor="rgba(8, 15, 28, 0.02)",
+        plot_bgcolor="rgba(8, 15, 28, 0.18)",
+        template="plotly_dark",
+    )
+    figure.update_xaxes(
+        gridcolor="rgba(148, 163, 184, 0.14)",
+        tickfont=dict(color="#dbe4f0"),
+        zerolinecolor="rgba(148, 163, 184, 0.12)",
+    )
+    figure.update_yaxes(
+        gridcolor="rgba(148, 163, 184, 0.14)",
+        tickfont=dict(color="#dbe4f0"),
+        zerolinecolor="rgba(148, 163, 184, 0.12)",
     )
     return figure
 
@@ -244,14 +492,27 @@ def _build_line_figure(
             )
         )
     figure.update_layout(
-        title=title,
+        title=dict(text=title, font=dict(color="#f8fafc", size=18)),
         height=320,
         margin=dict(l=10, r=10, t=50, b=10),
         legend_title_text="Metric",
         yaxis_title=yaxis_title,
         xaxis_title="Threshold",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#e2e8f0", family="Inter, Segoe UI, Arial"),
+        legend=dict(font=dict(color="#e2e8f0")),
+        paper_bgcolor="rgba(8, 15, 28, 0.02)",
+        plot_bgcolor="rgba(8, 15, 28, 0.18)",
+        template="plotly_dark",
+    )
+    figure.update_xaxes(
+        gridcolor="rgba(148, 163, 184, 0.14)",
+        tickfont=dict(color="#dbe4f0"),
+        zerolinecolor="rgba(148, 163, 184, 0.12)",
+    )
+    figure.update_yaxes(
+        gridcolor="rgba(148, 163, 184, 0.14)",
+        tickfont=dict(color="#dbe4f0"),
+        zerolinecolor="rgba(148, 163, 184, 0.12)",
     )
     return figure
 
@@ -285,8 +546,11 @@ def _render_overview_status_chart() -> None:
         height=300,
         margin=dict(l=10, r=10, t=10, b=10),
         showlegend=True,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#e2e8f0", family="Inter, Segoe UI, Arial"),
+        legend=dict(font=dict(color="#e2e8f0")),
+        paper_bgcolor="rgba(8, 15, 28, 0.02)",
+        plot_bgcolor="rgba(8, 15, 28, 0.18)",
+        template="plotly_dark",
     )
     st.plotly_chart(figure, width="stretch")
 
@@ -368,13 +632,17 @@ def _render_series_chart(
 
 def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the overview page content."""
-    st.markdown(f"## {PROJECT_TITLE}")
-    st.markdown(
-        "A governed evidence dashboard for comparing Track A, Track B, and YOLO summaries "
-        "while keeping the local Track A upload prototype clearly separated."
+    _render_hero_card(
+        PROJECT_TITLE,
+        "A governed evidence dashboard for comparing Track A, Track B, and YOLO summaries while keeping the local Track A upload prototype clearly separated.",
+        "Governed evidence only · not production-ready · not deployment-safe",
+        accent="blue",
     )
-    st.info(
-        "Safe status: governed evidence only. not production-ready. not deployment-safe."
+    _render_agent_callout(
+        "Explain this page",
+        "Use this placeholder to ask for a plain-language explanation of the dashboard page.",
+        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        accent="violet",
     )
 
     if bundles is None:
@@ -384,34 +652,24 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     track_a = bundles["track_a"]
     track_b = bundles["track_b"]
     detection = bundles["detection"]
+    summary_cols = st.columns(4)
+    with summary_cols[0]:
+        st.metric("Track A Classification", "PASS", help="Governed evidence and local prototype available")
+    with summary_cols[1]:
+        st.metric("Track B / Autoencoder", "PASS", help="Governed evidence available")
+    with summary_cols[2]:
+        st.metric("YOLO Detection", "COMPLETE", help="Governed evidence layer complete")
+    with summary_cols[3]:
+        st.metric("Upload / Predict", "LOCAL PROTOTYPE", help="Track A only")
 
-    track_a_reco = track_a.get("frontend_model_recommendation.json", {})
-    track_b_summary = track_b.get("frontend_anomaly_summary.json", {})
-    detection_overview = detection.get("detection_overview.json", {})
-
-    hero_cols = st.columns([1.25, 1])
-    with hero_cols[0]:
-        st.markdown("### Current status")
-        st.caption(
-            "Green means evidence complete, blue means a local prototype exists, and gray/orange marks work that is not yet a production claim."
-        )
-        summary_cols = st.columns(4)
-        with summary_cols[0]:
-            st.metric("Track A Classification", "PASS", help="Governed evidence and local prototype available")
-        with summary_cols[1]:
-            st.metric("Track B / Autoencoder", "PASS", help="Governed evidence available")
-        with summary_cols[2]:
-            st.metric("YOLO Detection", "COMPLETE", help="Governed evidence layer complete")
-        with summary_cols[3]:
-            st.metric("Upload / Predict", "LOCAL PROTOTYPE", help="Track A only")
-
+    overview_cols = st.columns([1.15, 0.95])
+    with overview_cols[0]:
         st.markdown("### What this dashboard can do")
         st.write(
             "- View governed evidence from Track A, Track B, and YOLO\n"
-            "- Compare the high-level summaries for each track\n"
+            "- Compare the current summaries for each track\n"
             "- Run the local Track A upload/predict prototype"
         )
-
         st.markdown("### What it cannot claim yet")
         st.write(
             "- not production-ready\n"
@@ -419,61 +677,13 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
             "- YOLO/anomaly upload prediction not implemented yet"
         )
 
-    with hero_cols[1]:
+    with overview_cols[1]:
         st.markdown("### Visual status")
         _render_overview_status_chart()
 
-    st.markdown("### Data contract health")
-    health_cols = st.columns(3)
-    with health_cols[0]:
-        st.metric("Track A bundle", f"{len(track_a)} files")
-    with health_cols[1]:
-        st.metric("Track B bundle", f"{len(track_b)} files")
-    with health_cols[2]:
-        st.metric("Detection bundle", f"{len(detection)} files")
-
-    st.markdown("### High-level evidence summary")
-    summary_cols = st.columns(3)
-    with summary_cols[0]:
-        st.metric(
-            "Track A selected model",
-            _safe_text(track_a_reco.get("selected_model_name")),
-            help=_safe_text(track_a_reco.get("selected_model_version")),
-        )
-        st.caption(
-            f"Run: {_safe_text(track_a_reco.get('selected_run_id'))} | "
-            f"Threshold: {_safe_text(track_a_reco.get('selected_threshold'))}"
-        )
-    with summary_cols[1]:
-        st.metric(
-            "Track B model",
-            _safe_text(track_b_summary.get("model_type")),
-            help=_safe_text(track_b_summary.get("model_version")),
-        )
-        key_metrics = track_b_summary.get("key_metrics", {})
-        st.caption(
-            " | ".join(
-                [
-                    f"Canonical status: {_safe_text(track_b_summary.get('canonical_status'))}",
-                    f"ROC AUC: {_safe_text(key_metrics.get('roc_auc'))}",
-                    f"Threshold: {_safe_text(key_metrics.get('threshold'))}",
-                ]
-            )
-        )
-    with summary_cols[2]:
-        st.metric(
-            "Detection images",
-            _safe_text(detection_overview.get("image_count")),
-            help=_safe_text(detection_overview.get("safe_summary")),
-        )
-        st.caption(
-            f"Total bboxes: {_safe_text(detection_overview.get('total_bbox_count'))} | "
-            f"Gallery samples: {_safe_text(detection_overview.get('gallery_sample_count'))}"
-        )
-
     with st.expander("Technical evidence", expanded=False):
-        tech_tabs = st.tabs(["Data Contracts", "Evidence Paths", "Run Notes"])
-        with tech_tabs[0]:
+        evidence_tabs = st.tabs(["Detailed metrics", "Technical evidence", "Artifact and run details"])
+        with evidence_tabs[0]:
             _render_key_value_grid(
                 [
                     ("Track A files", len(track_a)),
@@ -481,11 +691,15 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
                     ("Detection files", len(detection)),
                 ]
             )
-        with tech_tabs[1]:
+        with evidence_tabs[1]:
+            st.caption("Evidence paths")
             st.code("artifacts/frontend/track_a/", language="text")
             st.code("artifacts/frontend/track_b/", language="text")
             st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
-        with tech_tabs[2]:
+        with evidence_tabs[2]:
+            track_a_reco = track_a.get("frontend_model_recommendation.json", {})
+            track_b_summary = track_b.get("frontend_anomaly_summary.json", {})
+            detection_overview = detection.get("detection_overview.json", {})
             _render_key_value_grid(
                 [
                     ("Track A run", track_a_reco.get("selected_run_id")),
@@ -498,9 +712,11 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the Track A classification page."""
-    st.markdown("## Track A Classification")
-    st.markdown(
-        "A governed binary classifier page for the Track A good-vs-defect task, presented as an evidence dashboard rather than a live deployment view."
+    _render_hero_card(
+        "Track A Classification",
+        "A governed binary classifier page for the Track A good-vs-defect task, presented as an evidence dashboard rather than a live deployment view.",
+        "Evidence/dashboard view only · not production-ready · not deployment-safe",
+        accent="teal",
     )
     st.warning(
         "Evidence/dashboard view only. not production-ready. not deployment-safe. "
@@ -548,128 +764,67 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             help=_format_value(quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
         )
 
-    tabs = st.tabs(["Summary", "Charts", "Evidence"])
-    with tabs[0]:
-        st.caption("Summary cards and a concise sample gallery view.")
-        quality_cols = st.columns(4)
-        with quality_cols[0]:
-            st.metric("Decision", _format_value(quality.get("decision")))
-        with quality_cols[1]:
-            st.metric("Production ready", _format_value(quality.get("production_ready")))
-        with quality_cols[2]:
-            st.metric("Deployment candidate", _format_value(quality.get("deployment_candidate")))
-        with quality_cols[3]:
-            st.metric(
-                "Selected threshold",
-                _format_value(recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
+    st.markdown("### Visual evidence")
+    visual_cols = st.columns(3)
+    with visual_cols[0]:
+        st.caption("Error distribution")
+        error_rows = error_distribution.get("segments", [])
+        if error_rows:
+            labels = [str(row.get("label", f"segment_{idx}")) for idx, row in enumerate(error_rows)]
+            values = [float(row.get("count", 0) or 0) for row in error_rows]
+            palette = []
+            for label in labels:
+                lowered = label.lower()
+                if "false_negative" in lowered or "fn" in lowered:
+                    palette.append("#dc2626")
+                elif "false_positive" in lowered or "fp" in lowered:
+                    palette.append("#d97706")
+                elif "true_positive" in lowered or "tp" in lowered:
+                    palette.append("#16a34a")
+                else:
+                    palette.append("#2563eb")
+            st.plotly_chart(
+                _build_donut_figure(
+                    "Track A error distribution",
+                    labels,
+                    values,
+                    palette,
+                ),
+                width="stretch",
             )
-
-        gallery_cols = st.columns(2)
-        with gallery_cols[0]:
-            st.metric("Sample gallery images", _format_value(gallery.get("gallery_sample_count")))
-            st.caption(
-                "The gallery remains summary-only here; images can be surfaced later without changing the governed data contract."
+        else:
+            _render_chart_placeholder(
+                "Track A error distribution",
+                "No error distribution data is available in the governed bundle, so this visual is hidden.",
+                accent="gray",
             )
-        with gallery_cols[1]:
-            gallery_counts = gallery.get("counts_by_error_type", {})
-            _render_key_value_grid(
-                [
-                    ("True positive", gallery_counts.get("true_positive")),
-                    ("True negative", gallery_counts.get("true_negative")),
-                    ("False positive", gallery_counts.get("false_positive")),
-                    ("False negative", gallery_counts.get("false_negative")),
-                ]
+    with visual_cols[1]:
+        st.caption("Per-class performance")
+        class_metric_rows = per_class.get("classes", [])
+        if class_metric_rows:
+            categories = [str(row.get("label", f"class_{idx}")) for idx, row in enumerate(class_metric_rows)]
+            series_map = {
+                "Precision": [float(row.get("precision", 0) or 0) for row in class_metric_rows],
+                "Recall": [float(row.get("recall", 0) or 0) for row in class_metric_rows],
+                "F1": [float(row.get("f1", 0) or 0) for row in class_metric_rows],
+            }
+            st.plotly_chart(
+                _build_grouped_bar_figure(
+                    "Track A per-class performance",
+                    categories,
+                    series_map,
+                    {"Precision": "#2563eb", "Recall": "#d97706", "F1": "#16a34a"},
+                    "Score",
+                ),
+                width="stretch",
             )
-
-        with st.expander("Metric cards", expanded=False):
-            cards = metric_cards.get("cards", [])
-            if cards:
-                for start_idx in range(0, len(cards), 3):
-                    row_cards = cards[start_idx : start_idx + 3]
-                    cols = st.columns(len(row_cards))
-                    for col, card in zip(cols, row_cards):
-                        with col:
-                            st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
-                            detail = card.get("detail")
-                            if detail:
-                                st.caption(str(detail))
-            else:
-                st.info("No Track A metric cards available.")
-
-        st.markdown("### Quality decision")
-        _render_key_value_grid(
-            [
-                ("Selected model", recommendation.get("selected_model_name") or metric_cards.get("selected_model_name")),
-                ("Version", recommendation.get("selected_model_version") or metric_cards.get("selected_model_version")),
-                ("Run ID", recommendation.get("selected_run_id")),
-                ("Threshold", recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
-                ("Quality target", quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
-            ]
-        )
-    with tabs[1]:
-        chart_cols = st.columns(2)
-        with chart_cols[0]:
-            st.caption("Error distribution")
-            error_rows = error_distribution.get("segments", [])
-            if error_rows:
-                labels = [str(row.get("label", f"segment_{idx}")) for idx, row in enumerate(error_rows)]
-                values = [float(row.get("count", 0) or 0) for row in error_rows]
-                palette = []
-                for label in labels:
-                    lowered = label.lower()
-                    if "false_negative" in lowered or "fn" in lowered:
-                        palette.append("#d62728")
-                    elif "false_positive" in lowered or "fp" in lowered:
-                        palette.append("#ff9800")
-                    elif "true_positive" in lowered or "tp" in lowered:
-                        palette.append("#2ca02c")
-                    else:
-                        palette.append("#1f77b4")
-                st.plotly_chart(
-                    _build_donut_figure(
-                        "Track A error distribution",
-                        labels,
-                        values,
-                        palette,
-                    ),
-                    width="stretch",
-                )
-            else:
-                st.info("No error distribution data available.")
-
-        with chart_cols[1]:
-            st.caption("Per-class performance")
-            class_metric_rows = per_class.get("classes", [])
-            if class_metric_rows:
-                categories = [str(row.get("label", f"class_{idx}")) for idx, row in enumerate(class_metric_rows)]
-                series_map = {
-                    "Precision": [float(row.get("precision", 0) or 0) for row in class_metric_rows],
-                    "Recall": [float(row.get("recall", 0) or 0) for row in class_metric_rows],
-                    "F1": [float(row.get("f1", 0) or 0) for row in class_metric_rows],
-                }
-                st.plotly_chart(
-                    _build_grouped_bar_figure(
-                        "Track A per-class performance",
-                        categories,
-                        series_map,
-                        {"Precision": "#1f77b4", "Recall": "#ff9800", "F1": "#2ca02c"},
-                        "Score",
-                    ),
-                    width="stretch",
-                )
-            else:
-                st.info("No per-class data available for charting.")
-            with st.expander("Per-class table", expanded=False):
-                _render_markdown_table(
-                    class_metric_rows,
-                    [
-                        ("Class", "label"),
-                        ("Precision", "precision"),
-                        ("Recall", "recall"),
-                        ("F1", "f1"),
-                    ],
-                )
-
+        else:
+            _render_chart_placeholder(
+                "Track A per-class performance",
+                "No per-class data is available in the governed bundle, so this visual is hidden.",
+                accent="gray",
+            )
+    with visual_cols[2]:
         st.caption("Threshold behavior")
         threshold_rows = threshold_curve.get("rows", [])
         if threshold_rows:
@@ -686,108 +841,154 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                     threshold_values,
                     series_map,
                     {
-                        "Precision": "#1f77b4",
-                        "Recall": "#ff9800",
-                        "Macro F1": "#2ca02c",
-                        "Accuracy": "#9467bd",
+                        "Precision": "#2563eb",
+                        "Recall": "#d97706",
+                        "Macro F1": "#16a34a",
+                        "Accuracy": "#7c3aed",
                     },
                     "Score",
                 ),
                 width="stretch",
             )
-            st.caption(
-                "Thresholds: "
-                + ", ".join(_format_value(row.get("threshold")) for row in threshold_rows)
-            )
         else:
-            st.info("No threshold sweep data available for charting.")
-    with tabs[2]:
-        st.caption("Detailed evidence and raw tables are kept inside expanders.")
-        st.caption("The model comparison details are kept behind an expander.")
-        with st.expander("Model comparison", expanded=False):
-            _render_markdown_table(
-                comparison.get("rows", []),
-                [
-                    ("Rank", "rank"),
-                    ("Selected", "selected"),
-                    ("Model", "model_name"),
-                    ("Version", "model_version"),
-                    ("Run ID", "run_id"),
-                    ("Macro F1", "macro_f1"),
-                    ("Accuracy", "accuracy"),
-                    ("Recall", "recall"),
-                    ("Threshold", "threshold_used"),
-                    ("Status", "short_status"),
-                ],
+            _render_chart_placeholder(
+                "Track A threshold behavior",
+                "No threshold sweep data is available in the governed bundle, so this visual is hidden.",
+                accent="gray",
             )
-        with st.expander("Confusion matrix", expanded=False):
-            matrix = confusion.get("matrix", [])
-            labels = confusion.get("labels", {})
-            matrix_rows = []
-            row_labels = labels.get("rows", [])
-            col_labels = labels.get("columns", [])
-            for idx, row in enumerate(matrix):
-                matrix_rows.append(
-                    {
-                        "actual": row_labels[idx] if idx < len(row_labels) else f"row_{idx}",
-                        **{
-                            (col_labels[col_idx] if col_idx < len(col_labels) else f"col_{col_idx}"): value
-                            for col_idx, value in enumerate(row)
-                        },
-                    }
-                )
-            _render_markdown_table(
-                matrix_rows,
-                [
-                    ("Actual", "actual"),
-                    (col_labels[0] if len(col_labels) > 0 else "Column 1", col_labels[0] if len(col_labels) > 0 else "col_0"),
-                    (col_labels[1] if len(col_labels) > 1 else "Column 2", col_labels[1] if len(col_labels) > 1 else "col_1"),
-                ],
+
+    _render_agent_callout(
+        "Explain these classification charts",
+        "Ask for a plain-language summary of the error distribution, per-class performance, and threshold behavior charts.",
+        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        accent="violet",
+    )
+
+    st.markdown("### Sample gallery")
+    gallery_cols = st.columns([0.7, 1.3])
+    with gallery_cols[0]:
+        st.metric("Sample gallery images", _format_value(gallery.get("gallery_sample_count")))
+        st.caption("Summary-only view; individual images stay inside the governed evidence bundle.")
+    with gallery_cols[1]:
+        gallery_counts = gallery.get("counts_by_error_type", {})
+        _render_key_value_grid(
+            [
+                ("True positive", gallery_counts.get("true_positive")),
+                ("True negative", gallery_counts.get("true_negative")),
+                ("False positive", gallery_counts.get("false_positive")),
+                ("False negative", gallery_counts.get("false_negative")),
+            ]
+        )
+
+    with st.expander("Detailed metrics", expanded=False):
+        cards = metric_cards.get("cards", [])
+        if cards:
+            for start_idx in range(0, len(cards), 3):
+                row_cards = cards[start_idx : start_idx + 3]
+                cols = st.columns(len(row_cards))
+                for col, card in zip(cols, row_cards):
+                    with col:
+                        st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
+                        detail = card.get("detail")
+                        if detail:
+                            st.caption(str(detail))
+        else:
+            st.info("No Track A metric cards available.")
+
+    with st.expander("Technical evidence", expanded=False):
+        st.caption("Model comparison")
+        _render_markdown_table(
+            comparison.get("rows", []),
+            [
+                ("Rank", "rank"),
+                ("Selected", "selected"),
+                ("Model", "model_name"),
+                ("Version", "model_version"),
+                ("Run ID", "run_id"),
+                ("Macro F1", "macro_f1"),
+                ("Accuracy", "accuracy"),
+                ("Recall", "recall"),
+                ("Threshold", "threshold_used"),
+                ("Status", "short_status"),
+            ],
+        )
+        st.markdown("##### Confusion matrix")
+        matrix = confusion.get("matrix", [])
+        labels = confusion.get("labels", {})
+        matrix_rows = []
+        row_labels = labels.get("rows", [])
+        col_labels = labels.get("columns", [])
+        for idx, row in enumerate(matrix):
+            matrix_rows.append(
+                {
+                    "actual": row_labels[idx] if idx < len(row_labels) else f"row_{idx}",
+                    **{
+                        (col_labels[col_idx] if col_idx < len(col_labels) else f"col_{col_idx}"): value
+                        for col_idx, value in enumerate(row)
+                    },
+                }
             )
-        with st.expander("Per-class table", expanded=False):
+        _render_markdown_table(
+            matrix_rows,
+            [
+                ("Actual", "actual"),
+                (col_labels[0] if len(col_labels) > 0 else "Column 1", col_labels[0] if len(col_labels) > 0 else "col_0"),
+                (col_labels[1] if len(col_labels) > 1 else "Column 2", col_labels[1] if len(col_labels) > 1 else "col_1"),
+            ],
+        )
+        st.markdown("##### Per-class table")
+        _render_markdown_table(
+            per_class.get("classes", []),
+            [
+                ("Class", "label"),
+                ("Precision", "precision"),
+                ("Recall", "recall"),
+                ("F1", "f1"),
+            ],
+        )
+        st.markdown("##### Threshold table")
+        threshold_rows = threshold_curve.get("rows", [])
+        if threshold_rows:
             _render_markdown_table(
-                per_class.get("classes", []),
+                threshold_rows,
                 [
-                    ("Class", "label"),
+                    ("Threshold", "threshold"),
                     ("Precision", "precision"),
                     ("Recall", "recall"),
-                    ("F1", "f1"),
+                    ("Macro F1", "macro_f1"),
+                    ("Accuracy", "accuracy"),
+                    ("False Positives", "false_positive"),
+                    ("False Negatives", "false_negative"),
                 ],
             )
-        with st.expander("Threshold table", expanded=False):
-            threshold_rows = threshold_curve.get("rows", [])
-            if threshold_rows:
-                _render_markdown_table(
-                    threshold_rows,
-                    [
-                        ("Threshold", "threshold"),
-                        ("Precision", "precision"),
-                        ("Recall", "recall"),
-                        ("Macro F1", "macro_f1"),
-                        ("Accuracy", "accuracy"),
-                        ("False Positives", "false_positive"),
-                        ("False Negatives", "false_negative"),
-                    ],
-                )
-            else:
-                st.info("No threshold curve data available.")
-        with st.expander("Artifact inventory", expanded=False):
-            _render_key_value_grid(
-                [
-                    ("Bundle files", inventory.get("bundle_artifact_count")),
-                    ("Source artifacts", inventory.get("source_artifact_count")),
-                    ("Selected threshold", recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
-                ]
-            )
-            st.caption(
-                "The evidence bundle remains governed; raw JSON is intentionally hidden by default."
-            )
-        with st.expander("Evidence file list", expanded=False):
-            for filename in TRACK_A_EVIDENCE_FILENAMES:
-                st.code(filename, language="text")
-        with st.expander("Evidence paths", expanded=False):
-            st.code("artifacts/frontend/track_a/", language="text")
-            st.write("Selected model recommendation, comparison table, quality summary, and evidence inventory remain in the bundle.")
+        else:
+            st.info("No threshold curve data available.")
+
+    with st.expander("Artifact and run details", expanded=False):
+        _render_key_value_grid(
+            [
+                ("Selected model", recommendation.get("selected_model_name") or metric_cards.get("selected_model_name")),
+                ("Version", recommendation.get("selected_model_version") or metric_cards.get("selected_model_version")),
+                ("Run ID", recommendation.get("selected_run_id")),
+                ("Threshold", recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
+                ("Quality target", quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
+            ]
+        )
+        _render_key_value_grid(
+            [
+                ("Bundle files", inventory.get("bundle_artifact_count")),
+                ("Source artifacts", inventory.get("source_artifact_count")),
+                ("Selected threshold", recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
+            ]
+        )
+        st.caption("Evidence paths")
+        st.code("artifacts/frontend/track_a/", language="text")
+        st.caption("Evidence file list")
+        for filename in TRACK_A_EVIDENCE_FILENAMES:
+            st.code(filename, language="text")
+        st.caption(
+            "The evidence bundle remains governed; raw JSON is intentionally hidden by default."
+        )
 
     st.markdown("### Safe interpretation")
     st.write(
@@ -797,9 +998,11 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the Track B anomaly detection page."""
-    st.markdown("## Track B Anomaly Detection")
-    st.markdown(
-        "A governed autoencoder-based anomaly page for reviewing reconstruction behavior, anomaly scores, and quality decision evidence."
+    _render_hero_card(
+        "Track B Anomaly Detection",
+        "A governed autoencoder-based anomaly page for reviewing reconstruction behavior, anomaly scores, and quality decision evidence.",
+        "Evidence/dashboard view only · not production-ready · not deployment-safe",
+        accent="orange",
     )
     st.warning(
         "Evidence/dashboard view only. not production-ready. not deployment-safe. "
@@ -844,61 +1047,181 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             "Unavailable",
             help="PR AUC is unavailable in governed evidence and is not fabricated.",
         )
+    _render_premium_info_card(
+        "PR AUC is unavailable",
+        "This page reviews reconstruction/anomaly behavior, but PR AUC is unavailable in the current evidence.",
+        "The score is not fabricated and no production claim is made.",
+        accent="orange",
+    )
+    _render_agent_callout(
+        "Explain anomaly behavior",
+        "Ask for a plain-language summary of the reconstruction, anomaly score, and threshold charts.",
+        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        accent="violet",
+    )
 
-    tabs = st.tabs(["Summary", "Charts", "Evidence"])
-    with tabs[0]:
-        st.caption("Summary cards and the key gallery snapshot.")
-        summary_cols = st.columns(4)
-        with summary_cols[0]:
-            st.metric("Canonical status", _format_value(frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")))
-        with summary_cols[1]:
-            st.metric("Production ready", _format_value(quality.get("production_ready")))
-        with summary_cols[2]:
-            st.metric("Deployment candidate", _format_value(quality.get("deployment_candidate")))
-        with summary_cols[3]:
-            st.metric("Next step", _format_value(quality.get("next_recommended_step")))
-
-        gallery_cols = st.columns(2)
-        with gallery_cols[0]:
-            st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
-            st.caption(
-                "The gallery remains summary-only here; image rendering can be added later without changing the governed data contract."
+    st.markdown("### Visual evidence")
+    visual_cols = st.columns(3)
+    with visual_cols[0]:
+        st.caption("Reconstruction behavior")
+        reconstruction_rows = reconstruction.get("chart_rows", [])
+        if reconstruction_rows:
+            epochs = [float(row.get("epoch", idx + 1) or idx + 1) for idx, row in enumerate(reconstruction_rows)]
+            losses = [float(row.get("reconstruction_loss", 0) or 0) for row in reconstruction_rows]
+            st.plotly_chart(
+                _build_line_figure(
+                    "Track B reconstruction loss",
+                    epochs,
+                    {"Reconstruction loss": losses},
+                    {"Reconstruction loss": "#2563eb"},
+                    "Loss",
+                ),
+                width="stretch",
             )
-        with gallery_cols[1]:
-            count_rows = [
-                {"error_type": label, "count": count}
-                for label, count in (
-                    ("true_positive", gallery.get("counts_by_error_type", {}).get("true_positive")),
-                    ("true_negative", gallery.get("counts_by_error_type", {}).get("true_negative")),
-                    ("false_positive", gallery.get("counts_by_error_type", {}).get("false_positive")),
-                    ("false_negative", gallery.get("counts_by_error_type", {}).get("false_negative")),
-                )
-                if count is not None
-            ]
-            _render_markdown_table(
-                count_rows,
-                [
-                    ("Error type", "error_type"),
-                    ("Count", "count"),
-                ],
+        else:
+            _render_chart_placeholder(
+                "Track B reconstruction loss",
+                "No reconstruction loss data is available in the governed bundle, so this visual is hidden.",
+                accent="gray",
+            )
+    with visual_cols[1]:
+        st.caption("Anomaly score summary")
+        anomaly_rows = anomaly_summary.get("segments", [])
+        if anomaly_rows:
+            labels = [str(row.get("label", f"segment_{idx}")) for idx, row in enumerate(anomaly_rows)]
+            values = [float(row.get("count", 0) or 0) for row in anomaly_rows]
+            palette = []
+            for label in labels:
+                lowered = label.lower()
+                if "anomaly" in lowered or "high" in lowered:
+                    palette.append("#dc2626")
+                elif "normal" in lowered or "low" in lowered:
+                    palette.append("#16a34a")
+                else:
+                    palette.append("#2563eb")
+            st.plotly_chart(
+                _build_donut_figure(
+                    "Track B anomaly score distribution",
+                    labels,
+                    values,
+                    palette,
+                ),
+                width="stretch",
+            )
+        else:
+            _render_chart_placeholder(
+                "Track B anomaly score distribution",
+                "No anomaly score data is available in the governed bundle, so this visual is hidden.",
+                accent="gray",
+            )
+    with visual_cols[2]:
+        st.caption("Threshold behavior")
+        threshold_rows = threshold_behavior.get("rows", [])
+        if threshold_rows:
+            thresholds = [float(row.get("threshold", 0) or 0) for row in threshold_rows]
+            series_map = {
+                "Precision": [float(row.get("precision", 0) or 0) for row in threshold_rows],
+                "Recall": [float(row.get("recall", 0) or 0) for row in threshold_rows],
+                "F1": [float(row.get("f1", 0) or 0) for row in threshold_rows],
+            }
+            st.plotly_chart(
+                _build_line_figure(
+                    "Track B threshold behavior",
+                    thresholds,
+                    series_map,
+                    {"Precision": "#2563eb", "Recall": "#d97706", "F1": "#16a34a"},
+                    "Score",
+                ),
+                width="stretch",
+            )
+        else:
+            _render_chart_placeholder(
+                "Track B threshold behavior",
+                "No threshold behavior data is available in the governed bundle, so this visual is hidden.",
+                accent="gray",
             )
 
-        with st.expander("Metric cards", expanded=False):
-            cards = metric_cards.get("cards", [])
-            if cards:
-                for start_idx in range(0, len(cards), 3):
-                    row_cards = cards[start_idx : start_idx + 3]
-                    cols = st.columns(len(row_cards))
-                    for col, card in zip(cols, row_cards):
-                        with col:
-                            st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
-                            detail = card.get("detail")
-                            if detail:
-                                st.caption(str(detail))
-            else:
-                st.info("No Track B metric cards available.")
+    st.markdown("### Sample gallery")
+    gallery_cols = st.columns([0.7, 1.3])
+    with gallery_cols[0]:
+        st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
+        st.caption("Summary-only view; images stay inside the governed evidence bundle.")
+    with gallery_cols[1]:
+        count_rows = [
+            {"error_type": label, "count": count}
+            for label, count in (
+                ("true_positive", gallery.get("counts_by_error_type", {}).get("true_positive")),
+                ("true_negative", gallery.get("counts_by_error_type", {}).get("true_negative")),
+                ("false_positive", gallery.get("counts_by_error_type", {}).get("false_positive")),
+                ("false_negative", gallery.get("counts_by_error_type", {}).get("false_negative")),
+            )
+            if count is not None
+        ]
+        _render_markdown_table(
+            count_rows,
+            [
+                ("Error type", "error_type"),
+                ("Count", "count"),
+            ],
+        )
 
-        st.markdown("### Quality decision")
+    with st.expander("Detailed metrics", expanded=False):
+        cards = metric_cards.get("cards", [])
+        if cards:
+            for start_idx in range(0, len(cards), 3):
+                row_cards = cards[start_idx : start_idx + 3]
+                cols = st.columns(len(row_cards))
+                for col, card in zip(cols, row_cards):
+                    with col:
+                        st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
+                        detail = card.get("detail")
+                        if detail:
+                            st.caption(str(detail))
+        else:
+            st.info("No Track B metric cards available.")
+
+    with st.expander("Technical evidence", expanded=False):
+        st.caption("Anomaly score summary")
+        anomaly_rows = anomaly_summary.get("segments", [])
+        _render_markdown_table(
+            anomaly_rows,
+            [
+                ("Label", "label"),
+                ("Count", "count"),
+                ("Share", "percentage"),
+            ],
+        )
+        st.markdown("##### Reconstruction table")
+        _render_markdown_table(
+            reconstruction.get("chart_rows", []),
+            [
+                ("Epoch", "epoch"),
+                ("Reconstruction loss", "reconstruction_loss"),
+            ],
+        )
+        st.markdown("##### Threshold table")
+        threshold_rows = threshold_behavior.get("rows", [])
+        _render_markdown_table(
+            threshold_rows,
+            [
+                ("Threshold", "threshold"),
+                ("Precision", "precision"),
+                ("Recall", "recall"),
+                ("F1", "f1"),
+                ("False Positives", "false_positive"),
+                ("False Negatives", "false_negative"),
+            ],
+        )
+        st.markdown("##### Sample anomaly gallery details")
+        _render_markdown_table(
+            count_rows,
+            [
+                ("Error type", "error_type"),
+                ("Count", "count"),
+            ],
+        )
+
+    with st.expander("Artifact and run details", expanded=False):
         _render_key_value_grid(
             [
                 ("Model", frontend_summary.get("model_type")),
@@ -908,176 +1231,18 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ("PR AUC", "Unavailable"),
             ]
         )
-    with tabs[1]:
-        chart_cols = st.columns(2)
-        with chart_cols[0]:
-            st.caption("Reconstruction loss")
-            reconstruction_rows = reconstruction.get("chart_rows", [])
-            if reconstruction_rows:
-                epochs = [float(row.get("epoch", idx + 1) or idx + 1) for idx, row in enumerate(reconstruction_rows)]
-                losses = [float(row.get("reconstruction_loss", 0) or 0) for row in reconstruction_rows]
-                st.plotly_chart(
-                    _build_line_figure(
-                        "Track B reconstruction loss",
-                        epochs,
-                        {"Reconstruction loss": losses},
-                        {"Reconstruction loss": "#1f77b4"},
-                        "Loss",
-                    ),
-                    width="stretch",
-                )
-                st.caption("Epochs: " + ", ".join(_format_value(row.get("epoch")) for row in reconstruction_rows))
-            else:
-                st.info("No reconstruction loss data available for charting.")
-            with st.expander("Reconstruction table", expanded=False):
-                _render_markdown_table(
-                    reconstruction_rows,
-                    [
-                        ("Epoch", "epoch"),
-                        ("Reconstruction loss", "reconstruction_loss"),
-                    ],
-                )
-        with chart_cols[1]:
-            st.caption("Anomaly score summary")
-            anomaly_rows = anomaly_summary.get("segments", [])
-            if anomaly_rows:
-                labels = [str(row.get("label", f"segment_{idx}")) for idx, row in enumerate(anomaly_rows)]
-                values = [float(row.get("count", 0) or 0) for row in anomaly_rows]
-                palette = []
-                for label in labels:
-                    lowered = label.lower()
-                    if "anomaly" in lowered or "high" in lowered:
-                        palette.append("#d62728")
-                    elif "normal" in lowered or "low" in lowered:
-                        palette.append("#2ca02c")
-                    else:
-                        palette.append("#1f77b4")
-                st.plotly_chart(
-                    _build_donut_figure(
-                        "Track B anomaly score distribution",
-                        labels,
-                        values,
-                        palette,
-                    ),
-                    width="stretch",
-                )
-            else:
-                st.info("No anomaly score data available for charting.")
-
-            st.caption("Threshold behavior")
-            threshold_rows = threshold_behavior.get("rows", [])
-            if threshold_rows:
-                thresholds = [float(row.get("threshold", 0) or 0) for row in threshold_rows]
-                series_map = {
-                    "Precision": [float(row.get("precision", 0) or 0) for row in threshold_rows],
-                    "Recall": [float(row.get("recall", 0) or 0) for row in threshold_rows],
-                    "F1": [float(row.get("f1", 0) or 0) for row in threshold_rows],
-                }
-                st.plotly_chart(
-                    _build_line_figure(
-                        "Track B threshold behavior",
-                        thresholds,
-                        series_map,
-                        {"Precision": "#1f77b4", "Recall": "#ff9800", "F1": "#2ca02c"},
-                        "Score",
-                    ),
-                    width="stretch",
-                )
-                st.caption("Thresholds: " + ", ".join(_format_value(row.get("threshold")) for row in threshold_rows))
-            else:
-                st.info("No threshold behavior data available for charting.")
-            with st.expander("Threshold table", expanded=False):
-                _render_markdown_table(
-                    threshold_rows,
-                    [
-                        ("Threshold", "threshold"),
-                        ("Precision", "precision"),
-                        ("Recall", "recall"),
-                        ("F1", "f1"),
-                        ("False Positives", "false_positive"),
-                        ("False Negatives", "false_negative"),
-                    ],
-                )
-    with tabs[2]:
-        st.caption("Detailed evidence and raw tables are kept inside expanders.")
-        st.caption("The anomaly score details are kept behind an expander.")
-        st.caption("PR AUC is unavailable in governed evidence and not fabricated.")
-        with st.expander("Metric cards", expanded=False):
-            cards = metric_cards.get("cards", [])
-            if cards:
-                for start_idx in range(0, len(cards), 3):
-                    row_cards = cards[start_idx : start_idx + 3]
-                    cols = st.columns(len(row_cards))
-                    for col, card in zip(cols, row_cards):
-                        with col:
-                            st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
-                            detail = card.get("detail")
-                            if detail:
-                                st.caption(str(detail))
-            else:
-                st.info("No Track B metric cards available.")
-        with st.expander("Anomaly score summary", expanded=False):
-            anomaly_rows = anomaly_summary.get("segments", [])
-            _render_markdown_table(
-                anomaly_rows,
-                [
-                    ("Label", "label"),
-                    ("Count", "count"),
-                    ("Share", "percentage"),
-                ],
-            )
-        with st.expander("Reconstruction table", expanded=False):
-            _render_markdown_table(
-                reconstruction.get("chart_rows", []),
-                [
-                    ("Epoch", "epoch"),
-                    ("Reconstruction loss", "reconstruction_loss"),
-                ],
-            )
-        with st.expander("Threshold table", expanded=False):
-            _render_markdown_table(
-                threshold_rows,
-                [
-                    ("Threshold", "threshold"),
-                    ("Precision", "precision"),
-                    ("Recall", "recall"),
-                    ("F1", "f1"),
-                    ("False Positives", "false_positive"),
-                    ("False Negatives", "false_negative"),
-                ],
-            )
-        with st.expander("Sample anomaly gallery details", expanded=False):
-            count_rows = [
-                {"error_type": label, "count": count}
-                for label, count in (
-                    ("true_positive", gallery.get("counts_by_error_type", {}).get("true_positive")),
-                    ("true_negative", gallery.get("counts_by_error_type", {}).get("true_negative")),
-                    ("false_positive", gallery.get("counts_by_error_type", {}).get("false_positive")),
-                    ("false_negative", gallery.get("counts_by_error_type", {}).get("false_negative")),
-                )
-                if count is not None
+        _render_key_value_grid(
+            [
+                ("Bundle files", inventory.get("bundle_artifact_count")),
+                ("Source artifacts", inventory.get("source_artifact_count")),
+                ("Threshold", frontend_summary.get("key_metrics", {}).get("threshold") or metric_cards.get("threshold")),
             ]
-            _render_markdown_table(
-                count_rows,
-                [
-                    ("Error type", "error_type"),
-                    ("Count", "count"),
-                ],
-            )
-        with st.expander("Artifact inventory", expanded=False):
-            _render_key_value_grid(
-                [
-                    ("Bundle files", inventory.get("bundle_artifact_count")),
-                    ("Source artifacts", inventory.get("source_artifact_count")),
-                    ("Threshold", frontend_summary.get("key_metrics", {}).get("threshold") or metric_cards.get("threshold")),
-                ]
-            )
-        with st.expander("Evidence file list", expanded=False):
-            for filename in TRACK_B_EVIDENCE_FILENAMES:
-                st.code(filename, language="text")
-        with st.expander("Evidence paths", expanded=False):
-            st.code("artifacts/frontend/track_b/", language="text")
-            st.write("Metric cards, anomaly summary, reconstruction loss, threshold behavior, quality summary, and inventory remain in the bundle.")
+        )
+        st.caption("Evidence paths")
+        st.code("artifacts/frontend/track_b/", language="text")
+        st.caption("Evidence file list")
+        for filename in TRACK_B_EVIDENCE_FILENAMES:
+            st.code(filename, language="text")
 
     st.markdown("### Safe interpretation")
     st.write(
@@ -1087,15 +1252,23 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the YOLO / Detection page."""
-    st.markdown("## YOLO Detection")
-    st.markdown(
-        "A governed object-detection evidence page for the validation bundle, designed for review rather than live deployment."
+    _render_hero_card(
+        "YOLO Detection",
+        "A governed object-detection evidence page for the validation bundle, designed for review rather than live deployment.",
+        "Evidence/dashboard view only · not production-ready · not deployment-safe",
+        accent="green",
     )
     st.warning(
         "Evidence/dashboard view only. not production-ready. not deployment-safe. "
         "No live prediction on this YOLO evidence page. YOLO upload/predict not implemented yet."
     )
     st.caption("evidence/dashboard view only")
+    _render_agent_callout(
+        "Explain detection confidence",
+        "Ask for a plain-language summary of the confidence distribution, class balance, and detection review state.",
+        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        accent="violet",
+    )
 
     if bundles is None:
         st.error("Detection evidence is unavailable because the frontend bundles failed to load.")
@@ -1142,6 +1315,58 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
         )
         st.caption("Governed validation evidence only")
 
+    st.markdown("### Visual evidence")
+    visual_cols = st.columns(2)
+    with visual_cols[0]:
+        st.caption("Confidence distribution")
+        confidence_rows = confidence_chart.get("confidence_bins", [])
+        if confidence_rows:
+            confidence_labels = [row.get("label", f"bin_{idx}") for idx, row in enumerate(confidence_rows)]
+            confidence_values = [float(row.get("count", 0) or 0) for row in confidence_rows]
+            confidence_colors = ["#2563eb", "#d97706", "#16a34a", "#64748b"][: len(confidence_labels)]
+            st.plotly_chart(
+                _build_donut_figure(
+                    confidence_chart.get("chart_title", "Confidence distribution"),
+                    confidence_labels,
+                    confidence_values,
+                    confidence_colors,
+                ),
+                width="stretch",
+            )
+            st.caption(
+                confidence_chart.get("chart_explanation")
+                or "Confidence distribution across predicted boxes."
+            )
+        else:
+            _render_chart_placeholder(
+                "YOLO confidence distribution",
+                "No confidence distribution data is available in the governed bundle, so this visual is hidden.",
+                accent="gray",
+            )
+    with visual_cols[1]:
+        st.caption("Class summary")
+        class_rows = class_summary.get("class_rows", [])
+        if class_rows:
+            class_labels = [row.get("class_label", f"class_{idx}") for idx, row in enumerate(class_rows)]
+            class_counts = [float(row.get("bbox_count", 0) or 0) for row in class_rows]
+            st.plotly_chart(
+                _build_grouped_bar_figure(
+                    "YOLO class summary by bbox count",
+                    class_labels,
+                    {"BBox count": class_counts},
+                    {"BBox count": "#2563eb"},
+                    "BBox count",
+                ),
+                width="stretch",
+            )
+            st.caption("Bar heights represent bbox counts per class.")
+        else:
+            _render_chart_placeholder(
+                "YOLO class summary",
+                "No class summary data is available in the governed bundle, so this visual is hidden.",
+                accent="gray",
+            )
+
     summary_cols = st.columns(2)
     with summary_cols[0]:
         st.markdown("### What the bundle shows")
@@ -1167,191 +1392,135 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
             with col:
                 st.metric(label, _format_value(value))
 
-    st.markdown("### Visual evidence")
-    visual_cols = st.columns(2)
-    with visual_cols[0]:
-        confidence_rows = confidence_chart.get("confidence_bins", [])
-        if confidence_rows:
-            confidence_labels = [row.get("label", f"bin_{idx}") for idx, row in enumerate(confidence_rows)]
-            confidence_values = [float(row.get("count", 0) or 0) for row in confidence_rows]
-            confidence_colors = ["#1f77b4", "#ff9800", "#2ca02c", "#9e9e9e"][: len(confidence_labels)]
-            st.plotly_chart(
-                _build_donut_figure(
-                    confidence_chart.get("chart_title", "Confidence distribution"),
-                    confidence_labels,
-                    confidence_values,
-                    confidence_colors,
-                ),
-                width="stretch",
-            )
-            st.caption(
-                confidence_chart.get("chart_explanation")
-                or "Confidence distribution across predicted boxes."
-            )
-        else:
-            st.info("No confidence distribution data available for charting.")
-    with visual_cols[1]:
-        class_rows = class_summary.get("class_rows", [])
-        if class_rows:
-            class_labels = [row.get("class_label", f"class_{idx}") for idx, row in enumerate(class_rows)]
-            class_counts = [float(row.get("bbox_count", 0) or 0) for row in class_rows]
-            st.plotly_chart(
-                _build_grouped_bar_figure(
-                    "Class summary by bbox count",
-                    class_labels,
-                    {"BBox count": class_counts},
-                    {"BBox count": "#1f77b4"},
-                    "BBox count",
-                ),
-                width="stretch",
-            )
-            st.caption("Bar heights represent bbox counts per class.")
-        else:
-            st.info("No class summary data available for charting.")
+    _render_agent_callout(
+        "Explain detection confidence",
+        "Ask for a plain-language summary of the confidence distribution, class balance, and detection review state.",
+        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        accent="violet",
+    )
 
-    st.markdown("### Decision summary")
-    decision_cols = st.columns(2)
-    with decision_cols[0]:
-        st.metric("Review status", _format_value(quality.get("decision")))
-        st.caption(
-            f"Production ready: {_format_value(quality.get('production_ready'))} | "
-            f"Deployment candidate: {_format_value(quality.get('deployment_candidate'))}"
-        )
-        st.caption(_format_value(quality.get("next_recommended_step")))
-    with decision_cols[1]:
-        st.metric("Frontend recommendation", _format_value(recommendation.get("recommendation_status")))
-        st.caption(_format_value(recommendation.get("next_step")))
-        st.caption(
-            "What it can claim: "
-            + ", ".join(
-                _format_value(value)
-                for value in recommendation.get("what_it_can_claim", [])
-            )
-        )
+    st.markdown("### Quick take")
+    _render_premium_info_card(
+        "Review status: " + _format_value(quality.get("decision")),
+        "The YOLO bundle is review-oriented only and does not claim production readiness or deployment safety.",
+        "What it can claim: "
+        + ", ".join(_format_value(value) for value in recommendation.get("what_it_can_claim", [])),
+        accent="green" if str(quality.get("decision", "")).lower() == "pass" else "orange",
+    )
+
+    with st.expander("Detailed metrics", expanded=False):
+        st.caption("Metric cards for the governed YOLO evidence bundle")
+        cards = metric_cards.get("cards", [])
+        if cards:
+            for start_idx in range(0, len(cards), 2):
+                row_cards = cards[start_idx : start_idx + 2]
+                cols = st.columns(len(row_cards))
+                for col, card in zip(cols, row_cards):
+                    with col:
+                        st.metric(card.get("label", "Metric"), _format_value(card.get("value")))
+                        description = card.get("description")
+                        if description:
+                            st.caption(str(description))
+        else:
+            st.info("No detection metric cards available.")
 
     with st.expander("Technical evidence", expanded=False):
-        tech_tabs = st.tabs(["Metric cards", "Tables", "Artifact lineage", "Run notes"])
-        with tech_tabs[0]:
-            st.caption("Metric cards for the governed YOLO evidence bundle")
-            cards = metric_cards.get("cards", [])
-            if cards:
-                for start_idx in range(0, len(cards), 2):
-                    row_cards = cards[start_idx : start_idx + 2]
-                    cols = st.columns(len(row_cards))
-                    for col, card in zip(cols, row_cards):
-                        with col:
-                            st.metric(card.get("label", "Metric"), _format_value(card.get("value")))
-                            description = card.get("description")
-                            if description:
-                                st.caption(str(description))
-            else:
-                st.info("No detection metric cards available.")
+        st.caption("Confidence distribution table")
+        _render_markdown_table(
+            confidence_rows,
+            [
+                ("Band", "label"),
+                ("Count", "count"),
+                ("Share", "percentage"),
+            ],
+        )
+        st.caption("Class summary table")
+        _render_markdown_table(
+            class_rows,
+            [
+                ("Class", "class_label"),
+                ("BBox count", "bbox_count"),
+                ("Min confidence", "min_confidence"),
+                ("Mean confidence", "mean_confidence"),
+                ("Median confidence", "median_confidence"),
+            ],
+        )
+        st.caption("Sample gallery details")
+        gallery_rows = [
+            {
+                "category": category.get("category_label"),
+                "samples": category.get("sample_count"),
+                "selection_rule": category.get("selection_rule"),
+            }
+            for category in sample_gallery.get("categories", [])
+            if isinstance(category, dict)
+        ]
+        _render_markdown_table(
+            gallery_rows,
+            [
+                ("Category", "category"),
+                ("Samples", "samples"),
+                ("Selection rule", "selection_rule"),
+            ],
+        )
 
-        with tech_tabs[1]:
-            table_cols = st.columns(2)
-            with table_cols[0]:
-                st.caption("Confidence distribution table")
-                confidence_rows = confidence_chart.get("confidence_bins", [])
-                _render_markdown_table(
-                    confidence_rows,
-                    [
-                        ("Band", "label"),
-                        ("Count", "count"),
-                        ("Share", "percentage"),
-                    ],
-                )
-            with table_cols[1]:
-                st.caption("Class summary table")
-                class_rows = class_summary.get("class_rows", [])
-                _render_markdown_table(
-                    class_rows,
-                    [
-                        ("Class", "class_label"),
-                        ("BBox count", "bbox_count"),
-                        ("Min confidence", "min_confidence"),
-                        ("Mean confidence", "mean_confidence"),
-                        ("Median confidence", "median_confidence"),
-                    ],
-                )
+    with st.expander("Artifact and run details", expanded=False):
+        st.caption("artifact lineage")
+        source_rows = [
+            {
+                "artifact": item.get("artifact_type") or item.get("artifact_id"),
+                "path": item.get("artifact_path") or item.get("path"),
+                "hash": item.get("artifact_hash") or item.get("sha256"),
+            }
+            for item in lineage.get("source_artifacts", [])
+            if isinstance(item, dict)
+        ]
+        _render_markdown_table(
+            source_rows,
+            [
+                ("Artifact", "artifact"),
+                ("Path", "path"),
+                ("Hash", "hash"),
+            ],
+        )
+        st.caption("bundle manifest")
+        st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
+        _render_markdown_table(
+            [{"file": name} for name in manifest.get("bundle_files", [])],
+            [("File", "file")],
+        )
+        st.caption("Evidence file list")
+        for filename in DETECTION_EVIDENCE_FILENAMES:
+            st.code(filename, language="text")
 
-            st.markdown("##### Sample gallery details")
-            gallery_rows = [
-                {
-                    "category": category.get("category_label"),
-                    "samples": category.get("sample_count"),
-                    "selection_rule": category.get("selection_rule"),
-                }
-                for category in sample_gallery.get("categories", [])
-                if isinstance(category, dict)
+    with st.expander("Run details", expanded=False):
+        _render_key_value_grid(
+            [
+                ("Run", metadata.get("run_id")),
+                ("Dataset", metadata.get("dataset_id")),
+                ("Review required", quality.get("review_required")),
+                ("Production ready", quality.get("production_ready")),
+                ("Deployment candidate", quality.get("deployment_candidate")),
             ]
-            _render_markdown_table(
-                gallery_rows,
-                [
-                    ("Category", "category"),
-                    ("Samples", "samples"),
-                    ("Selection rule", "selection_rule"),
-                ],
+        )
+        st.markdown("##### Quality decision")
+        st.write(
+            f"{_format_value(quality.get('decision'))} | "
+            f"{_format_value(quality.get('next_recommended_step'))}"
+        )
+        st.caption("frontend recommendation")
+        st.markdown("##### Frontend recommendation")
+        st.write(
+            f"{_format_value(recommendation.get('recommendation_status'))} | "
+            f"{_format_value(recommendation.get('next_step'))}"
+        )
+        st.caption(
+            "What it cannot claim: "
+            + ", ".join(
+                _format_value(value)
+                for value in recommendation.get("what_it_cannot_claim", [])
             )
-
-        with tech_tabs[2]:
-            st.caption("artifact lineage")
-            st.caption("Artifact lineage and bundle files for the detection evidence layer")
-            source_rows = [
-                {
-                    "artifact": item.get("artifact_type") or item.get("artifact_id"),
-                    "path": item.get("artifact_path") or item.get("path"),
-                    "hash": item.get("artifact_hash") or item.get("sha256"),
-                }
-                for item in lineage.get("source_artifacts", [])
-                if isinstance(item, dict)
-            ]
-            _render_markdown_table(
-                source_rows,
-                [
-                    ("Artifact", "artifact"),
-                    ("Path", "path"),
-                    ("Hash", "hash"),
-                ],
-            )
-            st.caption("bundle manifest")
-            st.markdown("##### Bundle manifest")
-            st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
-            _render_markdown_table(
-                [{"file": name} for name in manifest.get("bundle_files", [])],
-                [("File", "file")],
-            )
-            st.markdown("##### Evidence file list")
-            for filename in DETECTION_EVIDENCE_FILENAMES:
-                st.code(filename, language="text")
-
-        with tech_tabs[3]:
-            _render_key_value_grid(
-                [
-                    ("Run", metadata.get("run_id")),
-                    ("Dataset", metadata.get("dataset_id")),
-                    ("Review required", quality.get("review_required")),
-                    ("Production ready", quality.get("production_ready")),
-                    ("Deployment candidate", quality.get("deployment_candidate")),
-                ]
-            )
-            st.markdown("##### Quality decision")
-            st.write(
-                f"{_format_value(quality.get('decision'))} | "
-                f"{_format_value(quality.get('next_recommended_step'))}"
-            )
-            st.caption("frontend recommendation")
-            st.markdown("##### Frontend recommendation")
-            st.write(
-                f"{_format_value(recommendation.get('recommendation_status'))} | "
-                f"{_format_value(recommendation.get('next_step'))}"
-            )
-            st.caption(
-                "What it cannot claim: "
-                + ", ".join(
-                    _format_value(value)
-                    for value in recommendation.get("what_it_cannot_claim", [])
-                )
-            )
+        )
 
     st.markdown("### Safe interpretation")
     st.write(
@@ -1361,9 +1530,11 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 def _render_upload_predict() -> None:
     """Render the Track A upload/predict page."""
-    st.markdown("## Upload / Predict")
-    st.markdown(
-        "A local Track A classification prototype that sends one uploaded image to the FastAPI endpoint and returns the governed prediction result."
+    _render_hero_card(
+        "Upload / Predict",
+        "A local Track A classification prototype that sends one uploaded image to the FastAPI endpoint and returns the governed prediction result.",
+        "Local prototype endpoint · not production-ready · not deployment-safe",
+        accent="blue",
     )
     st.warning(
         "Local prototype endpoint for Track A classification only. not production-ready. "
@@ -1492,9 +1663,16 @@ def _render_upload_predict() -> None:
             "not production-ready | not deployment-safe | local prototype endpoint | Track A classification only"
         )
 
-    with st.expander("Technical details", expanded=False):
-        detail_cols = st.columns(2)
-        with detail_cols[0]:
+    _render_agent_callout(
+        "Explain this prediction",
+        "Ask for a plain-language explanation of the predicted label, confidence split, and model threshold.",
+        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        accent="violet",
+    )
+
+    with st.expander("Technical evidence", expanded=False):
+        detail_tabs = st.tabs(["Detailed metrics", "Artifact and run details", "Raw/API response"])
+        with detail_tabs[0]:
             _render_key_value_grid(
                 [
                     ("Request ID", payload.get("request_id")),
@@ -1504,7 +1682,7 @@ def _render_upload_predict() -> None:
                     ("Threshold", payload.get("threshold")),
                 ]
             )
-        with detail_cols[1]:
+        with detail_tabs[1]:
             input_meta = payload.get("input", {})
             _render_key_value_grid(
                 [
@@ -1517,8 +1695,9 @@ def _render_upload_predict() -> None:
             if limitations:
                 st.caption("Limitations")
                 st.write(" | ".join(str(item) for item in limitations))
-        st.markdown("##### Raw API response")
-        st.json(payload)
+        with detail_tabs[2]:
+            st.caption("Raw API response")
+            st.json(payload)
 
     st.caption(
         "This page is limited to Track A classification. YOLO and anomaly upload/predict are not implemented yet."
@@ -1527,28 +1706,50 @@ def _render_upload_predict() -> None:
 
 def _render_ai_assistant() -> None:
     """Render the future AI Assistant placeholder page."""
-    st.markdown("## AI Assistant")
-    st.markdown(
-        "A planned, context-aware explanation surface that will sit beside charts, pages, and predictions."
+    _render_hero_card(
+        "AI Assistant",
+        "A planned, context-aware explanation surface that will sit beside charts, pages, and predictions.",
+        "Agent layer planned · no backend agent implemented yet · no fake AI",
+        accent="violet",
     )
     st.info(
         "Agent layer planned. no backend agent implemented yet. no fake AI. "
         "Future explanations should use governed evidence, prediction responses, and safety docs."
     )
-    st.write(
-        "This is a placeholder only. It does not chat, call an LLM, or generate explanations yet."
-    )
-    st.markdown("### Planned placements")
-    placement_cols = st.columns(3)
+    st.write("This is a placeholder only. It does not chat, call an LLM, or generate explanations yet.")
+
+    placement_cols = st.columns(2)
     with placement_cols[0]:
-        st.metric("Explain this page", "Planned")
-        st.caption("Available from each page header")
+        _render_premium_info_card(
+            "What it will explain",
+            "Page summaries, chart explanations, prediction result summaries, and safety boundaries.",
+            "Explain this page · Explain this chart · Explain this prediction",
+            accent="violet",
+        )
     with placement_cols[1]:
-        st.metric("Explain this chart", "Planned")
-        st.caption("Placed near charts and tables")
-    with placement_cols[2]:
-        st.metric("Explain this prediction", "Planned")
-        st.caption("Placed beside upload results")
+        _render_premium_info_card(
+            "Evidence it will use",
+            "Governed evidence bundles, prediction responses, and safety docs only.",
+            "Future explanations should stay grounded in tracked bundle data.",
+            accent="blue",
+        )
+
+    placement_cols = st.columns(2)
+    with placement_cols[0]:
+        _render_premium_info_card(
+            "What it will not do",
+            "It will not invent evidence, call an LLM in this phase, or replace governed dashboard content.",
+            "no fake AI · no backend agent implemented yet",
+            accent="gray",
+        )
+    with placement_cols[1]:
+        _render_premium_info_card(
+            "Current status",
+            "Placeholder only. The agent layer is planned for a later phase.",
+            "Future AI explanation surfaces will be added beside charts and result cards.",
+            accent="orange",
+        )
+
     with st.expander("Agent design notes", expanded=False):
         st.caption("The future agent should use governed evidence, prediction outputs, and safety docs.")
         st.write(
@@ -1558,11 +1759,43 @@ def _render_ai_assistant() -> None:
 
 def _render_limitations() -> None:
     """Render the limitations and safety page."""
-    st.subheader("Limitations / Safety")
-    st.write(
-        "This scaffold is evidence-focused only. It does not train models, recompute metrics, "
-        "create artifacts, update registries, or claim production or deployment readiness."
+    _render_hero_card(
+        "Limitations / Safety",
+        "A short and explicit safety page that states what the dashboard can claim and what it cannot claim yet.",
+        "not production-ready · not deployment-safe · governed evidence only",
+        accent="gray",
     )
+    _render_agent_callout(
+        "Explain safety boundaries",
+        "Ask for a plain-language summary of the prototype limits, production gaps, and deployment gaps.",
+        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        accent="violet",
+    )
+
+    top_cols = st.columns(3)
+    with top_cols[0]:
+        st.metric("Safe to claim", "Governed evidence", help="Dashboards and evidence summaries only.")
+    with top_cols[1]:
+        st.metric("Not safe to claim", "Production readiness", help="No production or deployment claim is made.")
+    with top_cols[2]:
+        st.metric("Prototype boundary", "Track A only", help="Upload / Predict remains limited to Track A.")
+
+    second_cols = st.columns(3)
+    with second_cols[0]:
+        st.metric("Production gaps", "API hardening pending", help="The current endpoint is still a local prototype.")
+    with second_cols[1]:
+        st.metric("Deployment gaps", "Docker / release pending", help="No deployment-safe claim is made.")
+    with second_cols[2]:
+        st.metric("Agent limitations", "Placeholder only", help="The AI Assistant page is not a backend agent.")
+    st.caption("Prototype boundaries")
+
+    with st.expander("Safety details", expanded=False):
+        st.write(
+            "This scaffold is evidence-focused only. It does not train models, recompute metrics, create artifacts, update registries, or claim production or deployment readiness."
+        )
+        st.write(
+            "Track A upload/predict only. YOLO/anomaly upload prediction not implemented yet. no backend agent implemented yet. no fake AI."
+        )
 
 
 def _call_classification_api(api_base_url: str, uploaded_file: Any) -> dict[str, Any]:
@@ -1686,8 +1919,19 @@ def main() -> None:
         "AI Assistant": _render_ai_assistant,
     }
 
+    st.sidebar.markdown("### Navigation")
     choice = st.sidebar.radio("Navigation", list(pages.keys()), index=0)
-    st.sidebar.info(
+    st.sidebar.markdown(
+        f"""
+        <div class="premium-card premium-card--blue" style="margin-bottom:0.75rem; padding:0.8rem 0.85rem;">
+            <div class="premium-card__eyebrow">Current page</div>
+            <div class="premium-card__title" style="font-size:1rem;">{html.escape(choice)}</div>
+            <div class="premium-card__meta">Premium dashboard navigation</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.sidebar.caption(
         "This scaffold is read-only and consumes existing evidence bundles. "
         "The future AI Assistant is a placeholder only."
     )

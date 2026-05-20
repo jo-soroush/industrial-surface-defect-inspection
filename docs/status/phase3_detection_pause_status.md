@@ -29,6 +29,8 @@ This document records the current Phase 3 / Detection state so later roadmap wor
   - Track B notebook path: `notebooks/track_b_anomaly_detection_mvtec_evidence.ipynb`
   - Track A notebook refreshed and now consumes `artifacts/frontend/track_a/`
   - Track B notebook refreshed and now consumes `artifacts/frontend/track_b/`
+  - YOLO notebook path: `notebooks/detection_yolo_gc10det_evidence.ipynb`
+  - YOLO notebook refreshed and now consumes `artifacts/frontend/detection/yolo_train_v0_2_0/`
   - notebook evidence update / quality pass: PASS for current demo-facing bundles
 - Detection / YOLO evidence layer: COMPLETE
   - governed YOLO detection evidence exists for `yolo_train_v0_2_0`
@@ -93,7 +95,7 @@ The Detection / YOLO status above is evidence/data-contract completion only.
 - The platform is not marked deployment-safe.
 - No real frontend/UI implementation has started in this status step.
 - No API endpoint implementation has started in this status step.
-- No notebook update has started in this status step.
+- No additional notebook training, recomputation, or new artifact creation has started in this status step.
 - Agent-layer work has not started in this status step.
 
 Frontend implementation, API endpoints, notebook updates, and agent integration are later roadmap sections.
@@ -101,7 +103,7 @@ Frontend implementation, API endpoints, notebook updates, and agent integration 
 ## Remaining Work Outside The YOLO Evidence Layer
 - real frontend/dashboard implementation
 - API endpoint implementation
-- notebook updates for Detection / YOLO evidence
+- optional notebook presentation refinements for Detection / YOLO evidence
 - agent or orchestration layer integration
 - production-readiness review
 - deployment-safety review

@@ -93,7 +93,7 @@ Frontend bundle JSON files exist to support future dashboard development. They d
 
 - Track A notebook: refreshed / PASS
 - Track B notebook: refreshed / PASS
-- YOLO notebook: not updated yet unless separately audited
+- YOLO notebook: refreshed and now consumes `artifacts/frontend/detection/yolo_train_v0_2_0/`
 - Notebook role: read-only evidence and presentation layer
 
 Notebook work must not train models, create governed artifacts, update registries, or rewrite source-of-truth state unless a later explicit task defines that behavior.
@@ -101,7 +101,7 @@ Notebook work must not train models, create governed artifacts, update registrie
 ## 8. Remaining Roadmap Sections
 
 - [ ] Perform a final project-wide status/demo readiness audit.
-- [ ] Decide whether to refresh the YOLO notebook.
+- [ ] Review the refreshed YOLO notebook presentation if needed.
 - [ ] Decide whether to start the full frontend/dashboard application.
 - [ ] Decide whether to create API endpoints.
 - [ ] Decide whether to create an agent layer.

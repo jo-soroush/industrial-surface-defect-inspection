@@ -69,7 +69,7 @@ The Track B frontend folder is data/evidence for review and dashboard consumptio
 
 - Status: evidence layer COMPLETE
 - Notebook: `notebooks/detection_yolo_gc10det_evidence.ipynb`
-- Notebook refresh status: optional and skipped for now
+- Notebook refresh status: refreshed and now consumes `artifacts/frontend/detection/yolo_train_v0_2_0/`
 
 Structured artifacts:
 
@@ -120,7 +120,7 @@ The artifact registry links governed artifacts to hashes, sizes, metadata, and a
 - `notebooks/track_b_anomaly_detection_mvtec_evidence.ipynb`
 - `notebooks/detection_yolo_gc10det_evidence.ipynb`
 
-Track A and Track B notebooks are refreshed and quality-pass complete. The YOLO notebook is safe but has not been refreshed to consume the new Detection frontend bundle. Notebooks are presentation/evidence layers, not the source of truth.
+Track A and Track B notebooks are refreshed and quality-pass complete. The YOLO notebook is refreshed and now consumes the Detection frontend bundle. Notebooks are presentation/evidence layers, not the source of truth.
 
 ## 8. Frontend Data Contracts
 

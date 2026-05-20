@@ -73,7 +73,7 @@ Talking points:
 - Detection frontend data-contract generator is complete.
 - YOLO notebook: `notebooks/detection_yolo_gc10det_evidence.ipynb`
 - Detection frontend data-contract folder: `artifacts/frontend/detection/yolo_train_v0_2_0/`
-- YOLO notebook refresh is optional and skipped for now.
+- YOLO notebook is refreshed and now consumes the Detection frontend bundle.
 
 Safe wording:
 
@@ -96,7 +96,7 @@ Safe wording:
 - Do not say a real frontend/dashboard app exists.
 - Do not say API endpoints exist.
 - Do not say an agent layer exists.
-- Do not say YOLO notebook has been refreshed to the new detection frontend bundle.
+- Do not say YOLO notebook is production-ready or deployment-safe.
 - Do not say additional training is needed now unless a future audit finds a specific gap.
 
 ## 9. Expected Questions And Safe Answers
@@ -109,9 +109,9 @@ No. The project has governed demo evidence, but production readiness is not clai
 
 No. The repository has frontend-ready JSON data contracts for future dashboard work, but not a real frontend/dashboard application.
 
-**Why is YOLO notebook not refreshed?**
+**How is the refreshed YOLO notebook used?**
 
-The YOLO notebook is safe and presents governed YOLO evidence. Refreshing it to consume the new Detection frontend bundle is optional and was skipped to avoid notebook churn before packaging.
+The YOLO notebook is safe and presents governed YOLO evidence. It now consumes the finalized Detection frontend bundle at `artifacts/frontend/detection/yolo_train_v0_2_0/` and remains an evidence/presentation layer only.
 
 **Why is PR AUC unavailable for Track B?**
 

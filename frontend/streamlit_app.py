@@ -29,6 +29,17 @@ TRACK_A_EVIDENCE_FILENAMES = (
     "error_distribution_pie_data.json",
 )
 
+TRACK_B_EVIDENCE_FILENAMES = (
+    "metric_cards.json",
+    "anomaly_score_summary.json",
+    "frontend_anomaly_summary.json",
+    "reconstruction_loss_summary.json",
+    "threshold_behavior.json",
+    "sample_anomaly_gallery.json",
+    "quality_decision_summary.json",
+    "artifact_inventory_frontend.json",
+)
+
 STATUS_LINES = [
     ("Track A Classification", "PASS"),
     ("Track B / Autoencoder", "PASS"),
@@ -466,11 +477,172 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
     )
 
 
-def _render_track_b() -> None:
-    """Render the Track B page."""
+def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
+    """Render the Track B anomaly detection page."""
     st.subheader("Track B Anomaly Detection")
-    st.write("Planned: read the Track B JSON data contract and present anomaly metrics, thresholds, and examples.")
-    st.info("Current status: PASS, PR AUC unavailable in governed evidence and not fabricated.")
+    st.warning(
+        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
+        "No live prediction on this page."
+    )
+    st.write(
+        "This page summarizes the governed Track B autoencoder bundle and keeps the "
+        "presentation focused on evidence rather than live inference."
+    )
+
+    if bundles is None:
+        st.error("Track B evidence is unavailable because the frontend bundles failed to load.")
+        return
+
+    track_b = bundles["track_b"]
+    metric_cards = track_b.get("metric_cards.json", {})
+    anomaly_summary = track_b.get("anomaly_score_summary.json", {})
+    frontend_summary = track_b.get("frontend_anomaly_summary.json", {})
+    reconstruction = track_b.get("reconstruction_loss_summary.json", {})
+    threshold_behavior = track_b.get("threshold_behavior.json", {})
+    gallery = track_b.get("sample_anomaly_gallery.json", {})
+    quality = track_b.get("quality_decision_summary.json", {})
+    inventory = track_b.get("artifact_inventory_frontend.json", {})
+
+    top_cols = st.columns(3)
+    with top_cols[0]:
+        st.metric(
+            "Model",
+            _format_value(frontend_summary.get("model_type") or metric_cards.get("model_type")),
+            help=_format_value(frontend_summary.get("model_version") or metric_cards.get("model_version")),
+        )
+    with top_cols[1]:
+        st.metric(
+            "Threshold",
+            _format_value(frontend_summary.get("key_metrics", {}).get("threshold") or metric_cards.get("threshold")),
+        )
+    with top_cols[2]:
+        st.metric(
+            "Canonical status",
+            _format_value(frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")),
+            help="PR AUC is unavailable in governed evidence and is not fabricated.",
+        )
+
+    st.markdown("### Metric Cards")
+    cards = metric_cards.get("cards", [])
+    if cards:
+        for start_idx in range(0, len(cards), 3):
+            row_cards = cards[start_idx : start_idx + 3]
+            cols = st.columns(len(row_cards))
+            for col, card in zip(cols, row_cards):
+                with col:
+                    st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
+                    detail = card.get("detail")
+                    if detail:
+                        st.caption(str(detail))
+    else:
+        st.info("No Track B metric cards available.")
+
+    st.markdown("### Anomaly Summary And Decision")
+    summary_cols = st.columns([1.3, 1])
+    with summary_cols[0]:
+        st.caption("Frontend anomaly summary")
+        _render_key_value_grid(
+            [
+                ("Model", frontend_summary.get("model_type")),
+                ("Version", frontend_summary.get("model_version")),
+                ("Canonical status", frontend_summary.get("canonical_status")),
+                ("ROC AUC", frontend_summary.get("key_metrics", {}).get("roc_auc")),
+                ("Threshold", frontend_summary.get("key_metrics", {}).get("threshold")),
+                ("Next step", frontend_summary.get("next_step")),
+            ]
+        )
+        st.caption("Anomaly score summary")
+        _render_key_value_grid(
+            [
+                ("Score definition", anomaly_summary.get("score_definition")),
+                ("Threshold strategy", anomaly_summary.get("threshold_strategy")),
+                ("Threshold", anomaly_summary.get("threshold")),
+                ("Normal/anomaly separation", anomaly_summary.get("normal_vs_anomaly_score_separation")),
+            ]
+        )
+    with summary_cols[1]:
+        st.caption("Quality decision summary")
+        _render_key_value_grid(
+            [
+                ("Decision", quality.get("decision")),
+                ("Canonical status", quality.get("canonical_status")),
+                ("Model status", quality.get("model_quality_status")),
+                ("Production ready", quality.get("production_ready")),
+                ("Deployment candidate", quality.get("deployment_candidate")),
+                ("Threshold", quality.get("threshold")),
+                ("Next step", quality.get("next_recommended_step")),
+            ]
+        )
+
+    st.markdown("### Reconstruction And Threshold Behavior")
+    analysis_cols = st.columns(2)
+    with analysis_cols[0]:
+        st.caption("Reconstruction loss summary")
+        _render_markdown_table(
+            reconstruction.get("chart_rows", []),
+            [
+                ("Epoch", "epoch"),
+                ("Reconstruction loss", "reconstruction_loss"),
+            ],
+        )
+    with analysis_cols[1]:
+        st.caption("Threshold behavior")
+        _render_markdown_table(
+            threshold_behavior.get("rows", []),
+            [
+                ("Threshold", "threshold"),
+                ("Precision", "precision"),
+                ("Recall", "recall"),
+                ("F1", "f1"),
+                ("False Positives", "false_positive"),
+                ("False Negatives", "false_negative"),
+            ],
+        )
+
+    st.markdown("### Sample Gallery Summary")
+    gallery_cols = st.columns(2)
+    with gallery_cols[0]:
+        st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
+        st.caption(
+            "This page shows summary metadata only; image rendering can be added later without changing the data contract."
+        )
+    with gallery_cols[1]:
+        count_rows = [
+            {"error_type": label, "count": count}
+            for label, count in (
+                ("true_positive", gallery.get("counts_by_error_type", {}).get("true_positive")),
+                ("true_negative", gallery.get("counts_by_error_type", {}).get("true_negative")),
+                ("false_positive", gallery.get("counts_by_error_type", {}).get("false_positive")),
+                ("false_negative", gallery.get("counts_by_error_type", {}).get("false_negative")),
+            )
+            if count is not None
+        ]
+        _render_markdown_table(
+            count_rows,
+            [
+                ("Error type", "error_type"),
+                ("Count", "count"),
+            ],
+        )
+
+    st.markdown("### Evidence Inventory")
+    inventory_cols = st.columns(3)
+    with inventory_cols[0]:
+        st.metric("Bundle files", _format_value(inventory.get("bundle_artifact_count")))
+    with inventory_cols[1]:
+        st.metric("Source artifacts", _format_value(inventory.get("source_artifact_count")))
+    with inventory_cols[2]:
+        st.metric("Selected threshold", _format_value(frontend_summary.get("key_metrics", {}).get("threshold") or metric_cards.get("threshold")))
+
+    st.caption("PR AUC is unavailable in governed evidence and not fabricated.")
+
+    with st.expander("Track B evidence file list", expanded=False):
+        for filename in TRACK_B_EVIDENCE_FILENAMES:
+            st.code(filename, language="text")
+
+    with st.expander("Track B evidence paths", expanded=False):
+        st.code("artifacts/frontend/track_b/", language="text")
+        st.write("Metric cards, anomaly summary, reconstruction loss, threshold behavior, quality summary, and inventory remain in the bundle.")
 
 
 def _render_yolo() -> None:
@@ -519,7 +691,7 @@ def main() -> None:
     pages = {
         "Overview": lambda: _render_overview(bundles),
         "Track A Classification": lambda: _render_track_a(bundles),
-        "Track B Anomaly Detection": _render_track_b,
+        "Track B Anomaly Detection": lambda: _render_track_b(bundles),
         "YOLO Detection": _render_yolo,
         "Upload / Predict": _render_upload_predict,
         "Limitations / Safety": _render_limitations,

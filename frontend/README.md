@@ -10,6 +10,8 @@ Install the project requirements first:
 python -m pip install -r requirements.txt
 ```
 
+That install also includes Plotly for cleaner dashboard charts.
+
 Start the API in one terminal:
 
 ```bash

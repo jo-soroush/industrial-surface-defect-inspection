@@ -16,6 +16,19 @@ from frontend.data_loader import load_all_frontend_bundles
 
 PROJECT_TITLE = "Industrial Surface Defect Inspection Platform"
 
+TRACK_A_EVIDENCE_FILENAMES = (
+    "metric_cards.json",
+    "confusion_matrix_chart_data.json",
+    "per_class_bar_chart_data.json",
+    "threshold_curve_chart_data.json",
+    "sample_predictions_gallery.json",
+    "frontend_model_recommendation.json",
+    "quality_decision_summary.json",
+    "model_comparison_table.json",
+    "artifact_inventory_frontend.json",
+    "error_distribution_pie_data.json",
+)
+
 STATUS_LINES = [
     ("Track A Classification", "PASS"),
     ("Track B / Autoencoder", "PASS"),
@@ -70,6 +83,48 @@ def _render_data_load_health(bundles: dict[str, dict[str, Any]] | None) -> None:
                 help=f"{len(bundle)} JSON files loaded from the evidence bundle",
             )
             st.caption(f"{len(bundle)} JSON files")
+
+
+def _format_value(value: Any) -> str:
+    """Format values for compact markdown tables and labels."""
+    if value is None:
+        return "Unavailable"
+    if isinstance(value, bool):
+        return "Yes" if value else "No"
+    if isinstance(value, float):
+        formatted = f"{value:.3f}".rstrip("0").rstrip(".")
+        return formatted or "0"
+    return str(value)
+
+
+def _render_markdown_table(rows: list[dict[str, Any]], columns: list[tuple[str, str]]) -> None:
+    """Render a small markdown table from a list of row dictionaries."""
+    if not rows:
+        st.info("No data available.")
+        return
+
+    headers = [header for header, _ in columns]
+    table_lines = [
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join(["---"] * len(headers)) + " |",
+    ]
+    for row in rows:
+        cells = [_format_value(row.get(key)) for _, key in columns]
+        table_lines.append("| " + " | ".join(cells) + " |")
+
+    st.markdown("\n".join(table_lines))
+
+
+def _render_key_value_grid(items: list[tuple[str, Any]]) -> None:
+    """Render a compact key/value grid using Streamlit metrics."""
+    if not items:
+        st.info("No summary metrics available.")
+        return
+
+    cols = st.columns(min(3, len(items)))
+    for idx, (label, value) in enumerate(items):
+        with cols[idx % len(cols)]:
+            st.metric(label, _format_value(value))
 
 
 def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
@@ -162,11 +217,253 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
         st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
 
 
-def _render_track_a() -> None:
-    """Render the Track A page."""
+def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
+    """Render the Track A classification page."""
     st.subheader("Track A Classification")
-    st.write("Planned: read the Track A JSON data contract and present summary cards, charts, and samples.")
-    st.info("Current status: PASS, selected candidate ResNet18 v0.4.0, threshold 0.65.")
+    st.warning(
+        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
+        "No live prediction on this page."
+    )
+    st.write(
+        "This page summarizes the governed Track A classification bundle and keeps the "
+        "presentation focused on current evidence, not live inference."
+    )
+
+    if bundles is None:
+        st.error("Track A evidence is unavailable because the frontend bundles failed to load.")
+        return
+
+    track_a = bundles["track_a"]
+    metric_cards = track_a.get("metric_cards.json", {})
+    recommendation = track_a.get("frontend_model_recommendation.json", {})
+    comparison = track_a.get("model_comparison_table.json", {})
+    confusion = track_a.get("confusion_matrix_chart_data.json", {})
+    per_class = track_a.get("per_class_bar_chart_data.json", {})
+    threshold_curve = track_a.get("threshold_curve_chart_data.json", {})
+    gallery = track_a.get("sample_predictions_gallery.json", {})
+    quality = track_a.get("quality_decision_summary.json", {})
+    inventory = track_a.get("artifact_inventory_frontend.json", {})
+    error_distribution = track_a.get("error_distribution_pie_data.json", {})
+
+    top_cols = st.columns(3)
+    with top_cols[0]:
+        st.metric(
+            "Selected model",
+            _format_value(recommendation.get("selected_model_name") or metric_cards.get("selected_model_name")),
+            help=_format_value(recommendation.get("selected_model_version") or metric_cards.get("selected_model_version")),
+        )
+    with top_cols[1]:
+        st.metric(
+            "Recommended threshold",
+            _format_value(recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
+        )
+    with top_cols[2]:
+        st.metric(
+            "Quality target",
+            _format_value(quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
+            help=_format_value(quality.get("decision") or metric_cards.get("selected_model_quality_status")),
+        )
+
+    st.markdown("### Metric Cards")
+    cards = metric_cards.get("cards", [])
+    if cards:
+        for start_idx in range(0, len(cards), 3):
+            row_cards = cards[start_idx : start_idx + 3]
+            cols = st.columns(len(row_cards))
+            for col, card in zip(cols, row_cards):
+                with col:
+                    st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
+                    detail = card.get("detail")
+                    if detail:
+                        st.caption(str(detail))
+    else:
+        st.info("No Track A metric cards available.")
+
+    st.markdown("### Comparison and Decision Summary")
+    comparison_cols = st.columns([1.4, 1])
+    with comparison_cols[0]:
+        st.caption("Selected model comparison table")
+        _render_markdown_table(
+            comparison.get("rows", []),
+            [
+                ("Rank", "rank"),
+                ("Selected", "selected"),
+                ("Model", "model_name"),
+                ("Version", "model_version"),
+                ("Run ID", "run_id"),
+                ("Macro F1", "macro_f1"),
+                ("Accuracy", "accuracy"),
+                ("Recall", "recall"),
+                ("Threshold", "threshold_used"),
+                ("Status", "short_status"),
+            ],
+        )
+    with comparison_cols[1]:
+        st.caption("Quality decision summary")
+        _render_key_value_grid(
+            [
+                ("Decision", quality.get("decision")),
+                ("Selected run", quality.get("run_id")),
+                ("Selected model", quality.get("model_name")),
+                ("Version", quality.get("model_version")),
+                ("Production ready", quality.get("production_ready")),
+                ("Deployment candidate", quality.get("deployment_candidate")),
+                ("Recommended threshold", quality.get("recommended_threshold")),
+                ("Next step", quality.get("next_recommended_step")),
+            ]
+        )
+
+    st.markdown("### Evidence Tables")
+    evidence_cols = st.columns(2)
+    with evidence_cols[0]:
+        st.caption("Confusion matrix data")
+        matrix = confusion.get("matrix", [])
+        labels = confusion.get("labels", {})
+        matrix_rows = []
+        row_labels = labels.get("rows", [])
+        col_labels = labels.get("columns", [])
+        for idx, row in enumerate(matrix):
+            matrix_rows.append(
+                {
+                    "actual": row_labels[idx] if idx < len(row_labels) else f"row_{idx}",
+                    **{
+                        (col_labels[col_idx] if col_idx < len(col_labels) else f"col_{col_idx}"): value
+                        for col_idx, value in enumerate(row)
+                    },
+                }
+            )
+        _render_markdown_table(
+            matrix_rows,
+            [
+                ("Actual", "actual"),
+                (col_labels[0] if len(col_labels) > 0 else "Column 1", col_labels[0] if len(col_labels) > 0 else "col_0"),
+                (col_labels[1] if len(col_labels) > 1 else "Column 2", col_labels[1] if len(col_labels) > 1 else "col_1"),
+            ],
+        )
+    with evidence_cols[1]:
+        st.caption("Per-class validation metrics")
+        _render_markdown_table(
+            per_class.get("classes", []),
+            [
+                ("Class", "label"),
+                ("Precision", "precision"),
+                ("Recall", "recall"),
+                ("F1", "f1"),
+            ],
+        )
+
+    st.markdown("### Threshold And Error Analysis")
+    analysis_cols = st.columns(2)
+    with analysis_cols[0]:
+        st.caption("Threshold sweep summary")
+        threshold_rows = threshold_curve.get("rows", [])
+        if threshold_rows:
+            key_thresholds = [
+                row
+                for row in threshold_rows
+                if row.get("threshold") in {threshold_curve.get("baseline_threshold"), threshold_curve.get("recommended_threshold")}
+            ]
+            if key_thresholds:
+                _render_markdown_table(
+                    key_thresholds,
+                    [
+                        ("Threshold", "threshold"),
+                        ("Precision", "precision"),
+                        ("Recall", "recall"),
+                        ("Macro F1", "macro_f1"),
+                        ("Accuracy", "accuracy"),
+                        ("False Positives", "false_positive"),
+                        ("False Negatives", "false_negative"),
+                    ],
+                )
+            else:
+                _render_markdown_table(
+                    threshold_rows[:4],
+                    [
+                        ("Threshold", "threshold"),
+                        ("Precision", "precision"),
+                        ("Recall", "recall"),
+                        ("Macro F1", "macro_f1"),
+                        ("Accuracy", "accuracy"),
+                    ],
+                )
+        else:
+            st.info("No threshold curve data available.")
+
+    with analysis_cols[1]:
+        st.caption("Error distribution")
+        error_rows = error_distribution.get("segments", [])
+        _render_markdown_table(
+            error_rows,
+            [
+                ("Label", "label"),
+                ("Count", "count"),
+                ("Share", "percentage"),
+            ],
+        )
+
+    st.markdown("### Sample Gallery Summary")
+    gallery_cols = st.columns(2)
+    with gallery_cols[0]:
+        st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
+        gallery_counts = gallery.get("counts_by_error_type", {})
+        count_rows = [
+            {"error_type": label, "count": count}
+            for label, count in (
+                ("true_positive", gallery_counts.get("true_positive")),
+                ("true_negative", gallery_counts.get("true_negative")),
+                ("false_positive", gallery_counts.get("false_positive")),
+                ("false_negative", gallery_counts.get("false_negative")),
+            )
+            if count is not None
+        ]
+        _render_markdown_table(
+            count_rows,
+            [
+                ("Error type", "error_type"),
+                ("Count", "count"),
+            ],
+        )
+        st.caption(
+            "This page shows summary metadata only; image rendering can be added later without changing the data contract."
+        )
+    with gallery_cols[1]:
+        gallery_counts = gallery.get("selected_counts_by_error_type", {})
+        gallery_rows = [
+            {"error_type": label, "count": gallery_counts.get(label), "available": gallery.get("counts_by_error_type", {}).get(label)}
+            for label in ("true_positive", "true_negative", "false_positive", "false_negative")
+            if label in gallery.get("counts_by_error_type", {})
+        ]
+        _render_markdown_table(
+            gallery_rows,
+            [
+                ("Error type", "error_type"),
+                ("Selected count", "count"),
+                ("Available count", "available"),
+            ],
+        )
+
+    st.markdown("### Evidence Inventory")
+    inventory_cols = st.columns(3)
+    with inventory_cols[0]:
+        st.metric("Bundle files", _format_value(inventory.get("bundle_artifact_count")))
+    with inventory_cols[1]:
+        st.metric("Source artifacts", _format_value(inventory.get("source_artifact_count")))
+    with inventory_cols[2]:
+        st.metric("Selected threshold", _format_value(recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")))
+
+    with st.expander("Track A evidence file list", expanded=False):
+        for filename in TRACK_A_EVIDENCE_FILENAMES:
+            st.code(filename, language="text")
+
+    with st.expander("Track A evidence paths", expanded=False):
+        st.code("artifacts/frontend/track_a/", language="text")
+        st.write("Selected model recommendation, comparison table, quality summary, and evidence inventory remain in the bundle.")
+
+    st.markdown("### Safe Interpretation")
+    st.write(
+        "ResNet18 v0.4.0 is the strongest governed Track A candidate, but this dashboard page remains an evidence view only."
+    )
 
 
 def _render_track_b() -> None:
@@ -221,7 +518,7 @@ def main() -> None:
 
     pages = {
         "Overview": lambda: _render_overview(bundles),
-        "Track A Classification": _render_track_a,
+        "Track A Classification": lambda: _render_track_a(bundles),
         "Track B Anomaly Detection": _render_track_b,
         "YOLO Detection": _render_yolo,
         "Upload / Predict": _render_upload_predict,

@@ -7,14 +7,13 @@ implement live prediction, API integration, Docker, or production features.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import streamlit as st
 
 from frontend.data_loader import (
     DETECTION_BUNDLE_DIR,
     TRACK_A_BUNDLE_DIR,
     TRACK_B_BUNDLE_DIR,
+    load_all_frontend_bundles,
 )
 
 
@@ -38,6 +37,27 @@ def _render_status_summary() -> None:
     for idx, (label, value) in enumerate(STATUS_LINES):
         with cols[idx % 2]:
             st.metric(label, value)
+
+
+def _render_data_load_health() -> None:
+    """Render a small data-load health section."""
+    st.subheader("Data Load Health")
+    try:
+        bundles = load_all_frontend_bundles()
+    except (FileNotFoundError, ValueError) as exc:
+        st.error(f"Frontend data contracts are not fully loadable: {exc}")
+        return
+
+    cols = st.columns(3)
+    for idx, key in enumerate(("track_a", "track_b", "detection")):
+        with cols[idx]:
+            bundle = bundles[key]
+            st.metric(
+                label=f"{key.replace('_', ' ').title()} bundle",
+                value="Loaded",
+                help=f"{len(bundle)} JSON files loaded from the evidence bundle",
+            )
+            st.caption(f"{len(bundle)} JSON files")
 
 
 def _render_limitations_banner() -> None:
@@ -116,6 +136,7 @@ def main() -> None:
     st.title(PROJECT_TITLE)
     _render_limitations_banner()
     _render_status_summary()
+    _render_data_load_health()
 
     pages = {
         "Overview": _render_overview,

@@ -19,6 +19,7 @@ streamlit run frontend/streamlit_app.py
 ## What This Scaffold Does
 
 - Shows the project title and current high-level status
+- Loads and validates the existing JSON data contracts for Track A, Track B, and Detection
 - Provides sidebar navigation for the planned dashboard pages
 - Presents a safe limitations banner
 - Establishes the structure for reading existing JSON data contracts in the next phase
@@ -30,6 +31,16 @@ streamlit run frontend/streamlit_app.py
 - Docker or docker-compose
 - Full chart wiring from JSON data contracts
 - Production or deployment claims
+
+## Data Loading Phase
+
+The current frontend phase validates that the following JSON data-contract folders are present and readable:
+
+- `artifacts/frontend/track_a/`
+- `artifacts/frontend/track_b/`
+- `artifacts/frontend/detection/yolo_train_v0_2_0/`
+
+The next frontend phase is to turn these validated payloads into dashboard sections and charts.
 
 ## Next Phase
 

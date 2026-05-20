@@ -69,7 +69,8 @@ The `artifacts/frontend/` folders are frontend-ready data contracts and evidence
 - Evidence layers are ready for presentation.
 - Final demo readiness passed with warnings.
 - The remaining warnings are presentation-oriented:
-  - YOLO notebook refresh is optional.
+  - YOLO notebook has been refreshed and now consumes `artifacts/frontend/detection/yolo_train_v0_2_0/`.
+  - It remains an evidence/presentation layer only and does not train, recompute metrics, create artifacts, update registries, or claim production/deployment readiness.
   - Final packaging docs are being assembled.
   - README cleanup may be useful later.
 - No evidence-layer blockers remain.

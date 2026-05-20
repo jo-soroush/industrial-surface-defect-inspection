@@ -117,6 +117,102 @@ def _render_data_load_health(bundles: dict[str, dict[str, Any]] | None) -> None:
             st.caption(f"{len(bundle)} JSON files")
 
 
+def _build_donut_figure(
+    title: str,
+    labels: list[str],
+    values: list[float],
+    colors: list[str],
+) -> go.Figure:
+    """Build a small donut chart for dashboard summaries."""
+    figure = go.Figure(
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.58,
+                sort=False,
+                textinfo="label+percent",
+                marker=dict(colors=colors),
+                hovertemplate="%{label}<br>%{value}<extra></extra>",
+                direction="clockwise",
+            )
+        ]
+    )
+    figure.update_layout(
+        title=title,
+        height=320,
+        margin=dict(l=10, r=10, t=50, b=10),
+        showlegend=True,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+    return figure
+
+
+def _build_grouped_bar_figure(
+    title: str,
+    categories: list[str],
+    series_map: dict[str, list[float]],
+    colors: dict[str, str],
+    yaxis_title: str,
+) -> go.Figure:
+    """Build a grouped bar chart for dashboard summaries."""
+    figure = go.Figure()
+    for series_name, series_values in series_map.items():
+        figure.add_trace(
+            go.Bar(
+                name=series_name,
+                x=categories,
+                y=series_values,
+                marker_color=colors.get(series_name),
+            )
+        )
+    figure.update_layout(
+        title=title,
+        height=320,
+        barmode="group",
+        margin=dict(l=10, r=10, t=50, b=10),
+        legend_title_text="Metric",
+        yaxis_title=yaxis_title,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+    return figure
+
+
+def _build_line_figure(
+    title: str,
+    x_values: list[float],
+    series_map: dict[str, list[float]],
+    colors: dict[str, str],
+    yaxis_title: str,
+) -> go.Figure:
+    """Build a multi-line chart for dashboard summaries."""
+    figure = go.Figure()
+    for series_name, series_values in series_map.items():
+        figure.add_trace(
+            go.Scatter(
+                name=series_name,
+                x=x_values,
+                y=series_values,
+                mode="lines+markers",
+                line=dict(color=colors.get(series_name)),
+                marker=dict(size=7),
+            )
+        )
+    figure.update_layout(
+        title=title,
+        height=320,
+        margin=dict(l=10, r=10, t=50, b=10),
+        legend_title_text="Metric",
+        yaxis_title=yaxis_title,
+        xaxis_title="Threshold",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+    return figure
+
+
 def _render_overview_status_chart() -> None:
     """Render a compact plotly overview chart for the current module state."""
     labels = [
@@ -359,14 +455,13 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
 
 def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the Track A classification page."""
-    st.subheader("Track A Classification")
-    st.warning(
-        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
-        "No live prediction on this page."
+    st.markdown("## Track A Classification")
+    st.markdown(
+        "A governed binary classifier page for the Track A good-vs-defect task, presented as an evidence dashboard rather than a live deployment view."
     )
-    st.write(
-        "This page summarizes the governed Track A classification bundle and keeps the "
-        "presentation focused on current evidence, not live inference."
+    st.warning(
+        "Evidence/dashboard view only. not production-ready. not deployment-safe. "
+        "No live prediction on this Track A evidence page."
     )
 
     if bundles is None:
@@ -385,7 +480,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
     inventory = track_a.get("artifact_inventory_frontend.json", {})
     error_distribution = track_a.get("error_distribution_pie_data.json", {})
 
-    top_cols = st.columns(3)
+    top_cols = st.columns(4)
     with top_cols[0]:
         st.metric(
             "Selected model",
@@ -399,54 +494,216 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
         )
     with top_cols[2]:
         st.metric(
-            "Quality target",
-            _format_value(quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
-            help=_format_value(quality.get("decision") or metric_cards.get("selected_model_quality_status")),
+            "Task",
+            "good vs defect",
+            help="Binary classification task for the governed Track A model.",
         )
-
-    st.markdown("### Metric Cards")
-    cards = metric_cards.get("cards", [])
-    if cards:
-        for start_idx in range(0, len(cards), 3):
-            row_cards = cards[start_idx : start_idx + 3]
-            cols = st.columns(len(row_cards))
-            for col, card in zip(cols, row_cards):
-                with col:
-                    st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
-                    detail = card.get("detail")
-                    if detail:
-                        st.caption(str(detail))
-    else:
-        st.info("No Track A metric cards available.")
+    with top_cols[3]:
+        st.metric(
+            "Quality/status",
+            _format_value(quality.get("decision") or metric_cards.get("selected_model_quality_status")),
+            help=_format_value(quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
+        )
 
     tabs = st.tabs(["Summary", "Charts", "Evidence"])
     with tabs[0]:
-        st.caption("Selected model, threshold, and quality target")
+        st.caption("Summary cards and a concise sample gallery view.")
+        quality_cols = st.columns(4)
+        with quality_cols[0]:
+            st.metric("Decision", _format_value(quality.get("decision")))
+        with quality_cols[1]:
+            st.metric("Production ready", _format_value(quality.get("production_ready")))
+        with quality_cols[2]:
+            st.metric("Deployment candidate", _format_value(quality.get("deployment_candidate")))
+        with quality_cols[3]:
+            st.metric(
+                "Selected threshold",
+                _format_value(recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
+            )
+
+        gallery_cols = st.columns(2)
+        with gallery_cols[0]:
+            st.metric("Sample gallery images", _format_value(gallery.get("gallery_sample_count")))
+            st.caption(
+                "The gallery remains summary-only here; images can be surfaced later without changing the governed data contract."
+            )
+        with gallery_cols[1]:
+            gallery_counts = gallery.get("counts_by_error_type", {})
+            _render_key_value_grid(
+                [
+                    ("True positive", gallery_counts.get("true_positive")),
+                    ("True negative", gallery_counts.get("true_negative")),
+                    ("False positive", gallery_counts.get("false_positive")),
+                    ("False negative", gallery_counts.get("false_negative")),
+                ]
+            )
+
+        with st.expander("Metric cards", expanded=False):
+            cards = metric_cards.get("cards", [])
+            if cards:
+                for start_idx in range(0, len(cards), 3):
+                    row_cards = cards[start_idx : start_idx + 3]
+                    cols = st.columns(len(row_cards))
+                    for col, card in zip(cols, row_cards):
+                        with col:
+                            st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
+                            detail = card.get("detail")
+                            if detail:
+                                st.caption(str(detail))
+            else:
+                st.info("No Track A metric cards available.")
+
+        st.markdown("### Quality decision")
         _render_key_value_grid(
             [
                 ("Selected model", recommendation.get("selected_model_name") or metric_cards.get("selected_model_name")),
+                ("Version", recommendation.get("selected_model_version") or metric_cards.get("selected_model_version")),
+                ("Run ID", recommendation.get("selected_run_id")),
                 ("Threshold", recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
                 ("Quality target", quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
-                ("Production ready", quality.get("production_ready")),
-                ("Deployment candidate", quality.get("deployment_candidate")),
             ]
         )
     with tabs[1]:
         chart_cols = st.columns(2)
         with chart_cols[0]:
-            st.caption("Per-class metric view")
+            st.caption("Error distribution")
+            error_rows = error_distribution.get("segments", [])
+            if error_rows:
+                labels = [str(row.get("label", f"segment_{idx}")) for idx, row in enumerate(error_rows)]
+                values = [float(row.get("count", 0) or 0) for row in error_rows]
+                palette = []
+                for label in labels:
+                    lowered = label.lower()
+                    if "false_negative" in lowered or "fn" in lowered:
+                        palette.append("#d62728")
+                    elif "false_positive" in lowered or "fp" in lowered:
+                        palette.append("#ff9800")
+                    elif "true_positive" in lowered or "tp" in lowered:
+                        palette.append("#2ca02c")
+                    else:
+                        palette.append("#1f77b4")
+                st.plotly_chart(
+                    _build_donut_figure(
+                        "Track A error distribution",
+                        labels,
+                        values,
+                        palette,
+                    ),
+                    use_container_width=True,
+                )
+            else:
+                st.info("No error distribution data available.")
+
+        with chart_cols[1]:
+            st.caption("Per-class performance")
             class_metric_rows = per_class.get("classes", [])
             if class_metric_rows:
-                st.bar_chart(
-                    {
-                        row.get("label", f"class_{idx}"): float(row.get("precision", 0) or 0)
-                        for idx, row in enumerate(class_metric_rows)
-                    }
+                categories = [str(row.get("label", f"class_{idx}")) for idx, row in enumerate(class_metric_rows)]
+                series_map = {
+                    "Precision": [float(row.get("precision", 0) or 0) for row in class_metric_rows],
+                    "Recall": [float(row.get("recall", 0) or 0) for row in class_metric_rows],
+                    "F1": [float(row.get("f1", 0) or 0) for row in class_metric_rows],
+                }
+                st.plotly_chart(
+                    _build_grouped_bar_figure(
+                        "Track A per-class performance",
+                        categories,
+                        series_map,
+                        {"Precision": "#1f77b4", "Recall": "#ff9800", "F1": "#2ca02c"},
+                        "Score",
+                    ),
+                    use_container_width=True,
                 )
             else:
                 st.info("No per-class data available for charting.")
+            with st.expander("Per-class table", expanded=False):
+                _render_markdown_table(
+                    class_metric_rows,
+                    [
+                        ("Class", "label"),
+                        ("Precision", "precision"),
+                        ("Recall", "recall"),
+                        ("F1", "f1"),
+                    ],
+                )
+
+        st.caption("Threshold behavior")
+        threshold_rows = threshold_curve.get("rows", [])
+        if threshold_rows:
+            threshold_values = [float(row.get("threshold", 0) or 0) for row in threshold_rows]
+            series_map = {
+                "Precision": [float(row.get("precision", 0) or 0) for row in threshold_rows],
+                "Recall": [float(row.get("recall", 0) or 0) for row in threshold_rows],
+                "Macro F1": [float(row.get("macro_f1", 0) or 0) for row in threshold_rows],
+                "Accuracy": [float(row.get("accuracy", 0) or 0) for row in threshold_rows],
+            }
+            st.plotly_chart(
+                _build_line_figure(
+                    "Track A threshold behavior",
+                    threshold_values,
+                    series_map,
+                    {
+                        "Precision": "#1f77b4",
+                        "Recall": "#ff9800",
+                        "Macro F1": "#2ca02c",
+                        "Accuracy": "#9467bd",
+                    },
+                    "Score",
+                ),
+                use_container_width=True,
+            )
+            st.caption(
+                "Thresholds: "
+                + ", ".join(_format_value(row.get("threshold")) for row in threshold_rows)
+            )
+        else:
+            st.info("No threshold sweep data available for charting.")
+    with tabs[2]:
+        st.caption("Detailed evidence and raw tables are kept inside expanders.")
+        st.caption("The model comparison details are kept behind an expander.")
+        with st.expander("Model comparison", expanded=False):
             _render_markdown_table(
-                class_metric_rows,
+                comparison.get("rows", []),
+                [
+                    ("Rank", "rank"),
+                    ("Selected", "selected"),
+                    ("Model", "model_name"),
+                    ("Version", "model_version"),
+                    ("Run ID", "run_id"),
+                    ("Macro F1", "macro_f1"),
+                    ("Accuracy", "accuracy"),
+                    ("Recall", "recall"),
+                    ("Threshold", "threshold_used"),
+                    ("Status", "short_status"),
+                ],
+            )
+        with st.expander("Confusion matrix", expanded=False):
+            matrix = confusion.get("matrix", [])
+            labels = confusion.get("labels", {})
+            matrix_rows = []
+            row_labels = labels.get("rows", [])
+            col_labels = labels.get("columns", [])
+            for idx, row in enumerate(matrix):
+                matrix_rows.append(
+                    {
+                        "actual": row_labels[idx] if idx < len(row_labels) else f"row_{idx}",
+                        **{
+                            (col_labels[col_idx] if col_idx < len(col_labels) else f"col_{col_idx}"): value
+                            for col_idx, value in enumerate(row)
+                        },
+                    }
+                )
+            _render_markdown_table(
+                matrix_rows,
+                [
+                    ("Actual", "actual"),
+                    (col_labels[0] if len(col_labels) > 0 else "Column 1", col_labels[0] if len(col_labels) > 0 else "col_0"),
+                    (col_labels[1] if len(col_labels) > 1 else "Column 2", col_labels[1] if len(col_labels) > 1 else "col_1"),
+                ],
+            )
+        with st.expander("Per-class table", expanded=False):
+            _render_markdown_table(
+                per_class.get("classes", []),
                 [
                     ("Class", "label"),
                     ("Precision", "precision"),
@@ -454,115 +711,11 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                     ("F1", "f1"),
                 ],
             )
-        with chart_cols[1]:
-            st.caption("Threshold sweep line")
+        with st.expander("Threshold table", expanded=False):
             threshold_rows = threshold_curve.get("rows", [])
             if threshold_rows:
-                st.line_chart(
-                    {
-                        "Macro F1": [float(row.get("macro_f1", 0) or 0) for row in threshold_rows],
-                        "Accuracy": [float(row.get("accuracy", 0) or 0) for row in threshold_rows],
-                        "Precision": [float(row.get("precision", 0) or 0) for row in threshold_rows],
-                        "Recall": [float(row.get("recall", 0) or 0) for row in threshold_rows],
-                    }
-                )
-                st.caption(
-                    "Thresholds: "
-                    + ", ".join(_format_value(row.get("threshold")) for row in threshold_rows)
-                )
-            else:
-                st.info("No threshold sweep data available for charting.")
-    with tabs[2]:
-        st.caption("Evidence tables")
-        st.dataframe(comparison.get("rows", []), use_container_width=True)
-
-    st.markdown("### Comparison and Decision Summary")
-    comparison_cols = st.columns([1.4, 1])
-    with comparison_cols[0]:
-        st.caption("Selected model comparison table")
-        _render_markdown_table(
-            comparison.get("rows", []),
-            [
-                ("Rank", "rank"),
-                ("Selected", "selected"),
-                ("Model", "model_name"),
-                ("Version", "model_version"),
-                ("Run ID", "run_id"),
-                ("Macro F1", "macro_f1"),
-                ("Accuracy", "accuracy"),
-                ("Recall", "recall"),
-                ("Threshold", "threshold_used"),
-                ("Status", "short_status"),
-            ],
-        )
-    with comparison_cols[1]:
-        st.caption("Quality decision summary")
-        _render_key_value_grid(
-            [
-                ("Decision", quality.get("decision")),
-                ("Selected run", quality.get("run_id")),
-                ("Selected model", quality.get("model_name")),
-                ("Version", quality.get("model_version")),
-                ("Production ready", quality.get("production_ready")),
-                ("Deployment candidate", quality.get("deployment_candidate")),
-                ("Recommended threshold", quality.get("recommended_threshold")),
-                ("Next step", quality.get("next_recommended_step")),
-            ]
-        )
-
-    st.markdown("### Evidence Tables")
-    evidence_cols = st.columns(2)
-    with evidence_cols[0]:
-        st.caption("Confusion matrix data")
-        matrix = confusion.get("matrix", [])
-        labels = confusion.get("labels", {})
-        matrix_rows = []
-        row_labels = labels.get("rows", [])
-        col_labels = labels.get("columns", [])
-        for idx, row in enumerate(matrix):
-            matrix_rows.append(
-                {
-                    "actual": row_labels[idx] if idx < len(row_labels) else f"row_{idx}",
-                    **{
-                        (col_labels[col_idx] if col_idx < len(col_labels) else f"col_{col_idx}"): value
-                        for col_idx, value in enumerate(row)
-                    },
-                }
-            )
-        _render_markdown_table(
-            matrix_rows,
-            [
-                ("Actual", "actual"),
-                (col_labels[0] if len(col_labels) > 0 else "Column 1", col_labels[0] if len(col_labels) > 0 else "col_0"),
-                (col_labels[1] if len(col_labels) > 1 else "Column 2", col_labels[1] if len(col_labels) > 1 else "col_1"),
-            ],
-        )
-    with evidence_cols[1]:
-        st.caption("Per-class validation metrics")
-        _render_markdown_table(
-            per_class.get("classes", []),
-            [
-                ("Class", "label"),
-                ("Precision", "precision"),
-                ("Recall", "recall"),
-                ("F1", "f1"),
-            ],
-        )
-
-    st.markdown("### Threshold And Error Analysis")
-    analysis_cols = st.columns(2)
-    with analysis_cols[0]:
-        st.caption("Threshold sweep summary")
-        threshold_rows = threshold_curve.get("rows", [])
-        if threshold_rows:
-            key_thresholds = [
-                row
-                for row in threshold_rows
-                if row.get("threshold") in {threshold_curve.get("baseline_threshold"), threshold_curve.get("recommended_threshold")}
-            ]
-            if key_thresholds:
                 _render_markdown_table(
-                    key_thresholds,
+                    threshold_rows,
                     [
                         ("Threshold", "threshold"),
                         ("Precision", "precision"),
@@ -574,92 +727,28 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                     ],
                 )
             else:
-                _render_markdown_table(
-                    threshold_rows[:4],
-                    [
-                        ("Threshold", "threshold"),
-                        ("Precision", "precision"),
-                        ("Recall", "recall"),
-                        ("Macro F1", "macro_f1"),
-                        ("Accuracy", "accuracy"),
-                    ],
-                )
-        else:
-            st.info("No threshold curve data available.")
-
-    with analysis_cols[1]:
-        st.caption("Error distribution")
-        error_rows = error_distribution.get("segments", [])
-        _render_markdown_table(
-            error_rows,
-            [
-                ("Label", "label"),
-                ("Count", "count"),
-                ("Share", "percentage"),
-            ],
-        )
-
-    st.markdown("### Sample Gallery Summary")
-    gallery_cols = st.columns(2)
-    with gallery_cols[0]:
-        st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
-        gallery_counts = gallery.get("counts_by_error_type", {})
-        count_rows = [
-            {"error_type": label, "count": count}
-            for label, count in (
-                ("true_positive", gallery_counts.get("true_positive")),
-                ("true_negative", gallery_counts.get("true_negative")),
-                ("false_positive", gallery_counts.get("false_positive")),
-                ("false_negative", gallery_counts.get("false_negative")),
+                st.info("No threshold curve data available.")
+        with st.expander("Artifact inventory", expanded=False):
+            _render_key_value_grid(
+                [
+                    ("Bundle files", inventory.get("bundle_artifact_count")),
+                    ("Source artifacts", inventory.get("source_artifact_count")),
+                    ("Selected threshold", recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
+                ]
             )
-            if count is not None
-        ]
-        _render_markdown_table(
-            count_rows,
-            [
-                ("Error type", "error_type"),
-                ("Count", "count"),
-            ],
-        )
-        st.caption(
-            "This page shows summary metadata only; image rendering can be added later without changing the data contract."
-        )
-    with gallery_cols[1]:
-        gallery_counts = gallery.get("selected_counts_by_error_type", {})
-        gallery_rows = [
-            {"error_type": label, "count": gallery_counts.get(label), "available": gallery.get("counts_by_error_type", {}).get(label)}
-            for label in ("true_positive", "true_negative", "false_positive", "false_negative")
-            if label in gallery.get("counts_by_error_type", {})
-        ]
-        _render_markdown_table(
-            gallery_rows,
-            [
-                ("Error type", "error_type"),
-                ("Selected count", "count"),
-                ("Available count", "available"),
-            ],
-        )
+            st.caption(
+                "The evidence bundle remains governed; raw JSON is intentionally hidden by default."
+            )
+        with st.expander("Evidence file list", expanded=False):
+            for filename in TRACK_A_EVIDENCE_FILENAMES:
+                st.code(filename, language="text")
+        with st.expander("Evidence paths", expanded=False):
+            st.code("artifacts/frontend/track_a/", language="text")
+            st.write("Selected model recommendation, comparison table, quality summary, and evidence inventory remain in the bundle.")
 
-    st.markdown("### Evidence Inventory")
-    inventory_cols = st.columns(3)
-    with inventory_cols[0]:
-        st.metric("Bundle files", _format_value(inventory.get("bundle_artifact_count")))
-    with inventory_cols[1]:
-        st.metric("Source artifacts", _format_value(inventory.get("source_artifact_count")))
-    with inventory_cols[2]:
-        st.metric("Selected threshold", _format_value(recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")))
-
-    with st.expander("Track A evidence file list", expanded=False):
-        for filename in TRACK_A_EVIDENCE_FILENAMES:
-            st.code(filename, language="text")
-
-    with st.expander("Track A evidence paths", expanded=False):
-        st.code("artifacts/frontend/track_a/", language="text")
-        st.write("Selected model recommendation, comparison table, quality summary, and evidence inventory remain in the bundle.")
-
-    st.markdown("### Safe Interpretation")
+    st.markdown("### Safe interpretation")
     st.write(
-        "ResNet18 v0.4.0 is the strongest governed Track A candidate, but this dashboard page remains an evidence view only."
+        "ResNet18 v0.4.0 remains the governed Track A candidate, and this page stays in evidence/dashboard view only."
     )
 
 

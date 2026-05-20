@@ -11,6 +11,7 @@ import mimetypes
 from pathlib import Path
 from typing import Any
 
+import plotly.graph_objects as go
 import requests
 import streamlit as st
 
@@ -116,6 +117,41 @@ def _render_data_load_health(bundles: dict[str, dict[str, Any]] | None) -> None:
             st.caption(f"{len(bundle)} JSON files")
 
 
+def _render_overview_status_chart() -> None:
+    """Render a compact plotly overview chart for the current module state."""
+    labels = [
+        "Evidence complete",
+        "Prototype available",
+        "Not started",
+        "Not claimed",
+    ]
+    values = [3, 1, 2, 2]
+    colors = ["#2ca02c", "#1f77b4", "#9e9e9e", "#ff9800"]
+
+    figure = go.Figure(
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.58,
+                sort=False,
+                textinfo="label+percent",
+                marker=dict(colors=colors),
+                hovertemplate="%{label}<br>%{value}<extra></extra>",
+                direction="clockwise",
+            )
+        ]
+    )
+    figure.update_layout(
+        height=300,
+        margin=dict(l=10, r=10, t=10, b=10),
+        showlegend=True,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+    st.plotly_chart(figure, use_container_width=True)
+
+
 def _format_value(value: Any) -> str:
     """Format values for compact markdown tables and labels."""
     if value is None:
@@ -193,10 +229,13 @@ def _render_series_chart(
 
 def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the overview page content."""
-    st.subheader("Overview")
-    st.write(
-        "This scaffold is a company-grade starting point for a demo dashboard that "
-        "consumes the existing JSON data contracts for Track A, Track B, and YOLO."
+    st.markdown(f"## {PROJECT_TITLE}")
+    st.markdown(
+        "A governed evidence dashboard for comparing Track A, Track B, and YOLO summaries "
+        "while keeping the local Track A upload prototype clearly separated."
+    )
+    st.info(
+        "Safe status: governed evidence only. not production-ready. not deployment-safe."
     )
 
     if bundles is None:
@@ -207,16 +246,45 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     track_b = bundles["track_b"]
     detection = bundles["detection"]
 
-    st.markdown("### Current Project State")
-    state_cols = st.columns(3)
-    with state_cols[0]:
-        st.metric("Track A Classification", "PASS")
-    with state_cols[1]:
-        st.metric("Track B / Autoencoder", "PASS")
-    with state_cols[2]:
-        st.metric("YOLO / Detection evidence layer", "COMPLETE")
+    track_a_reco = track_a.get("frontend_model_recommendation.json", {})
+    track_b_summary = track_b.get("frontend_anomaly_summary.json", {})
+    detection_overview = detection.get("detection_overview.json", {})
 
-    st.markdown("### Data Contract Health")
+    hero_cols = st.columns([1.25, 1])
+    with hero_cols[0]:
+        st.markdown("### Current status")
+        st.caption(
+            "Green means evidence complete, blue means a local prototype exists, and gray/orange marks work that is not yet a production claim."
+        )
+        summary_cols = st.columns(4)
+        with summary_cols[0]:
+            st.metric("Track A Classification", "PASS", help="Governed evidence and local prototype available")
+        with summary_cols[1]:
+            st.metric("Track B / Autoencoder", "PASS", help="Governed evidence available")
+        with summary_cols[2]:
+            st.metric("YOLO Detection", "COMPLETE", help="Governed evidence layer complete")
+        with summary_cols[3]:
+            st.metric("Upload / Predict", "LOCAL PROTOTYPE", help="Track A only")
+
+        st.markdown("### What this dashboard can do")
+        st.write(
+            "- View governed evidence from Track A, Track B, and YOLO\n"
+            "- Compare the high-level summaries for each track\n"
+            "- Run the local Track A upload/predict prototype"
+        )
+
+        st.markdown("### What it cannot claim yet")
+        st.write(
+            "- not production-ready\n"
+            "- not deployment-safe\n"
+            "- YOLO/anomaly upload prediction not implemented yet"
+        )
+
+    with hero_cols[1]:
+        st.markdown("### Visual status")
+        _render_overview_status_chart()
+
+    st.markdown("### Data contract health")
     health_cols = st.columns(3)
     with health_cols[0]:
         st.metric("Track A bundle", f"{len(track_a)} files")
@@ -225,13 +293,8 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     with health_cols[2]:
         st.metric("Detection bundle", f"{len(detection)} files")
 
-    st.markdown("### High-Level Evidence Summary")
+    st.markdown("### High-level evidence summary")
     summary_cols = st.columns(3)
-
-    track_a_reco = track_a.get("frontend_model_recommendation.json", {})
-    track_b_summary = track_b.get("frontend_anomaly_summary.json", {})
-    detection_overview = detection.get("detection_overview.json", {})
-
     with summary_cols[0]:
         st.metric(
             "Track A selected model",
@@ -242,7 +305,6 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
             f"Run: {_safe_text(track_a_reco.get('selected_run_id'))} | "
             f"Threshold: {_safe_text(track_a_reco.get('selected_threshold'))}"
         )
-
     with summary_cols[1]:
         st.metric(
             "Track B model",
@@ -259,7 +321,6 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ]
             )
         )
-
     with summary_cols[2]:
         st.metric(
             "Detection images",
@@ -271,42 +332,27 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
             f"Gallery samples: {_safe_text(detection_overview.get('gallery_sample_count'))}"
         )
 
-    st.markdown("### Evidence Paths")
-    path_cols = st.columns(3)
-    with path_cols[0]:
-        st.code("artifacts/frontend/track_a/", language="text")
-    with path_cols[1]:
-        st.code("artifacts/frontend/track_b/", language="text")
-    with path_cols[2]:
-        st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
-
-    with st.expander("Quick evidence details", expanded=False):
-        overview_tabs = st.tabs(["Track A", "Track B", "YOLO"])
-        with overview_tabs[0]:
-            st.caption("Track A selected model and comparison summary")
+    with st.expander("Technical evidence", expanded=False):
+        tech_tabs = st.tabs(["Data Contracts", "Evidence Paths", "Run Notes"])
+        with tech_tabs[0]:
             _render_key_value_grid(
                 [
-                    ("Selected model", track_a_reco.get("selected_model_name")),
-                    ("Version", track_a_reco.get("selected_model_version")),
-                    ("Threshold", track_a_reco.get("selected_threshold")),
+                    ("Track A files", len(track_a)),
+                    ("Track B files", len(track_b)),
+                    ("Detection files", len(detection)),
                 ]
             )
-        with overview_tabs[1]:
-            st.caption("Track B canonical status and threshold")
+        with tech_tabs[1]:
+            st.code("artifacts/frontend/track_a/", language="text")
+            st.code("artifacts/frontend/track_b/", language="text")
+            st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
+        with tech_tabs[2]:
             _render_key_value_grid(
                 [
-                    ("Model", track_b_summary.get("model_type")),
-                    ("Canonical status", track_b_summary.get("canonical_status")),
-                    ("Threshold", track_b_summary.get("key_metrics", {}).get("threshold")),
-                ]
-            )
-        with overview_tabs[2]:
-            st.caption("YOLO overview and manifest")
-            _render_key_value_grid(
-                [
-                    ("Images", detection_overview.get("image_count")),
-                    ("Total bboxes", detection_overview.get("total_bbox_count")),
-                    ("Bundle files", len(detection.get("frontend_bundle_manifest.json", {}).get("bundle_files", []))),
+                    ("Track A run", track_a_reco.get("selected_run_id")),
+                    ("Track A threshold", track_a_reco.get("selected_threshold")),
+                    ("Track B threshold", track_b_summary.get("key_metrics", {}).get("threshold")),
+                    ("Detection run", detection_overview.get("run_id")),
                 ]
             )
 

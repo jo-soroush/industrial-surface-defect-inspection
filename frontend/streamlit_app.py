@@ -40,6 +40,19 @@ TRACK_B_EVIDENCE_FILENAMES = (
     "artifact_inventory_frontend.json",
 )
 
+DETECTION_EVIDENCE_FILENAMES = (
+    "detection_overview.json",
+    "detection_model_metadata.json",
+    "detection_metric_cards.json",
+    "detection_confidence_chart.json",
+    "detection_class_summary.json",
+    "detection_sample_gallery.json",
+    "detection_artifact_lineage.json",
+    "detection_quality_decision_summary.json",
+    "frontend_detection_recommendation.json",
+    "frontend_bundle_manifest.json",
+)
+
 STATUS_LINES = [
     ("Track A Classification", "PASS"),
     ("Track B / Autoencoder", "PASS"),
@@ -645,14 +658,177 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
         st.write("Metric cards, anomaly summary, reconstruction loss, threshold behavior, quality summary, and inventory remain in the bundle.")
 
 
-def _render_yolo() -> None:
-    """Render the YOLO page."""
+def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
+    """Render the YOLO / Detection page."""
     st.subheader("YOLO Detection")
-    st.write(
-        "Planned: read the Detection JSON data contract and present overview, metadata, confidence "
-        "distribution, class summary, sample gallery, and lineage."
+    st.warning(
+        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
+        "No live prediction on this page. No API upload/predict yet."
     )
-    st.info("Current status: YOLO / Detection evidence layer COMPLETE.")
+    st.write(
+        "This page summarizes the governed YOLO / Detection bundle and keeps the "
+        "presentation focused on current evidence, not live inference."
+    )
+
+    if bundles is None:
+        st.error("Detection evidence is unavailable because the frontend bundles failed to load.")
+        return
+
+    detection = bundles["detection"]
+    overview = detection.get("detection_overview.json", {})
+    metadata = detection.get("detection_model_metadata.json", {})
+    metric_cards = detection.get("detection_metric_cards.json", {})
+    confidence_chart = detection.get("detection_confidence_chart.json", {})
+    class_summary = detection.get("detection_class_summary.json", {})
+    sample_gallery = detection.get("detection_sample_gallery.json", {})
+    lineage = detection.get("detection_artifact_lineage.json", {})
+    quality = detection.get("detection_quality_decision_summary.json", {})
+    recommendation = detection.get("frontend_detection_recommendation.json", {})
+    manifest = detection.get("frontend_bundle_manifest.json", {})
+
+    st.markdown("### Detection Overview")
+    overview_cols = st.columns(4)
+    with overview_cols[0]:
+        st.metric("Images", _format_value(overview.get("image_count")))
+    with overview_cols[1]:
+        st.metric("Images with detections", _format_value(overview.get("image_with_detections_count")))
+    with overview_cols[2]:
+        st.metric("Total bboxes", _format_value(overview.get("total_bbox_count")))
+    with overview_cols[3]:
+        st.metric("Gallery samples", _format_value(overview.get("gallery_sample_count")))
+
+    st.caption(
+        "Run yolo_train_v0_2_0 | "
+        f"Model: {_format_value(metadata.get('model_name'))} | "
+        f"Version: {_format_value(metadata.get('model_version'))} | "
+        f"Dataset: {_format_value(metadata.get('dataset_id'))}"
+    )
+
+    st.markdown("### Metric Cards")
+    cards = metric_cards.get("cards", [])
+    if cards:
+        for start_idx in range(0, len(cards), 3):
+            row_cards = cards[start_idx : start_idx + 3]
+            cols = st.columns(len(row_cards))
+            for col, card in zip(cols, row_cards):
+                with col:
+                    st.metric(card.get("label", "Metric"), _format_value(card.get("value")))
+                    description = card.get("description")
+                    if description:
+                        st.caption(str(description))
+    else:
+        st.info("No detection metric cards available.")
+
+    st.markdown("### Confidence Distribution")
+    confidence_rows = confidence_chart.get("confidence_bins", [])
+    if confidence_rows:
+        _render_markdown_table(
+            confidence_rows,
+            [
+                ("Band", "label"),
+                ("Count", "count"),
+                ("Share", "percentage"),
+            ],
+        )
+    else:
+        st.info("No confidence distribution data available.")
+
+    st.markdown("### Class Summary")
+    class_rows = class_summary.get("class_rows", [])
+    if class_rows:
+        _render_markdown_table(
+            class_rows,
+            [
+                ("Class", "class_label"),
+                ("BBox count", "bbox_count"),
+                ("Min confidence", "min_confidence"),
+                ("Mean confidence", "mean_confidence"),
+                ("Median confidence", "median_confidence"),
+            ],
+        )
+    else:
+        st.info("No class summary data available.")
+
+    st.markdown("### Sample Gallery Summary")
+    sample_cols = st.columns(2)
+    with sample_cols[0]:
+        st.metric("Gallery samples", _format_value(sample_gallery.get("gallery_sample_count")))
+        st.caption("This page shows summary metadata only; image rendering can be added later without changing the data contract.")
+    with sample_cols[1]:
+        category_counts = sample_gallery.get("category_sample_counts", {})
+        gallery_rows = [
+            {"category": label, "count": count}
+            for label, count in category_counts.items()
+        ]
+        _render_markdown_table(
+            gallery_rows,
+            [
+                ("Category", "category"),
+                ("Count", "count"),
+            ],
+        )
+
+    st.markdown("### Artifact Lineage And Decision")
+    lineage_cols = st.columns(2)
+    with lineage_cols[0]:
+        _render_key_value_grid(
+            [
+                ("Decision", quality.get("decision")),
+                ("Review required", quality.get("review_required")),
+                ("Production ready", quality.get("production_ready")),
+                ("Deployment candidate", quality.get("deployment_candidate")),
+                ("Next step", quality.get("next_recommended_step")),
+            ]
+        )
+        st.caption(
+            f"Recommendation: {_format_value(recommendation.get('recommendation_status'))}"
+        )
+        st.caption(
+            f"Run: {_format_value(metadata.get('run_id'))} | "
+            f"Version: {_format_value(metadata.get('model_version'))}"
+        )
+    with lineage_cols[1]:
+        source_paths = lineage.get("source_artifacts", [])
+        lineage_rows = [
+            {
+                "artifact": item.get("artifact_type") or item.get("artifact_id"),
+                "path": item.get("artifact_path") or item.get("path"),
+                "hash": item.get("artifact_hash") or item.get("sha256"),
+            }
+            for item in source_paths
+            if isinstance(item, dict)
+        ]
+        _render_markdown_table(
+            lineage_rows,
+            [
+                ("Artifact", "artifact"),
+                ("Path", "path"),
+                ("Hash", "hash"),
+            ],
+        )
+
+    with st.expander("Detection bundle manifest", expanded=False):
+        st.caption("Bundle directory and generated file list")
+        st.code("artifacts/frontend/detection/yolo_train_v0_2_0/", language="text")
+        _render_markdown_table(
+            [
+                {"file": name}
+                for name in manifest.get("bundle_files", [])
+            ],
+            [
+                ("File", "file"),
+            ],
+        )
+
+    with st.expander("Detection evidence file list", expanded=False):
+        for filename in DETECTION_EVIDENCE_FILENAMES:
+            st.code(filename, language="text")
+
+    st.markdown("### Safe Interpretation")
+    st.write(
+        "YOLO / Detection evidence layer COMPLETE. This page is a review-oriented dashboard view only "
+        "and does not claim production readiness or deployment safety."
+    )
 
 
 def _render_upload_predict() -> None:
@@ -692,7 +868,7 @@ def main() -> None:
         "Overview": lambda: _render_overview(bundles),
         "Track A Classification": lambda: _render_track_a(bundles),
         "Track B Anomaly Detection": lambda: _render_track_b(bundles),
-        "YOLO Detection": _render_yolo,
+        "YOLO Detection": lambda: _render_yolo(bundles),
         "Upload / Predict": _render_upload_predict,
         "Limitations / Safety": _render_limitations,
     }

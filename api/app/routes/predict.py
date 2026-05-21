@@ -11,8 +11,9 @@ from uuid import uuid4
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from PIL import Image, UnidentifiedImageError
 
-from api.app.schemas.inspection import DetectionResult
+from api.app.schemas.inspection import AnomalyResult, DetectionResult
 from api.app.schemas.prediction import ClassificationPredictionResponse, PredictionInputMetadata
+from src.inspection_ai.inference.anomaly_detector import AnomalyDetector
 from src.inspection_ai.inference.track_a_classifier import TrackAClassifier
 from src.inspection_ai.inference.yolo_detector import YOLODetector
 
@@ -38,6 +39,12 @@ def get_track_a_classifier() -> TrackAClassifier:
 def get_yolo_detector() -> YOLODetector:
     """Return a cached YOLO detector wrapper without loading the model at import time."""
     return YOLODetector(device="cpu")
+
+
+@lru_cache(maxsize=1)
+def get_anomaly_detector() -> AnomalyDetector:
+    """Return a cached anomaly detector wrapper without loading the checkpoint at import time."""
+    return AnomalyDetector(device="cpu")
 
 
 @router.post("/predict/classification", response_model=ClassificationPredictionResponse)
@@ -133,39 +140,7 @@ async def predict_detection(
     file: UploadFile | None = File(default=None),
 ) -> DetectionResult:
     """Run live defect detection/localization on a single uploaded image."""
-    if file is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing image upload. Use multipart field 'file'.",
-        )
-
-    content_type = file.content_type or ""
-    if not content_type.startswith("image/"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Uploaded file must be an image. Received content type: {content_type!r}.",
-        )
-
-    payload = await file.read(MAX_UPLOAD_BYTES + 1)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Uploaded image is empty or missing.",
-        )
-    if len(payload) > MAX_UPLOAD_BYTES:
-        raise HTTPException(
-            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
-            detail=f"Uploaded file exceeds the {MAX_UPLOAD_BYTES} byte limit.",
-        )
-
-    try:
-        with Image.open(BytesIO(payload)) as opened:
-            image = opened.convert("RGB")
-    except (UnidentifiedImageError, OSError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Uploaded file could not be decoded as an image.",
-        ) from exc
+    image = await _read_uploaded_image(file)
 
     try:
         detector = get_yolo_detector()
@@ -194,6 +169,98 @@ async def predict_detection(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="YOLO detection failed unexpectedly.",
+        ) from exc
+
+
+@router.post("/predict/anomaly", response_model=AnomalyResult)
+async def predict_anomaly(
+    file: UploadFile | None = File(default=None),
+) -> AnomalyResult:
+    """Run live surface anomaly detection on a single uploaded image."""
+    image = await _read_uploaded_image(file)
+
+    try:
+        detector = get_anomaly_detector()
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Anomaly detection dependency is unavailable: {exc}",
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Anomaly detection dependency is unavailable: {exc}",
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Anomaly detection dependency is unavailable: {exc}",
+        ) from exc
+
+    try:
+        return detector.predict(image)
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Anomaly detection dependency is unavailable: {exc}",
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Anomaly detection returned invalid output: {exc}",
+        ) from exc
+    except RuntimeError as exc:
+        detail = str(exc)
+        if "checkpoint loading" in detail or "model construction" in detail:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Anomaly detection dependency is unavailable: {exc}",
+            ) from exc
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Anomaly detection failed: {exc}",
+        ) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Anomaly detection failed unexpectedly.",
+        ) from exc
+
+
+async def _read_uploaded_image(file: UploadFile | None) -> Image.Image:
+    """Validate and decode an uploaded image for live prediction endpoints."""
+    if file is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing image upload. Use multipart field 'file'.",
+        )
+
+    content_type = file.content_type or ""
+    if not content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Uploaded file must be an image. Received content type: {content_type!r}.",
+        )
+
+    payload = await file.read(MAX_UPLOAD_BYTES + 1)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded image is empty or missing.",
+        )
+    if len(payload) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail=f"Uploaded file exceeds the {MAX_UPLOAD_BYTES} byte limit.",
+        )
+
+    try:
+        with Image.open(BytesIO(payload)) as opened:
+            return opened.convert("RGB")
+    except (UnidentifiedImageError, OSError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file could not be decoded as an image.",
         ) from exc
 
 

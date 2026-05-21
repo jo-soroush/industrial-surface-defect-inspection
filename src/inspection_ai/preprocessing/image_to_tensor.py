@@ -20,6 +20,13 @@ def load_and_preprocess_image(path: str, config: dict[str, Any]) -> torch.Tensor
     """
     image_path = _validate_image_path(path)
     image = _load_image(image_path, config)
+    return preprocess_pil_image(image, config)
+
+
+def preprocess_pil_image(image: Image.Image, config: dict[str, Any]) -> torch.Tensor:
+    """Preprocess one already-decoded PIL image using the governed image policy."""
+    if not isinstance(image, Image.Image):
+        raise TypeError("image must be a PIL.Image.Image.")
     image = _apply_rgb_policy(image, config)
     image = _apply_resize_policy(image, config)
     tensor = _image_to_scaled_tensor(image, config)

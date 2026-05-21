@@ -1,0 +1,141 @@
+{
+  "artifacts": {
+    "anomaly_pr_curve": {
+      "artifact_type": "anomaly_pr_curve",
+      "exists": true,
+      "file_size_bytes": 219637,
+      "frontend_ready": true,
+      "generated_at_utc": "2026-05-21T21:10:22.302018Z",
+      "generated_from_existing_evidence": true,
+      "generation_script": "scripts/evaluation/generate_anomaly_governed_evidence.py",
+      "no_new_inference": true,
+      "no_retraining": true,
+      "path": "artifacts/models/metrics/anomaly_pr_curve__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json",
+      "purpose": "Derived PR curve and PR AUC from governed sample-level anomaly scores.",
+      "required_for_frontend": true,
+      "run_id": "b8ca43f5-0d53-4a42-ab37-b5fca9544a36",
+      "sha256": "88c18cdf54a751ae7b9fa086b89330fd51b1b5718119c0b72c32149a56c1d147",
+      "source_artifact_path": "artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+    },
+    "anomaly_quality_decision": {
+      "artifact_type": "anomaly_quality_decision",
+      "exists": true,
+      "file_size_bytes": 1366,
+      "frontend_ready": true,
+      "generated_at_utc": "2026-05-21T21:10:22.302018Z",
+      "generated_from_existing_evidence": true,
+      "generation_script": "scripts/evaluation/generate_anomaly_governed_evidence.py",
+      "no_new_inference": true,
+      "no_retraining": true,
+      "path": "artifacts/models/metrics/anomaly_quality_decision__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json",
+      "purpose": "Governed quality decision for safe dashboard usage of anomaly evidence.",
+      "required_for_frontend": true,
+      "run_id": "b8ca43f5-0d53-4a42-ab37-b5fca9544a36",
+      "sha256": "beba68b4023cf7689b4f9cd8bba8e5e5b86d27b40b042338a69875b48524fcf7",
+      "source_artifact_path": "artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+    },
+    "anomaly_sample_predictions": {
+      "artifact_type": "anomaly_sample_predictions",
+      "exists": true,
+      "file_size_bytes": 827763,
+      "frontend_ready": true,
+      "generated_at_utc": "2026-05-21T21:10:22.302018Z",
+      "generated_from_existing_evidence": true,
+      "generation_script": "scripts/evaluation/generate_anomaly_governed_evidence.py",
+      "no_new_inference": true,
+      "no_retraining": true,
+      "path": "artifacts/models/predictions/anomaly_sample_predictions__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json",
+      "purpose": "Frontend-ready sample-level anomaly prediction export from governed evaluation rows.",
+      "required_for_frontend": true,
+      "run_id": "b8ca43f5-0d53-4a42-ab37-b5fca9544a36",
+      "sha256": "eb90f5f14cf5ec63db386f3ea75a72a0cbb4888d6b266f0842d4372f70d0b4b0",
+      "source_artifact_path": "artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+    },
+    "anomaly_score_distribution": {
+      "artifact_type": "anomaly_score_distribution",
+      "exists": true,
+      "file_size_bytes": 9126,
+      "frontend_ready": true,
+      "generated_at_utc": "2026-05-21T21:10:22.302018Z",
+      "generated_from_existing_evidence": true,
+      "generation_script": "scripts/evaluation/generate_anomaly_governed_evidence.py",
+      "no_new_inference": true,
+      "no_retraining": true,
+      "path": "artifacts/models/metrics/anomaly_score_distribution__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json",
+      "purpose": "Derived anomaly score and reconstruction-loss distribution data from governed sample-level scores.",
+      "required_for_frontend": true,
+      "run_id": "b8ca43f5-0d53-4a42-ab37-b5fca9544a36",
+      "sha256": "04b87ac130eb324c99169f3909126237aa7cfd57c5bd707e9ca6ef20c6e6a951",
+      "source_artifact_path": "artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+    },
+    "anomaly_threshold_sweep": {
+      "artifact_type": "anomaly_threshold_sweep",
+      "exists": true,
+      "file_size_bytes": 7485,
+      "frontend_ready": true,
+      "generated_at_utc": "2026-05-21T21:10:22.302018Z",
+      "generated_from_existing_evidence": true,
+      "generation_script": "scripts/evaluation/generate_anomaly_governed_evidence.py",
+      "no_new_inference": true,
+      "no_retraining": true,
+      "path": "artifacts/models/metrics/anomaly_threshold_sweep__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json",
+      "purpose": "Derived threshold behavior table from governed sample-level anomaly scores.",
+      "required_for_frontend": true,
+      "run_id": "b8ca43f5-0d53-4a42-ab37-b5fca9544a36",
+      "sha256": "53190d2a851b853cbcea86469b61e087902b3a4a5a058650e328720eb39fce45",
+      "source_artifact_path": "artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+    }
+  },
+  "frontend_bundle_update_deferred": true,
+  "generated_at_utc": "2026-05-21T21:10:22.302018Z",
+  "generated_from_existing_evidence": true,
+  "generation_script": "scripts/evaluation/generate_anomaly_governed_evidence.py",
+  "inventory_type": "anomaly_governed_evidence_inventory",
+  "known_limitations": [
+    "This inventory governs derived evidence artifacts only.",
+    "The artifacts are generated from existing sample-level anomaly evaluation output.",
+    "No model inference, model training, or metric invention is performed.",
+    "Global artifact registry publication is deferred to a later explicit step.",
+    "Frontend bundle integration is deferred to a later explicit step."
+  ],
+  "no_new_inference": true,
+  "no_retraining": true,
+  "regeneration_command": "PYTHONPATH=src python scripts/evaluation/generate_anomaly_governed_evidence.py",
+  "registry_update_deferred": true,
+  "run_id": "b8ca43f5-0d53-4a42-ab37-b5fca9544a36",
+  "source_artifact_path": "artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json",
+  "split": "test",
+  "task_type": "anomaly_detection",
+  "track_id": "track_b",
+  "validation_checks": [
+    {
+      "details": "artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json",
+      "name": "source_artifact_declared",
+      "status": "PASS"
+    },
+    {
+      "details": "count=5",
+      "name": "derived_artifact_count",
+      "status": "PASS"
+    },
+    {
+      "details": "sha256 recorded for every derived anomaly evidence artifact.",
+      "name": "hashes_computed",
+      "status": "PASS"
+    },
+    {
+      "details": "Inventory covers posthoc derivations from existing governed evaluation output only.",
+      "name": "no_new_inference_or_retraining",
+      "status": "PASS"
+    },
+    {
+      "details": "Global artifact_registry.yaml publication is deferred to a later explicit step.",
+      "name": "registry_update_deferred",
+      "status": "PASS"
+    }
+  ],
+  "validation_commands": [
+    "python -m compileall scripts/evaluation src/inspection_ai api/app/schemas tests",
+    "pytest tests/unit/test_anomaly_governed_evidence.py -q"
+  ]
+}

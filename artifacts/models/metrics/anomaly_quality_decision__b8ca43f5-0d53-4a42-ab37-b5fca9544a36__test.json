@@ -1,0 +1,36 @@
+{
+  "artifact_type": "anomaly_quality_decision",
+  "dashboard_usage_recommendation": "review_only_signal",
+  "deployment_safe": false,
+  "derived_artifacts": {
+    "pr_curve": "anomaly_pr_curve",
+    "sample_predictions": "anomaly_sample_predictions",
+    "score_distribution": "anomaly_score_distribution",
+    "threshold_sweep": "anomaly_threshold_sweep"
+  },
+  "generated_at_utc": "2026-05-21T21:10:22.302018Z",
+  "limitations": [
+    "This quality decision is derived from existing governed evaluation evidence.",
+    "It does not claim production readiness or deployment safety."
+  ],
+  "metrics_summary": {
+    "f1": 0.07072987208427389,
+    "pr_auc": 0.7182909909021874,
+    "precision": 0.6619718309859155,
+    "recall": 0.037360890302066775,
+    "roc_auc": 0.4881290788206017,
+    "sample_count": 1725,
+    "threshold": 0.2043069839477539
+  },
+  "model_family": "autoencoder",
+  "production_ready": false,
+  "quality_status": "review_required_weak_evidence",
+  "reasons": [
+    "ROC AUC is below 0.5 on the governed test split.",
+    "Recall is very low at the governed threshold.",
+    "F1 is very low at the governed threshold."
+  ],
+  "run_id": "b8ca43f5-0d53-4a42-ab37-b5fca9544a36",
+  "source_artifact_path": "artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json",
+  "task_type": "anomaly_detection"
+}

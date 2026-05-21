@@ -13,6 +13,21 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "artifacts" / "frontend" / "track_b"
+DEFAULT_TRAINING_RESULT_PATH = REPO_ROOT / "artifacts/models/analysis/training_results/training_result__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json"
+DEFAULT_EVALUATION_PATH = REPO_ROOT / "artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+DEFAULT_LEARNING_CURVES_PATH = REPO_ROOT / "artifacts/models/metrics/anomaly_learning_curves__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json"
+DEFAULT_CONFUSION_MATRIX_PATH = REPO_ROOT / "artifacts/models/metrics/anomaly_confusion_matrix__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__train_test.json"
+DEFAULT_QUALITATIVE_SAMPLES_PATH = REPO_ROOT / "artifacts/models/explainability/b8ca43f5-0d53-4a42-ab37-b5fca9544a36/anomaly_qualitative_samples__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json"
+DEFAULT_EXPLAINABILITY_PATH = REPO_ROOT / "artifacts/models/explainability/b8ca43f5-0d53-4a42-ab37-b5fca9544a36/anomaly_reconstruction_explainability__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json"
+DEFAULT_PRODUCTION_SUMMARY_PATH = REPO_ROOT / "artifacts/models/metadata/track_b_production_canonical_summary__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json"
+DEFAULT_FULL_SUMMARY_PATH = REPO_ROOT / "artifacts/models/metadata/track_b_full_production_canonical_summary__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json"
+DEFAULT_INVENTORY_PATH = REPO_ROOT / "artifacts/models/inventory/track_b_artifact_inventory__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.json"
+DEFAULT_PR_CURVE_PATH = REPO_ROOT / "artifacts/models/metrics/anomaly_pr_curve__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+DEFAULT_THRESHOLD_SWEEP_PATH = REPO_ROOT / "artifacts/models/metrics/anomaly_threshold_sweep__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+DEFAULT_SCORE_DISTRIBUTION_PATH = REPO_ROOT / "artifacts/models/metrics/anomaly_score_distribution__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+DEFAULT_SAMPLE_PREDICTIONS_PATH = REPO_ROOT / "artifacts/models/predictions/anomaly_sample_predictions__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+DEFAULT_QUALITY_DECISION_PATH = REPO_ROOT / "artifacts/models/metrics/anomaly_quality_decision__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
+DEFAULT_GOVERNED_EVIDENCE_INVENTORY_PATH = REPO_ROOT / "artifacts/models/inventory/anomaly_governed_evidence_inventory__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json"
 TRACK_ID = "track_b"
 TASK_TYPE = "anomaly_detection"
 DATASET_ID = "mvtec_anomaly"
@@ -21,6 +36,7 @@ MODEL_VERSION = "0.1.0"
 RUN_ID = "b8ca43f5-0d53-4a42-ab37-b5fca9544a36"
 CONFIG_ID = "autoencoder_train_v0_1_0"
 CANONICAL_STATUS = "production-canonical"
+FRONTEND_EVIDENCE_STATUS = "governed_review_evidence"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -29,49 +45,55 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--training-result",
-        required=True,
+        default=str(DEFAULT_TRAINING_RESULT_PATH),
         help="Path to the governed Track B TrainingResult JSON artifact.",
     )
     parser.add_argument(
         "--evaluation",
-        required=True,
+        default=str(DEFAULT_EVALUATION_PATH),
         help="Path to the governed Track B anomaly evaluation JSON artifact.",
     )
     parser.add_argument(
         "--learning-curves",
-        required=True,
+        default=str(DEFAULT_LEARNING_CURVES_PATH),
         help="Path to the governed Track B learning-curves JSON artifact.",
     )
     parser.add_argument(
         "--confusion-matrix",
-        required=True,
+        default=str(DEFAULT_CONFUSION_MATRIX_PATH),
         help="Path to the governed Track B confusion-matrix JSON artifact.",
     )
     parser.add_argument(
         "--qualitative-samples",
-        required=True,
+        default=str(DEFAULT_QUALITATIVE_SAMPLES_PATH),
         help="Path to the governed Track B qualitative-samples JSON artifact.",
     )
     parser.add_argument(
         "--reconstruction-explainability",
-        required=True,
+        default=str(DEFAULT_EXPLAINABILITY_PATH),
         help="Path to the governed Track B reconstruction-explainability JSON artifact.",
     )
     parser.add_argument(
         "--production-canonical-summary",
-        required=True,
+        default=str(DEFAULT_PRODUCTION_SUMMARY_PATH),
         help="Path to the governed Track B production-canonical summary JSON artifact.",
     )
     parser.add_argument(
         "--full-production-canonical-summary",
-        required=True,
+        default=str(DEFAULT_FULL_SUMMARY_PATH),
         help="Path to the governed Track B full production-canonical summary JSON artifact.",
     )
     parser.add_argument(
         "--inventory",
-        required=True,
+        default=str(DEFAULT_INVENTORY_PATH),
         help="Path to the governed Track B artifact inventory JSON artifact.",
     )
+    parser.add_argument("--pr-curve", default=str(DEFAULT_PR_CURVE_PATH), help="Path to governed anomaly PR curve JSON.")
+    parser.add_argument("--threshold-sweep", default=str(DEFAULT_THRESHOLD_SWEEP_PATH), help="Path to governed anomaly threshold sweep JSON.")
+    parser.add_argument("--score-distribution", default=str(DEFAULT_SCORE_DISTRIBUTION_PATH), help="Path to governed anomaly score distribution JSON.")
+    parser.add_argument("--sample-predictions", default=str(DEFAULT_SAMPLE_PREDICTIONS_PATH), help="Path to governed anomaly sample predictions JSON.")
+    parser.add_argument("--quality-decision", default=str(DEFAULT_QUALITY_DECISION_PATH), help="Path to governed anomaly quality decision JSON.")
+    parser.add_argument("--governed-evidence-inventory", default=str(DEFAULT_GOVERNED_EVIDENCE_INVENTORY_PATH), help="Path to governed anomaly derived-evidence inventory JSON.")
     parser.add_argument(
         "--output-dir",
         default=str(DEFAULT_OUTPUT_DIR),
@@ -100,6 +122,12 @@ def main() -> int:
     production_summary_path = Path(args.production_canonical_summary)
     full_summary_path = Path(args.full_production_canonical_summary)
     inventory_path = Path(args.inventory)
+    pr_curve_path = Path(args.pr_curve)
+    threshold_sweep_path = Path(args.threshold_sweep)
+    score_distribution_path = Path(args.score_distribution)
+    sample_predictions_path = Path(args.sample_predictions)
+    quality_decision_path = Path(args.quality_decision)
+    governed_evidence_inventory_path = Path(args.governed_evidence_inventory)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -116,6 +144,14 @@ def main() -> int:
         full_summary_path, "full production canonical summary"
     )
     inventory = _load_json_file(inventory_path, "artifact inventory")
+    pr_curve = _load_json_file(pr_curve_path, "anomaly PR curve")
+    threshold_sweep = _load_json_file(threshold_sweep_path, "anomaly threshold sweep")
+    score_distribution = _load_json_file(score_distribution_path, "anomaly score distribution")
+    sample_predictions = _load_json_file(sample_predictions_path, "anomaly sample predictions")
+    quality_decision = _load_json_file(quality_decision_path, "anomaly quality decision")
+    governed_evidence_inventory = _load_json_file(
+        governed_evidence_inventory_path, "anomaly governed evidence inventory"
+    )
 
     _validate_training_result(training_result)
     _validate_evaluation(evaluation, training_result)
@@ -126,6 +162,12 @@ def main() -> int:
     _validate_production_summary(production_summary, training_result)
     _validate_full_summary(full_summary, training_result)
     _validate_inventory(inventory, training_result, evaluation)
+    _validate_governed_evidence(pr_curve, "anomaly_pr_curve")
+    _validate_governed_evidence(threshold_sweep, "anomaly_threshold_sweep")
+    _validate_governed_evidence(score_distribution, "anomaly_score_distribution")
+    _validate_governed_evidence(sample_predictions, "anomaly_sample_predictions")
+    _validate_governed_evidence(quality_decision, "anomaly_quality_decision")
+    _validate_governed_evidence_inventory(governed_evidence_inventory)
 
     source_paths = {
         "training_result": training_result_path,
@@ -137,28 +179,34 @@ def main() -> int:
         "production_canonical_summary": production_summary_path,
         "full_production_canonical_summary": full_summary_path,
         "inventory": inventory_path,
+        "anomaly_pr_curve": pr_curve_path,
+        "anomaly_threshold_sweep": threshold_sweep_path,
+        "anomaly_score_distribution": score_distribution_path,
+        "anomaly_sample_predictions": sample_predictions_path,
+        "anomaly_quality_decision": quality_decision_path,
+        "anomaly_governed_evidence_inventory": governed_evidence_inventory_path,
     }
 
     score_summary = _build_anomaly_score_summary(
-        training_result=training_result,
         evaluation=evaluation,
+        score_distribution=score_distribution,
         source_paths=source_paths,
     )
     reconstruction_summary = _build_reconstruction_loss_summary(
         training_result=training_result,
         learning_curves=learning_curves,
+        score_distribution=score_distribution,
         source_paths=source_paths,
     )
     threshold_behavior = _build_threshold_behavior(
-        evaluation=evaluation,
-        confusion=confusion,
+        threshold_sweep=threshold_sweep,
         source_paths=source_paths,
     )
     metric_cards = _build_metric_cards(
         training_result=training_result,
         evaluation=evaluation,
-        production_summary=production_summary,
-        full_summary=full_summary,
+        pr_curve=pr_curve,
+        quality_decision=quality_decision,
         source_paths=source_paths,
     )
     sample_gallery = _build_sample_anomaly_gallery(
@@ -169,15 +217,17 @@ def main() -> int:
         source_paths=source_paths,
     )
     quality_summary = _build_quality_decision_summary(
-        production_summary=production_summary,
-        full_summary=full_summary,
-        evaluation=evaluation,
+        quality_decision=quality_decision,
         source_paths=source_paths,
     )
     frontend_summary = _build_frontend_anomaly_summary(
         evaluation=evaluation,
-        production_summary=production_summary,
-        full_summary=full_summary,
+        pr_curve=pr_curve,
+        quality_decision=quality_decision,
+        source_paths=source_paths,
+    )
+    sample_prediction_summary = _build_sample_predictions_summary(
+        sample_predictions=sample_predictions,
         source_paths=source_paths,
     )
 
@@ -187,6 +237,7 @@ def main() -> int:
         "threshold_behavior": output_dir / "threshold_behavior.json",
         "metric_cards": output_dir / "metric_cards.json",
         "sample_anomaly_gallery": output_dir / "sample_anomaly_gallery.json",
+        "sample_predictions": output_dir / "sample_predictions.json",
         "quality_decision_summary": output_dir / "quality_decision_summary.json",
         "frontend_anomaly_summary": output_dir / "frontend_anomaly_summary.json",
     }
@@ -196,6 +247,7 @@ def main() -> int:
     _write_json(generated_files["threshold_behavior"], threshold_behavior)
     _write_json(generated_files["metric_cards"], metric_cards)
     _write_json(generated_files["sample_anomaly_gallery"], sample_gallery)
+    _write_json(generated_files["sample_predictions"], sample_prediction_summary)
     _write_json(generated_files["quality_decision_summary"], quality_summary)
     _write_json(generated_files["frontend_anomaly_summary"], frontend_summary)
 
@@ -214,13 +266,10 @@ def main() -> int:
 
 def _build_anomaly_score_summary(
     *,
-    training_result: dict[str, Any],
     evaluation: dict[str, Any],
+    score_distribution: dict[str, Any],
     source_paths: dict[str, Path],
 ) -> dict[str, Any]:
-    metadata = _require_dict(training_result.get("metadata"), "training_result.metadata")
-    train_score_summary = _require_dict(evaluation.get("train_score_summary"), "evaluation.train_score_summary")
-    test_score_summary = _require_dict(evaluation.get("test_score_summary"), "evaluation.test_score_summary")
     metrics = _require_dict(evaluation.get("metrics"), "evaluation.metrics")
 
     return {
@@ -232,26 +281,30 @@ def _build_anomaly_score_summary(
         "run_id": RUN_ID,
         "model_type": MODEL_TYPE,
         "model_version": MODEL_VERSION,
-        "dataset_version": metadata.get("dataset_version"),
+        "dataset_version": "mvtec_1.0",
         "score_definition": evaluation.get("score_definition"),
         "threshold_strategy": evaluation.get("threshold_strategy"),
-        "threshold": evaluation.get("threshold"),
-        "anomaly_score_statistics": {
-            "train": train_score_summary,
-            "test": test_score_summary,
-        },
+        "threshold": score_distribution.get("threshold"),
+        "summary": score_distribution.get("summary"),
+        "histograms": score_distribution.get("histograms"),
+        "anomaly_score_statistics": score_distribution.get("summary"),
         "normal_vs_anomaly_score_separation": {
             "roc_auc": metrics.get("roc_auc"),
             "plain_language": (
                 "ROC AUC is below 0.5 on the governed test split, so the anomaly score "
-                "does not show strong normal-vs-anomaly separation in this canonical run."
+                "does not show strong normal-vs-anomaly separation in this governed run."
             ),
         },
-        "source_artifact_path": str(source_paths["evaluation"]),
+        "source_artifact_path": str(source_paths["anomaly_score_distribution"]),
+        "source_artifact_paths": {
+            "evaluation": str(source_paths["evaluation"]),
+            "anomaly_score_distribution": str(source_paths["anomaly_score_distribution"]),
+            "anomaly_governed_evidence_inventory": str(source_paths["anomaly_governed_evidence_inventory"]),
+        },
         "plain_language_explanation": (
             "The autoencoder assigns a higher reconstruction-error anomaly score to images "
-            "that look less like the training set. This governed summary shows the score "
-            "distribution on train and test and the canonical percentile-based threshold."
+            "that look less like the training set. This governed summary includes chart-ready "
+            "test-set score distributions derived from existing sample-level anomaly scores."
         ),
         "generated_at": _utc_now_iso(),
     }
@@ -261,6 +314,7 @@ def _build_reconstruction_loss_summary(
     *,
     training_result: dict[str, Any],
     learning_curves: dict[str, Any],
+    score_distribution: dict[str, Any],
     source_paths: dict[str, Path],
 ) -> dict[str, Any]:
     metrics = _require_dict(training_result.get("metrics"), "training_result.metrics")
@@ -290,11 +344,22 @@ def _build_reconstruction_loss_summary(
         "final_reconstruction_loss": metrics.get("reconstruction_loss"),
         "learning_curves": curves,
         "chart_rows": learning_rows,
-        "source_artifact_path": str(source_paths["training_result"]),
+        "sample_level_reconstruction_loss": {
+            "mapping": score_distribution.get("reconstruction_loss_mapping"),
+            "summary": score_distribution.get("summary"),
+            "histograms": score_distribution.get("histograms"),
+            "threshold": score_distribution.get("threshold"),
+        },
+        "source_artifact_path": str(source_paths["anomaly_score_distribution"]),
+        "source_artifact_paths": {
+            "training_result": str(source_paths["training_result"]),
+            "learning_curves": str(source_paths["learning_curves"]),
+            "anomaly_score_distribution": str(source_paths["anomaly_score_distribution"]),
+        },
         "plain_language_explanation": (
-            "The canonical autoencoder run reports a single governed training reconstruction "
-            "loss and a one-point learning curve, because the production-canonical run used "
-            "a one-epoch training contract."
+            "Sample-level reconstruction loss is mapped from anomaly_score because the governed "
+            "score_definition is mean_squared_reconstruction_error_per_image. This file does not "
+            "claim full reconstruction image evidence for every sample."
         ),
         "generated_at": _utc_now_iso(),
     }
@@ -302,32 +367,9 @@ def _build_reconstruction_loss_summary(
 
 def _build_threshold_behavior(
     *,
-    evaluation: dict[str, Any],
-    confusion: dict[str, Any],
+    threshold_sweep: dict[str, Any],
     source_paths: dict[str, Path],
 ) -> dict[str, Any]:
-    metrics = _require_dict(evaluation.get("metrics"), "evaluation.metrics")
-    train_score_summary = _require_dict(evaluation.get("train_score_summary"), "evaluation.train_score_summary")
-    test_score_summary = _require_dict(evaluation.get("test_score_summary"), "evaluation.test_score_summary")
-    counts = _require_dict(evaluation.get("counts"), "evaluation.counts")
-    test_split = _require_dict(confusion.get("splits"), "confusion.splits").get("test")
-    test_matrix = _require_dict(test_split, "confusion.splits.test")
-    threshold = evaluation.get("threshold")
-
-    row = {
-        "threshold": threshold,
-        "true_negative": test_matrix.get("matrix", [[None, None], [None, None]])[0][0],
-        "false_positive": test_matrix.get("matrix", [[None, None], [None, None]])[0][1],
-        "false_negative": test_matrix.get("matrix", [[None, None], [None, None]])[1][0],
-        "true_positive": test_matrix.get("matrix", [[None, None], [None, None]])[1][1],
-        "precision": metrics.get("precision"),
-        "recall": metrics.get("recall"),
-        "f1": metrics.get("f1"),
-        "roc_auc": metrics.get("roc_auc"),
-        "test_score_percentile_95": test_score_summary.get("percentile_95"),
-        "train_score_percentile_95": train_score_summary.get("percentile_95"),
-    }
-
     return {
         "artifact_type": "track_b_threshold_behavior",
         "track_id": TRACK_ID,
@@ -337,28 +379,23 @@ def _build_threshold_behavior(
         "run_id": RUN_ID,
         "model_type": MODEL_TYPE,
         "model_version": MODEL_VERSION,
-        "threshold_strategy": evaluation.get("threshold_strategy"),
-        "baseline_threshold": threshold,
-        "selected_threshold": threshold,
-        "rows": [row],
-        "selected_threshold_metrics": {
-            "true_negative": row["true_negative"],
-            "false_positive": row["false_positive"],
-            "false_negative": row["false_negative"],
-            "true_positive": row["true_positive"],
-            "precision": row["precision"],
-            "recall": row["recall"],
-            "f1": row["f1"],
-            "roc_auc": row["roc_auc"],
-        },
+        "threshold_strategy": threshold_sweep.get("selected_threshold_strategy"),
+        "baseline_threshold": threshold_sweep.get("selected_threshold"),
+        "selected_threshold": threshold_sweep.get("selected_threshold"),
+        "rows": threshold_sweep.get("rows"),
+        "threshold_sweep": threshold_sweep.get("rows"),
+        "selected_threshold_metrics": threshold_sweep.get("selected_threshold_metrics"),
         "threshold_explanation": (
-            "The canonical Track B threshold is the 95th percentile of the train-score "
-            "distribution. It yields a very low recall on the governed test split, which "
-            "means many anomalies are missed even though the anomaly score is stable."
+            "The governed selected threshold is shown together with a chart-ready threshold "
+            "sweep derived from existing sample-level anomaly scores. No new inference was run."
         ),
-        "source_artifact_path": str(source_paths["evaluation"]),
+        "source_artifact_path": str(source_paths["anomaly_threshold_sweep"]),
+        "source_artifact_paths": {
+            "evaluation": str(source_paths["evaluation"]),
+            "anomaly_threshold_sweep": str(source_paths["anomaly_threshold_sweep"]),
+        },
         "generated_at": _utc_now_iso(),
-        "counts": counts,
+        "sample_count": threshold_sweep.get("sample_count"),
     }
 
 
@@ -366,28 +403,27 @@ def _build_metric_cards(
     *,
     training_result: dict[str, Any],
     evaluation: dict[str, Any],
-    production_summary: dict[str, Any],
-    full_summary: dict[str, Any],
+    pr_curve: dict[str, Any],
+    quality_decision: dict[str, Any],
     source_paths: dict[str, Path],
 ) -> dict[str, Any]:
-    identity = _require_dict(training_result.get("identity"), "training_result.identity")
     metadata = _require_dict(training_result.get("metadata"), "training_result.metadata")
     metrics = _require_dict(evaluation.get("metrics"), "evaluation.metrics")
     threshold = evaluation.get("threshold")
-    canonical_status = production_summary.get("canonical_status") or full_summary.get("canonical_status")
+    pr_auc = pr_curve.get("pr_auc")
 
     cards = [
         {"title": "Selected model", "value": f"{MODEL_TYPE} v{MODEL_VERSION}", "detail": f"Run {RUN_ID}"},
-        {"title": "Canonical status", "value": canonical_status, "detail": "Governed Track B evidence package."},
-        {"title": "Production readiness", "value": "not claimed", "detail": "Canonical status is production-canonical, but the frontend bundle does not claim deployment readiness."},
+        {"title": "Evidence status", "value": FRONTEND_EVIDENCE_STATUS, "detail": "Governed anomaly evidence package for review."},
+        {"title": "Production readiness", "value": "not claimed", "detail": "This frontend bundle does not claim production or deployment readiness."},
         {"title": "Threshold", "value": threshold, "detail": "Governed percentile-95 threshold from the anomaly evaluation."},
         {"title": "ROC AUC", "value": metrics.get("roc_auc"), "detail": "Measured on the governed test split."},
+        {"title": "PR AUC", "value": pr_auc, "detail": "Average precision derived from governed sample-level anomaly scores."},
         {"title": "Precision", "value": metrics.get("precision"), "detail": "Positive-class precision at the canonical threshold."},
         {"title": "Recall", "value": metrics.get("recall"), "detail": "Positive-class recall at the canonical threshold."},
         {"title": "F1", "value": metrics.get("f1"), "detail": "Positive-class F1 at the canonical threshold."},
         {"title": "Train samples", "value": metadata.get("train_sample_count"), "detail": "Governed training split sample count."},
         {"title": "Test samples", "value": metadata.get("test_sample_count"), "detail": "Governed test split sample count."},
-        {"title": "PR AUC", "value": "unavailable", "detail": "PR AUC is not present in the governed Track B evidence."},
     ]
     return {
         "artifact_type": "track_b_metric_cards",
@@ -399,16 +435,17 @@ def _build_metric_cards(
         "model_type": MODEL_TYPE,
         "model_name": MODEL_TYPE,
         "model_version": MODEL_VERSION,
-        "canonical_status": canonical_status,
-        "quality_status": canonical_status,
-        "production_ready": None,
-        "deployment_candidate": None,
+        "evidence_status": FRONTEND_EVIDENCE_STATUS,
+        "quality_status": quality_decision.get("quality_status"),
+        "production_ready": False,
+        "deployment_safe": False,
+        "deployment_candidate": False,
         "threshold": threshold,
         "validation_samples": metadata.get("test_sample_count"),
         "cards": cards,
         "safe_interpretation": (
-            "Track B Autoencoder v0.1.0 is the governed canonical anomaly-detection evidence package. "
-            "It is useful for review and dashboarding, but the bundle does not claim deployment safety."
+            "Surface Anomaly Detection evidence is useful as a review-only supporting signal. "
+            "It does not claim production readiness or deployment safety."
         ),
         "source_artifact_paths": {
             "training_result": str(source_paths["training_result"]),
@@ -418,6 +455,9 @@ def _build_metric_cards(
             "production_canonical_summary": str(source_paths["production_canonical_summary"]),
             "full_production_canonical_summary": str(source_paths["full_production_canonical_summary"]),
             "inventory": str(source_paths["inventory"]),
+            "anomaly_pr_curve": str(source_paths["anomaly_pr_curve"]),
+            "anomaly_quality_decision": str(source_paths["anomaly_quality_decision"]),
+            "anomaly_governed_evidence_inventory": str(source_paths["anomaly_governed_evidence_inventory"]),
         },
         "created_at": _utc_now_iso(),
     }
@@ -510,12 +550,9 @@ def _build_sample_anomaly_gallery(
 
 def _build_quality_decision_summary(
     *,
-    production_summary: dict[str, Any],
-    full_summary: dict[str, Any],
-    evaluation: dict[str, Any],
+    quality_decision: dict[str, Any],
     source_paths: dict[str, Path],
 ) -> dict[str, Any]:
-    metrics = _require_dict(full_summary.get("metrics"), "full_summary.metrics")
     return {
         "artifact_type": "track_b_quality_decision_summary",
         "track_id": TRACK_ID,
@@ -524,45 +561,41 @@ def _build_quality_decision_summary(
         "model_name": MODEL_TYPE,
         "model_type": MODEL_TYPE,
         "model_version": MODEL_VERSION,
-        "dataset_id": full_summary.get("dataset_id"),
-        "dataset_version": production_summary.get("dataset_version") or "mvtec_1.0",
+        "dataset_id": DATASET_ID,
+        "dataset_version": "mvtec_1.0",
         "split": "test",
-        "canonical_status": production_summary.get("canonical_status"),
-        "model_quality_status": production_summary.get("canonical_status"),
-        "quality_target_status": "PASS",
-        "production_ready": None,
-        "deployment_candidate": None,
-        "recommendation_status": "canonical",
-        "threshold": evaluation.get("threshold"),
+        "evidence_status": FRONTEND_EVIDENCE_STATUS,
+        "model_quality_status": quality_decision.get("quality_status"),
+        "quality_status": quality_decision.get("quality_status"),
+        "dashboard_usage_recommendation": quality_decision.get("dashboard_usage_recommendation"),
+        "production_ready": False,
+        "deployment_safe": False,
+        "deployment_candidate": False,
+        "threshold": quality_decision.get("metrics_summary", {}).get("threshold"),
         "safe_wording": (
-            "Track B Autoencoder v0.1.0 is the current governed canonical evidence package. "
-            "It is suitable for review and frontend/dashboard packaging, but this bundle does not "
-            "claim deployment safety."
+            "Surface Anomaly Detection is currently a review-only supporting signal. "
+            "The dashboard may present governed evidence, but it must not claim production "
+            "readiness or deployment safety."
         ),
         "forbidden_wording": [
             "production-ready",
             "deployment-safe",
             "final system complete",
         ],
-        "limitations": [
-            "The canonical evidence shows ROC AUC below 0.5 on the governed test split.",
-            "PR AUC is not present in the governed Track B evidence bundle.",
-            "No additional training or prediction recomputation was performed for this frontend bundle.",
-        ],
-        "next_recommended_step": (
-            "Use the Track B frontend bundle for notebook/dashboard presentation. If PR A is required, "
-            "compute it from the governed evaluation pipeline before claiming it in the UI."
-        ),
+        "limitations": quality_decision.get("limitations"),
+        "reasons": quality_decision.get("reasons"),
+        "next_recommended_step": "Use as a supporting review signal and investigate weak anomaly recall before stronger claims.",
         "source_artifact_paths": {
-            "production_canonical_summary": str(source_paths["production_canonical_summary"]),
-            "full_production_canonical_summary": str(source_paths["full_production_canonical_summary"]),
             "training_result": str(source_paths["training_result"]),
             "evaluation": str(source_paths["evaluation"]),
             "qualitative_samples": str(source_paths["qualitative_samples"]),
             "explainability": str(source_paths["reconstruction_explainability"]),
             "inventory": str(source_paths["inventory"]),
+            "anomaly_quality_decision": str(source_paths["anomaly_quality_decision"]),
+            "anomaly_governed_evidence_inventory": str(source_paths["anomaly_governed_evidence_inventory"]),
         },
-        "metrics": metrics,
+        "metrics_summary": quality_decision.get("metrics_summary"),
+        "metrics": quality_decision.get("metrics_summary"),
         "generated_at": _utc_now_iso(),
     }
 
@@ -570,11 +603,12 @@ def _build_quality_decision_summary(
 def _build_frontend_anomaly_summary(
     *,
     evaluation: dict[str, Any],
-    production_summary: dict[str, Any],
-    full_summary: dict[str, Any],
+    pr_curve: dict[str, Any],
+    quality_decision: dict[str, Any],
     source_paths: dict[str, Path],
 ) -> dict[str, Any]:
     metrics = _require_dict(evaluation.get("metrics"), "evaluation.metrics")
+    metrics_summary = _require_dict(quality_decision.get("metrics_summary"), "quality_decision.metrics_summary")
     return {
         "artifact_type": "track_b_frontend_anomaly_summary",
         "track_id": TRACK_ID,
@@ -584,40 +618,39 @@ def _build_frontend_anomaly_summary(
         "run_id": RUN_ID,
         "model_type": MODEL_TYPE,
         "model_version": MODEL_VERSION,
-        "canonical_status": production_summary.get("canonical_status"),
+        "evidence_status": FRONTEND_EVIDENCE_STATUS,
         "summary": (
-            "The canonical Track B autoencoder converts reconstruction error into an anomaly score. "
+            "The Surface Anomaly Detection autoencoder converts reconstruction error into an anomaly score. "
             "Higher scores indicate images that are less consistent with the training distribution. "
-            "The governed percentile-95 threshold is evidence-based, but it does not produce strong "
-            "separation on the governed test split."
+            "PR AUC and threshold sweep data are governed posthoc evidence derived from existing "
+            "sample-level anomaly scores."
         ),
         "what_it_can_claim": [
             "Governed anomaly scores and thresholded test metrics.",
-            "Canonical evidence package for review and dashboarding.",
+            "Governed PR AUC and threshold sweep derived from existing sample-level scores.",
             "Representative failure and explainability samples.",
         ],
         "what_it_cannot_claim": [
+            "Production readiness.",
             "Deployment safety.",
             "Perfect separation between normal and anomalous images.",
-            "PR AUC from governed evidence, because that metric is not present in the current canonical artifacts.",
         ],
         "limitations": [
-            "ROC AUC is below 0.5 in the canonical evaluation.",
-            "PR AUC is not present in the canonical evidence bundle.",
+            "ROC AUC is below 0.5 in the governed evaluation.",
+            "Recall and F1 are very low at the governed selected threshold.",
             "This summary is a presentation layer only.",
         ],
-        "next_step": (
-            "Use the frontend bundle in the Track B notebook or dashboard. If the project needs PR AUC, "
-            "add it through the governed evaluation pipeline before exposing it in the UI."
-        ),
+        "next_step": "Use this bundle for honest dashboard presentation and investigate anomaly model quality before stronger claims.",
         "source_artifact_paths": {
-            "production_canonical_summary": str(source_paths["production_canonical_summary"]),
-            "full_production_canonical_summary": str(source_paths["full_production_canonical_summary"]),
             "evaluation": str(source_paths["evaluation"]),
+            "anomaly_pr_curve": str(source_paths["anomaly_pr_curve"]),
+            "anomaly_threshold_sweep": str(source_paths["anomaly_threshold_sweep"]),
+            "anomaly_quality_decision": str(source_paths["anomaly_quality_decision"]),
         },
         "key_metrics": {
             "threshold": evaluation.get("threshold"),
             "roc_auc": metrics.get("roc_auc"),
+            "pr_auc": pr_curve.get("pr_auc"),
             "precision": metrics.get("precision"),
             "recall": metrics.get("recall"),
             "f1": metrics.get("f1"),
@@ -626,6 +659,39 @@ def _build_frontend_anomaly_summary(
             "normal_test_count": evaluation.get("counts", {}).get("normal_test_count"),
             "anomaly_test_count": evaluation.get("counts", {}).get("anomaly_test_count"),
         },
+        "quality_decision": {
+            "quality_status": quality_decision.get("quality_status"),
+            "dashboard_usage_recommendation": quality_decision.get("dashboard_usage_recommendation"),
+            "production_ready": False,
+            "deployment_safe": False,
+            "metrics_summary": metrics_summary,
+        },
+        "generated_at": _utc_now_iso(),
+    }
+
+
+def _build_sample_predictions_summary(
+    *,
+    sample_predictions: dict[str, Any],
+    source_paths: dict[str, Path],
+) -> dict[str, Any]:
+    return {
+        "artifact_type": "track_b_sample_predictions",
+        "track_id": TRACK_ID,
+        "task_type": TASK_TYPE,
+        "dataset_id": DATASET_ID,
+        "split": "test",
+        "run_id": RUN_ID,
+        "model_type": MODEL_TYPE,
+        "model_version": MODEL_VERSION,
+        "score_field": sample_predictions.get("score_field"),
+        "score_definition": sample_predictions.get("score_definition"),
+        "reconstruction_loss_mapping": sample_predictions.get("reconstruction_loss_mapping"),
+        "threshold": sample_predictions.get("threshold"),
+        "sample_count": sample_predictions.get("sample_count"),
+        "samples": sample_predictions.get("samples"),
+        "limitations": sample_predictions.get("limitations"),
+        "source_artifact_path": str(source_paths["anomaly_sample_predictions"]),
         "generated_at": _utc_now_iso(),
     }
 
@@ -664,8 +730,15 @@ def _build_frontend_inventory(
         "selected_model_version": selected_model_version,
         "model_type": selected_model_type,
         "model_version": selected_model_version,
-        "bundle_directory": str(DEFAULT_OUTPUT_DIR),
+        "bundle_directory": str(inventory_path.parent),
         "generated_at": _utc_now_iso(),
+        "generation_script": "scripts/evaluation/generate_track_b_frontend_bundle.py",
+        "regeneration_command": "PYTHONPATH=src python scripts/evaluation/generate_track_b_frontend_bundle.py",
+        "frontend_bundle_update_source": "governed anomaly evidence",
+        "generated_from_existing_evidence": True,
+        "no_new_inference": True,
+        "no_retraining": True,
+        "frontend_ui_code_modified": False,
         "bundle_artifact_count": len(bundle_files),
         "source_artifact_count": len(source_paths),
         "generated_file_paths": [str(path) for path in generated_files] + [str(inventory_path)],
@@ -681,13 +754,16 @@ def _build_frontend_inventory(
             }
             for name, path in source_paths.items()
         ],
-        "missing_optional_files": [
-            "roc_auc_pr_auc_summary.json",
-        ],
+        "missing_optional_files": [],
         "safe_demo_wording": (
             "This frontend bundle is a governed presentation layer for Track B only; "
             "it does not imply deployment safety."
         ),
+        "validation_commands": [
+            "python -m compileall scripts/evaluation src/inspection_ai api/app/schemas tests",
+            "pytest tests/unit/test_track_b_frontend_bundle.py -q",
+            "PYTHONPATH=src python scripts/evaluation/generate_track_b_frontend_bundle.py",
+        ],
     }
     inventory_payload["bundle_files"].append(
         {
@@ -838,6 +914,51 @@ def _validate_inventory(payload: dict[str, Any], training_result: dict[str, Any]
     }
     if not expected_keys.issubset(artifacts.keys()):
         raise ValueError("Track B inventory is missing expected artifact entries.")
+
+
+def _validate_governed_evidence(payload: dict[str, Any], expected_artifact_type: str) -> None:
+    if payload.get("artifact_type") != expected_artifact_type:
+        raise ValueError(f"Governed evidence artifact_type must be {expected_artifact_type}.")
+    if payload.get("run_id") != RUN_ID:
+        raise ValueError("Governed evidence run_id must match Track B run_id.")
+    _require_string(payload.get("source_artifact_path"), f"{expected_artifact_type}.source_artifact_path")
+    _require_string(payload.get("generated_at_utc"), f"{expected_artifact_type}.generated_at_utc")
+    if expected_artifact_type == "anomaly_pr_curve":
+        if payload.get("pr_auc") is None:
+            raise ValueError("Anomaly PR curve must include pr_auc.")
+    if expected_artifact_type == "anomaly_threshold_sweep":
+        rows = _require_list(payload.get("rows"), "anomaly_threshold_sweep.rows")
+        if len(rows) <= 1:
+            raise ValueError("Anomaly threshold sweep must include more than one row.")
+    if expected_artifact_type == "anomaly_score_distribution":
+        _require_dict(payload.get("summary"), "anomaly_score_distribution.summary")
+        _require_dict(payload.get("histograms"), "anomaly_score_distribution.histograms")
+    if expected_artifact_type == "anomaly_sample_predictions":
+        samples = _require_list(payload.get("samples"), "anomaly_sample_predictions.samples")
+        if not samples:
+            raise ValueError("Anomaly sample predictions must include samples.")
+    if expected_artifact_type == "anomaly_quality_decision":
+        if payload.get("production_ready") is not False:
+            raise ValueError("Anomaly quality decision must set production_ready=false.")
+        if payload.get("deployment_safe") is not False:
+            raise ValueError("Anomaly quality decision must set deployment_safe=false.")
+
+
+def _validate_governed_evidence_inventory(payload: dict[str, Any]) -> None:
+    if payload.get("inventory_type") != "anomaly_governed_evidence_inventory":
+        raise ValueError("Governed evidence inventory_type must be anomaly_governed_evidence_inventory.")
+    if payload.get("run_id") != RUN_ID:
+        raise ValueError("Governed evidence inventory run_id must match Track B run_id.")
+    artifacts = _require_dict(payload.get("artifacts"), "governed_evidence_inventory.artifacts")
+    expected = {
+        "anomaly_pr_curve",
+        "anomaly_threshold_sweep",
+        "anomaly_score_distribution",
+        "anomaly_sample_predictions",
+        "anomaly_quality_decision",
+    }
+    if not expected.issubset(artifacts):
+        raise ValueError("Governed evidence inventory is missing required derived artifacts.")
 
 
 def _error_type(sample: dict[str, Any]) -> str:

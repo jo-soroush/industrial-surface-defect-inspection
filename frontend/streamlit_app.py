@@ -569,9 +569,12 @@ def _render_agent_callout(action_label: str, summary: str, note: str, *, accent:
     """Render a compact premium agent callout without an action button."""
     st.markdown(
         f"""
-        <div class="premium-card premium-card--{accent}" style="margin-top:0.35rem;">
-            <div class="premium-card__eyebrow">Future AI explanation</div>
-            <div class="premium-card__title premium-card__title--subtle">{html.escape(action_label)}</div>
+        <div class="premium-card premium-card--{accent}" style="margin-top:0.35rem; padding: 1.15rem 1.2rem 1.05rem;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:0.45rem;">
+                <div class="premium-card__eyebrow" style="margin:0;">Future AI explanation</div>
+                <span style="display:inline-flex; align-items:center; padding:0.22rem 0.7rem; border-radius:999px; background:rgba(124,58,237,0.16); color:#f5d0fe; border:1px solid rgba(192,132,252,0.28); font-size:0.72rem; font-weight:700; letter-spacing:0.02em; white-space:nowrap;">Planned / not active</span>
+            </div>
+            <div class="premium-card__title" style="font-size:1.15rem; line-height:1.2; margin-bottom:0.55rem;">{html.escape(action_label)}</div>
             <div class="premium-card__body">{html.escape(summary)}</div>
             <div class="premium-card__meta">{html.escape(note)}</div>
         </div>
@@ -2285,30 +2288,43 @@ def _render_ai_assistant() -> None:
     """Render the future AI explanation assistant placeholder page."""
     _render_hero_card(
         AI_EXPLANATION_ASSISTANT_PAGE_LABEL,
-        "A planned, evidence-grounded explanation surface that will sit beside charts, pages, and inspection results.",
+        "A planned, evidence-grounded explanation surface for helping non-technical users read governed inspection evidence.",
         "Planned / not active · no backend agent · no LLM call · no fake AI",
         accent="violet",
     )
-    st.info(
-        "AI Explanation Assistant planned / not active. No backend agent is implemented yet, no LLM call is wired, and no fake AI behavior exists. Future explanations must stay grounded in governed evidence and real inspection responses."
+    st.warning(
+        "Planned / not active. No backend agent is implemented yet, no LLM call is wired, and no fake AI behavior exists."
     )
-    st.write(
-        "This is a placeholder only. It does not chat, call an LLM, or generate explanations yet."
-    )
+
+    status_cols = st.columns([1.25, 0.95])
+    with status_cols[0]:
+        _render_premium_info_card(
+            "Future AI explanation assistant",
+            "This future assistant will help non-technical users understand governed inspection evidence without changing the underlying model results.",
+            "It is designed to sit beside charts and result cards, not replace them.",
+            accent="violet",
+        )
+    with status_cols[1]:
+        _render_premium_info_card(
+            "Current status",
+            "Planned / not active.",
+            "No backend agent. No LLM call. No fake AI behavior.",
+            accent="orange",
+        )
 
     placement_cols = st.columns(2)
     with placement_cols[0]:
         _render_premium_info_card(
             "What it will explain",
-            "Page summaries, chart explanations, prediction result summaries, and safety boundaries.",
-            "Explain this page · Explain this chart · Explain this prediction",
+            "Page summaries, chart explanations, inspection result summaries, confidence, warnings, manual review needs, and limitations.",
+            "Examples: explain this page, explain this chart, explain this prediction.",
             accent="violet",
         )
     with placement_cols[1]:
         _render_premium_info_card(
             "Evidence it will use",
-            "Governed frontend bundles, Image Inspection responses, prediction responses, and safety docs only.",
-            "Future explanations should stay grounded in tracked bundle data.",
+            "Governed frontend bundles, Image Inspection responses, prediction responses, traceability, and safety docs only.",
+            "Future explanations must stay grounded in real evidence and response data.",
             accent="blue",
         )
 
@@ -2317,14 +2333,14 @@ def _render_ai_assistant() -> None:
         _render_premium_info_card(
             "What it will not do",
             "It will not invent metrics or predictions, hide uncertainty, claim production readiness, claim deployment safety, replace reviewer approval, modify artifacts, update registries, or silently recompute evidence.",
-            "no fake AI · no backend agent implemented yet",
+            "Assistant not active yet.",
             accent="gray",
         )
     with placement_cols[1]:
         _render_premium_info_card(
-            "Current status",
-            "Placeholder only. The assistant layer is planned for a later phase.",
-            "Future explanation surfaces will be added beside charts and result cards.",
+            "Visibility note",
+            "This is a placeholder for a future product capability.",
+            "It should remain visible, but secondary to the model evidence pages.",
             accent="orange",
         )
 

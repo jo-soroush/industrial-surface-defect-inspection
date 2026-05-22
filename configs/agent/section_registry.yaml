@@ -1,0 +1,50 @@
+pages:
+  overview:
+    label: Overview
+    allowed_sections:
+      - review_path
+      - status_summary
+      - technical_evidence
+  classification:
+    label: Surface Defect Classification
+    allowed_sections:
+      - hero_summary
+      - detailed_metrics
+      - technical_evidence
+  anomaly:
+    label: Surface Anomaly Detection
+    allowed_sections:
+      - visual_evidence
+      - sample_evidence_summary
+      - technical_evidence
+  detection:
+    label: Defect Detection & Localization
+    allowed_sections:
+      - visual_evidence
+      - sample_evidence_summary
+      - technical_evidence
+  image_inspection:
+    label: Image Inspection
+    allowed_sections:
+      - final_decision
+      - detection_overlay
+      - unified_results
+      - detection_box_details
+      - inspection_warnings
+      - limitations
+      - traceability
+      - technical_evidence
+  safety:
+    label: Safety & Limitations
+    allowed_sections:
+      - boundaries
+      - manual_review
+      - ai_assistant_state
+      - docker_release
+  ai_assistant:
+    label: AI Explanation Assistant
+    allowed_sections:
+      - preview_status
+      - future_scope
+      - boundaries
+      - design_notes

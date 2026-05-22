@@ -26,7 +26,7 @@ def metadata() -> MetadataResponse:
     """Return the current API stage and supported tracks."""
     return MetadataResponse(
         project_name="Industrial Surface Defect Inspection Platform",
-        api_stage="health_metadata_plus_unified_inspection",
+        api_stage="health_metadata_plus_unified_inspection_agent_mvp",
         supported_tracks=[
             "track_a_classification",
             "track_b_anomaly",
@@ -36,6 +36,8 @@ def metadata() -> MetadataResponse:
         implemented_endpoints=[
             "/health",
             "/metadata",
+            "/agent/health",
+            "/agent/explain",
             "/predict/classification",
             "/predict/detection",
             "/predict/anomaly",

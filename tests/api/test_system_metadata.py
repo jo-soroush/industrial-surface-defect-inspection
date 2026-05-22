@@ -16,11 +16,15 @@ def test_metadata_includes_unified_inspection_endpoint() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert "/inspect/image" in payload["implemented_endpoints"]
+    assert "/agent/health" in payload["implemented_endpoints"]
+    assert "/agent/explain" in payload["implemented_endpoints"]
     assert "/inspect/image" not in payload["planned_endpoints"]
+    assert "/agent/health" not in payload["planned_endpoints"]
+    assert "/agent/explain" not in payload["planned_endpoints"]
     assert "/predict/classification" in payload["implemented_endpoints"]
     assert "/predict/detection" in payload["implemented_endpoints"]
     assert "/predict/anomaly" in payload["implemented_endpoints"]
     assert payload["production_ready"] is False
     assert payload["deployment_safe"] is False
-    assert payload["api_stage"] == "health_metadata_plus_unified_inspection"
+    assert payload["api_stage"] == "health_metadata_plus_unified_inspection_agent_mvp"
     assert "unified_image_inspection" in payload["supported_tracks"]

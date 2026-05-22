@@ -2195,15 +2195,16 @@ def _render_ai_assistant() -> None:
     """Render the future AI explanation assistant placeholder page."""
     _render_hero_card(
         AI_EXPLANATION_ASSISTANT_PAGE_LABEL,
-        "A planned, context-aware explanation surface that will sit beside charts, pages, and predictions.",
-        "Agent layer planned · no backend agent implemented yet · no fake AI",
+        "A planned, evidence-grounded explanation surface that will sit beside charts, pages, and inspection results.",
+        "Planned / not active · no backend agent · no LLM call · no fake AI",
         accent="violet",
     )
     st.info(
-        "AI explanation assistant planned. no backend agent implemented yet. no fake AI. "
-        "Future explanations should use governed evidence, prediction responses, and safety docs."
+        "AI Explanation Assistant planned / not active. No backend agent is implemented yet, no LLM call is wired, and no fake AI behavior exists. Future explanations must stay grounded in governed evidence and real inspection responses."
     )
-    st.write("This is a placeholder only. It does not chat, call an LLM, or generate explanations yet.")
+    st.write(
+        "This is a placeholder only. It does not chat, call an LLM, or generate explanations yet."
+    )
 
     placement_cols = st.columns(2)
     with placement_cols[0]:
@@ -2216,7 +2217,7 @@ def _render_ai_assistant() -> None:
     with placement_cols[1]:
         _render_premium_info_card(
             "Evidence it will use",
-            "Governed evidence bundles, prediction responses, and safety docs only.",
+            "Governed frontend bundles, Image Inspection responses, prediction responses, and safety docs only.",
             "Future explanations should stay grounded in tracked bundle data.",
             accent="blue",
         )
@@ -2225,20 +2226,23 @@ def _render_ai_assistant() -> None:
     with placement_cols[0]:
         _render_premium_info_card(
             "What it will not do",
-            "It will not invent evidence, call an LLM in this phase, or replace governed dashboard content.",
+            "It will not invent metrics or predictions, hide uncertainty, claim production readiness, claim deployment safety, replace reviewer approval, modify artifacts, update registries, or silently recompute evidence.",
             "no fake AI · no backend agent implemented yet",
             accent="gray",
         )
     with placement_cols[1]:
         _render_premium_info_card(
             "Current status",
-            "Placeholder only. The agent layer is planned for a later phase.",
-            "Future AI explanation surfaces will be added beside charts and result cards.",
+            "Placeholder only. The assistant layer is planned for a later phase.",
+            "Future explanation surfaces will be added beside charts and result cards.",
             accent="orange",
         )
 
     with st.expander("Agent design notes", expanded=False):
-        st.caption("The future agent should use governed evidence, prediction outputs, and safety docs.")
+        st.caption("The future assistant should use governed evidence, prediction outputs, and safety docs.")
+        st.write(
+            "Future explanations may use governed frontend bundles, Image Inspection response data, classification results, defect localization boxes, anomaly results, final rule-based decisions, warnings, errors, limitations, traceability, explanation_context, safety documentation, model metadata, thresholds, run IDs, and artifact references."
+        )
         st.write(
             "Backend agent remains a future phase. This page is a design placeholder only."
         )

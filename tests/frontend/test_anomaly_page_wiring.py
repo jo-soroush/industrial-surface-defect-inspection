@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 
 import pytest
 
 from frontend.data_loader import load_track_b_bundle
+from frontend import streamlit_app as app
 from frontend.streamlit_app import (
     _extract_histogram_series,
     _extract_pr_auc,
@@ -50,5 +52,15 @@ def test_track_b_bundle_exposes_governed_anomaly_evidence() -> None:
 
 def test_anomaly_page_source_no_longer_shows_stale_unavailable_copy() -> None:
     source = Path("frontend/streamlit_app.py").read_text(encoding="utf-8")
+    anomaly_source = inspect.getsource(app._render_track_b)
     assert "PR AUC is unavailable" not in source
     assert "No anomaly score data is available in the governed bundle" not in source
+    assert "Sample evidence count" in anomaly_source
+    assert "Sample predictions" in anomaly_source
+    assert "Summary-only view; the full governed sample prediction evidence remains in the artifact bundle." in anomaly_source
+    assert "Sample prediction preview" in anomaly_source
+    assert "Preview (first 5 rows)" in anomaly_source
+    assert "replace(\"_\", \" \").title()" in anomaly_source
+    assert "_render_mini_metric_tile(" in anomaly_source
+    assert "_render_premium_info_card(\n                    label," not in anomaly_source
+    assert "_render_chart_mini_tile(" in anomaly_source

@@ -479,6 +479,32 @@ def _apply_light_visual_system() -> None:
             font-size: 0.8rem;
             margin-top: 0.55rem;
         }
+        .chart-mini-card {
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: linear-gradient(180deg, rgba(11, 20, 35, 0.96), rgba(16, 24, 40, 0.92));
+            padding: 0.48rem 0.62rem 0.42rem;
+            min-height: 58px;
+            box-shadow: 0 10px 18px rgba(2, 6, 23, 0.12);
+            margin-bottom: 0.25rem;
+        }
+        .chart-mini-card__label {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            line-height: 1.0;
+            margin-bottom: 0.18rem;
+        }
+        .chart-mini-card__value {
+            font-size: 0.92rem;
+            font-weight: 700;
+            line-height: 1.08;
+            color: #f8fafc;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
         .premium-pill {
             display: inline-block;
             background: rgba(56, 189, 248, 0.14);
@@ -610,6 +636,32 @@ def _render_premium_info_card(title: str, summary: str, note: str = "", accent: 
             <div class="premium-card__title">{html.escape(title)}</div>
             <div class="premium-card__body">{html.escape(summary)}</div>
             <div class="premium-card__meta">{html.escape(note)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_mini_metric_tile(title: str, value: Any) -> None:
+    """Render a compact metric tile without the heavier dashboard-note treatment."""
+    st.markdown(
+        f"""
+        <div class="premium-card premium-card--gray" style="padding:0.8rem 0.9rem 0.75rem; min-height: 96px;">
+            <div style="font-size:0.68rem; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; color:#94a3b8; margin-bottom:0.3rem; line-height:1.05;">{html.escape(title)}</div>
+            <div style="font-size:1.12rem; font-weight:700; line-height:1.15; color:#f8fafc; word-break:break-word; overflow-wrap:anywhere;">{html.escape(_format_value(value))}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_chart_mini_tile(title: str, value: Any) -> None:
+    """Render a very compact metric tile for chart-level summaries."""
+    st.markdown(
+        f"""
+        <div class="chart-mini-card">
+            <div class="chart-mini-card__label">{html.escape(title)}</div>
+            <div class="chart-mini-card__value">{html.escape(_format_value(value))}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1345,7 +1397,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     )
 
     st.markdown("### Visual evidence")
-    visual_cols = st.columns(3)
+    visual_cols = st.columns(3, gap="small", vertical_alignment="top")
     with visual_cols[0]:
         st.caption("Reconstruction behavior")
         reconstruction_data = reconstruction.get("sample_level_reconstruction_loss", reconstruction)
@@ -1368,10 +1420,6 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ),
                 width="stretch",
             )
-            st.caption(
-                reconstruction_mapping
-                or "Reconstruction loss is shown as governed sample-level loss because the score definition is mean squared reconstruction error per image."
-            )
         else:
             _render_chart_placeholder(
                 "Surface anomaly reconstruction loss",
@@ -1379,13 +1427,15 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 accent="gray",
             )
         if reconstruction_summary:
-            _render_key_value_grid(
-                [
-                    ("Samples", reconstruction_summary.get("all", {}).get("count")),
-                    ("Median loss", reconstruction_summary.get("all", {}).get("median")),
-                    ("P95 loss", reconstruction_summary.get("all", {}).get("p95")),
-                ]
-            )
+            recon_cols = st.columns(3, gap="small")
+            recon_items = [
+                ("Samples", reconstruction_summary.get("all", {}).get("count")),
+                ("Median loss", reconstruction_summary.get("all", {}).get("median")),
+                ("P95 loss", reconstruction_summary.get("all", {}).get("p95")),
+            ]
+            for col, (label, value) in zip(recon_cols, recon_items):
+                with col:
+                    _render_chart_mini_tile(label, value)
     with visual_cols[1]:
         st.caption("Anomaly score summary")
         score_histograms = anomaly_summary.get("histograms", {})
@@ -1413,13 +1463,15 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
         anomaly_summary_stats = anomaly_summary.get("summary", {})
         if anomaly_summary_stats:
-            _render_key_value_grid(
-                [
-                    ("Samples", anomaly_summary_stats.get("all", {}).get("count")),
-                    ("Median score", anomaly_summary_stats.get("all", {}).get("median")),
-                    ("P95 score", anomaly_summary_stats.get("all", {}).get("p95")),
-                ]
-            )
+            score_cols = st.columns(3, gap="small")
+            score_items = [
+                ("Samples", anomaly_summary_stats.get("all", {}).get("count")),
+                ("Median score", anomaly_summary_stats.get("all", {}).get("median")),
+                ("P95 score", anomaly_summary_stats.get("all", {}).get("p95")),
+            ]
+            for col, (label, value) in zip(score_cols, score_items):
+                with col:
+                    _render_chart_mini_tile(label, value)
     with visual_cols[2]:
         st.caption("Threshold behavior")
         threshold_rows = _extract_threshold_rows(threshold_behavior)
@@ -1462,30 +1514,33 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
 
     st.markdown("### Sample evidence summary")
-    gallery_cols = st.columns([0.7, 1.3])
-    with gallery_cols[0]:
-        st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
-        st.caption("Summary-only view; images stay inside the governed evidence bundle.")
-        if sample_predictions.get("sample_count") is not None:
-            st.metric("Sample predictions", _format_value(sample_predictions.get("sample_count")))
-    with gallery_cols[1]:
-        count_rows = [
-            {"error_type": label, "count": count}
-            for label, count in (
-                ("true_positive", gallery.get("counts_by_error_type", {}).get("true_positive")),
-                ("true_negative", gallery.get("counts_by_error_type", {}).get("true_negative")),
-                ("false_positive", gallery.get("counts_by_error_type", {}).get("false_positive")),
-                ("false_negative", gallery.get("counts_by_error_type", {}).get("false_negative")),
-            )
-            if count is not None
-        ]
-        _render_markdown_table(
-            count_rows,
-            [
-                ("Error type", "error_type"),
-                ("Count", "count"),
-            ],
+    count_rows = [
+        {"error_type": label, "count": count}
+        for label, count in (
+            ("true_positive", gallery.get("counts_by_error_type", {}).get("true_positive")),
+            ("true_negative", gallery.get("counts_by_error_type", {}).get("true_negative")),
+            ("false_positive", gallery.get("counts_by_error_type", {}).get("false_positive")),
+            ("false_negative", gallery.get("counts_by_error_type", {}).get("false_negative")),
         )
+        if count is not None
+    ]
+    summary_items = [
+        ("Sample evidence count", gallery.get("gallery_sample_count")),
+        ("Sample predictions", sample_predictions.get("sample_count")),
+    ] + [
+        (row["error_type"].replace("_", " ").title(), row["count"])
+        for row in count_rows
+    ]
+    for start_idx in range(0, len(summary_items), 3):
+        summary_row = st.columns(3)
+        for col, (label, value) in zip(summary_row, summary_items[start_idx : start_idx + 3]):
+            with col:
+                _render_mini_metric_tile(label, value)
+
+    st.caption("Summary-only view; the full governed sample prediction evidence remains in the artifact bundle.")
+
+    with st.expander("Sample prediction preview", expanded=False):
+        st.caption("Preview (first 5 rows). The full governed sample prediction data remains in the artifact bundle.")
         sample_preview_rows = []
         for row in _extract_sample_prediction_rows(sample_predictions)[:5]:
             sample_preview_rows.append(
@@ -1499,7 +1554,6 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 }
             )
         if sample_preview_rows:
-            st.caption("Sample-level anomaly evidence preview")
             _render_markdown_table(
                 sample_preview_rows,
                 [
@@ -1511,6 +1565,8 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                     ("Correct", "correct"),
                 ],
             )
+        else:
+            st.info("No sample prediction preview is available in the governed evidence bundle.")
 
     with st.expander("Detailed metrics", expanded=False):
         cards = metric_cards.get("cards", [])
@@ -1528,7 +1584,11 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             st.info("No surface anomaly metric cards available.")
 
     with st.expander("Technical evidence", expanded=False):
-        st.caption("Anomaly score summary")
+        st.caption("Preview tables below show only a small slice of the governed evidence; the full data remains in the artifact bundle.")
+        st.caption(
+            reconstruction_mapping
+            or "Reconstruction loss is shown as governed sample-level loss because score_definition is mean_squared_reconstruction_error_per_image."
+        )
         anomaly_rows = []
         for series_name, rows in (anomaly_summary.get("histograms", {}) or {}).items():
             if not isinstance(rows, list):
@@ -1544,16 +1604,17 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                         "count": row.get("count"),
                     }
                 )
-        _render_markdown_table(
-            anomaly_rows,
-            [
-                ("Series", "series"),
-                ("Bin start", "bin_start"),
-                ("Bin end", "bin_end"),
-                ("Count", "count"),
-            ],
-        )
-        st.markdown("##### Reconstruction table")
+        with st.expander("Anomaly score distribution table", expanded=False):
+            st.caption("Preview (first 10 rows). The full governed histogram table remains in the artifact bundle.")
+            _render_markdown_table(
+                anomaly_rows[:10],
+                [
+                    ("Series", "series"),
+                    ("Bin start", "bin_start"),
+                    ("Bin end", "bin_end"),
+                    ("Count", "count"),
+                ],
+            )
         reconstruction_rows = []
         reconstruction_histograms = reconstruction.get("sample_level_reconstruction_loss", {}).get("histograms", {})
         for series_name, rows in reconstruction_histograms.items():
@@ -1570,51 +1631,55 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                         "count": row.get("count"),
                     }
                 )
-        _render_markdown_table(
-            reconstruction_rows,
-            [
-                ("Series", "series"),
-                ("Bin start", "bin_start"),
-                ("Bin end", "bin_end"),
-                ("Count", "count"),
-            ],
-        )
-        st.markdown("##### Threshold table")
         threshold_rows = _extract_threshold_rows(threshold_behavior)
-        _render_markdown_table(
-            threshold_rows,
-            [
-                ("Threshold", "threshold"),
-                ("Precision", "precision"),
-                ("Recall", "recall"),
-                ("F1", "f1"),
-                ("False positive rate", "false_positive_rate"),
-                ("False negative rate", "false_negative_rate"),
-                ("False Positives", "false_positive"),
-                ("False Negatives", "false_negative"),
-            ],
-        )
-        st.markdown("##### Sample evidence details")
-        _render_markdown_table(
-            count_rows,
-            [
-                ("Error type", "error_type"),
-                ("Count", "count"),
-            ],
-        )
-        if sample_predictions.get("samples"):
-            st.markdown("##### Sample predictions")
+        with st.expander("Reconstruction loss table", expanded=False):
+            st.caption("Preview (first 10 rows). The full governed reconstruction table remains in the artifact bundle.")
             _render_markdown_table(
-                _extract_sample_prediction_rows(sample_predictions),
+                reconstruction_rows[:10],
                 [
-                    ("Sample ID", "sample_id"),
-                    ("True label", "true_label"),
-                    ("Predicted label", "predicted_label"),
-                    ("Anomaly score", "anomaly_score"),
-                    ("Threshold", "threshold"),
-                    ("Correct", "correct"),
+                    ("Series", "series"),
+                    ("Bin start", "bin_start"),
+                    ("Bin end", "bin_end"),
+                    ("Count", "count"),
                 ],
             )
+        with st.expander("Threshold behavior table", expanded=False):
+            st.caption("Preview (first 10 rows). The full governed threshold sweep remains in the artifact bundle.")
+            _render_markdown_table(
+                threshold_rows[:10],
+                [
+                    ("Threshold", "threshold"),
+                    ("Precision", "precision"),
+                    ("Recall", "recall"),
+                    ("F1", "f1"),
+                    ("False positive rate", "false_positive_rate"),
+                    ("False negative rate", "false_negative_rate"),
+                    ("False Positives", "false_positive"),
+                    ("False Negatives", "false_negative"),
+                ],
+            )
+        with st.expander("Sample evidence records", expanded=False):
+            st.caption("Preview (first 10 rows). The full sample prediction data remains in the governed evidence bundle.")
+            _render_markdown_table(
+                count_rows,
+                [
+                    ("Error type", "error_type"),
+                    ("Count", "count"),
+                ],
+            )
+            if sample_predictions.get("samples"):
+                st.caption("Sample prediction rows")
+                _render_markdown_table(
+                    _extract_sample_prediction_rows(sample_predictions)[:10],
+                    [
+                        ("Sample ID", "sample_id"),
+                        ("True label", "true_label"),
+                        ("Predicted label", "predicted_label"),
+                        ("Anomaly score", "anomaly_score"),
+                        ("Threshold", "threshold"),
+                        ("Correct", "correct"),
+                    ],
+                )
 
     with st.expander("Artifact and run details", expanded=False):
         st.caption("Internal metadata: Anomaly bundle | User-facing module: Surface Anomaly Detection")

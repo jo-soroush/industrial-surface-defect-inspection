@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import mimetypes
 import html
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
 import plotly.graph_objects as go
 import requests
 import streamlit as st
+from PIL import Image, ImageDraw, ImageFont
 
 from frontend.data_loader import load_all_frontend_bundles
 
@@ -119,6 +121,34 @@ def _friendly_status_label(value: Any, default: str = "Unavailable") -> str:
     return text.replace("_", " ")
 
 
+def _friendly_decision_label(value: Any, default: str = "Unavailable") -> str:
+    """Return a user-facing label for final decision values."""
+    if value is None:
+        return default
+    text = str(value).strip()
+    mapping = {
+        "good": "Good",
+        "defective": "Defective",
+        "anomalous": "Anomalous",
+        "needs_manual_review": "Needs manual review",
+        "inconclusive": "Inconclusive",
+    }
+    return mapping.get(text.lower(), text.replace("_", " "))
+
+
+def _format_probability(value: Any) -> str:
+    """Format a probability for user-facing display."""
+    if value is None:
+        return "Unavailable"
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if numeric in (0.0, 1.0):
+        return f"{numeric:.0f}"
+    return f"{numeric:.2%}"
+
+
 def _lookup_card_value(cards: list[dict[str, Any]], title: str) -> Any:
     """Return the value for a metric card with the requested title."""
     for card in cards:
@@ -171,6 +201,66 @@ def _extract_sample_prediction_rows(sample_predictions: dict[str, Any]) -> list[
     """Return sample-level anomaly prediction rows."""
     samples = sample_predictions.get("samples", [])
     return samples if isinstance(samples, list) else []
+
+
+def _extract_detection_rows(detection_payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return detection box rows from a unified inspection response."""
+    detections = detection_payload.get("detections", [])
+    return detections if isinstance(detections, list) else []
+
+
+def _annotate_detection_boxes(image: Image.Image, detection_payload: dict[str, Any]) -> Image.Image:
+    """Return a copy of the uploaded image annotated with detection boxes."""
+    annotated = image.copy().convert("RGB")
+    detections = _extract_detection_rows(detection_payload)
+    if not detections:
+        return annotated
+
+    draw = ImageDraw.Draw(annotated)
+    font = ImageFont.load_default()
+    base_width, base_height = annotated.size
+    source_width = int(detection_payload.get("image_width") or base_width or 1)
+    source_height = int(detection_payload.get("image_height") or base_height or 1)
+    scale_x = base_width / source_width if source_width else 1.0
+    scale_y = base_height / source_height if source_height else 1.0
+    colors = ["#38bdf8", "#f97316", "#22c55e", "#a78bfa", "#ef4444"]
+
+    for index, detection in enumerate(detections):
+        if not isinstance(detection, dict):
+            continue
+        bbox = detection.get("bbox_xyxy")
+        if not isinstance(bbox, list) or len(bbox) != 4:
+            continue
+        try:
+            x1, y1, x2, y2 = [float(value) for value in bbox]
+        except (TypeError, ValueError):
+            continue
+
+        x1 *= scale_x
+        x2 *= scale_x
+        y1 *= scale_y
+        y2 *= scale_y
+        color = colors[index % len(colors)]
+        outline_width = max(2, min(base_width, base_height) // 240)
+        draw.rectangle([x1, y1, x2, y2], outline=color, width=outline_width)
+
+        label = str(detection.get("display_label") or detection.get("class_label") or "Detection")
+        confidence = detection.get("confidence")
+        if confidence is not None:
+            label = f"{label} {_format_probability(confidence)}"
+
+        text_bbox = draw.textbbox((0, 0), label, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        text_x = max(0.0, x1)
+        text_y = max(0.0, y1 - text_height - 6)
+        draw.rectangle(
+            [text_x, text_y, text_x + text_width + 8, text_y + text_height + 6],
+            fill=color,
+        )
+        draw.text((text_x + 4, text_y + 3), label, fill="#0f172a", font=font)
+
+    return annotated
 
 
 def _render_status_summary() -> None:
@@ -1736,16 +1826,15 @@ def _render_upload_predict() -> None:
     """Render the image inspection page."""
     _render_hero_card(
         IMAGE_INSPECTION_PAGE_LABEL,
-        "A local inspection workflow that sends one uploaded image to the FastAPI endpoint and returns the governed inspection result.",
+        "A local inspection workflow that sends one uploaded image to the unified FastAPI endpoint and returns the governed inspection result.",
         "Local inspection workflow · not production-ready · not deployment-safe",
         accent="blue",
     )
     st.warning(
         "Local inspection workflow. not production-ready. not deployment-safe. "
-        "The unified inspection UI is not yet connected here."
+        "The page now calls the unified inspection endpoint and shows the governed inspection response."
     )
-    st.caption("Current flow: classification only")
-    st.caption("Unified inspection UI is not yet connected here")
+    st.caption("Unified inspection workflow")
 
     step_cols = st.columns(3)
     with step_cols[0]:
@@ -1756,18 +1845,18 @@ def _render_upload_predict() -> None:
         st.caption("Default: http://localhost:8000")
     with step_cols[2]:
         st.metric("Step 3", "Run inspection")
-        st.caption("Current flow: classification only")
+        st.caption("Unified inspection response")
 
     controls_cols = st.columns([1.2, 1])
     with controls_cols[0]:
         api_base_url = st.text_input(
             "API base URL",
             value=API_DEFAULT_BASE_URL,
-            help="Base URL for the current local inspection workflow.",
+            help="Base URL for POST /inspect/image.",
         )
     with controls_cols[1]:
         st.caption("Connection target")
-        st.code(f"POST {api_base_url.rstrip('/')}/predict/classification", language="text")
+        st.code(f"POST {api_base_url.rstrip('/')}/inspect/image", language="text")
 
     uploaded_file = st.file_uploader(
         "Choose an image for inspection",
@@ -1775,9 +1864,14 @@ def _render_upload_predict() -> None:
         accept_multiple_files=False,
         key="image_inspection_upload_file",
     )
+    uploaded_image: Image.Image | None = None
 
     if uploaded_file is not None:
         file_bytes = uploaded_file.getvalue()
+        try:
+            uploaded_image = Image.open(BytesIO(file_bytes)).convert("RGB")
+        except Exception:  # pragma: no cover - preview boundary
+            uploaded_image = None
         preview_cols = st.columns([1, 1.1])
         with preview_cols[0]:
             st.markdown("### Image preview")
@@ -1798,7 +1892,7 @@ def _render_upload_predict() -> None:
             )
             st.caption("This preview is local only and does not change the API contract.")
     else:
-        st.info("Choose a single image to enable the prediction button.")
+        st.info("Choose a single image to enable the inspection button.")
 
     predict_clicked = st.button(
         "Run inspection",
@@ -1808,7 +1902,7 @@ def _render_upload_predict() -> None:
 
     if predict_clicked and uploaded_file is not None:
         try:
-            payload = _call_classification_api(api_base_url, uploaded_file)
+            payload = _call_image_inspection_api(api_base_url, uploaded_file)
             st.session_state["image_inspection_prediction"] = payload
             st.session_state["image_inspection_error"] = None
         except Exception as exc:  # pragma: no cover - UI boundary
@@ -1821,55 +1915,208 @@ def _render_upload_predict() -> None:
 
     payload = st.session_state.get("image_inspection_prediction")
     if not isinstance(payload, dict):
-        st.info("Upload an image and press Run inspection to call the current classification endpoint.")
+        st.info("Upload an image and press Run inspection to call the unified image inspection endpoint.")
         return
 
-    st.success("Prediction completed.")
+    st.success("Inspection completed.")
+
+    decision = payload.get("decision", {}) if isinstance(payload.get("decision"), dict) else {}
+    classification = payload.get("classification", {}) if isinstance(payload.get("classification"), dict) else {}
+    detection = payload.get("detection", {}) if isinstance(payload.get("detection"), dict) else {}
+    anomaly = payload.get("anomaly", {}) if isinstance(payload.get("anomaly"), dict) else {}
+    traceability = payload.get("traceability", {}) if isinstance(payload.get("traceability"), dict) else {}
+    explanation_context = payload.get("explanation_context", {}) if isinstance(payload.get("explanation_context"), dict) else {}
+    input_meta = payload.get("input", {}) if isinstance(payload.get("input"), dict) else {}
+    errors = payload.get("errors", []) if isinstance(payload.get("errors"), list) else []
+    warnings = payload.get("warnings", []) if isinstance(payload.get("warnings"), list) else []
+    limitations = payload.get("limitations", []) if isinstance(payload.get("limitations"), list) else []
 
     result_cols = st.columns([1.1, 1])
     with result_cols[0]:
-        st.markdown("### Prediction result")
-        visual_cols = st.columns(2)
-        with visual_cols[0]:
-            st.metric("Predicted label", _safe_text(payload.get("predicted_label")))
-        with visual_cols[1]:
-            st.metric("Decision", _safe_text(payload.get("decision")))
-        probability_good = float(payload.get("probability_good") or 0.0)
-        probability_defect = float(payload.get("probability_defect") or 0.0)
-        st.plotly_chart(
-            _build_donut_figure(
-                "Prediction confidence",
-                ["Good", "Defect"],
-                [probability_good, probability_defect],
-                ["#2ca02c", "#d62728"],
-            ),
-            width="stretch",
+        st.markdown("### Final decision")
+        accent = "green" if str(decision.get("final_decision", "")).lower() == "good" else "orange"
+        _render_premium_info_card(
+            "Decision: " + _friendly_decision_label(decision.get("final_decision")),
+            "Rule-based aggregation of classification, defect localization, and anomaly signals.",
+            _format_value(decision.get("recommended_action")),
+            accent=accent,
         )
-        confidence_cols = st.columns(2)
-        with confidence_cols[0]:
-            st.metric("Probability good", _format_value(payload.get("probability_good")))
-        with confidence_cols[1]:
-            st.metric("Probability defect", _format_value(payload.get("probability_defect")))
-        st.caption("The chart shows how the model split confidence between good and defect.")
-
-    with result_cols[1]:
-        st.markdown("### Model summary")
         _render_key_value_grid(
             [
-                ("Model", payload.get("model_name")),
-                ("Version", payload.get("model_version")),
-                ("Threshold", payload.get("threshold")),
-                ("Production ready", payload.get("production_ready")),
-                ("Deployment safe", payload.get("deployment_safe")),
+                ("Decision level", _friendly_status_label(decision.get("decision_level"))),
+                ("Model agreement", _friendly_status_label(decision.get("model_agreement_status"))),
+                ("Primary signal", _safe_text(decision.get("primary_signal"))),
+                ("Rule ID", _safe_text(decision.get("rule_id"))),
             ]
         )
+        if decision.get("rule_summary"):
+            st.caption(str(decision.get("rule_summary")))
+        if decision.get("conflict_reason"):
+            st.warning(str(decision.get("conflict_reason")))
+        if decision.get("supporting_signals"):
+            st.caption("Supporting signals")
+            st.write(" | ".join(str(item) for item in decision.get("supporting_signals", [])))
+    with result_cols[1]:
+        st.markdown("### Detection overlay")
+        if uploaded_image is not None:
+            if _extract_detection_rows(detection):
+                st.image(_annotate_detection_boxes(uploaded_image, detection), caption="Uploaded image with detection boxes", width="stretch")
+            else:
+                st.image(uploaded_image, caption="Uploaded image (no detection boxes returned)", width="stretch")
+        else:
+            st.info("Uploaded image preview is unavailable.")
         st.caption(
-            "not production-ready | not deployment-safe | local inspection workflow | classification only"
+            f"Detection image size: {_format_value(detection.get('image_width'))} x {_format_value(detection.get('image_height'))}"
         )
+
+    st.markdown("### Unified inspection results")
+    model_cols = st.columns(3)
+    with model_cols[0]:
+        st.markdown("#### Classification")
+        _render_key_value_grid(
+            [
+                ("Model", classification.get("model_name")),
+                ("Version", classification.get("model_version")),
+                ("Run ID", classification.get("run_id")),
+                ("Threshold", classification.get("threshold")),
+                ("Predicted label", classification.get("predicted_label")),
+                ("Decision", _safe_text(classification.get("decision"))),
+            ]
+        )
+        _render_key_value_grid(
+            [
+                ("Probability good", _format_probability(classification.get("probability_good"))),
+                ("Probability defect", _format_probability(classification.get("probability_defect"))),
+                ("Production ready", "Not claimed" if classification.get("production_ready") is False else _safe_text(classification.get("production_ready"))),
+                ("Deployment safe", "Not claimed" if classification.get("deployment_safe") is False else _safe_text(classification.get("deployment_safe"))),
+            ]
+        )
+        if classification.get("limitations"):
+            st.caption("Classification limitations")
+            st.write(" | ".join(str(item) for item in classification.get("limitations", [])))
+
+    with model_cols[1]:
+        st.markdown("#### Defect detection & localization")
+        _render_key_value_grid(
+            [
+                ("Model", detection.get("model_name")),
+                ("Version", detection.get("model_version")),
+                ("Run ID", detection.get("run_id")),
+                ("Confidence threshold", detection.get("confidence_threshold")),
+                ("IoU threshold", detection.get("iou_threshold")),
+                ("Predicted boxes", detection.get("predicted_box_count")),
+                ("Defect count", detection.get("defect_count")),
+                ("Review status", _friendly_status_label(detection.get("review_status"))),
+            ]
+        )
+        detections = _extract_detection_rows(detection)
+        if detections:
+            detection_rows = []
+            for det in detections:
+                detection_rows.append(
+                    {
+                        "box_id": det.get("box_id"),
+                        "class_label": det.get("class_label"),
+                        "display_label": det.get("display_label"),
+                        "confidence": det.get("confidence"),
+                        "bbox_xyxy": det.get("bbox_xyxy"),
+                        "is_best_prediction": det.get("is_best_prediction"),
+                    }
+                )
+            _render_markdown_table(
+                detection_rows[:5],
+                [
+                    ("Box", "box_id"),
+                    ("Class", "class_label"),
+                    ("Label", "display_label"),
+                    ("Confidence", "confidence"),
+                    ("BBox xyxy", "bbox_xyxy"),
+                    ("Best", "is_best_prediction"),
+                ],
+            )
+        else:
+            st.info("No detection boxes were returned by the unified inspection response.")
+        if detection.get("best_detection"):
+            st.caption("Best detection")
+            st.json(detection.get("best_detection"))
+
+    with model_cols[2]:
+        st.markdown("#### Surface anomaly detection")
+        _render_key_value_grid(
+            [
+                ("Model", anomaly.get("model_name")),
+                ("Version", anomaly.get("model_version")),
+                ("Run ID", anomaly.get("run_id")),
+                ("Anomaly score", anomaly.get("anomaly_score")),
+                ("Reconstruction loss", anomaly.get("reconstruction_loss")),
+                ("Threshold", anomaly.get("threshold")),
+                ("Predicted label", anomaly.get("predicted_label")),
+                ("Decision", anomaly.get("decision")),
+                ("Quality status", _friendly_status_label(anomaly.get("quality_status"))),
+                ("Production ready", "Not claimed" if anomaly.get("production_ready") is False else _safe_text(anomaly.get("production_ready"))),
+                ("Deployment safe", "Not claimed" if anomaly.get("deployment_safe") is False else _safe_text(anomaly.get("deployment_safe"))),
+            ]
+        )
+        if anomaly.get("optional_reconstruction_artifacts"):
+            st.caption("Optional reconstruction artifacts")
+            st.json(anomaly.get("optional_reconstruction_artifacts"))
+
+    if warnings:
+        st.warning("Partial-failure warnings were returned by the unified inspection response.")
+        _render_markdown_table(
+            [{"warning": warning} if isinstance(warning, str) else warning for warning in warnings],
+            [("Warning", "warning")],
+        )
+
+    if errors:
+        st.error("One or more inspection components reported an error.")
+        error_rows = []
+        for error in errors:
+            if isinstance(error, dict):
+                error_rows.append(
+                    {
+                        "component": error.get("component"),
+                        "code": error.get("code"),
+                        "message": error.get("message"),
+                        "recoverable": error.get("recoverable"),
+                    }
+                )
+        _render_markdown_table(
+            error_rows,
+            [
+                ("Component", "component"),
+                ("Code", "code"),
+                ("Message", "message"),
+                ("Recoverable", "recoverable"),
+            ],
+        )
+
+    with st.expander("Limitations", expanded=False):
+        if limitations:
+            st.write("\n".join(f"- {item}" for item in limitations))
+        else:
+            st.info("No additional limitations were returned by the inspection response.")
+
+    with st.expander("Traceability and explanation context", expanded=False):
+        st.markdown("##### Input metadata")
+        _render_key_value_grid(
+            [
+                ("Filename", input_meta.get("filename")),
+                ("Content type", input_meta.get("content_type")),
+                ("File size bytes", input_meta.get("file_size_bytes")),
+                ("Image width", input_meta.get("image_width")),
+                ("Image height", input_meta.get("image_height")),
+                ("Image mode", input_meta.get("image_mode")),
+            ]
+        )
+        st.markdown("##### Traceability")
+        st.json(traceability)
+        st.markdown("##### Explanation context")
+        st.json(explanation_context)
 
     _render_agent_callout(
         "Explain this prediction",
-        "Ask for a plain-language explanation of the predicted label, confidence split, and model threshold.",
+        "Ask for a plain-language explanation of the unified inspection response, decision rule, and evidence sources.",
         "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
         accent="violet",
     )
@@ -1880,31 +2127,29 @@ def _render_upload_predict() -> None:
             _render_key_value_grid(
                 [
                     ("Request ID", payload.get("request_id")),
-                    ("Run ID", payload.get("run_id")),
-                    ("Model name", payload.get("model_name")),
-                    ("Model version", payload.get("model_version")),
-                    ("Threshold", payload.get("threshold")),
+                    ("Classification run", classification.get("run_id")),
+                    ("Detection run", detection.get("run_id")),
+                    ("Anomaly run", anomaly.get("run_id")),
+                    ("Decision rule", decision.get("rule_id")),
                 ]
             )
         with detail_tabs[1]:
-            input_meta = payload.get("input", {})
             _render_key_value_grid(
                 [
-                    ("Filename", input_meta.get("filename")),
-                    ("Content type", input_meta.get("content_type")),
-                    ("File size bytes", input_meta.get("file_size_bytes")),
+                    ("Source endpoint", traceability.get("source_endpoint")),
+                    ("Contract version", traceability.get("contract_version")),
+                    ("API version", traceability.get("api_version")),
                 ]
             )
-            limitations = payload.get("limitations", [])
-            if limitations:
-                st.caption("Limitations")
-                st.write(" | ".join(str(item) for item in limitations))
+            st.caption("Frontend evidence sources")
+            for source in traceability.get("frontend_evidence_sources", []):
+                st.code(str(source), language="text")
         with detail_tabs[2]:
             st.caption("Raw API response")
             st.json(payload)
 
     st.caption(
-        "This page currently shows the local classification workflow. The unified inspection UI will expand this in a later phase."
+        "This page now shows the unified local inspection workflow via /inspect/image."
     )
 
 
@@ -2002,8 +2247,8 @@ def _render_limitations() -> None:
         )
 
 
-def _call_classification_api(api_base_url: str, uploaded_file: Any) -> dict[str, Any]:
-    """Call the local classification API with a local uploaded image."""
+def _call_image_inspection_api(api_base_url: str, uploaded_file: Any) -> dict[str, Any]:
+    """Call the unified image inspection API with a local uploaded image."""
     normalized_base_url = api_base_url.strip().rstrip("/")
     if not normalized_base_url:
         raise ValueError("API base URL must be a non-empty string.")
@@ -2024,7 +2269,7 @@ def _call_classification_api(api_base_url: str, uploaded_file: Any) -> dict[str,
             f"Allowed types are: {', '.join(sorted(UPLOAD_ALLOWED_CONTENT_TYPES))}."
         )
 
-    endpoint = f"{normalized_base_url}/predict/classification"
+    endpoint = f"{normalized_base_url}/inspect/image"
     try:
         response = requests.post(
             endpoint,
@@ -2048,21 +2293,16 @@ def _call_classification_api(api_base_url: str, uploaded_file: Any) -> dict[str,
 
     required_keys = {
         "request_id",
-        "model_name",
-        "model_version",
-        "run_id",
-        "threshold",
-        "predicted_label",
-        "predicted_label_id",
-        "probability_good",
-        "probability_defect",
-        "decision",
-        "production_ready",
-        "deployment_safe",
         "input",
-        "live_prediction_enabled",
-        "upload_predict_enabled",
+        "classification",
+        "detection",
+        "anomaly",
+        "decision",
+        "traceability",
         "limitations",
+        "errors",
+        "warnings",
+        "explanation_context",
     }
     missing_keys = sorted(key for key in required_keys if key not in payload)
     if missing_keys:

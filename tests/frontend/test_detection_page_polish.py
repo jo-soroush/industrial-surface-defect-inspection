@@ -13,6 +13,13 @@ def test_detection_page_copy_is_professional() -> None:
     assert "not deployment-safe" in source
     assert "yolo detection" not in source
     assert "yolo bundle" not in source
+    assert "confidence distribution table" in source
+    assert "full confidence distribution table" in source
+    assert "class summary table" in source
+    assert "full class summary table" in source
+    assert "sample evidence details" in source
+    assert "full sample evidence details" in source
+    assert "preview (first 5 rows)" in source or "preview (first 10 rows)" in source
 
 
 def test_detection_review_label_is_user_friendly() -> None:

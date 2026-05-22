@@ -1912,27 +1912,51 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
             st.info("No detection metric cards available.")
 
     with st.expander("Technical evidence", expanded=False):
-        st.caption("Confidence distribution table")
-        _render_markdown_table(
-            confidence_rows,
-            [
-                ("Band", "label"),
-                ("Count", "count"),
-                ("Share", "percentage"),
-            ],
-        )
-        st.caption("Class summary table")
-        _render_markdown_table(
-            class_rows,
-            [
-                ("Class", "class_label"),
-                ("BBox count", "bbox_count"),
-                ("Min confidence", "min_confidence"),
-                ("Mean confidence", "mean_confidence"),
-                ("Median confidence", "median_confidence"),
-            ],
-        )
-        st.caption("Sample evidence details")
+        st.caption("Preview tables below show a small slice of the governed detection evidence; the full data remains in the artifact bundle.")
+        with st.expander("Confidence distribution table", expanded=False):
+            st.caption("Preview (first 5 rows). The full governed confidence table remains in the artifact bundle.")
+            _render_markdown_table(
+                confidence_rows[:5],
+                [
+                    ("Band", "label"),
+                    ("Count", "count"),
+                    ("Share", "percentage"),
+                ],
+            )
+            with st.expander("Full confidence distribution table", expanded=False):
+                st.caption("Full governed confidence distribution table.")
+                _render_markdown_table(
+                    confidence_rows,
+                    [
+                        ("Band", "label"),
+                        ("Count", "count"),
+                        ("Share", "percentage"),
+                    ],
+                )
+        with st.expander("Class summary table", expanded=False):
+            st.caption("Preview (first 10 rows). The full governed class summary remains in the artifact bundle.")
+            _render_markdown_table(
+                class_rows[:10],
+                [
+                    ("Class", "class_label"),
+                    ("BBox count", "bbox_count"),
+                    ("Min confidence", "min_confidence"),
+                    ("Mean confidence", "mean_confidence"),
+                    ("Median confidence", "median_confidence"),
+                ],
+            )
+            with st.expander("Full class summary table", expanded=False):
+                st.caption("Full governed class summary table.")
+                _render_markdown_table(
+                    class_rows,
+                    [
+                        ("Class", "class_label"),
+                        ("BBox count", "bbox_count"),
+                        ("Min confidence", "min_confidence"),
+                        ("Mean confidence", "mean_confidence"),
+                        ("Median confidence", "median_confidence"),
+                    ],
+                )
         gallery_rows = [
             {
                 "category": category.get("category_label"),
@@ -1942,14 +1966,26 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
             for category in sample_gallery.get("categories", [])
             if isinstance(category, dict)
         ]
-        _render_markdown_table(
-            gallery_rows,
-            [
-                ("Category", "category"),
-                ("Samples", "samples"),
-                ("Selection rule", "selection_rule"),
-            ],
-        )
+        with st.expander("Sample evidence details", expanded=False):
+            st.caption("Preview (first 10 rows). The full governed sample evidence remains in the artifact bundle.")
+            _render_markdown_table(
+                gallery_rows[:10],
+                [
+                    ("Category", "category"),
+                    ("Samples", "samples"),
+                    ("Selection rule", "selection_rule"),
+                ],
+            )
+            with st.expander("Full sample evidence details", expanded=False):
+                st.caption("Full governed sample evidence details.")
+                _render_markdown_table(
+                    gallery_rows,
+                    [
+                        ("Category", "category"),
+                        ("Samples", "samples"),
+                        ("Selection rule", "selection_rule"),
+                    ],
+                )
 
     with st.expander("Artifact and run details", expanded=False):
         st.caption("artifact lineage")

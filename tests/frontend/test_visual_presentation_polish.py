@@ -11,6 +11,9 @@ def test_frontend_visual_presentation_copy_and_helper_text() -> None:
         "Image Inspection",
         "Evidence view only",
         "Not claimed means local review/demo only, not factory production use.",
+        "Recommended review path",
+        "Run Image Inspection",
+        "Check Safety & Limitations",
     ]
     for phrase in required_phrases:
         assert phrase in source, phrase
@@ -24,6 +27,7 @@ def test_frontend_visual_presentation_copy_and_helper_text() -> None:
         "YOLO Detection",
         "Upload / Predict",
         "Visual Status",
+        "Inspection capability summary",
         "prototype",
         "scaffold",
         "Sample gallery snapshot",

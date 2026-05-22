@@ -9,7 +9,7 @@ def test_frontend_page_labels_are_professional() -> None:
     assert app.IMAGE_INSPECTION_PAGE_LABEL == "Image Inspection"
     assert app.SAFETY_LIMITATIONS_PAGE_LABEL == "Safety & Limitations"
     assert app.AI_EXPLANATION_ASSISTANT_PAGE_LABEL == "AI Explanation Assistant"
-    assert app.INSPECTION_CAPABILITY_SUMMARY_LABEL == "Inspection capability summary"
+    assert app.INSPECTION_CAPABILITY_SUMMARY_LABEL == "Recommended review path"
 
 
 def test_frontend_status_labels_are_user_friendly() -> None:

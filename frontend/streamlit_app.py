@@ -40,7 +40,7 @@ DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL = "Defect Detection & Localization"
 IMAGE_INSPECTION_PAGE_LABEL = "Image Inspection"
 SAFETY_LIMITATIONS_PAGE_LABEL = "Safety & Limitations"
 AI_EXPLANATION_ASSISTANT_PAGE_LABEL = "AI Explanation Assistant"
-INSPECTION_CAPABILITY_SUMMARY_LABEL = "Inspection capability summary"
+INSPECTION_CAPABILITY_SUMMARY_LABEL = "Recommended review path"
 
 TRACK_A_EVIDENCE_FILENAMES = (
     "metric_cards.json",
@@ -734,20 +734,43 @@ def _build_line_figure(
     return figure
 
 
-def _render_overview_capability_summary() -> None:
-    """Render an evidence-backed capability summary for the current module state."""
-    st.caption("Checklist based on governed bundles and the registered unified inspection endpoint; not a metric chart.")
-    _render_key_value_grid(
-        [
-            ("Classification evidence", "Available"),
-            ("Anomaly evidence", "Available / review-only signal"),
-            ("Detection evidence", "Available"),
-            ("Image Inspection", "Connected"),
-            ("Decision layer", "Available"),
-            ("Production readiness", "Not claimed"),
-            ("Deployment readiness", "Not claimed"),
-        ]
-    )
+def _render_overview_review_path() -> None:
+    """Render a reviewer-oriented path for the current system."""
+    st.caption("A short path for reviewing the current dashboard and its governed evidence.")
+    review_steps = [
+        (
+            "1. Review classification evidence",
+            "This page shows the threshold, confusion matrix, false positives, false negatives, and selected classifier evidence.",
+            "Use the detailed metrics and technical evidence panels to review the governed classification package.",
+            "blue",
+        ),
+        (
+            "2. Review anomaly evidence",
+            "This page shows anomaly score, reconstruction loss, PR AUC, threshold behavior, and the review-only anomaly boundary.",
+            "Use the anomaly validation metrics and technical evidence panels to review governed anomaly evidence.",
+            "orange",
+        ),
+        (
+            "3. Review detection & localization evidence",
+            "This page shows confidence distribution, class summary, detection counts, and validation evidence.",
+            "Use the detection summary and technical evidence panels to review governed localization evidence.",
+            "green",
+        ),
+        (
+            "4. Run Image Inspection",
+            "Upload one image to see the final decision, classification output, localization boxes, anomaly signal, warnings, limitations, and traceability.",
+            "Use the live inspection page for the unified /inspect/image workflow.",
+            "teal",
+        ),
+        (
+            "5. Check Safety & Limitations",
+            "This page clarifies production and deployment boundaries, the manual review requirement, and what the dashboard does not claim.",
+            "Use the safety page to review the system boundary before any broader use.",
+            "gray",
+        ),
+    ]
+    for title, summary, note, accent in review_steps:
+        _render_premium_info_card(title, summary, note, accent=accent)
 
 
 def _render_not_claimed_note(summary: str) -> None:
@@ -838,12 +861,11 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
         "Governed evidence only · not production-ready · not deployment-safe",
         accent="blue",
     )
-    _render_agent_callout(
-        "Explain this page",
-        "Use this placeholder to ask for a plain-language explanation of the dashboard page.",
-        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
-        accent="violet",
-    )
+    with st.expander("Future AI explanation", expanded=False):
+        st.caption("Planned / not active.")
+        st.write(
+            "No backend agent is implemented yet, no LLM call is wired, and future explanations must stay grounded in governed evidence and real inspection responses."
+        )
 
     if bundles is None:
         st.error("Overview data is unavailable because one or more frontend bundles failed to load.")
@@ -892,7 +914,7 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
 
     with overview_cols[1]:
         st.markdown(f"### {INSPECTION_CAPABILITY_SUMMARY_LABEL}")
-        _render_overview_capability_summary()
+        _render_overview_review_path()
 
     with st.expander("Technical evidence", expanded=False):
         evidence_tabs = st.tabs(["Detailed metrics", "Technical evidence", "Artifact and run details"])

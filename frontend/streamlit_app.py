@@ -883,13 +883,13 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the surface defect classification page."""
     _render_hero_card(
         SURFACE_DEFECT_CLASSIFICATION_PAGE_LABEL,
-        "A governed binary classifier page for the surface defect good-vs-defect task, presented as an evidence dashboard rather than a live deployment view.",
+        "This page summarizes governed classification validation evidence for the surface defect good-vs-defect task. Use Image Inspection for live image analysis.",
         "Evidence/dashboard view only · not production-ready · not deployment-safe",
         accent="teal",
     )
     st.warning(
-        "Evidence/dashboard view only. not production-ready. not deployment-safe. "
-        "No live prediction on this evidence page."
+        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
+        "This page shows validation evidence, not the live inspection workflow."
     )
 
     if bundles is None:
@@ -922,21 +922,45 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
         )
     with top_cols[2]:
         st.metric(
-            "Task",
-            "good vs defect",
-            help="Binary classification task for the governed surface defect model.",
+            "Classification status",
+            _friendly_status_label(
+                quality.get("model_quality_status")
+                or metric_cards.get("selected_model_quality_status")
+                or quality.get("decision")
+            ),
+            help=_format_value(quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
         )
     with top_cols[3]:
         st.metric(
-            "Quality/status",
-            _friendly_status_label(quality.get("decision") or metric_cards.get("selected_model_quality_status")),
-            help=_format_value(quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
+            "Validation samples",
+            _format_value(metric_cards.get("validation_samples")),
+            help="Governed validation split sample count used for the classification package.",
         )
+
+    readiness_cols = st.columns(2)
+    with readiness_cols[0]:
+        st.metric(
+            "Production readiness",
+            "Not claimed",
+            help="Not claimed in this evidence package.",
+        )
+    with readiness_cols[1]:
+        st.metric(
+            "Deployment readiness",
+            "Not claimed",
+            help="Not claimed in this evidence package.",
+        )
+
+    st.markdown("### Threshold explanation")
+    st.write(
+        "The threshold is the decision boundary between good and defect. The selected threshold is validation-derived and is used for evidence review; higher thresholds can reduce false positives but may increase false negatives. Live Image Inspection uses the threshold reported by the backend response."
+    )
 
     st.markdown("### Visual evidence")
     visual_cols = st.columns(3)
     with visual_cols[0]:
         st.caption("Error distribution")
+        st.caption("False positives are good parts flagged as defect; false negatives are missed defects.")
         error_rows = error_distribution.get("segments", [])
         if error_rows:
             labels = [str(row.get("label", f"segment_{idx}")) for idx, row in enumerate(error_rows)]
@@ -969,6 +993,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
     with visual_cols[1]:
         st.caption("Per-class performance")
+        st.caption("Per-class precision, recall, and F1 show how the classifier performs on each label.")
         class_metric_rows = per_class.get("classes", [])
         if class_metric_rows:
             categories = [str(row.get("label", f"class_{idx}")) for idx, row in enumerate(class_metric_rows)]
@@ -995,6 +1020,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
     with visual_cols[2]:
         st.caption("Threshold behavior")
+        st.caption("This curve shows how precision, recall, F1, and accuracy move as the decision threshold changes.")
         threshold_rows = threshold_curve.get("rows", [])
         if threshold_rows:
             threshold_values = [float(row.get("threshold", 0) or 0) for row in threshold_rows]
@@ -1162,7 +1188,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
 
     st.markdown("### Safe interpretation")
     st.write(
-        "ResNet18 v0.4.0 remains the governed classification candidate, and this page stays in evidence/dashboard view only."
+        "ResNet18 v0.4.0 is the selected governed validation model for this page, and the page remains evidence/dashboard view only."
     )
 
 

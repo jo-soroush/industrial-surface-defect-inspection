@@ -18,3 +18,8 @@ def test_classification_page_copy_is_professional() -> None:
 
 def test_classification_quality_label_is_user_friendly() -> None:
     assert app._friendly_status_label("TRACK_A_STRONG_CANDIDATE") == "Strong classification candidate"
+    assert app._friendly_metric_display("TRACK_A_STRONG_CANDIDATE") == "Strong classification candidate"
+    assert (
+        app._friendly_metric_display("Selected Track A candidate, not production-ready.")
+        == "Selected governed classification candidate; local review/demo only, not production use."
+    )

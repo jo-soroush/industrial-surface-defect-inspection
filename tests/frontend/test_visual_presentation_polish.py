@@ -18,6 +18,7 @@ def test_frontend_visual_presentation_copy_and_helper_text() -> None:
     blocked_visible_phrases = [
         "Unified image inspection UI is not yet connected here",
         "Partial-failure warnings were returned",
+        "Selected Track A candidate",
         "Track A Classification",
         "Track B Anomaly Detection",
         "YOLO Detection",
@@ -31,4 +32,5 @@ def test_frontend_visual_presentation_copy_and_helper_text() -> None:
         assert phrase not in source, phrase
 
     assert "\" | \".join(str(item) for item in decision.get(\"supporting_signals\"" not in source
-
+    assert "Selected governed classification candidate" in source
+    assert "Strong classification candidate" in source

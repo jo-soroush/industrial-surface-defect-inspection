@@ -126,6 +126,23 @@ def _friendly_status_label(value: Any, default: str = "Unavailable") -> str:
     return text.replace("_", " ")
 
 
+def _friendly_metric_display(value: Any) -> str:
+    """Return a user-facing metric value while normalizing raw governance statuses."""
+    if isinstance(value, str):
+        text = value.strip()
+        lowered = text.lower()
+        if lowered == "selected track a candidate, not production-ready.":
+            return "Selected governed classification candidate; local review/demo only, not production use."
+        if "track_a_strong_candidate" in lowered or "strong_track_a_candidate" in lowered:
+            return "Strong classification candidate"
+        if "track a" in lowered and "candidate" in lowered and "production" in lowered:
+            return "Selected governed classification candidate; local review/demo only, not production use."
+        if "track a" in lowered or "track b" in lowered:
+            return text.replace("Track A", "classification").replace("Track B", "anomaly")
+        return _friendly_status_label(text)
+    return _safe_text(value)
+
+
 def _friendly_decision_label(value: Any, default: str = "Unavailable") -> str:
     """Return a user-facing label for final decision values."""
     if value is None:
@@ -955,7 +972,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                 or metric_cards.get("selected_model_quality_status")
                 or quality.get("decision")
             ),
-            help=_format_value(quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
+            help=_friendly_metric_display(quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
         )
     with top_cols[3]:
         st.metric(
@@ -1111,10 +1128,10 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                 cols = st.columns(len(row_cards))
                 for col, card in zip(cols, row_cards):
                     with col:
-                        st.metric(card.get("title", "Metric"), _format_value(card.get("value")))
+                        st.metric(card.get("title", "Metric"), _friendly_metric_display(card.get("value")))
                         detail = card.get("detail")
                         if detail:
-                            st.caption(str(detail))
+                            st.caption(_friendly_metric_display(detail))
         else:
             st.info("No surface defect metric cards available.")
 
@@ -1195,7 +1212,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ("Version", recommendation.get("selected_model_version") or metric_cards.get("selected_model_version")),
                 ("Run ID", recommendation.get("selected_run_id")),
                 ("Threshold", recommendation.get("selected_threshold") or metric_cards.get("recommended_threshold")),
-                ("Quality target", quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
+                ("Quality target", _friendly_metric_display(quality.get("quality_target_status") or metric_cards.get("quality_target_status"))),
             ]
         )
         _render_key_value_grid(

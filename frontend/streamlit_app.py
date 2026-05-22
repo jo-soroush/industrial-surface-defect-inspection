@@ -131,6 +131,12 @@ def _friendly_metric_display(value: Any) -> str:
     if isinstance(value, str):
         text = value.strip()
         lowered = text.lower()
+        if lowered in {"review_required", "review_required_weak_evidence"}:
+            return "Needs review"
+        if "classification_detection_agree_v0" in lowered:
+            return "Class + detection agree"
+        if "autoencoder" in lowered:
+            return "Autoencoder"
         if lowered == "selected track a candidate, not production-ready.":
             return "Selected governed classification candidate; local review/demo only, not production use."
         if "track_a_strong_candidate" in lowered or "strong_track_a_candidate" in lowered:
@@ -2157,8 +2163,8 @@ def _render_upload_predict() -> None:
         )
         _render_key_value_grid(
             [
-                ("Decision level", _friendly_status_label(decision.get("decision_level"))),
-                ("Model agreement", _friendly_status_label(decision.get("model_agreement_status"))),
+                ("Decision level", _friendly_metric_display(decision.get("decision_level"))),
+                ("Model agreement", _friendly_metric_display(decision.get("model_agreement_status"))),
                 ("Primary signal", _safe_text(decision.get("primary_signal"))),
                 ("Rule ID", _safe_text(decision.get("rule_id"))),
             ]
@@ -2186,47 +2192,109 @@ def _render_upload_predict() -> None:
             f"Detection image size: {_format_value(detection.get('image_width'))} x {_format_value(detection.get('image_height'))}"
         )
 
-        st.markdown("### Unified inspection results")
+    _render_agent_callout(
+        "Explain this inspection result",
+        "Future assistant will explain this inspection result using response evidence, model outputs, warnings, limitations, and traceability.",
+        "Planned / not active · no backend agent · no LLM call · no fake AI",
+        accent="violet",
+    )
+
+    st.markdown("### Unified inspection results")
     model_cols = st.columns(3)
+    classification_detail_rows: list[tuple[str, Any]] = [
+        ("Version", classification.get("model_version")),
+        ("Run ID", classification.get("run_id")),
+        ("Threshold", classification.get("threshold")),
+        ("Probability good", _format_probability(classification.get("probability_good"))),
+        ("Production ready", "Not claimed" if classification.get("production_ready") is False else _safe_text(classification.get("production_ready"))),
+        ("Deployment safe", "Not claimed" if classification.get("deployment_safe") is False else _safe_text(classification.get("deployment_safe"))),
+    ]
+    detection_detail_rows: list[tuple[str, Any]] = [
+        ("Version", detection.get("model_version")),
+        ("Run ID", detection.get("run_id")),
+        ("Confidence threshold", detection.get("confidence_threshold")),
+        ("IoU threshold", detection.get("iou_threshold")),
+    ]
+    anomaly_detail_rows: list[tuple[str, Any]] = [
+        ("Version", anomaly.get("model_version")),
+        ("Run ID", anomaly.get("run_id")),
+        ("Reconstruction loss", anomaly.get("reconstruction_loss")),
+        ("Threshold", anomaly.get("threshold")),
+        ("Production ready", "Not claimed" if anomaly.get("production_ready") is False else _safe_text(anomaly.get("production_ready"))),
+        ("Deployment safe", "Not claimed" if anomaly.get("deployment_safe") is False else _safe_text(anomaly.get("deployment_safe"))),
+    ]
     with model_cols[0]:
         st.markdown("#### Classification")
         _render_key_value_grid(
             [
-                ("Model", classification.get("model_name")),
-                ("Version", classification.get("model_version")),
-                ("Run ID", classification.get("run_id")),
-                ("Threshold", classification.get("threshold")),
+                ("Model", _friendly_metric_display(classification.get("model_name"))),
                 ("Predicted label", classification.get("predicted_label")),
-                ("Decision", _safe_text(classification.get("decision"))),
+                ("Decision", _friendly_status_label(classification.get("decision"))),
+                ("Defect prob.", _format_probability(classification.get("probability_defect"))),
             ]
         )
-        _render_key_value_grid(
-            [
-                ("Probability good", _format_probability(classification.get("probability_good"))),
-                ("Probability defect", _format_probability(classification.get("probability_defect"))),
-                ("Production ready", "Not claimed" if classification.get("production_ready") is False else _safe_text(classification.get("production_ready"))),
-                ("Deployment safe", "Not claimed" if classification.get("deployment_safe") is False else _safe_text(classification.get("deployment_safe"))),
-            ]
-        )
-        st.caption("Not claimed means local review/demo only, not factory production use. Docker/release validation is still pending.")
-        if classification.get("limitations"):
-            st.caption("Classification limitations")
-            st.write(" | ".join(str(item) for item in classification.get("limitations", [])))
 
     with model_cols[1]:
         st.markdown("#### Defect detection & localization")
         _render_key_value_grid(
             [
-                ("Model", detection.get("model_name")),
-                ("Version", detection.get("model_version")),
-                ("Run ID", detection.get("run_id")),
-                ("Confidence threshold", detection.get("confidence_threshold")),
-                ("IoU threshold", detection.get("iou_threshold")),
+                ("Model", _friendly_metric_display(detection.get("model_name"))),
                 ("Predicted boxes", detection.get("predicted_box_count")),
                 ("Defect count", detection.get("defect_count")),
-                ("Review status", _friendly_status_label(detection.get("review_status"))),
+                ("Review", _friendly_metric_display(detection.get("review_status"))),
             ]
         )
+        detections = _extract_detection_rows(detection)
+        if detections:
+            top_detection = next((det for det in detections if isinstance(det, dict) and det.get("is_best_prediction")), None)
+            if top_detection is None:
+                top_detection = next((det for det in detections if isinstance(det, dict)), None)
+            if isinstance(top_detection, dict):
+                st.caption(
+                    "Top detection summary: "
+                    + ", ".join(
+                        [
+                            f"Class {_safe_text(top_detection.get('class_label') or top_detection.get('display_label'))}",
+                            f"Confidence {_format_probability(top_detection.get('confidence'))}",
+                            f"Box {_safe_text(top_detection.get('box_id'))}",
+                        ]
+                    )
+                )
+        else:
+            st.info("No detection boxes were returned by the unified inspection response.")
+        if detection.get("best_detection"):
+            best_detection = detection.get("best_detection")
+            if isinstance(best_detection, dict):
+                best_summary = ", ".join(
+                    [
+                        f"Class: {_safe_text(best_detection.get('class_label') or best_detection.get('display_label'))}",
+                        f"Confidence: {_format_probability(best_detection.get('confidence'))}",
+                        f"Box: {_safe_text(best_detection.get('box_id'))}",
+                    ]
+                )
+                st.caption("Best detection summary")
+                st.write(best_summary)
+
+    with model_cols[2]:
+        st.markdown("#### Surface anomaly detection")
+        _render_key_value_grid(
+            [
+                ("Model", _friendly_metric_display(anomaly.get("model_name"))),
+                ("Anomaly score", anomaly.get("anomaly_score")),
+                ("Predicted label", anomaly.get("predicted_label")),
+                ("Decision", anomaly.get("decision")),
+                ("Quality", _friendly_metric_display(anomaly.get("quality_status"))),
+            ]
+        )
+
+    with st.expander("Classification details", expanded=False):
+        _render_key_value_grid(classification_detail_rows)
+        st.caption("Not claimed means local review/demo only, not factory production use. Docker/release validation is still pending.")
+        if classification.get("limitations"):
+            st.caption("Classification limitations")
+            st.write(" | ".join(str(item) for item in classification.get("limitations", [])))
+
+    with st.expander("Detection box details", expanded=False):
         detections = _extract_detection_rows(detection)
         if detections:
             detection_rows = []
@@ -2242,7 +2310,7 @@ def _render_upload_predict() -> None:
                     }
                 )
             _render_markdown_table(
-                detection_rows[:5],
+                detection_rows,
                 [
                     ("Box", "box_id"),
                     ("Class", "class_label"),
@@ -2254,72 +2322,36 @@ def _render_upload_predict() -> None:
             )
         else:
             st.info("No detection boxes were returned by the unified inspection response.")
+
+    with st.expander("Best detection details", expanded=False):
         if detection.get("best_detection"):
             best_detection = detection.get("best_detection")
             if isinstance(best_detection, dict):
-                best_summary = ", ".join(
-                    [
-                        f"Class: {_safe_text(best_detection.get('class_label') or best_detection.get('display_label'))}",
-                        f"Confidence: {_format_probability(best_detection.get('confidence'))}",
-                        f"Box: {_safe_text(best_detection.get('box_id'))}",
-                    ]
-                )
-                st.caption("Best detection summary")
-                st.write(best_summary)
-            with st.expander("Best detection details", expanded=False):
                 st.json(best_detection)
+        else:
+            st.info("No best detection was returned by the unified inspection response.")
 
-    with model_cols[2]:
-        st.markdown("#### Surface anomaly detection")
-        _render_key_value_grid(
-            [
-                ("Model", anomaly.get("model_name")),
-                ("Version", anomaly.get("model_version")),
-                ("Run ID", anomaly.get("run_id")),
-                ("Anomaly score", anomaly.get("anomaly_score")),
-                ("Reconstruction loss", anomaly.get("reconstruction_loss")),
-                ("Threshold", anomaly.get("threshold")),
-                ("Predicted label", anomaly.get("predicted_label")),
-                ("Decision", anomaly.get("decision")),
-                ("Quality status", _friendly_status_label(anomaly.get("quality_status"))),
-                ("Production ready", "Not claimed" if anomaly.get("production_ready") is False else _safe_text(anomaly.get("production_ready"))),
-                ("Deployment safe", "Not claimed" if anomaly.get("deployment_safe") is False else _safe_text(anomaly.get("deployment_safe"))),
-            ]
-        )
+    with st.expander("Detection details", expanded=False):
+        _render_key_value_grid(detection_detail_rows)
+
+    with st.expander("Anomaly details", expanded=False):
+        _render_key_value_grid(anomaly_detail_rows)
         st.caption("Not claimed means local review/demo only, not factory production use. Docker/release validation is still pending.")
         if anomaly.get("optional_reconstruction_artifacts"):
             st.caption("Optional reconstruction artifacts")
             st.json(anomaly.get("optional_reconstruction_artifacts"))
 
-    if warnings:
-        st.warning("Inspection warnings were returned by the unified inspection response.")
-        _render_markdown_table(
-            [{"warning": warning} if isinstance(warning, str) else warning for warning in warnings],
-            [("Warning", "warning")],
-        )
-
-    if errors:
-        st.error("One or more inspection components reported an error.")
-        error_rows = []
-        for error in errors:
-            if isinstance(error, dict):
-                error_rows.append(
-                    {
-                        "component": error.get("component"),
-                        "code": error.get("code"),
-                        "message": error.get("message"),
-                        "recoverable": error.get("recoverable"),
-                    }
+    with st.expander("Inspection warnings", expanded=False):
+        if warnings:
+            st.caption("The unified inspection response returned warnings. The text below is preserved exactly.")
+            st.markdown(
+                "\n".join(
+                    f"- {warning if isinstance(warning, str) else _safe_text(warning)}"
+                    for warning in warnings
                 )
-        _render_markdown_table(
-            error_rows,
-            [
-                ("Component", "component"),
-                ("Code", "code"),
-                ("Message", "message"),
-                ("Recoverable", "recoverable"),
-            ],
-        )
+                )
+        else:
+            st.info("No inspection warnings were returned by the unified inspection response.")
 
     with st.expander("Limitations", expanded=False):
         if limitations:
@@ -2344,12 +2376,28 @@ def _render_upload_predict() -> None:
         st.markdown("##### Explanation context")
         st.json(explanation_context)
 
-    _render_agent_callout(
-        "Explain this prediction",
-        "Ask for a plain-language explanation of the unified inspection response, decision rule, and evidence sources.",
-        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
-        accent="violet",
-    )
+    if errors:
+        st.error("One or more inspection components reported an error.")
+        error_rows = []
+        for error in errors:
+            if isinstance(error, dict):
+                error_rows.append(
+                    {
+                        "component": error.get("component"),
+                        "code": error.get("code"),
+                        "message": error.get("message"),
+                        "recoverable": error.get("recoverable"),
+                    }
+                )
+        _render_markdown_table(
+            error_rows,
+            [
+                ("Component", "component"),
+                ("Code", "code"),
+                ("Message", "message"),
+                ("Recoverable", "recoverable"),
+            ],
+        )
 
     with st.expander("Technical evidence", expanded=False):
         detail_tabs = st.tabs(["Detailed metrics", "Artifact and run details", "Raw/API response"])

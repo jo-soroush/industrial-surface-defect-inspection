@@ -11,6 +11,7 @@ from frontend.streamlit_app import (
     _annotate_detection_boxes,
     _call_image_inspection_api,
     _extract_detection_rows,
+    _friendly_metric_display,
 )
 
 
@@ -120,11 +121,34 @@ def test_detection_overlay_helper_draws_boxes() -> None:
     assert _extract_detection_rows(payload) == payload["detections"]
 
 
+def test_image_inspection_compact_labels_are_friendly() -> None:
+    assert _friendly_metric_display("classification_detection_agree_v0") == "Class + detection agree"
+    assert _friendly_metric_display("autoencoder") == "Autoencoder"
+    assert _friendly_metric_display("review_required_weak_evidence") == "Needs review"
+    assert _friendly_metric_display("review_required") == "Needs review"
+
+
 def test_frontend_source_no_longer_uses_classification_only_flow() -> None:
     source = Path("frontend/streamlit_app.py").read_text(encoding="utf-8")
     assert "/inspect/image" in source
     assert "classification only" not in source
     assert "unified inspection UI is not yet connected" not in source
+    assert "Explain this inspection result" in source
+    assert "Future assistant will explain this inspection result using response evidence, model outputs, warnings, limitations, and traceability." in source
+    assert "Detection box details" in source
+    assert "Classification details" in source
+    assert "Detection details" in source
+    assert "Anomaly details" in source
+    assert "Inspection warnings" in source
+    assert "st.warning(\"Inspection warnings were returned by the unified inspection response.\")" not in source
+    assert "Raw API response" in source
+    assert '("Decision", _friendly_status_label(classification.get("decision")))' in source
+    assert '("Defect prob.", _format_probability(classification.get("probability_defect")))' in source
+    assert '("Review", _friendly_metric_display(detection.get("review_status")))' in source
+    assert '("Quality", _friendly_metric_display(anomaly.get("quality_status")))' in source
+    assert source.index('with st.expander("Classification details", expanded=False):') > source.index("with model_cols[2]:")
+    assert source.index('with st.expander("Detection box details", expanded=False):') > source.index("with model_cols[2]:")
+    assert source.index('with st.expander("Anomaly details", expanded=False):') > source.index("with model_cols[2]:")
 
 
 def _png_bytes() -> bytes:

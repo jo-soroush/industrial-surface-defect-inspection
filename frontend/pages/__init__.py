@@ -1,1 +1,1 @@
-"""Frontend page package for the initial scaffold."""
+"""Frontend page package for the dashboard."""

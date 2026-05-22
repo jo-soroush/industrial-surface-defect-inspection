@@ -1,8 +1,9 @@
-"""Streamlit entrypoint for the initial frontend scaffold.
+"""Streamlit entrypoint for the frontend dashboard shell.
 
-This scaffold presents the current project status as a read-only demo shell.
-It is intentionally limited to local evidence presentation and does not
-implement live prediction, API integration, Docker, or production features.
+This dashboard presents the current project status as a read-only evidence
+shell. It is intentionally limited to local evidence presentation and does
+not implement live prediction, API integration, Docker, or production
+features.
 """
 
 from __future__ import annotations
@@ -24,6 +25,15 @@ API_DEFAULT_BASE_URL = "http://localhost:8000"
 UPLOAD_ALLOWED_EXTENSIONS = ("png", "jpg", "jpeg", "webp")
 UPLOAD_ALLOWED_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
 UPLOAD_MAX_BYTES = 10 * 1024 * 1024
+
+OVERVIEW_PAGE_LABEL = "Overview"
+SURFACE_DEFECT_CLASSIFICATION_PAGE_LABEL = "Surface Defect Classification"
+SURFACE_ANOMALY_DETECTION_PAGE_LABEL = "Surface Anomaly Detection"
+DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL = "Defect Detection & Localization"
+IMAGE_INSPECTION_PAGE_LABEL = "Image Inspection"
+SAFETY_LIMITATIONS_PAGE_LABEL = "Safety & Limitations"
+AI_EXPLANATION_ASSISTANT_PAGE_LABEL = "AI Explanation Assistant"
+SYSTEM_CAPABILITY_STATUS_LABEL = "System Capability Status"
 
 TRACK_A_EVIDENCE_FILENAMES = (
     "metric_cards.json",
@@ -63,12 +73,13 @@ DETECTION_EVIDENCE_FILENAMES = (
 )
 
 STATUS_LINES = [
-    ("Track A Classification", "PASS"),
-    ("Track B / Autoencoder", "PASS"),
-    ("YOLO / Detection evidence layer", "COMPLETE"),
+    ("Surface Defect Classification", "PASS"),
+    ("Surface Anomaly Detection", "PASS"),
+    ("Defect Detection & Localization", "COMPLETE"),
+    ("Image Inspection", "LOCAL WORKFLOW"),
     ("Frontend app", "NOT STARTED / NOT VALIDATED"),
     ("API endpoints", "NOT STARTED"),
-    ("Agent layer", "NOT STARTED"),
+    ("AI Explanation Assistant", "NOT STARTED"),
     ("Production readiness", "NOT CLAIMED"),
     ("Deployment safety", "NOT CLAIMED"),
 ]
@@ -83,6 +94,40 @@ def _safe_text(value: Any, default: str = "Unavailable") -> str:
     return str(value)
 
 
+def _friendly_status_label(value: Any, default: str = "Unavailable") -> str:
+    """Return a user-facing label for raw status values."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return "Yes" if value else "No"
+
+    text = str(value).strip()
+    lowered = text.lower()
+    status_map = {
+        "review_required": "Needs review",
+        "review_required_weak_evidence": "Review required: weak evidence",
+        "review_only_signal": "Review-only supporting signal",
+        "frontend_bundle_ready_for_review": "Frontend evidence bundle ready for review",
+    }
+    if lowered in status_map:
+        return status_map[lowered]
+    if "strong_track_a_candidate" in lowered or "track_a_strong_candidate" in lowered:
+        return "Strong classification candidate"
+    if "production-canonical" in lowered:
+        return "Governed review evidence"
+    return text.replace("_", " ")
+
+
+def _lookup_card_value(cards: list[dict[str, Any]], title: str) -> Any:
+    """Return the value for a metric card with the requested title."""
+    for card in cards:
+        if not isinstance(card, dict):
+            continue
+        if str(card.get("title", "")).strip().lower() == title.strip().lower():
+            return card.get("value")
+    return None
+
+
 def _render_status_summary() -> None:
     """Render a compact project status summary."""
     cols = st.columns(2)
@@ -95,7 +140,7 @@ def _render_limitations_banner() -> None:
     """Show the non-production limitations banner."""
     st.warning(
         "Evidence dashboard only. The project is not production-ready and not deployment-safe. "
-        "no live prediction and no API upload/predict yet."
+        "The frontend is still being completed as a governed inspection workflow."
     )
 
 
@@ -634,7 +679,7 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the overview page content."""
     _render_hero_card(
         PROJECT_TITLE,
-        "A governed evidence dashboard for comparing Track A, Track B, and YOLO summaries while keeping the local Track A upload prototype clearly separated.",
+        "A governed evidence dashboard for comparing surface defect classification, surface anomaly detection, and defect detection & localization while the local image inspection workflow is finalized.",
         "Governed evidence only · not production-ready · not deployment-safe",
         accent="blue",
     )
@@ -654,31 +699,31 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     detection = bundles["detection"]
     summary_cols = st.columns(4)
     with summary_cols[0]:
-        st.metric("Track A Classification", "PASS", help="Governed evidence and local prototype available")
+        st.metric(SURFACE_DEFECT_CLASSIFICATION_PAGE_LABEL, "PASS", help="Governed classification evidence available")
     with summary_cols[1]:
-        st.metric("Track B / Autoencoder", "PASS", help="Governed evidence available")
+        st.metric(SURFACE_ANOMALY_DETECTION_PAGE_LABEL, "PASS", help="Governed anomaly evidence available")
     with summary_cols[2]:
-        st.metric("YOLO Detection", "COMPLETE", help="Governed evidence layer complete")
+        st.metric(DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL, "COMPLETE", help="Governed detection evidence layer complete")
     with summary_cols[3]:
-        st.metric("Upload / Predict", "LOCAL PROTOTYPE", help="Track A only")
+        st.metric(IMAGE_INSPECTION_PAGE_LABEL, "LOCAL WORKFLOW", help="Current local inspection flow")
 
     overview_cols = st.columns([1.15, 0.95])
     with overview_cols[0]:
-        st.markdown("### What this dashboard can do")
+        st.markdown("### What you can review")
         st.write(
-            "- View governed evidence from Track A, Track B, and YOLO\n"
-            "- Compare the current summaries for each track\n"
-            "- Run the local Track A upload/predict prototype"
+            "- View governed evidence from surface defect classification, surface anomaly detection, and defect detection & localization\n"
+            "- Compare the current summaries for each inspection module\n"
+            "- Use the current local image inspection workflow"
         )
-        st.markdown("### What it cannot claim yet")
+        st.markdown("### What this dashboard does not claim")
         st.write(
             "- not production-ready\n"
             "- not deployment-safe\n"
-            "- YOLO/anomaly upload prediction not implemented yet"
+            "- the dashboard is still a governed evidence shell for local review"
         )
 
     with overview_cols[1]:
-        st.markdown("### Visual status")
+        st.markdown(f"### {SYSTEM_CAPABILITY_STATUS_LABEL}")
         _render_overview_status_chart()
 
     with st.expander("Technical evidence", expanded=False):
@@ -686,9 +731,9 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
         with evidence_tabs[0]:
             _render_key_value_grid(
                 [
-                    ("Track A files", len(track_a)),
-                    ("Track B files", len(track_b)),
-                    ("Detection files", len(detection)),
+                    ("Internal track A files", len(track_a)),
+                    ("Internal track B files", len(track_b)),
+                    ("Internal detection files", len(detection)),
                 ]
             )
         with evidence_tabs[1]:
@@ -702,29 +747,29 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
             detection_overview = detection.get("detection_overview.json", {})
             _render_key_value_grid(
                 [
-                    ("Track A run", track_a_reco.get("selected_run_id")),
-                    ("Track A threshold", track_a_reco.get("selected_threshold")),
-                    ("Track B threshold", track_b_summary.get("key_metrics", {}).get("threshold")),
-                    ("Detection run", detection_overview.get("run_id")),
+                    ("Internal track A run", track_a_reco.get("selected_run_id")),
+                    ("Internal track A threshold", track_a_reco.get("selected_threshold")),
+                    ("Internal track B threshold", track_b_summary.get("key_metrics", {}).get("threshold")),
+                    ("Internal detection run", detection_overview.get("run_id")),
                 ]
             )
 
 
 def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
-    """Render the Track A classification page."""
+    """Render the surface defect classification page."""
     _render_hero_card(
-        "Track A Classification",
-        "A governed binary classifier page for the Track A good-vs-defect task, presented as an evidence dashboard rather than a live deployment view.",
+        SURFACE_DEFECT_CLASSIFICATION_PAGE_LABEL,
+        "A governed binary classifier page for the surface defect good-vs-defect task, presented as an evidence dashboard rather than a live deployment view.",
         "Evidence/dashboard view only · not production-ready · not deployment-safe",
         accent="teal",
     )
     st.warning(
         "Evidence/dashboard view only. not production-ready. not deployment-safe. "
-        "No live prediction on this Track A evidence page."
+        "No live prediction on this evidence page."
     )
 
     if bundles is None:
-        st.error("Track A evidence is unavailable because the frontend bundles failed to load.")
+        st.error("Surface defect evidence is unavailable because the frontend bundles failed to load.")
         return
 
     track_a = bundles["track_a"]
@@ -755,12 +800,12 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
         st.metric(
             "Task",
             "good vs defect",
-            help="Binary classification task for the governed Track A model.",
+            help="Binary classification task for the governed surface defect model.",
         )
     with top_cols[3]:
         st.metric(
             "Quality/status",
-            _format_value(quality.get("decision") or metric_cards.get("selected_model_quality_status")),
+            _friendly_status_label(quality.get("decision") or metric_cards.get("selected_model_quality_status")),
             help=_format_value(quality.get("quality_target_status") or metric_cards.get("quality_target_status")),
         )
 
@@ -785,7 +830,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                     palette.append("#2563eb")
             st.plotly_chart(
                 _build_donut_figure(
-                    "Track A error distribution",
+                    "Surface defect error distribution",
                     labels,
                     values,
                     palette,
@@ -794,7 +839,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
         else:
             _render_chart_placeholder(
-                "Track A error distribution",
+                "Surface defect error distribution",
                 "No error distribution data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
@@ -810,7 +855,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             }
             st.plotly_chart(
                 _build_grouped_bar_figure(
-                    "Track A per-class performance",
+                    "Surface defect per-class performance",
                     categories,
                     series_map,
                     {"Precision": "#2563eb", "Recall": "#d97706", "F1": "#16a34a"},
@@ -820,7 +865,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
         else:
             _render_chart_placeholder(
-                "Track A per-class performance",
+                "Surface defect per-class performance",
                 "No per-class data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
@@ -837,7 +882,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             }
             st.plotly_chart(
                 _build_line_figure(
-                    "Track A threshold behavior",
+                    "Surface defect threshold behavior",
                     threshold_values,
                     series_map,
                     {
@@ -852,7 +897,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
         else:
             _render_chart_placeholder(
-                "Track A threshold behavior",
+                "Surface defect threshold behavior",
                 "No threshold sweep data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
@@ -893,7 +938,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                         if detail:
                             st.caption(str(detail))
         else:
-            st.info("No Track A metric cards available.")
+            st.info("No surface defect metric cards available.")
 
     with st.expander("Technical evidence", expanded=False):
         st.caption("Model comparison")
@@ -965,6 +1010,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             st.info("No threshold curve data available.")
 
     with st.expander("Artifact and run details", expanded=False):
+        st.caption("Internal track: Track A | User-facing module: Surface Defect Classification")
         _render_key_value_grid(
             [
                 ("Selected model", recommendation.get("selected_model_name") or metric_cards.get("selected_model_name")),
@@ -992,25 +1038,25 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
 
     st.markdown("### Safe interpretation")
     st.write(
-        "ResNet18 v0.4.0 remains the governed Track A candidate, and this page stays in evidence/dashboard view only."
+        "ResNet18 v0.4.0 remains the governed classification candidate, and this page stays in evidence/dashboard view only."
     )
 
 
 def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
-    """Render the Track B anomaly detection page."""
+    """Render the surface anomaly detection page."""
     _render_hero_card(
-        "Track B Anomaly Detection",
+        SURFACE_ANOMALY_DETECTION_PAGE_LABEL,
         "A governed autoencoder-based anomaly page for reviewing reconstruction behavior, anomaly scores, and quality decision evidence.",
         "Evidence/dashboard view only · not production-ready · not deployment-safe",
         accent="orange",
     )
     st.warning(
         "Evidence/dashboard view only. not production-ready. not deployment-safe. "
-        "No live prediction on this Track B evidence page. Track B upload/predict not implemented yet."
+        "No live prediction on this evidence page. Unified image inspection UI is not yet connected here."
     )
 
     if bundles is None:
-        st.error("Track B evidence is unavailable because the frontend bundles failed to load.")
+        st.error("Surface anomaly evidence is unavailable because the frontend bundles failed to load.")
         return
 
     track_b = bundles["track_b"]
@@ -1026,7 +1072,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     top_cols = st.columns(4)
     with top_cols[0]:
         st.metric(
-            "Model / autoencoder",
+            "Model family",
             _format_value(frontend_summary.get("model_type") or metric_cards.get("model_type")),
             help=_format_value(frontend_summary.get("model_version") or metric_cards.get("model_version")),
         )
@@ -1038,19 +1084,22 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     with top_cols[2]:
         st.metric(
             "Quality/status",
-            _format_value(quality.get("decision") or frontend_summary.get("canonical_status")),
+            _friendly_status_label(quality.get("quality_status") or quality.get("decision") or frontend_summary.get("quality_status") or frontend_summary.get("canonical_status")),
             help=_format_value(frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")),
         )
     with top_cols[3]:
+        pr_auc_value = frontend_summary.get("key_metrics", {}).get("pr_auc")
+        if pr_auc_value is None:
+            pr_auc_value = _lookup_card_value(metric_cards.get("cards", []), "PR AUC")
         st.metric(
             "PR AUC",
-            "Unavailable",
-            help="PR AUC is unavailable in governed evidence and is not fabricated.",
+            _format_value(pr_auc_value),
+            help="Average precision derived from governed sample-level anomaly scores.",
         )
     _render_premium_info_card(
-        "PR AUC is unavailable",
-        "This page reviews reconstruction/anomaly behavior, but PR AUC is unavailable in the current evidence.",
-        "The score is not fabricated and no production claim is made.",
+        "PR AUC is governed evidence",
+        "This page reviews reconstruction and anomaly behavior, and the governed evidence now includes PR AUC.",
+        "The score is grounded in sample-level anomaly evidence and no production claim is made.",
         accent="orange",
     )
     _render_agent_callout(
@@ -1070,7 +1119,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             losses = [float(row.get("reconstruction_loss", 0) or 0) for row in reconstruction_rows]
             st.plotly_chart(
                 _build_line_figure(
-                    "Track B reconstruction loss",
+                    "Surface anomaly reconstruction loss",
                     epochs,
                     {"Reconstruction loss": losses},
                     {"Reconstruction loss": "#2563eb"},
@@ -1080,7 +1129,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
         else:
             _render_chart_placeholder(
-                "Track B reconstruction loss",
+                "Surface anomaly reconstruction loss",
                 "No reconstruction loss data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
@@ -1101,7 +1150,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                     palette.append("#2563eb")
             st.plotly_chart(
                 _build_donut_figure(
-                    "Track B anomaly score distribution",
+                    "Surface anomaly score distribution",
                     labels,
                     values,
                     palette,
@@ -1110,7 +1159,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
         else:
             _render_chart_placeholder(
-                "Track B anomaly score distribution",
+                "Surface anomaly score distribution",
                 "No anomaly score data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
@@ -1126,7 +1175,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             }
             st.plotly_chart(
                 _build_line_figure(
-                    "Track B threshold behavior",
+                    "Surface anomaly threshold behavior",
                     thresholds,
                     series_map,
                     {"Precision": "#2563eb", "Recall": "#d97706", "F1": "#16a34a"},
@@ -1136,7 +1185,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
         else:
             _render_chart_placeholder(
-                "Track B threshold behavior",
+                "Surface anomaly threshold behavior",
                 "No threshold behavior data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
@@ -1178,7 +1227,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                         if detail:
                             st.caption(str(detail))
         else:
-            st.info("No Track B metric cards available.")
+            st.info("No surface anomaly metric cards available.")
 
     with st.expander("Technical evidence", expanded=False):
         st.caption("Anomaly score summary")
@@ -1222,6 +1271,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
         )
 
     with st.expander("Artifact and run details", expanded=False):
+        st.caption("Internal track: Track B | User-facing module: Surface Anomaly Detection")
         _render_key_value_grid(
             [
                 ("Model", frontend_summary.get("model_type")),
@@ -1246,21 +1296,21 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
 
     st.markdown("### Safe interpretation")
     st.write(
-        "The Track B autoencoder remains governed evidence only, with PR AUC unavailable in the current evidence set."
+        "The surface anomaly detector remains governed evidence only, with a weak-evidence quality status that supports review rather than automation."
     )
 
 
 def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
-    """Render the YOLO / Detection page."""
+    """Render the defect detection and localization page."""
     _render_hero_card(
-        "YOLO Detection",
-        "A governed object-detection evidence page for the validation bundle, designed for review rather than live deployment.",
+        DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL,
+        "A governed defect detection and localization evidence page for the validation bundle, designed for review rather than live deployment.",
         "Evidence/dashboard view only · not production-ready · not deployment-safe",
         accent="green",
     )
     st.warning(
         "Evidence/dashboard view only. not production-ready. not deployment-safe. "
-        "No live prediction on this YOLO evidence page. YOLO upload/predict not implemented yet."
+        "No live prediction on this evidence page. Live detection UI is not yet connected here."
     )
     st.caption("evidence/dashboard view only")
     _render_agent_callout(
@@ -1371,7 +1421,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     with summary_cols[0]:
         st.markdown("### What the bundle shows")
         st.write(
-            "The YOLO bundle summarizes detection counts, confidence bands, class balance, and curated gallery samples for review."
+            "The detection bundle summarizes detection counts, confidence bands, class balance, and curated gallery samples for review."
         )
         st.metric(
             "Images with detections",
@@ -1402,7 +1452,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     st.markdown("### Quick take")
     _render_premium_info_card(
         "Review status: " + _format_value(quality.get("decision")),
-        "The YOLO bundle is review-oriented only and does not claim production readiness or deployment safety.",
+        "The detection bundle is review-oriented only and does not claim production readiness or deployment safety.",
         "What it can claim: "
         + ", ".join(_format_value(value) for value in recommendation.get("what_it_can_claim", [])),
         accent="green" if str(quality.get("decision", "")).lower() == "pass" else "orange",
@@ -1524,24 +1574,24 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
 
     st.markdown("### Safe interpretation")
     st.write(
-        "This YOLO / Detection evidence layer is review-oriented only and does not claim production readiness or deployment safety."
+        "This detection and localization evidence layer is review-oriented only and does not claim production readiness or deployment safety."
     )
 
 
 def _render_upload_predict() -> None:
-    """Render the Track A upload/predict page."""
+    """Render the image inspection page."""
     _render_hero_card(
-        "Upload / Predict",
-        "A local Track A classification prototype that sends one uploaded image to the FastAPI endpoint and returns the governed prediction result.",
-        "Local prototype endpoint · not production-ready · not deployment-safe",
+        IMAGE_INSPECTION_PAGE_LABEL,
+        "A local inspection workflow that sends one uploaded image to the FastAPI endpoint and returns the governed inspection result.",
+        "Local inspection workflow · not production-ready · not deployment-safe",
         accent="blue",
     )
     st.warning(
-        "Local prototype endpoint for Track A classification only. not production-ready. "
-        "not deployment-safe. YOLO and anomaly upload/predict not implemented yet."
+        "Local inspection workflow. not production-ready. not deployment-safe. "
+        "The unified inspection UI is not yet connected here."
     )
-    st.caption("Track A upload/predict only")
-    st.caption("YOLO/anomaly upload prediction not implemented yet")
+    st.caption("Current flow: classification only")
+    st.caption("Unified inspection UI is not yet connected here")
 
     step_cols = st.columns(3)
     with step_cols[0]:
@@ -1551,25 +1601,25 @@ def _render_upload_predict() -> None:
         st.metric("Step 2", "Confirm API URL")
         st.caption("Default: http://localhost:8000")
     with step_cols[2]:
-        st.metric("Step 3", "Run prediction")
-        st.caption("Track A classification only")
+        st.metric("Step 3", "Run inspection")
+        st.caption("Current flow: classification only")
 
     controls_cols = st.columns([1.2, 1])
     with controls_cols[0]:
         api_base_url = st.text_input(
             "API base URL",
             value=API_DEFAULT_BASE_URL,
-            help="Base URL for POST /predict/classification.",
+            help="Base URL for the current local inspection workflow.",
         )
     with controls_cols[1]:
         st.caption("Connection target")
         st.code(f"POST {api_base_url.rstrip('/')}/predict/classification", language="text")
 
     uploaded_file = st.file_uploader(
-        "Choose an image for Track A classification",
+        "Choose an image for inspection",
         type=list(UPLOAD_ALLOWED_EXTENSIONS),
         accept_multiple_files=False,
-        key="track_a_upload_file",
+        key="image_inspection_upload_file",
     )
 
     if uploaded_file is not None:
@@ -1584,7 +1634,7 @@ def _render_upload_predict() -> None:
                 f"{len(file_bytes)} bytes"
             )
         with preview_cols[1]:
-            st.markdown("### Ready to predict")
+            st.markdown("### Ready to inspect")
             _render_key_value_grid(
                 [
                     ("Filename", uploaded_file.name),
@@ -1597,7 +1647,7 @@ def _render_upload_predict() -> None:
         st.info("Choose a single image to enable the prediction button.")
 
     predict_clicked = st.button(
-        "Predict Track A classification",
+        "Run inspection",
         type="primary",
         disabled=uploaded_file is None,
     )
@@ -1605,19 +1655,19 @@ def _render_upload_predict() -> None:
     if predict_clicked and uploaded_file is not None:
         try:
             payload = _call_classification_api(api_base_url, uploaded_file)
-            st.session_state["track_a_upload_prediction"] = payload
-            st.session_state["track_a_upload_error"] = None
+            st.session_state["image_inspection_prediction"] = payload
+            st.session_state["image_inspection_error"] = None
         except Exception as exc:  # pragma: no cover - UI boundary
-            st.session_state["track_a_upload_prediction"] = None
-            st.session_state["track_a_upload_error"] = str(exc)
+            st.session_state["image_inspection_prediction"] = None
+            st.session_state["image_inspection_error"] = str(exc)
 
-    error_message = st.session_state.get("track_a_upload_error")
+    error_message = st.session_state.get("image_inspection_error")
     if error_message:
         st.error(error_message)
 
-    payload = st.session_state.get("track_a_upload_prediction")
+    payload = st.session_state.get("image_inspection_prediction")
     if not isinstance(payload, dict):
-        st.info("Upload an image and press Predict to call the Track A classification endpoint.")
+        st.info("Upload an image and press Run inspection to call the current classification endpoint.")
         return
 
     st.success("Prediction completed.")
@@ -1660,7 +1710,7 @@ def _render_upload_predict() -> None:
             ]
         )
         st.caption(
-            "not production-ready | not deployment-safe | local prototype endpoint | Track A classification only"
+            "not production-ready | not deployment-safe | local inspection workflow | classification only"
         )
 
     _render_agent_callout(
@@ -1700,20 +1750,20 @@ def _render_upload_predict() -> None:
             st.json(payload)
 
     st.caption(
-        "This page is limited to Track A classification. YOLO and anomaly upload/predict are not implemented yet."
+        "This page currently shows the local classification workflow. The unified inspection UI will expand this in a later phase."
     )
 
 
 def _render_ai_assistant() -> None:
-    """Render the future AI Assistant placeholder page."""
+    """Render the future AI explanation assistant placeholder page."""
     _render_hero_card(
-        "AI Assistant",
+        AI_EXPLANATION_ASSISTANT_PAGE_LABEL,
         "A planned, context-aware explanation surface that will sit beside charts, pages, and predictions.",
         "Agent layer planned · no backend agent implemented yet · no fake AI",
         accent="violet",
     )
     st.info(
-        "Agent layer planned. no backend agent implemented yet. no fake AI. "
+        "AI explanation assistant planned. no backend agent implemented yet. no fake AI. "
         "Future explanations should use governed evidence, prediction responses, and safety docs."
     )
     st.write("This is a placeholder only. It does not chat, call an LLM, or generate explanations yet.")
@@ -1760,14 +1810,14 @@ def _render_ai_assistant() -> None:
 def _render_limitations() -> None:
     """Render the limitations and safety page."""
     _render_hero_card(
-        "Limitations / Safety",
+        SAFETY_LIMITATIONS_PAGE_LABEL,
         "A short and explicit safety page that states what the dashboard can claim and what it cannot claim yet.",
         "not production-ready · not deployment-safe · governed evidence only",
         accent="gray",
     )
     _render_agent_callout(
         "Explain safety boundaries",
-        "Ask for a plain-language summary of the prototype limits, production gaps, and deployment gaps.",
+        "Ask for a plain-language summary of the local inspection workflow limits, production gaps, and deployment gaps.",
         "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
         accent="violet",
     )
@@ -1778,28 +1828,28 @@ def _render_limitations() -> None:
     with top_cols[1]:
         st.metric("Not safe to claim", "Production readiness", help="No production or deployment claim is made.")
     with top_cols[2]:
-        st.metric("Prototype boundary", "Track A only", help="Upload / Predict remains limited to Track A.")
+        st.metric("Current flow", "Local inspection workflow", help="The unified inspection UI is still being finalized.")
 
     second_cols = st.columns(3)
     with second_cols[0]:
-        st.metric("Production gaps", "API hardening pending", help="The current endpoint is still a local prototype.")
+        st.metric("Production gaps", "Not claimed", help="No production claim is made.")
     with second_cols[1]:
-        st.metric("Deployment gaps", "Docker / release pending", help="No deployment-safe claim is made.")
+        st.metric("Deployment gaps", "Not claimed", help="No deployment-safe claim is made.")
     with second_cols[2]:
-        st.metric("Agent limitations", "Placeholder only", help="The AI Assistant page is not a backend agent.")
-    st.caption("Prototype boundaries")
+        st.metric("Agent limitations", "Placeholder only", help="The AI explanation assistant page is not a backend agent.")
+    st.caption("Current boundaries")
 
     with st.expander("Safety details", expanded=False):
         st.write(
-            "This scaffold is evidence-focused only. It does not train models, recompute metrics, create artifacts, update registries, or claim production or deployment readiness."
+            "This dashboard is evidence-focused only. It does not train models, recompute metrics, create artifacts, update registries, or claim production or deployment readiness."
         )
         st.write(
-            "Track A upload/predict only. YOLO/anomaly upload prediction not implemented yet. no backend agent implemented yet. no fake AI."
+            "The local inspection workflow is still being finalized. The AI explanation assistant remains a placeholder only."
         )
 
 
 def _call_classification_api(api_base_url: str, uploaded_file: Any) -> dict[str, Any]:
-    """Call the Track A classification API with a local uploaded image."""
+    """Call the local classification API with a local uploaded image."""
     normalized_base_url = api_base_url.strip().rstrip("/")
     if not normalized_base_url:
         raise ValueError("API base URL must be a non-empty string.")
@@ -1910,13 +1960,13 @@ def main() -> None:
     _render_sidebar_health(bundles)
 
     pages = {
-        "Overview": lambda: _render_overview(bundles),
-        "Track A Classification": lambda: _render_track_a(bundles),
-        "Track B Anomaly Detection": lambda: _render_track_b(bundles),
-        "YOLO Detection": lambda: _render_yolo(bundles),
-        "Upload / Predict": _render_upload_predict,
-        "Limitations / Safety": _render_limitations,
-        "AI Assistant": _render_ai_assistant,
+        OVERVIEW_PAGE_LABEL: lambda: _render_overview(bundles),
+        SURFACE_DEFECT_CLASSIFICATION_PAGE_LABEL: lambda: _render_track_a(bundles),
+        SURFACE_ANOMALY_DETECTION_PAGE_LABEL: lambda: _render_track_b(bundles),
+        DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL: lambda: _render_yolo(bundles),
+        IMAGE_INSPECTION_PAGE_LABEL: _render_upload_predict,
+        SAFETY_LIMITATIONS_PAGE_LABEL: _render_limitations,
+        AI_EXPLANATION_ASSISTANT_PAGE_LABEL: _render_ai_assistant,
     }
 
     st.sidebar.markdown("### Navigation")
@@ -1932,8 +1982,8 @@ def main() -> None:
         unsafe_allow_html=True,
     )
     st.sidebar.caption(
-        "This scaffold is read-only and consumes existing evidence bundles. "
-        "The future AI Assistant is a placeholder only."
+        "This dashboard is read-only and consumes existing evidence bundles. "
+        "The future AI explanation assistant is a placeholder only."
     )
     pages[choice]()
 

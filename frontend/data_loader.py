@@ -1,6 +1,6 @@
 """Helpers for loading frontend JSON evidence bundles.
 
-This module keeps the frontend scaffold read-only. It validates that the
+This module keeps the frontend dashboard read-only. It validates that the
 expected JSON bundle files exist, parses them safely, and returns structured
 dictionary payloads for the dashboard shell.
 """
@@ -101,12 +101,12 @@ def _load_bundle(bundle_name: str, bundle_dir: Path, required_files: tuple[str, 
 
 
 def load_track_a_bundle() -> dict[str, Any]:
-    """Load the Track A frontend evidence bundle."""
+    """Load the surface defect frontend evidence bundle."""
     return _load_bundle("track_a", TRACK_A_BUNDLE_DIR, TRACK_A_REQUIRED_FILES)
 
 
 def load_track_b_bundle() -> dict[str, Any]:
-    """Load the Track B frontend evidence bundle."""
+    """Load the surface anomaly frontend evidence bundle."""
     return _load_bundle("track_b", TRACK_B_BUNDLE_DIR, TRACK_B_REQUIRED_FILES)
 
 

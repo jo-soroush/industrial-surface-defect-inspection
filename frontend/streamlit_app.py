@@ -391,6 +391,13 @@ def _apply_light_visual_system() -> None:
         div[data-testid="stMetric"] [data-testid="stMetricValue"] {
             color: #f8fafc !important;
             font-weight: 700;
+            font-size: 1.18rem !important;
+            line-height: 1.15 !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
+            text-overflow: clip !important;
+            overflow: visible !important;
         }
         div[data-testid="stExpander"] {
             border: 1px solid rgba(148, 163, 184, 0.16);
@@ -441,6 +448,10 @@ def _apply_light_visual_system() -> None:
             line-height: 1.25;
             margin-bottom: 0.35rem;
         }
+        .premium-card__title--subtle {
+            font-size: 1.0rem;
+            font-weight: 700;
+        }
         .premium-card__body {
             color: #eef4fb;
             font-size: 0.96rem;
@@ -489,9 +500,13 @@ def _render_sidebar_health(bundles: dict[str, dict[str, Any]] | None) -> None:
             st.error("Frontend data contracts are not fully loadable.")
             return
         st.caption("Loaded JSON files per governed bundle")
-        for key in ("track_a", "track_b", "detection"):
+        for key, label in (
+            ("track_a", "Classification bundle"),
+            ("track_b", "Anomaly bundle"),
+            ("detection", "Detection bundle"),
+        ):
             bundle = bundles[key]
-            st.metric(f"{key.replace('_', ' ').title()}", f"{len(bundle)} files")
+            st.metric(label, f"{len(bundle)} files")
     st.sidebar.caption("Current page is highlighted in the navigation above.")
 
 
@@ -539,7 +554,7 @@ def _render_agent_callout(action_label: str, summary: str, note: str, *, accent:
         f"""
         <div class="premium-card premium-card--{accent}" style="margin-top:0.35rem;">
             <div class="premium-card__eyebrow">Future AI explanation</div>
-            <div class="premium-card__title">{html.escape(action_label)}</div>
+            <div class="premium-card__title premium-card__title--subtle">{html.escape(action_label)}</div>
             <div class="premium-card__body">{html.escape(summary)}</div>
             <div class="premium-card__meta">{html.escape(note)}</div>
         </div>
@@ -718,6 +733,11 @@ def _render_overview_capability_summary() -> None:
     )
 
 
+def _render_not_claimed_note(summary: str) -> None:
+    """Render a short caption explaining the not-claimed readiness state."""
+    st.caption(summary)
+
+
 def _format_value(value: Any) -> str:
     """Format values for compact markdown tables and labels."""
     if value is None:
@@ -830,8 +850,10 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
         st.metric("Decision layer", "Available", help="Deterministic rule-based aggregation is implemented")
     with capability_cols[1]:
         st.metric("Production readiness", "Not claimed", help="The dashboard does not claim production readiness")
+        _render_not_claimed_note("Not claimed means local review/demo only, not factory production use.")
     with capability_cols[2]:
         st.metric("Deployment readiness", "Not claimed", help="The dashboard does not claim deployment safety")
+        _render_not_claimed_note("Not claimed means Docker/release validation is still pending.")
 
     overview_cols = st.columns([1.15, 0.95])
     with overview_cols[0]:
@@ -860,8 +882,8 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
         with evidence_tabs[0]:
             _render_key_value_grid(
                 [
-                    ("Internal metadata: Track A bundle files", len(track_a)),
-                    ("Internal metadata: Track B bundle files", len(track_b)),
+                    ("Internal metadata: Classification bundle files", len(track_a)),
+                    ("Internal metadata: Anomaly bundle files", len(track_b)),
                     ("Internal metadata: Detection bundle files", len(detection)),
                 ]
             )
@@ -876,9 +898,9 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
             detection_overview = detection.get("detection_overview.json", {})
             _render_key_value_grid(
                 [
-                    ("Internal metadata: Track A run", track_a_reco.get("selected_run_id")),
-                    ("Internal metadata: Track A threshold", track_a_reco.get("selected_threshold")),
-                    ("Internal metadata: Track B threshold", track_b_summary.get("key_metrics", {}).get("threshold")),
+                    ("Internal metadata: Classification run", track_a_reco.get("selected_run_id")),
+                    ("Internal metadata: Classification threshold", track_a_reco.get("selected_threshold")),
+                    ("Internal metadata: Anomaly threshold", track_b_summary.get("key_metrics", {}).get("threshold")),
                     ("Internal metadata: Detection run", detection_overview.get("run_id")),
                 ]
             )
@@ -1064,10 +1086,10 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
         accent="violet",
     )
 
-    st.markdown("### Sample gallery")
+    st.markdown("### Sample evidence summary")
     gallery_cols = st.columns([0.7, 1.3])
     with gallery_cols[0]:
-        st.metric("Sample gallery images", _format_value(gallery.get("gallery_sample_count")))
+        st.metric("Sample evidence images", _format_value(gallery.get("gallery_sample_count")))
         st.caption("Summary-only view; individual images stay inside the governed evidence bundle.")
     with gallery_cols[1]:
         gallery_counts = gallery.get("counts_by_error_type", {})
@@ -1081,6 +1103,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
         )
 
     with st.expander("Detailed metrics", expanded=False):
+        st.caption("Not claimed means local review/demo only, not factory production use. Docker/release validation is still pending.")
         cards = metric_cards.get("cards", [])
         if cards:
             for start_idx in range(0, len(cards), 3):
@@ -1165,7 +1188,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             st.info("No threshold curve data available.")
 
     with st.expander("Artifact and run details", expanded=False):
-        st.caption("Internal track: Track A | User-facing module: Surface Defect Classification")
+        st.caption("Internal metadata: Classification bundle | User-facing module: Surface Defect Classification")
         _render_key_value_grid(
             [
                 ("Selected model", recommendation.get("selected_model_name") or metric_cards.get("selected_model_name")),
@@ -1191,9 +1214,11 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
             "The evidence bundle remains governed; raw JSON is intentionally hidden by default."
         )
 
-    st.markdown("### Safe interpretation")
-    st.write(
-        "ResNet18 v0.4.0 is the selected governed validation model for this page, and the page remains evidence/dashboard view only."
+    _render_premium_info_card(
+        "Safe interpretation",
+        "ResNet18 v0.4.0 is the selected governed validation model for this page.",
+        "Evidence view only — local review/demo, not production use.",
+        accent="gray",
     )
 
 
@@ -1206,8 +1231,8 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
         accent="orange",
     )
     st.warning(
-        "Evidence/dashboard view only. not production-ready. not deployment-safe. "
-        "No live prediction on this evidence page. Unified image inspection UI is not yet connected here."
+        "Evidence view only — local review/demo, not production use. Not production-ready. Not deployment-safe. "
+        "This page is evidence-only. Live inspection is available on the Image Inspection page."
     )
 
     if bundles is None:
@@ -1379,7 +1404,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 accent="gray",
             )
 
-    st.markdown("### Sample gallery")
+    st.markdown("### Sample evidence summary")
     gallery_cols = st.columns([0.7, 1.3])
     with gallery_cols[0]:
         st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
@@ -1512,7 +1537,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ("False Negatives", "false_negative"),
             ],
         )
-        st.markdown("##### Sample anomaly gallery details")
+        st.markdown("##### Sample evidence details")
         _render_markdown_table(
             count_rows,
             [
@@ -1535,7 +1560,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
 
     with st.expander("Artifact and run details", expanded=False):
-        st.caption("Internal track: Track B | User-facing module: Surface Anomaly Detection")
+        st.caption("Internal metadata: Anomaly bundle | User-facing module: Surface Anomaly Detection")
         _render_key_value_grid(
             [
                 ("Model", frontend_summary.get("model_type")),
@@ -1558,9 +1583,11 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
         for filename in TRACK_B_EVIDENCE_FILENAMES:
             st.code(filename, language="text")
 
-    st.markdown("### Safe interpretation")
-    st.write(
-        "The surface anomaly detector remains governed evidence only, with a weak-evidence quality status that supports review rather than automation."
+    _render_premium_info_card(
+        "Safe interpretation",
+        "The surface anomaly detector remains governed evidence only.",
+        "Weak-evidence quality status supports review rather than automation.",
+        accent="gray",
     )
 
 
@@ -1713,7 +1740,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
             help=_format_value(overview.get("safe_summary")),
         )
     with summary_cols[1]:
-        st.markdown("### Sample gallery snapshot")
+        st.markdown("### Sample detection summary")
         st.write(
             "This is curated validation evidence, not the current uploaded image. Live uploaded-image boxes are shown in Image Inspection."
         )
@@ -1746,6 +1773,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     )
 
     with st.expander("Detailed metrics", expanded=False):
+        st.caption("Not claimed means local review/demo only, not factory production use. Docker/release validation is still pending.")
         st.caption("Metric cards for the governed YOLO evidence bundle")
         cards = metric_cards.get("cards", [])
         if cards:
@@ -1782,7 +1810,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ("Median confidence", "median_confidence"),
             ],
         )
-        st.caption("Sample gallery details")
+        st.caption("Sample evidence details")
         gallery_rows = [
             {
                 "category": category.get("category_label"),
@@ -1859,9 +1887,11 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
             )
         )
 
-    st.markdown("### Safe interpretation")
-    st.write(
-        "This detection and localization evidence layer is review-oriented only and does not claim production readiness or deployment safety."
+    _render_premium_info_card(
+        "Safe interpretation",
+        "This detection and localization evidence layer is review-oriented only.",
+        "It does not claim production readiness or deployment safety.",
+        accent="gray",
     )
 
 
@@ -1996,9 +2026,12 @@ def _render_upload_predict() -> None:
             st.caption(str(decision.get("rule_summary")))
         if decision.get("conflict_reason"):
             st.warning(str(decision.get("conflict_reason")))
-        if decision.get("supporting_signals"):
+        supporting_signals = decision.get("supporting_signals") or []
+        if supporting_signals:
             st.caption("Supporting signals")
-            st.write(" | ".join(str(item) for item in decision.get("supporting_signals", [])))
+            st.write(", ".join(_friendly_status_label(item) for item in supporting_signals))
+            with st.expander("Supporting signal details", expanded=False):
+                st.json(supporting_signals)
     with result_cols[1]:
         st.markdown("### Detection overlay")
         if uploaded_image is not None:
@@ -2012,7 +2045,7 @@ def _render_upload_predict() -> None:
             f"Detection image size: {_format_value(detection.get('image_width'))} x {_format_value(detection.get('image_height'))}"
         )
 
-    st.markdown("### Unified inspection results")
+        st.markdown("### Unified inspection results")
     model_cols = st.columns(3)
     with model_cols[0]:
         st.markdown("#### Classification")
@@ -2034,6 +2067,7 @@ def _render_upload_predict() -> None:
                 ("Deployment safe", "Not claimed" if classification.get("deployment_safe") is False else _safe_text(classification.get("deployment_safe"))),
             ]
         )
+        st.caption("Not claimed means local review/demo only, not factory production use. Docker/release validation is still pending.")
         if classification.get("limitations"):
             st.caption("Classification limitations")
             st.write(" | ".join(str(item) for item in classification.get("limitations", [])))
@@ -2080,8 +2114,19 @@ def _render_upload_predict() -> None:
         else:
             st.info("No detection boxes were returned by the unified inspection response.")
         if detection.get("best_detection"):
-            st.caption("Best detection")
-            st.json(detection.get("best_detection"))
+            best_detection = detection.get("best_detection")
+            if isinstance(best_detection, dict):
+                best_summary = ", ".join(
+                    [
+                        f"Class: {_safe_text(best_detection.get('class_label') or best_detection.get('display_label'))}",
+                        f"Confidence: {_format_probability(best_detection.get('confidence'))}",
+                        f"Box: {_safe_text(best_detection.get('box_id'))}",
+                    ]
+                )
+                st.caption("Best detection summary")
+                st.write(best_summary)
+            with st.expander("Best detection details", expanded=False):
+                st.json(best_detection)
 
     with model_cols[2]:
         st.markdown("#### Surface anomaly detection")
@@ -2100,12 +2145,13 @@ def _render_upload_predict() -> None:
                 ("Deployment safe", "Not claimed" if anomaly.get("deployment_safe") is False else _safe_text(anomaly.get("deployment_safe"))),
             ]
         )
+        st.caption("Not claimed means local review/demo only, not factory production use. Docker/release validation is still pending.")
         if anomaly.get("optional_reconstruction_artifacts"):
             st.caption("Optional reconstruction artifacts")
             st.json(anomaly.get("optional_reconstruction_artifacts"))
 
     if warnings:
-        st.warning("Partial-failure warnings were returned by the unified inspection response.")
+        st.warning("Inspection warnings were returned by the unified inspection response.")
         _render_markdown_table(
             [{"warning": warning} if isinstance(warning, str) else warning for warning in warnings],
             [("Warning", "warning")],
@@ -2277,6 +2323,8 @@ def _render_limitations() -> None:
         st.metric("Multi-model outputs", "Classification + localization + anomaly + decision", help="Local inspection returns the unified inspection response.")
     with top_cols[3]:
         st.metric("Manual review boundary", "Required", help="The dashboard does not replace expert/manual review.")
+
+    st.caption("Not claimed means local review/demo only, not factory production use. Docker/release validation is still pending.")
 
     second_cols = st.columns(4)
     with second_cols[0]:

@@ -2248,40 +2248,53 @@ def _render_limitations() -> None:
     """Render the limitations and safety page."""
     _render_hero_card(
         SAFETY_LIMITATIONS_PAGE_LABEL,
-        "A short and explicit safety page that states what the dashboard can claim and what it cannot claim yet.",
+        "A governed boundary page that explains what the dashboard can review, what it cannot claim, and how local inspection evidence should be interpreted.",
         "not production-ready · not deployment-safe · governed evidence only",
         accent="gray",
     )
     _render_agent_callout(
         "Explain safety boundaries",
         "Ask for a plain-language summary of the local inspection workflow limits, production gaps, and deployment gaps.",
-        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references",
         accent="violet",
     )
 
-    top_cols = st.columns(3)
+    top_cols = st.columns(4)
     with top_cols[0]:
-        st.metric("Safe to claim", "Governed evidence", help="Dashboards and evidence summaries only.")
+        st.metric("Governed evidence", "Available", help="The dashboard presents governed inspection evidence and local image inspection results.")
     with top_cols[1]:
-        st.metric("Not safe to claim", "Production readiness", help="No production or deployment claim is made.")
+        st.metric("Local image inspection", "Connected", help="The unified /inspect/image flow is available in the frontend.")
     with top_cols[2]:
-        st.metric("Current flow", "Local inspection workflow", help="The unified inspection UI is still being finalized.")
+        st.metric("Multi-model outputs", "Classification + localization + anomaly + decision", help="Local inspection returns the unified inspection response.")
+    with top_cols[3]:
+        st.metric("Manual review boundary", "Required", help="The dashboard does not replace expert/manual review.")
 
-    second_cols = st.columns(3)
+    second_cols = st.columns(4)
     with second_cols[0]:
-        st.metric("Production gaps", "Not claimed", help="No production claim is made.")
+        st.metric("Production readiness", "Not claimed", help="No production-ready claim is made.")
     with second_cols[1]:
-        st.metric("Deployment gaps", "Not claimed", help="No deployment-safe claim is made.")
+        st.metric("Deployment readiness", "Not claimed", help="No deployment-safe claim is made.")
     with second_cols[2]:
-        st.metric("Agent limitations", "Placeholder only", help="The AI explanation assistant page is not a backend agent.")
+        st.metric("AI Explanation Assistant", "Planned / not active", help="No backend agent is active yet.")
+    with second_cols[3]:
+        st.metric("Docker / release", "Pending", help="Docker and release work remain later phases after local smoke tests.")
     st.caption("Current boundaries")
 
     with st.expander("Safety details", expanded=False):
         st.write(
-            "This dashboard is evidence-focused only. It does not train models, recompute metrics, create artifacts, update registries, or claim production or deployment readiness."
+            "This dashboard is evidence-focused only. It does not train models, silently recompute metrics, create artifacts, or update registries."
         )
         st.write(
-            "The local inspection workflow is still being finalized. The AI explanation assistant remains a placeholder only."
+            "The dashboard presents governed validation evidence and local image inspection results. The local inspection workflow includes classification, defect localization boxes, anomaly signal, final rule-based decision, warnings, errors, limitations, traceability, and explanation context."
+        )
+        st.write(
+            "The system is not production-ready and not deployment-safe. It does not replace expert/manual review. New evidence files must be created by governed pipeline scripts."
+        )
+        st.write(
+            "The AI explanation assistant remains planned / not active. No backend agent or LLM call is wired yet, and future explanations must stay grounded in governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references."
+        )
+        st.write(
+            "Docker, release, and hardening remain later phases and stay pending until frontend completion and local smoke tests pass."
         )
 
 

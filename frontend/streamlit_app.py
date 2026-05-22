@@ -583,6 +583,24 @@ def _render_agent_callout(action_label: str, summary: str, note: str, *, accent:
     )
 
 
+def _render_overview_ai_preview() -> None:
+    """Render the overview preview card for the future AI assistant."""
+    st.markdown(
+        """
+        <div class="premium-card premium-card--violet" style="margin:0.35rem 0 0.15rem; padding:1.15rem 1.2rem 1.05rem;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:0.45rem;">
+                <div class="premium-card__eyebrow" style="margin:0;">Future AI explanation</div>
+                <span style="display:inline-flex; align-items:center; padding:0.22rem 0.7rem; border-radius:999px; background:rgba(124,58,237,0.16); color:#f5d0fe; border:1px solid rgba(192,132,252,0.28); font-size:0.72rem; font-weight:700; letter-spacing:0.02em; white-space:nowrap;">Planned / not active</span>
+            </div>
+            <div class="premium-card__title" style="font-size:1.16rem; line-height:1.2; margin-bottom:0.55rem;">AI Explanation Assistant</div>
+            <div class="premium-card__body">A future assistant for non-technical users who want a plain-language explanation of governed evidence, chart summaries, and inspection results.</div>
+            <div class="premium-card__meta">It will stay secondary to the evidence dashboard · no backend agent · no LLM call · no fake AI</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def _render_premium_info_card(title: str, summary: str, note: str = "", accent: str = "blue") -> None:
     """Render a compact premium information card."""
     st.markdown(
@@ -864,11 +882,6 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
         "Governed evidence only · not production-ready · not deployment-safe",
         accent="blue",
     )
-    with st.expander("Future AI explanation", expanded=False):
-        st.caption("Planned / not active.")
-        st.write(
-            "No backend agent is implemented yet, no LLM call is wired, and future explanations must stay grounded in governed evidence and real inspection responses."
-        )
 
     if bundles is None:
         st.error("Overview data is unavailable because one or more frontend bundles failed to load.")
@@ -896,6 +909,8 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     with capability_cols[2]:
         st.metric("Deployment readiness", "Not claimed", help="The dashboard does not claim deployment safety")
         _render_not_claimed_note("Not claimed means Docker/release validation is still pending.")
+
+    _render_overview_ai_preview()
 
     overview_cols = st.columns([1.15, 0.95])
     with overview_cols[0]:

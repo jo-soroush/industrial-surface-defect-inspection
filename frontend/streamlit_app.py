@@ -1563,15 +1563,15 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the defect detection and localization page."""
     _render_hero_card(
         DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL,
-        "A governed defect detection and localization evidence page for the validation bundle, designed for review rather than live deployment.",
+        "This page summarizes governed detection and localization validation evidence for the validation bundle. Use Image Inspection for live image analysis and uploaded-image box overlays.",
         "Evidence/dashboard view only · not production-ready · not deployment-safe",
         accent="green",
     )
     st.warning(
-        "Evidence/dashboard view only. not production-ready. not deployment-safe. "
-        "No live prediction on this evidence page. Live detection UI is not yet connected here."
+        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
+        "This page shows validation evidence, not the live upload area."
     )
-    st.caption("evidence/dashboard view only")
+    st.caption("Evidence/dashboard view only")
     _render_agent_callout(
         "Explain detection confidence",
         "Ask for a plain-language summary of the confidence distribution, class balance, and detection review state.",
@@ -1605,24 +1605,44 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
 
     top_cols = st.columns(4)
     with top_cols[0]:
-        st.metric("Images", _format_value(overview.get("image_count")))
-        st.caption("Validation images in the governed bundle")
+        st.metric("Model", _format_value(metadata.get("model_name") or overview.get("model_name")))
+        st.caption(_format_value(metadata.get("model_type") or overview.get("model_type")))
     with top_cols[1]:
-        st.metric("Total bboxes", _format_value(overview.get("total_bbox_count")))
-        st.caption("All predicted boxes counted across the split")
+        st.metric("Detection evidence", "Available")
+        st.caption("Governed validation evidence is loaded and ready for review.")
     with top_cols[2]:
-        st.metric("Review decision", _format_value(quality.get("decision")))
-        st.caption(
-            f"Review required: {_format_value(quality.get('review_required'))} | "
-            f"Production ready: {_format_value(quality.get('production_ready'))}"
-        )
+        st.metric("Review status", "Needs review before final use")
+        st.caption("Review-oriented evidence package; final use requires manual review.")
     with top_cols[3]:
         st.metric(
-            "Model / run",
-            f"{_format_value(metadata.get('model_name'))} {_format_value(metadata.get('model_version'))}",
+            "Validation images",
+            _format_value(overview.get("image_count")),
             help=f"Run { _format_value(metadata.get('run_id')) }",
         )
-        st.caption("Governed validation evidence only")
+        st.caption("Governed validation images in the bundle")
+
+    status_cols = st.columns(2)
+    with status_cols[0]:
+        st.metric("Predicted boxes", _format_value(overview.get("total_bbox_count")))
+        st.caption("All predicted boxes counted across the split.")
+    with status_cols[1]:
+        st.metric("Images with detections", _format_value(overview.get("image_with_detections_count")))
+        st.caption("Images that produced at least one detection.")
+
+    readiness_cols = st.columns(2)
+    with readiness_cols[0]:
+        st.metric("Production readiness", "Not claimed", help="Not claimed in this evidence package.")
+    with readiness_cols[1]:
+        st.metric("Deployment readiness", "Not claimed", help="Not claimed in this evidence package.")
+
+    st.markdown("### Confidence interpretation")
+    st.write(
+        "Confidence score means how strongly the detector believes a box belongs to a defect class. Medium, high, and low confidence bands are evidence for review, not automatic production decisions. The confidence threshold affects how many boxes are shown."
+    )
+    st.markdown("### Class summary interpretation")
+    st.write(
+        "The class summary shows which defect classes were detected in validation evidence. Higher-count classes indicate more detections in evidence, not necessarily higher severity. Low-count classes may have weaker support, so class imbalance should be interpreted carefully."
+    )
 
     st.markdown("### Visual evidence")
     visual_cols = st.columns(2)
@@ -1689,6 +1709,9 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
         )
     with summary_cols[1]:
         st.markdown("### Sample gallery snapshot")
+        st.write(
+            "This is curated validation evidence, not the current uploaded image. Live uploaded-image boxes are shown in Image Inspection."
+        )
         gallery_counts = sample_gallery.get("category_sample_counts", {})
         gallery_snapshot_cols = st.columns(4)
         snapshot_items = [
@@ -1710,7 +1733,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
 
     st.markdown("### Quick take")
     _render_premium_info_card(
-        "Review status: " + _format_value(quality.get("decision")),
+        "Review status: Needs review before final use",
         "The detection bundle is review-oriented only and does not claim production readiness or deployment safety.",
         "What it can claim: "
         + ", ".join(_format_value(value) for value in recommendation.get("what_it_can_claim", [])),
@@ -1807,14 +1830,14 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
             [
                 ("Run", metadata.get("run_id")),
                 ("Dataset", metadata.get("dataset_id")),
-                ("Review required", quality.get("review_required")),
-                ("Production ready", quality.get("production_ready")),
-                ("Deployment candidate", quality.get("deployment_candidate")),
+                ("Review required", _friendly_status_label(quality.get("review_required"))),
+                ("Production ready", "Not claimed"),
+                ("Deployment candidate", "Not claimed"),
             ]
         )
         st.markdown("##### Quality decision")
         st.write(
-            f"{_format_value(quality.get('decision'))} | "
+            f"{_friendly_status_label(quality.get('review_required'))} | "
             f"{_format_value(quality.get('next_recommended_step'))}"
         )
         st.caption("frontend recommendation")

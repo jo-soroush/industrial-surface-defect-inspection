@@ -54,6 +54,7 @@ TRACK_B_EVIDENCE_FILENAMES = (
     "frontend_anomaly_summary.json",
     "reconstruction_loss_summary.json",
     "threshold_behavior.json",
+    "sample_predictions.json",
     "sample_anomaly_gallery.json",
     "quality_decision_summary.json",
     "artifact_inventory_frontend.json",
@@ -126,6 +127,50 @@ def _lookup_card_value(cards: list[dict[str, Any]], title: str) -> Any:
         if str(card.get("title", "")).strip().lower() == title.strip().lower():
             return card.get("value")
     return None
+
+
+def _extract_pr_auc(frontend_summary: dict[str, Any], metric_cards: dict[str, Any]) -> Any:
+    """Return the governed PR AUC value from the anomaly bundle."""
+    pr_auc_value = frontend_summary.get("key_metrics", {}).get("pr_auc")
+    if pr_auc_value is not None:
+        return pr_auc_value
+    return _lookup_card_value(metric_cards.get("cards", []), "PR AUC")
+
+
+def _extract_histogram_series(histograms: dict[str, Any]) -> tuple[list[str], dict[str, list[float]]]:
+    """Return shared histogram labels and series counts from a governed bundle."""
+    if not isinstance(histograms, dict):
+        return [], {}
+
+    label_source = histograms.get("all")
+    if not isinstance(label_source, list) or not label_source:
+        return [], {}
+
+    labels = [
+        f"{row.get('bin_start', 0):.3f}-{row.get('bin_end', 0):.3f}"
+        for row in label_source
+        if isinstance(row, dict)
+    ]
+    series_map: dict[str, list[float]] = {}
+    for series_name in ("all", "true_normal", "true_anomaly"):
+        rows = histograms.get(series_name, [])
+        if isinstance(rows, list) and rows:
+            series_map[series_name.replace("_", " ").title()] = [
+                float(row.get("count", 0) or 0) for row in rows if isinstance(row, dict)
+            ]
+    return labels, series_map
+
+
+def _extract_threshold_rows(threshold_behavior: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return threshold sweep rows from the anomaly bundle."""
+    rows = threshold_behavior.get("rows", [])
+    return rows if isinstance(rows, list) else []
+
+
+def _extract_sample_prediction_rows(sample_predictions: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return sample-level anomaly prediction rows."""
+    samples = sample_predictions.get("samples", [])
+    return samples if isinstance(samples, list) else []
 
 
 def _render_status_summary() -> None:
@@ -1065,6 +1110,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     frontend_summary = track_b.get("frontend_anomaly_summary.json", {})
     reconstruction = track_b.get("reconstruction_loss_summary.json", {})
     threshold_behavior = track_b.get("threshold_behavior.json", {})
+    sample_predictions = track_b.get("sample_predictions.json", {})
     gallery = track_b.get("sample_anomaly_gallery.json", {})
     quality = track_b.get("quality_decision_summary.json", {})
     inventory = track_b.get("artifact_inventory_frontend.json", {})
@@ -1088,12 +1134,9 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
             help=_format_value(frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")),
         )
     with top_cols[3]:
-        pr_auc_value = frontend_summary.get("key_metrics", {}).get("pr_auc")
-        if pr_auc_value is None:
-            pr_auc_value = _lookup_card_value(metric_cards.get("cards", []), "PR AUC")
         st.metric(
             "PR AUC",
-            _format_value(pr_auc_value),
+            _format_value(_extract_pr_auc(frontend_summary, metric_cards)),
             help="Average precision derived from governed sample-level anomaly scores.",
         )
     _render_premium_info_card(
@@ -1113,75 +1156,111 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     visual_cols = st.columns(3)
     with visual_cols[0]:
         st.caption("Reconstruction behavior")
-        reconstruction_rows = reconstruction.get("chart_rows", [])
-        if reconstruction_rows:
-            epochs = [float(row.get("epoch", idx + 1) or idx + 1) for idx, row in enumerate(reconstruction_rows)]
-            losses = [float(row.get("reconstruction_loss", 0) or 0) for row in reconstruction_rows]
+        reconstruction_data = reconstruction.get("sample_level_reconstruction_loss", reconstruction)
+        reconstruction_summary = reconstruction_data.get("summary", {}) if isinstance(reconstruction_data, dict) else {}
+        reconstruction_histograms = reconstruction_data.get("histograms", {}) if isinstance(reconstruction_data, dict) else {}
+        reconstruction_mapping = reconstruction_data.get("mapping") if isinstance(reconstruction_data, dict) else None
+        if reconstruction_histograms:
+            labels, series_map = _extract_histogram_series(reconstruction_histograms)
             st.plotly_chart(
-                _build_line_figure(
-                    "Surface anomaly reconstruction loss",
-                    epochs,
-                    {"Reconstruction loss": losses},
-                    {"Reconstruction loss": "#2563eb"},
-                    "Loss",
+                _build_grouped_bar_figure(
+                    "Surface anomaly reconstruction loss distribution",
+                    labels,
+                    series_map,
+                    {
+                        "All": "#2563eb",
+                        "True Normal": "#16a34a",
+                        "True Anomaly": "#d97706",
+                    },
+                    "Samples",
                 ),
                 width="stretch",
+            )
+            st.caption(
+                reconstruction_mapping
+                or "Reconstruction loss is shown as governed sample-level loss because the score definition is mean squared reconstruction error per image."
             )
         else:
             _render_chart_placeholder(
                 "Surface anomaly reconstruction loss",
-                "No reconstruction loss data is available in the governed bundle, so this visual is hidden.",
+                "No reconstruction-loss distribution data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
+            )
+        if reconstruction_summary:
+            _render_key_value_grid(
+                [
+                    ("Samples", reconstruction_summary.get("all", {}).get("count")),
+                    ("Median loss", reconstruction_summary.get("all", {}).get("median")),
+                    ("P95 loss", reconstruction_summary.get("all", {}).get("p95")),
+                ]
             )
     with visual_cols[1]:
         st.caption("Anomaly score summary")
-        anomaly_rows = anomaly_summary.get("segments", [])
-        if anomaly_rows:
-            labels = [str(row.get("label", f"segment_{idx}")) for idx, row in enumerate(anomaly_rows)]
-            values = [float(row.get("count", 0) or 0) for row in anomaly_rows]
-            palette = []
-            for label in labels:
-                lowered = label.lower()
-                if "anomaly" in lowered or "high" in lowered:
-                    palette.append("#dc2626")
-                elif "normal" in lowered or "low" in lowered:
-                    palette.append("#16a34a")
-                else:
-                    palette.append("#2563eb")
+        score_histograms = anomaly_summary.get("histograms", {})
+        if score_histograms:
+            labels, series_map = _extract_histogram_series(score_histograms)
             st.plotly_chart(
-                _build_donut_figure(
+                _build_grouped_bar_figure(
                     "Surface anomaly score distribution",
                     labels,
-                    values,
-                    palette,
+                    series_map,
+                    {
+                        "All": "#2563eb",
+                        "True Normal": "#16a34a",
+                        "True Anomaly": "#d97706",
+                    },
+                    "Samples",
                 ),
                 width="stretch",
             )
         else:
             _render_chart_placeholder(
                 "Surface anomaly score distribution",
-                "No anomaly score data is available in the governed bundle, so this visual is hidden.",
+                "No anomaly score histogram data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
+            )
+        anomaly_summary_stats = anomaly_summary.get("summary", {})
+        if anomaly_summary_stats:
+            _render_key_value_grid(
+                [
+                    ("Samples", anomaly_summary_stats.get("all", {}).get("count")),
+                    ("Median score", anomaly_summary_stats.get("all", {}).get("median")),
+                    ("P95 score", anomaly_summary_stats.get("all", {}).get("p95")),
+                ]
             )
     with visual_cols[2]:
         st.caption("Threshold behavior")
-        threshold_rows = threshold_behavior.get("rows", [])
+        threshold_rows = _extract_threshold_rows(threshold_behavior)
         if threshold_rows:
             thresholds = [float(row.get("threshold", 0) or 0) for row in threshold_rows]
             series_map = {
                 "Precision": [float(row.get("precision", 0) or 0) for row in threshold_rows],
                 "Recall": [float(row.get("recall", 0) or 0) for row in threshold_rows],
                 "F1": [float(row.get("f1", 0) or 0) for row in threshold_rows],
+                "False Positive Rate": [float(row.get("false_positive_rate", 0) or 0) for row in threshold_rows],
+                "False Negative Rate": [float(row.get("false_negative_rate", 0) or 0) for row in threshold_rows],
             }
             st.plotly_chart(
                 _build_line_figure(
                     "Surface anomaly threshold behavior",
                     thresholds,
                     series_map,
-                    {"Precision": "#2563eb", "Recall": "#d97706", "F1": "#16a34a"},
+                    {
+                        "Precision": "#2563eb",
+                        "Recall": "#d97706",
+                        "F1": "#16a34a",
+                        "False Positive Rate": "#7c3aed",
+                        "False Negative Rate": "#ef4444",
+                    },
                     "Score",
                 ),
                 width="stretch",
+            )
+            st.caption(
+                "Selected threshold: "
+                + _format_value(threshold_behavior.get("selected_threshold"))
+                + " | "
+                + _friendly_status_label("review_required_weak_evidence")
             )
         else:
             _render_chart_placeholder(
@@ -1195,6 +1274,8 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     with gallery_cols[0]:
         st.metric("Gallery samples", _format_value(gallery.get("gallery_sample_count")))
         st.caption("Summary-only view; images stay inside the governed evidence bundle.")
+        if sample_predictions.get("sample_count") is not None:
+            st.metric("Sample predictions", _format_value(sample_predictions.get("sample_count")))
     with gallery_cols[1]:
         count_rows = [
             {"error_type": label, "count": count}
@@ -1213,6 +1294,31 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ("Count", "count"),
             ],
         )
+        sample_preview_rows = []
+        for row in _extract_sample_prediction_rows(sample_predictions)[:5]:
+            sample_preview_rows.append(
+                {
+                    "sample_id": row.get("sample_id"),
+                    "true_label": row.get("true_label"),
+                    "predicted_label": row.get("predicted_label"),
+                    "anomaly_score": row.get("anomaly_score"),
+                    "threshold": row.get("threshold"),
+                    "correct": row.get("correct"),
+                }
+            )
+        if sample_preview_rows:
+            st.caption("Sample-level anomaly evidence preview")
+            _render_markdown_table(
+                sample_preview_rows,
+                [
+                    ("Sample ID", "sample_id"),
+                    ("True label", "true_label"),
+                    ("Predicted label", "predicted_label"),
+                    ("Anomaly score", "anomaly_score"),
+                    ("Threshold", "threshold"),
+                    ("Correct", "correct"),
+                ],
+            )
 
     with st.expander("Detailed metrics", expanded=False):
         cards = metric_cards.get("cards", [])
@@ -1231,25 +1337,58 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
 
     with st.expander("Technical evidence", expanded=False):
         st.caption("Anomaly score summary")
-        anomaly_rows = anomaly_summary.get("segments", [])
+        anomaly_rows = []
+        for series_name, rows in (anomaly_summary.get("histograms", {}) or {}).items():
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                anomaly_rows.append(
+                    {
+                        "series": series_name,
+                        "bin_start": row.get("bin_start"),
+                        "bin_end": row.get("bin_end"),
+                        "count": row.get("count"),
+                    }
+                )
         _render_markdown_table(
             anomaly_rows,
             [
-                ("Label", "label"),
+                ("Series", "series"),
+                ("Bin start", "bin_start"),
+                ("Bin end", "bin_end"),
                 ("Count", "count"),
-                ("Share", "percentage"),
             ],
         )
         st.markdown("##### Reconstruction table")
+        reconstruction_rows = []
+        reconstruction_histograms = reconstruction.get("sample_level_reconstruction_loss", {}).get("histograms", {})
+        for series_name, rows in reconstruction_histograms.items():
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                reconstruction_rows.append(
+                    {
+                        "series": series_name,
+                        "bin_start": row.get("bin_start"),
+                        "bin_end": row.get("bin_end"),
+                        "count": row.get("count"),
+                    }
+                )
         _render_markdown_table(
-            reconstruction.get("chart_rows", []),
+            reconstruction_rows,
             [
-                ("Epoch", "epoch"),
-                ("Reconstruction loss", "reconstruction_loss"),
+                ("Series", "series"),
+                ("Bin start", "bin_start"),
+                ("Bin end", "bin_end"),
+                ("Count", "count"),
             ],
         )
         st.markdown("##### Threshold table")
-        threshold_rows = threshold_behavior.get("rows", [])
+        threshold_rows = _extract_threshold_rows(threshold_behavior)
         _render_markdown_table(
             threshold_rows,
             [
@@ -1257,6 +1396,8 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ("Precision", "precision"),
                 ("Recall", "recall"),
                 ("F1", "f1"),
+                ("False positive rate", "false_positive_rate"),
+                ("False negative rate", "false_negative_rate"),
                 ("False Positives", "false_positive"),
                 ("False Negatives", "false_negative"),
             ],
@@ -1269,6 +1410,19 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ("Count", "count"),
             ],
         )
+        if sample_predictions.get("samples"):
+            st.markdown("##### Sample predictions")
+            _render_markdown_table(
+                _extract_sample_prediction_rows(sample_predictions),
+                [
+                    ("Sample ID", "sample_id"),
+                    ("True label", "true_label"),
+                    ("Predicted label", "predicted_label"),
+                    ("Anomaly score", "anomaly_score"),
+                    ("Threshold", "threshold"),
+                    ("Correct", "correct"),
+                ],
+            )
 
     with st.expander("Artifact and run details", expanded=False):
         st.caption("Internal track: Track B | User-facing module: Surface Anomaly Detection")
@@ -1277,8 +1431,8 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 ("Model", frontend_summary.get("model_type")),
                 ("Version", frontend_summary.get("model_version")),
                 ("Threshold", frontend_summary.get("key_metrics", {}).get("threshold") or metric_cards.get("threshold")),
-                ("Canonical status", frontend_summary.get("canonical_status") or metric_cards.get("canonical_status")),
-                ("PR AUC", "Unavailable"),
+                ("Quality status", _friendly_status_label(quality.get("quality_status") or frontend_summary.get("quality_decision") or quality.get("decision"))),
+                ("PR AUC", _format_value(_extract_pr_auc(frontend_summary, metric_cards))),
             ]
         )
         _render_key_value_grid(

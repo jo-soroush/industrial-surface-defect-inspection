@@ -36,6 +36,7 @@ TRACK_B_REQUIRED_FILES = (
     "frontend_anomaly_summary.json",
     "reconstruction_loss_summary.json",
     "threshold_behavior.json",
+    "sample_predictions.json",
     "sample_anomaly_gallery.json",
     "quality_decision_summary.json",
     "artifact_inventory_frontend.json",

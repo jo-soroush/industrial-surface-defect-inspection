@@ -9,16 +9,22 @@ def test_frontend_visual_presentation_copy_and_helper_text() -> None:
         "Docker/release validation",
         "planned / not active",
         "Image Inspection",
-        "Evidence view only",
         "Not claimed means local review/demo only, not factory production use.",
         "Recommended review path",
         "Run Image Inspection",
         "Check Safety & Limitations",
+        "Classification validation bundle",
+        "Anomaly validation bundle",
+        "Detection validation bundle",
+        "Unified inspection workflow",
     ]
     for phrase in required_phrases:
         assert phrase in source, phrase
 
     blocked_visible_phrases = [
+        "Evidence/dashboard view only",
+        "Evidence view only — local review/demo, not production use.",
+        "Local inspection workflow. not production-ready. not deployment-safe.",
         "Unified image inspection UI is not yet connected here",
         "Partial-failure warnings were returned",
         "Selected Track A candidate",

@@ -931,7 +931,7 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     _render_hero_card(
         PROJECT_TITLE,
         "A governed evidence dashboard for reviewing surface defect classification, surface anomaly detection, defect detection & localization, unified image inspection, and the rule-based decision layer.",
-        "Governed evidence only · not production-ready · not deployment-safe",
+        "Cross-page review path and inspection scope",
         accent="blue",
     )
 
@@ -1020,12 +1020,8 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
     _render_hero_card(
         SURFACE_DEFECT_CLASSIFICATION_PAGE_LABEL,
         "This page summarizes governed classification validation evidence for the surface defect good-vs-defect task. Use Image Inspection for live image analysis.",
-        "Evidence/dashboard view only · not production-ready · not deployment-safe",
+        "Classification validation bundle",
         accent="teal",
-    )
-    st.warning(
-        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
-        "This page shows validation evidence, not the live inspection workflow."
     )
 
     if bundles is None:
@@ -1326,7 +1322,7 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
     _render_premium_info_card(
         "Safe interpretation",
         "ResNet18 v0.4.0 is the selected governed validation model for this page.",
-        "Evidence view only — local review/demo, not production use.",
+        "Local review/demo only, not production-ready and not deployment-safe.",
         accent="gray",
     )
 
@@ -1336,12 +1332,8 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     _render_hero_card(
         SURFACE_ANOMALY_DETECTION_PAGE_LABEL,
         "A governed autoencoder-based anomaly page for reviewing reconstruction behavior, anomaly scores, and quality decision evidence.",
-        "Evidence/dashboard view only · not production-ready · not deployment-safe",
+        "Anomaly validation bundle",
         accent="orange",
-    )
-    st.warning(
-        "Evidence view only — local review/demo, not production use. Not production-ready. Not deployment-safe. "
-        "This page is evidence-only. Live inspection is available on the Image Inspection page."
     )
 
     if bundles is None:
@@ -1708,7 +1700,7 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
     _render_premium_info_card(
         "Safe interpretation",
         "The surface anomaly detector remains governed evidence only.",
-        "Weak-evidence quality status supports review rather than automation.",
+        "Weak-evidence quality status supports review rather than automation; local review/demo only, not production-ready and not deployment-safe.",
         accent="gray",
     )
 
@@ -1718,14 +1710,9 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     _render_hero_card(
         DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL,
         "This page summarizes governed detection and localization validation evidence for the validation bundle. Use Image Inspection for live image analysis and uploaded-image box overlays.",
-        "Evidence/dashboard view only · not production-ready · not deployment-safe",
+        "Detection validation bundle",
         accent="green",
     )
-    st.warning(
-        "Evidence/dashboard view only. Not production-ready. Not deployment-safe. "
-        "This page shows validation evidence, not the live upload area."
-    )
-    st.caption("Evidence/dashboard view only")
     _render_agent_callout(
         "Explain detection confidence",
         "Ask for a plain-language summary of the confidence distribution, class balance, and detection review state.",
@@ -2048,7 +2035,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     _render_premium_info_card(
         "Safe interpretation",
         "This detection and localization evidence layer is review-oriented only.",
-        "It does not claim production readiness or deployment safety.",
+        "It does not claim production readiness or deployment safety; local review/demo only, not production-ready and not deployment-safe.",
         accent="gray",
     )
 
@@ -2058,12 +2045,8 @@ def _render_upload_predict() -> None:
     _render_hero_card(
         IMAGE_INSPECTION_PAGE_LABEL,
         "A local inspection workflow that sends one uploaded image to the unified FastAPI endpoint and returns the governed inspection result.",
-        "Local inspection workflow · not production-ready · not deployment-safe",
+        "Unified inspection workflow",
         accent="blue",
-    )
-    st.warning(
-        "Local inspection workflow. not production-ready. not deployment-safe. "
-        "The page now calls the unified inspection endpoint and shows the governed inspection response."
     )
     st.caption("Unified inspection workflow")
 

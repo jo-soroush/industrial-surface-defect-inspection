@@ -35,7 +35,7 @@ DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL = "Defect Detection & Localization"
 IMAGE_INSPECTION_PAGE_LABEL = "Image Inspection"
 SAFETY_LIMITATIONS_PAGE_LABEL = "Safety & Limitations"
 AI_EXPLANATION_ASSISTANT_PAGE_LABEL = "AI Explanation Assistant"
-SYSTEM_CAPABILITY_STATUS_LABEL = "System Capability Status"
+INSPECTION_CAPABILITY_SUMMARY_LABEL = "Inspection capability summary"
 
 TRACK_A_EVIDENCE_FILENAMES = (
     "metric_cards.json",
@@ -697,42 +697,20 @@ def _build_line_figure(
     return figure
 
 
-def _render_overview_status_chart() -> None:
-    """Render a compact plotly overview chart for the current module state."""
-    labels = [
-        "Evidence complete",
-        "Prototype available",
-        "Not started",
-        "Not claimed",
-    ]
-    values = [3, 1, 2, 2]
-    colors = ["#2ca02c", "#1f77b4", "#9e9e9e", "#ff9800"]
-
-    figure = go.Figure(
-        data=[
-            go.Pie(
-                labels=labels,
-                values=values,
-                hole=0.58,
-                sort=False,
-                textinfo="label+percent",
-                marker=dict(colors=colors),
-                hovertemplate="%{label}<br>%{value}<extra></extra>",
-                direction="clockwise",
-            )
+def _render_overview_capability_summary() -> None:
+    """Render an evidence-backed capability summary for the current module state."""
+    st.caption("Checklist based on governed bundles and the registered unified inspection endpoint; not a metric chart.")
+    _render_key_value_grid(
+        [
+            ("Classification evidence", "Available"),
+            ("Anomaly evidence", "Available / review-only signal"),
+            ("Detection evidence", "Available"),
+            ("Image Inspection", "Connected"),
+            ("Decision layer", "Available"),
+            ("Production readiness", "Not claimed"),
+            ("Deployment readiness", "Not claimed"),
         ]
     )
-    figure.update_layout(
-        height=300,
-        margin=dict(l=10, r=10, t=10, b=10),
-        showlegend=True,
-        font=dict(color="#e2e8f0", family="Inter, Segoe UI, Arial"),
-        legend=dict(font=dict(color="#e2e8f0")),
-        paper_bgcolor="rgba(8, 15, 28, 0.02)",
-        plot_bgcolor="rgba(8, 15, 28, 0.18)",
-        template="plotly_dark",
-    )
-    st.plotly_chart(figure, width="stretch")
 
 
 def _format_value(value: Any) -> str:
@@ -814,7 +792,7 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     """Render the overview page content."""
     _render_hero_card(
         PROJECT_TITLE,
-        "A governed evidence dashboard for comparing surface defect classification, surface anomaly detection, and defect detection & localization while the local image inspection workflow is finalized.",
+        "A governed evidence dashboard for reviewing surface defect classification, surface anomaly detection, defect detection & localization, unified image inspection, and the rule-based decision layer.",
         "Governed evidence only · not production-ready · not deployment-safe",
         accent="blue",
     )
@@ -834,41 +812,52 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
     detection = bundles["detection"]
     summary_cols = st.columns(4)
     with summary_cols[0]:
-        st.metric(SURFACE_DEFECT_CLASSIFICATION_PAGE_LABEL, "PASS", help="Governed classification evidence available")
+        st.metric("Classification evidence", "Available", help="Governed classification evidence available")
     with summary_cols[1]:
-        st.metric(SURFACE_ANOMALY_DETECTION_PAGE_LABEL, "PASS", help="Governed anomaly evidence available")
+        st.metric("Anomaly evidence", "Available / review-only signal", help="Governed anomaly evidence and quality decision available")
     with summary_cols[2]:
-        st.metric(DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL, "COMPLETE", help="Governed detection evidence layer complete")
+        st.metric("Detection evidence", "Available", help="Governed detection evidence available")
     with summary_cols[3]:
-        st.metric(IMAGE_INSPECTION_PAGE_LABEL, "LOCAL WORKFLOW", help="Current local inspection flow")
+        st.metric("Image Inspection", "Connected", help="Unified local inspection endpoint is registered and wired")
+
+    capability_cols = st.columns(3)
+    with capability_cols[0]:
+        st.metric("Decision layer", "Available", help="Deterministic rule-based aggregation is implemented")
+    with capability_cols[1]:
+        st.metric("Production readiness", "Not claimed", help="The dashboard does not claim production readiness")
+    with capability_cols[2]:
+        st.metric("Deployment readiness", "Not claimed", help="The dashboard does not claim deployment safety")
 
     overview_cols = st.columns([1.15, 0.95])
     with overview_cols[0]:
         st.markdown("### What you can review")
         st.write(
-            "- View governed evidence from surface defect classification, surface anomaly detection, and defect detection & localization\n"
-            "- Compare the current summaries for each inspection module\n"
-            "- Use the current local image inspection workflow"
+            "- Review governed validation evidence for surface defect classification, surface anomaly detection, and defect detection & localization\n"
+            "- Run local image inspection through the unified inspection endpoint\n"
+            "- View classification output, localization boxes, anomaly signal, final rule-based decision, warnings, errors, limitations, traceability, and explanation context"
         )
         st.markdown("### What this dashboard does not claim")
         st.write(
-            "- not production-ready\n"
-            "- not deployment-safe\n"
-            "- the dashboard is still a governed evidence shell for local review"
+            "- It is not production-ready.\n"
+            "- It is not deployment-safe.\n"
+            "- It does not replace expert/manual inspection.\n"
+            "- It does not contain an active AI agent yet.\n"
+            "- Docker/release/hardening remain later steps.\n"
+            "- Weak anomaly evidence is review-only/supporting signal."
         )
 
     with overview_cols[1]:
-        st.markdown(f"### {SYSTEM_CAPABILITY_STATUS_LABEL}")
-        _render_overview_status_chart()
+        st.markdown(f"### {INSPECTION_CAPABILITY_SUMMARY_LABEL}")
+        _render_overview_capability_summary()
 
     with st.expander("Technical evidence", expanded=False):
         evidence_tabs = st.tabs(["Detailed metrics", "Technical evidence", "Artifact and run details"])
         with evidence_tabs[0]:
             _render_key_value_grid(
                 [
-                    ("Internal track A files", len(track_a)),
-                    ("Internal track B files", len(track_b)),
-                    ("Internal detection files", len(detection)),
+                    ("Internal metadata: Track A bundle files", len(track_a)),
+                    ("Internal metadata: Track B bundle files", len(track_b)),
+                    ("Internal metadata: Detection bundle files", len(detection)),
                 ]
             )
         with evidence_tabs[1]:
@@ -882,10 +871,10 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
             detection_overview = detection.get("detection_overview.json", {})
             _render_key_value_grid(
                 [
-                    ("Internal track A run", track_a_reco.get("selected_run_id")),
-                    ("Internal track A threshold", track_a_reco.get("selected_threshold")),
-                    ("Internal track B threshold", track_b_summary.get("key_metrics", {}).get("threshold")),
-                    ("Internal detection run", detection_overview.get("run_id")),
+                    ("Internal metadata: Track A run", track_a_reco.get("selected_run_id")),
+                    ("Internal metadata: Track A threshold", track_a_reco.get("selected_threshold")),
+                    ("Internal metadata: Track B threshold", track_b_summary.get("key_metrics", {}).get("threshold")),
+                    ("Internal metadata: Detection run", detection_overview.get("run_id")),
                 ]
             )
 

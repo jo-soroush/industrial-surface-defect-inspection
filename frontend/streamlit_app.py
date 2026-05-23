@@ -102,6 +102,202 @@ def _get_api_base_url() -> str:
     return value.rstrip("/")
 
 
+def _build_image_inspection_visible_context(
+    decision: dict[str, Any],
+    classification: dict[str, Any],
+    detection: dict[str, Any],
+    anomaly: dict[str, Any],
+    warnings: list[Any],
+    limitations: list[Any],
+) -> dict[str, Any]:
+    """Build a compact visible context for the image-inspection explanation request."""
+    top_detection = None
+    detections = _extract_detection_rows(detection)
+    if detections:
+        top_detection = next((det for det in detections if isinstance(det, dict) and det.get("is_best_prediction")), None)
+        if top_detection is None:
+            top_detection = next((det for det in detections if isinstance(det, dict)), None)
+
+    visible_context = {
+        "final_decision": decision.get("final_decision"),
+        "decision_level": decision.get("decision_level"),
+        "model_agreement_status": decision.get("model_agreement_status"),
+        "classification": {
+            "model_name": classification.get("model_name"),
+            "predicted_label": classification.get("predicted_label"),
+            "decision": classification.get("decision"),
+            "probability_defect": classification.get("probability_defect"),
+        },
+        "detection": {
+            "model_name": detection.get("model_name"),
+            "predicted_box_count": detection.get("predicted_box_count"),
+            "defect_count": detection.get("defect_count"),
+            "review_status": detection.get("review_status"),
+        },
+        "anomaly": {
+            "model_name": anomaly.get("model_name"),
+            "predicted_label": anomaly.get("predicted_label"),
+            "quality_status": anomaly.get("quality_status"),
+        },
+        "warning_count": len(warnings),
+        "limitation_count": len(limitations),
+    }
+    if isinstance(top_detection, dict):
+        visible_context["top_detection"] = {
+            "box_id": top_detection.get("box_id"),
+            "class_label": top_detection.get("class_label"),
+            "display_label": top_detection.get("display_label"),
+            "confidence": top_detection.get("confidence"),
+        }
+    return visible_context
+
+
+def _build_image_inspection_agent_request(
+    question: str,
+    inspection_response: dict[str, Any],
+    visible_context: dict[str, Any],
+    include_raw_evidence: bool = False,
+) -> dict[str, Any]:
+    """Build the agent explain request payload for the Image Inspection page."""
+    return {
+        "page_id": "image_inspection",
+        "section_id": "final_decision",
+        "question": question,
+        "visible_context": visible_context,
+        "inspection_response": inspection_response,
+        "include_raw_evidence": include_raw_evidence,
+    }
+
+
+def _agent_explanation_status_caption(provider_used: Any, fallback_used: Any) -> str:
+    """Return a short status caption for the agent explanation panel."""
+    provider_text = str(provider_used).strip().lower()
+    if provider_text == "mock" or bool(fallback_used):
+        return "Mock explanation MVP active · external LLM not connected · no fake AI"
+    return "External provider response returned a grounded explanation."
+
+
+def _call_agent_explain_api(api_base_url: str, request_payload: dict[str, Any]) -> dict[str, Any]:
+    """Call the agent explain API with a grounded request payload."""
+    normalized_base_url = api_base_url.strip().rstrip("/")
+    if not normalized_base_url:
+        raise ValueError("API base URL must be a non-empty string.")
+
+    endpoint = f"{normalized_base_url}/agent/explain"
+    try:
+        response = requests.post(endpoint, json=request_payload, timeout=60)
+    except requests.RequestException as exc:
+        raise ConnectionError(f"Could not reach the agent API at {normalized_base_url}: {exc}") from exc
+
+    if response.status_code >= 400:
+        detail = _extract_api_error_detail(response)
+        raise RuntimeError(f"Agent API request failed with status {response.status_code}: {detail}")
+
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise ValueError("Agent API returned a non-JSON response.") from exc
+
+    if not isinstance(payload, dict):
+        raise ValueError("Agent API returned an invalid response payload.")
+    return payload
+
+
+def _render_image_inspection_agent_panel(
+    api_base_url: str,
+    payload: dict[str, Any],
+    decision: dict[str, Any],
+    classification: dict[str, Any],
+    detection: dict[str, Any],
+    anomaly: dict[str, Any],
+    warnings: list[Any],
+    limitations: list[Any],
+) -> None:
+    """Render a compact one-shot explanation panel for Image Inspection."""
+    st.markdown("### AI explanation")
+    st.caption("One-shot, evidence-grounded explanation for the current inspection result.")
+
+    question_key = "image_inspection_agent_question"
+    response_key = "image_inspection_agent_explanation"
+    error_key = "image_inspection_agent_error"
+    source_request_key = "image_inspection_agent_source_request_id"
+    payload_request_id = _safe_text(payload.get("request_id"), "")
+
+    if st.session_state.get(source_request_key) != payload_request_id:
+        st.session_state.pop(response_key, None)
+        st.session_state.pop(error_key, None)
+        st.session_state[source_request_key] = payload_request_id
+
+    if question_key not in st.session_state:
+        st.session_state[question_key] = "Explain this inspection result."
+
+    with st.form("image_inspection_agent_form", clear_on_submit=False):
+        question = st.text_input("Question", key=question_key)
+        submitted = st.form_submit_button("Generate explanation", type="primary")
+
+    if submitted:
+        visible_context = _build_image_inspection_visible_context(
+            decision=decision,
+            classification=classification,
+            detection=detection,
+            anomaly=anomaly,
+            warnings=warnings,
+            limitations=limitations,
+        )
+        request_payload = _build_image_inspection_agent_request(
+            question=question,
+            inspection_response=payload,
+            visible_context=visible_context,
+            include_raw_evidence=False,
+        )
+        try:
+            st.session_state[response_key] = _call_agent_explain_api(api_base_url, request_payload)
+            st.session_state[error_key] = None
+        except Exception:
+            st.session_state[response_key] = None
+            st.session_state[error_key] = "AI explanation is temporarily unavailable. Please try again later."
+
+    error_message = st.session_state.get(error_key)
+    if error_message:
+        st.warning(error_message)
+
+    agent_response = st.session_state.get(response_key)
+    if not isinstance(agent_response, dict):
+        st.info("Enter a question and generate one grounded explanation for this inspection result.")
+        return
+
+    provider_used = agent_response.get("provider_used")
+    fallback_used = agent_response.get("fallback_used")
+    grounding_status = _friendly_status_label(agent_response.get("grounding_status"))
+    st.caption(_agent_explanation_status_caption(provider_used, fallback_used))
+    _render_key_value_grid(
+        [
+            ("Grounding", grounding_status),
+            ("Provider", _safe_text(provider_used)),
+            ("Fallback", _friendly_status_label(fallback_used)),
+        ]
+    )
+    st.write(_safe_text(agent_response.get("answer")))
+
+    evidence_used = agent_response.get("evidence_used", [])
+    if not isinstance(evidence_used, list):
+        evidence_used = []
+    with st.expander("Evidence used", expanded=False):
+        if evidence_used:
+            st.json(evidence_used)
+        else:
+            st.info("No evidence items were returned.")
+
+    limitations_used = agent_response.get("limitations", [])
+    if not isinstance(limitations_used, list):
+        limitations_used = []
+    with st.expander("Limitations", expanded=False):
+        if limitations_used:
+            st.write("\n".join(f"- {item}" for item in limitations_used))
+        else:
+            st.info("No limitations were returned.")
+
+
 def _safe_text(value: Any, default: str = "Unavailable") -> str:
     """Return a safe, concise display string for dashboard labels."""
     if value is None:
@@ -2203,9 +2399,19 @@ def _render_upload_predict() -> None:
 
     _render_agent_callout(
         "Explain this inspection result",
-        "Future assistant will explain this inspection result using response evidence, model outputs, warnings, limitations, and traceability.",
-        "Planned / not active · no backend agent · no LLM call · no fake AI",
+        "Mock explanation MVP active for the current inspection result. The panel uses governed response evidence, model outputs, warnings, limitations, and traceability.",
+        "Mock explanation MVP active · external LLM not connected · no fake AI",
         accent="violet",
+    )
+    _render_image_inspection_agent_panel(
+        api_base_url=api_base_url,
+        payload=payload,
+        decision=decision,
+        classification=classification,
+        detection=detection,
+        anomaly=anomaly,
+        warnings=warnings,
+        limitations=limitations,
     )
 
     st.markdown("### Unified inspection results")

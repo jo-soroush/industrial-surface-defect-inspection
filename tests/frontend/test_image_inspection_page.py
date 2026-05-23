@@ -8,8 +8,11 @@ import pytest
 from PIL import Image
 
 from frontend.streamlit_app import (
+    _agent_explanation_status_caption,
     _annotate_detection_boxes,
+    _build_image_inspection_agent_request,
     _call_image_inspection_api,
+    _call_agent_explain_api,
     _extract_detection_rows,
     _friendly_metric_display,
     _get_api_base_url,
@@ -94,6 +97,62 @@ def test_frontend_api_base_url_uses_env_override_and_trims_trailing_slash(monkey
     assert _get_api_base_url() == "http://api:8000"
 
 
+def test_agent_explain_api_call_uses_unified_endpoint(monkeypatch) -> None:
+    captured = {}
+    request_payload = _build_image_inspection_agent_request(
+        question="Explain this inspection result.",
+        inspection_response={"request_id": "inspection-0001"},
+        visible_context={"final_decision": "Defective"},
+        include_raw_evidence=False,
+    )
+
+    def fake_post(endpoint, json, timeout):
+        captured["endpoint"] = endpoint
+        captured["json"] = json
+        captured["timeout"] = timeout
+        return _FakeResponse(
+            200,
+            {
+                "answer": "Mock grounded explanation.",
+                "evidence_used": [{"source": "decision.final_decision", "value": "Defective"}],
+                "limitations": ["Manual review still applies."],
+                "provider_used": "mock",
+                "fallback_used": True,
+                "grounding_status": "grounded",
+                "page_id": "image_inspection",
+                "section_id": "final_decision",
+            },
+        )
+
+    monkeypatch.setattr("frontend.streamlit_app.requests.post", fake_post)
+
+    payload = _call_agent_explain_api("http://api:8000/", request_payload)
+
+    assert captured["endpoint"] == "http://api:8000/agent/explain"
+    assert captured["timeout"] == 60
+    assert captured["json"]["page_id"] == "image_inspection"
+    assert captured["json"]["section_id"] == "final_decision"
+    assert captured["json"]["inspection_response"]["request_id"] == "inspection-0001"
+    assert payload["provider_used"] == "mock"
+    assert payload["fallback_used"] is True
+
+
+def test_image_inspection_agent_request_includes_required_fields() -> None:
+    request_payload = _build_image_inspection_agent_request(
+        question="Explain this inspection result.",
+        inspection_response={"request_id": "inspection-0001"},
+        visible_context={"final_decision": "Defective"},
+        include_raw_evidence=False,
+    )
+
+    assert request_payload["page_id"] == "image_inspection"
+    assert request_payload["section_id"] == "final_decision"
+    assert request_payload["question"] == "Explain this inspection result."
+    assert request_payload["inspection_response"]["request_id"] == "inspection-0001"
+    assert request_payload["visible_context"]["final_decision"] == "Defective"
+    assert request_payload["include_raw_evidence"] is False
+
+
 def test_image_inspection_api_call_rejects_api_errors(monkeypatch) -> None:
     def fake_post(endpoint, files, timeout):
         return _FakeResponse(503, {"detail": "Model dependency unavailable"})
@@ -141,13 +200,22 @@ def test_image_inspection_compact_labels_are_friendly() -> None:
     assert _friendly_metric_display("review_required") == "Needs review"
 
 
+def test_agent_explanation_status_caption_reports_mock_fallback() -> None:
+    expected = "Mock explanation MVP active · external LLM not connected · no fake AI"
+    assert _agent_explanation_status_caption("mock", False) == expected
+    assert _agent_explanation_status_caption("gemini", True) == expected
+
+
 def test_frontend_source_no_longer_uses_classification_only_flow() -> None:
     source = Path("frontend/streamlit_app.py").read_text(encoding="utf-8")
     assert "/inspect/image" in source
+    assert "/agent/explain" in source
     assert "classification only" not in source
     assert "unified inspection UI is not yet connected" not in source
     assert "Explain this inspection result" in source
-    assert "Future assistant will explain this inspection result using response evidence, model outputs, warnings, limitations, and traceability." in source
+    assert "Mock explanation MVP active for the current inspection result. The panel uses governed response evidence, model outputs, warnings, limitations, and traceability." in source
+    assert "One-shot, evidence-grounded explanation for the current inspection result." in source
+    assert "Mock explanation MVP active · external LLM not connected · no fake AI" in source
     assert "Detection box details" in source
     assert "Classification details" in source
     assert "Detection details" in source

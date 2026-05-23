@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import mimetypes
 import html
+import os
 import sys
 from io import BytesIO
 from pathlib import Path
@@ -91,6 +92,14 @@ STATUS_LINES = [
     ("Production readiness", "NOT CLAIMED"),
     ("Deployment safety", "NOT CLAIMED"),
 ]
+
+
+def _get_api_base_url() -> str:
+    """Return the frontend API base URL, preferring the environment override."""
+    value = os.getenv("STREAMLIT_API_BASE_URL", API_DEFAULT_BASE_URL).strip()
+    if not value:
+        return API_DEFAULT_BASE_URL
+    return value.rstrip("/")
 
 
 def _safe_text(value: Any, default: str = "Unavailable") -> str:
@@ -2071,7 +2080,7 @@ def _render_upload_predict() -> None:
     with controls_cols[0]:
         api_base_url = st.text_input(
             "API base URL",
-            value=API_DEFAULT_BASE_URL,
+            value=_get_api_base_url(),
             help="Base URL for POST /inspect/image.",
         )
     with controls_cols[1]:

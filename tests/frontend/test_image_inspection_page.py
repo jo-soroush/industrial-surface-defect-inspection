@@ -12,6 +12,7 @@ from frontend.streamlit_app import (
     _call_image_inspection_api,
     _extract_detection_rows,
     _friendly_metric_display,
+    _get_api_base_url,
 )
 
 
@@ -79,6 +80,18 @@ def test_image_inspection_api_call_uses_unified_endpoint(monkeypatch) -> None:
     assert captured["timeout"] == 120
     assert payload["decision"]["final_decision"] == "needs_manual_review"
     assert payload["traceability"]["source_endpoint"] == "/inspect/image"
+
+
+def test_frontend_api_base_url_defaults_to_localhost(monkeypatch) -> None:
+    monkeypatch.delenv("STREAMLIT_API_BASE_URL", raising=False)
+
+    assert _get_api_base_url() == "http://localhost:8000"
+
+
+def test_frontend_api_base_url_uses_env_override_and_trims_trailing_slash(monkeypatch) -> None:
+    monkeypatch.setenv("STREAMLIT_API_BASE_URL", "http://api:8000/")
+
+    assert _get_api_base_url() == "http://api:8000"
 
 
 def test_image_inspection_api_call_rejects_api_errors(monkeypatch) -> None:

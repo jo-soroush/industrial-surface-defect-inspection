@@ -2916,8 +2916,7 @@ def main() -> None:
         unsafe_allow_html=True,
     )
     st.sidebar.caption(
-        "This dashboard is read-only and consumes existing evidence bundles. "
-        "The future AI explanation assistant is a placeholder only."
+        "This dashboard is read-only and consumes existing evidence bundles."
     )
     pages[choice]()
 

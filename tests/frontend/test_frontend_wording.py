@@ -1,3 +1,5 @@
+import inspect
+
 from frontend import streamlit_app as app
 
 
@@ -19,3 +21,9 @@ def test_frontend_status_labels_are_user_friendly() -> None:
     assert app._friendly_status_label("frontend_bundle_ready_for_review") == "Frontend evidence bundle ready for review"
     assert app._friendly_status_label("strong_track_a_candidate_selected_not_production_ready") == "Strong classification candidate"
     assert app._friendly_status_label("production-canonical") == "Governed review evidence"
+
+
+def test_frontend_source_no_longer_shows_global_ai_placeholder_sentence() -> None:
+    source = inspect.getsource(app)
+    lower = source.lower()
+    assert "the future ai explanation assistant is a placeholder only." not in lower

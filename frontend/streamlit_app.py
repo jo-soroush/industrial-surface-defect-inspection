@@ -173,7 +173,7 @@ def _agent_explanation_status_caption(provider_used: Any, fallback_used: Any) ->
     """Return a short status caption for the agent explanation panel."""
     provider_text = str(provider_used).strip().lower()
     if provider_text == "mock" or bool(fallback_used):
-        return "Mock explanation MVP active · external LLM not connected · no fake AI"
+        return "Mock MVP active · external LLM not connected · no fake AI"
     return "External provider response returned a grounded explanation."
 
 
@@ -228,8 +228,15 @@ def _render_image_inspection_agent_panel(
         st.session_state.pop(error_key, None)
         st.session_state[source_request_key] = payload_request_id
 
-    if question_key not in st.session_state:
-        st.session_state[question_key] = "Explain this inspection result."
+    default_question = "Explain this inspection result."
+    current_question = st.session_state.get(question_key)
+    if current_question is None:
+        st.session_state[question_key] = default_question
+    elif current_question in {
+        f"{default_question}{default_question}",
+        f"{default_question} {default_question}",
+    }:
+        st.session_state[question_key] = default_question
 
     with st.form("image_inspection_agent_form", clear_on_submit=False):
         question = st.text_input("Question", key=question_key)
@@ -802,14 +809,21 @@ def _render_agent_placeholder(
     st.button(action_label, disabled=True, key=key)
 
 
-def _render_agent_callout(action_label: str, summary: str, note: str, *, accent: str = "violet") -> None:
+def _render_agent_callout(
+    action_label: str,
+    summary: str,
+    note: str,
+    *,
+    accent: str = "violet",
+    badge_label: str = "Planned / not active",
+) -> None:
     """Render a compact premium agent callout without an action button."""
     st.markdown(
         f"""
         <div class="premium-card premium-card--{accent}" style="margin-top:0.35rem; padding: 1.15rem 1.2rem 1.05rem;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:0.45rem;">
                 <div class="premium-card__eyebrow" style="margin:0;">Future AI explanation</div>
-                <span style="display:inline-flex; align-items:center; padding:0.22rem 0.7rem; border-radius:999px; background:rgba(124,58,237,0.16); color:#f5d0fe; border:1px solid rgba(192,132,252,0.28); font-size:0.72rem; font-weight:700; letter-spacing:0.02em; white-space:nowrap;">Planned / not active</span>
+                <span style="display:inline-flex; align-items:center; padding:0.22rem 0.7rem; border-radius:999px; background:rgba(124,58,237,0.16); color:#f5d0fe; border:1px solid rgba(192,132,252,0.28); font-size:0.72rem; font-weight:700; letter-spacing:0.02em; white-space:nowrap;">{html.escape(badge_label)}</span>
             </div>
             <div class="premium-card__title" style="font-size:1.15rem; line-height:1.2; margin-bottom:0.55rem;">{html.escape(action_label)}</div>
             <div class="premium-card__body">{html.escape(summary)}</div>
@@ -2402,6 +2416,7 @@ def _render_upload_predict() -> None:
         "Mock explanation MVP active for the current inspection result. The panel uses governed response evidence, model outputs, warnings, limitations, and traceability.",
         "Mock explanation MVP active · external LLM not connected · no fake AI",
         accent="violet",
+        badge_label="Mock MVP active · external LLM not connected · no fake AI",
     )
     _render_image_inspection_agent_panel(
         api_base_url=api_base_url,

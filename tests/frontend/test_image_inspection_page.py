@@ -201,7 +201,7 @@ def test_image_inspection_compact_labels_are_friendly() -> None:
 
 
 def test_agent_explanation_status_caption_reports_mock_fallback() -> None:
-    expected = "Mock explanation MVP active · external LLM not connected · no fake AI"
+    expected = "Mock MVP active · external LLM not connected · no fake AI"
     assert _agent_explanation_status_caption("mock", False) == expected
     assert _agent_explanation_status_caption("gemini", True) == expected
 
@@ -215,7 +215,9 @@ def test_frontend_source_no_longer_uses_classification_only_flow() -> None:
     assert "Explain this inspection result" in source
     assert "Mock explanation MVP active for the current inspection result. The panel uses governed response evidence, model outputs, warnings, limitations, and traceability." in source
     assert "One-shot, evidence-grounded explanation for the current inspection result." in source
-    assert "Mock explanation MVP active · external LLM not connected · no fake AI" in source
+    assert "Mock MVP active · external LLM not connected · no fake AI" in source
+    assert 'badge_label: str = "Planned / not active"' in source
+    assert '>Planned / not active<' in source
     assert "Detection box details" in source
     assert "Classification details" in source
     assert "Detection details" in source

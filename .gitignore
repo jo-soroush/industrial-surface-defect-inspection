@@ -27,6 +27,9 @@ data/interim/
 data/processed/
 data/external/
 
+# Curated runtime-assets staging output
+/runtime_assets/
+
 # OS / editor noise
 .DS_Store
 Thumbs.db

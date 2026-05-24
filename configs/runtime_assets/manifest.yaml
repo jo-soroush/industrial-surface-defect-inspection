@@ -1,0 +1,120 @@
+assets:
+  - source: artifacts/frontend/track_a
+    target: artifacts/frontend/track_a
+    required: true
+    role: frontend classification evidence bundle
+    consumer: frontend
+
+  - source: artifacts/frontend/track_b
+    target: artifacts/frontend/track_b
+    required: true
+    role: frontend anomaly evidence bundle
+    consumer: frontend
+
+  - source: artifacts/frontend/detection/yolo_train_v0_2_0
+    target: artifacts/frontend/detection/yolo_train_v0_2_0
+    required: true
+    role: frontend detection evidence bundle
+    consumer: frontend
+
+  - source: configs/agent/global_context.yaml
+    target: configs/agent/global_context.yaml
+    required: true
+    role: agent global grounding context
+    consumer: api-agent
+
+  - source: configs/agent/section_registry.yaml
+    target: configs/agent/section_registry.yaml
+    required: true
+    role: agent section registry
+    consumer: api-agent
+
+  - source: configs/runs/resnet18_train_v0_4_0.yaml
+    target: configs/runs/resnet18_train_v0_4_0.yaml
+    required: true
+    role: track a classifier run config
+    consumer: api-inspect-image
+
+  - source: configs/models/resnet18.yaml
+    target: configs/models/resnet18.yaml
+    required: true
+    role: track a classifier model config
+    consumer: api-inspect-image
+
+  - source: configs/data/preprocessing_mvtec.yaml
+    target: configs/data/preprocessing_mvtec.yaml
+    required: true
+    role: shared preprocessing config
+    consumer: api-inspect-image
+
+  - source: configs/data/class_mapping_mvtec_binary.yaml
+    target: configs/data/class_mapping_mvtec_binary.yaml
+    required: true
+    role: track a class mapping config
+    consumer: api-inspect-image
+
+  - source: artifacts/models/analysis/track_a_resnet18_v0_4_0_quality_decision__1bc92561-c5bf-48f2-8246-b8f3d5718ffe.json
+    target: artifacts/models/analysis/track_a_resnet18_v0_4_0_quality_decision__1bc92561-c5bf-48f2-8246-b8f3d5718ffe.json
+    required: true
+    role: track a quality decision evidence
+    consumer: api-inspect-image
+
+  - source: artifacts/models/checkpoints/model_checkpoint__1bc92561-c5bf-48f2-8246-b8f3d5718ffe.pt
+    target: artifacts/models/checkpoints/model_checkpoint__1bc92561-c5bf-48f2-8246-b8f3d5718ffe.pt
+    required: true
+    role: track a classifier checkpoint
+    consumer: api-inspect-image
+
+  - source: configs/runs/autoencoder_train_v0_1_0.yaml
+    target: configs/runs/autoencoder_train_v0_1_0.yaml
+    required: true
+    role: anomaly detector run config
+    consumer: api-inspect-image
+
+  - source: configs/models/autoencoder.yaml
+    target: configs/models/autoencoder.yaml
+    required: true
+    role: anomaly detector model config
+    consumer: api-inspect-image
+
+  - source: artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json
+    target: artifacts/models/metrics/anomaly_detection_evaluation__b8ca43f5-0d53-4a42-ab37-b5fca9544a36__test.json
+    required: true
+    role: anomaly evaluation evidence
+    consumer: api-inspect-image
+
+  - source: artifacts/models/checkpoints/model_checkpoint__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.pt
+    target: artifacts/models/checkpoints/model_checkpoint__b8ca43f5-0d53-4a42-ab37-b5fca9544a36.pt
+    required: true
+    role: anomaly detector checkpoint
+    consumer: api-inspect-image
+
+  - source: configs/runs/yolo_train_v0_2_0.yaml
+    target: configs/runs/yolo_train_v0_2_0.yaml
+    required: true
+    role: detection run config
+    consumer: api-inspect-image
+
+  - source: configs/models/yolo.yaml
+    target: configs/models/yolo.yaml
+    required: true
+    role: detection model config
+    consumer: api-inspect-image
+
+  - source: data/processed/gc10det_yolo/dataset.yaml
+    target: data/processed/gc10det_yolo/dataset.yaml
+    required: true
+    role: detection dataset yaml
+    consumer: api-inspect-image
+
+  - source: artifacts/detection/yolo/runs/yolo_train_v0_2_0/weights/best.pt
+    target: artifacts/detection/yolo/runs/yolo_train_v0_2_0/weights/best.pt
+    required: true
+    role: detection checkpoint
+    consumer: api-inspect-image
+
+  - source: artifacts/models/predictions/detection_bbox_predictions__yolo_train_v0_2_0__validation.json
+    target: artifacts/models/predictions/detection_bbox_predictions__yolo_train_v0_2_0__validation.json
+    required: true
+    role: detection bbox prediction evidence
+    consumer: api-inspect-image

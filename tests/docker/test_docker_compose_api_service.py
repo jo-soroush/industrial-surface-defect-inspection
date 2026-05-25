@@ -25,7 +25,7 @@ def test_api_service_builds_from_repo_root_and_exposes_port() -> None:
     api = compose["services"]["api"]
 
     assert api["build"]["context"] == "."
-    assert api["build"]["dockerfile"] == "Dockerfile"
+    assert api["build"]["dockerfile"] == "Dockerfile.api"
     assert "8000:8000" in api["ports"]
 
 
@@ -54,7 +54,7 @@ def test_frontend_service_uses_streamlit_and_api_service_dns() -> None:
     frontend = compose["services"]["frontend"]
 
     assert frontend["build"]["context"] == "."
-    assert frontend["build"]["dockerfile"] == "Dockerfile"
+    assert frontend["build"]["dockerfile"] == "Dockerfile.frontend"
     assert "8501:8501" in frontend["ports"]
     assert frontend["depends_on"] == ["api"]
     assert frontend["environment"]["STREAMLIT_API_BASE_URL"] == "http://api:8000"
@@ -67,3 +67,13 @@ def test_frontend_service_uses_streamlit_and_api_service_dns() -> None:
         "--server.port=8501",
     ]
     assert "volumes" not in frontend
+
+
+def test_compose_frontend_does_not_request_agent_env_defaults() -> None:
+    compose = _load_compose()
+    frontend = compose["services"]["frontend"]
+
+    assert "AGENT_ENABLE_LLM" not in frontend["environment"]
+    assert "AGENT_DEFAULT_PROVIDER" not in frontend["environment"]
+    assert "LLM_PROVIDER_ORDER" not in frontend["environment"]
+    assert "LLM_ENABLE_FALLBACK" not in frontend["environment"]

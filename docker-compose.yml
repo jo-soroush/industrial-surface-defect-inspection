@@ -2,7 +2,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.api
     ports:
       - "8000:8000"
     environment:
@@ -30,7 +30,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.frontend
     depends_on:
       - api
     ports:
@@ -38,10 +38,6 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       PYTHONPATH: /app
-      AGENT_ENABLE_LLM: "false"
-      AGENT_DEFAULT_PROVIDER: mock
-      LLM_PROVIDER_ORDER: mock,gemini,grok
-      LLM_ENABLE_FALLBACK: "true"
       STREAMLIT_API_BASE_URL: http://api:8000
     command:
       - streamlit

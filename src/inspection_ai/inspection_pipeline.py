@@ -136,6 +136,7 @@ def inspect_image(
         warnings.append("One or more model subsystems failed; the inspection response is partial.")
     if anomaly_result.quality_status == "review_required_weak_evidence":
         warnings.append("Anomaly evidence is weak and review-only.")
+    warnings = _deduplicate_messages(warnings)
 
     limitations = _build_limitations(
         classification_result=classification_result,
@@ -663,6 +664,17 @@ def _build_warnings(*, errors: list[InspectionError], anomaly_result: AnomalyRes
     if anomaly_result.quality_status == "review_required_weak_evidence":
         warnings.append("Anomaly evidence is weak and review-only.")
     return warnings
+
+
+def _deduplicate_messages(messages: list[str]) -> list[str]:
+    deduplicated: list[str] = []
+    seen: set[str] = set()
+    for message in messages:
+        if message in seen:
+            continue
+        seen.add(message)
+        deduplicated.append(message)
+    return deduplicated
 
 
 def _build_limitations(

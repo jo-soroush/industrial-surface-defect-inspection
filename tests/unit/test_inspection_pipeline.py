@@ -130,10 +130,30 @@ def test_inspect_image_weak_anomaly_evidence_is_flagged_for_review() -> None:
     )
 
     assert response.decision.final_decision == "needs_manual_review"
-    assert any("weak" in warning.lower() for warning in response.warnings)
+    assert response.warnings == ["Anomaly evidence is weak and review-only."]
     assert any("weak" in limitation.lower() for limitation in response.limitations)
     assert response.explanation_context.status == "available"
     assert response.explanation_context.summary_inputs["final_decision"] == "needs_manual_review"
+
+
+def test_inspect_image_deduplicates_warning_messages_while_preserving_order() -> None:
+    response = inspect_image(
+        image_bytes=_png_bytes(),
+        filename="surface.png",
+        content_type="image/png",
+        classifier=FailingClassifier("Track A classifier failed."),
+        detector=FakeDetector(box_count=0),
+        anomaly_detector=FakeAnomalyDetector(
+            predicted_label="anomaly",
+            quality_status="review_required_weak_evidence",
+        ),
+    )
+
+    assert response.warnings == [
+        "classification subsystem failed: Track A classification failed.",
+        "Anomaly evidence is weak and review-only.",
+        "One or more model subsystems failed; the inspection response is partial.",
+    ]
 
 
 def test_inspect_image_rejects_empty_payload() -> None:

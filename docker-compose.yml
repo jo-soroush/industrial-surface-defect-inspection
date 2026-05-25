@@ -28,3 +28,26 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "8501:8501"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PYTHONPATH: /app
+      AGENT_ENABLE_LLM: "false"
+      AGENT_DEFAULT_PROVIDER: mock
+      LLM_PROVIDER_ORDER: mock,gemini,grok
+      LLM_ENABLE_FALLBACK: "true"
+      STREAMLIT_API_BASE_URL: http://api:8000
+    command:
+      - streamlit
+      - run
+      - frontend/streamlit_app.py
+      - --server.address=0.0.0.0
+      - --server.port=8501

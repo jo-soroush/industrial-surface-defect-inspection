@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY api/ ./api/
 COPY src/ ./src/
+COPY frontend/ ./frontend/
 COPY configs/ ./configs/
 
 COPY runtime_assets/artifacts/ ./artifacts/

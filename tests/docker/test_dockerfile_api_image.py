@@ -12,6 +12,7 @@ def test_dockerfile_contains_api_source_and_staged_assets() -> None:
 
     assert "COPY api/ ./api/" in text
     assert "COPY src/ ./src/" in text
+    assert "COPY frontend/ ./frontend/" in text
     assert "COPY configs/ ./configs/" in text
     assert "COPY runtime_assets/artifacts/ ./artifacts/" in text
     assert "COPY runtime_assets/configs/ ./configs/" in text

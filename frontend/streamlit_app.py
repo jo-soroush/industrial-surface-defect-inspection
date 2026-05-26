@@ -162,6 +162,7 @@ def _build_image_inspection_agent_request(
     return {
         "page_id": "image_inspection",
         "section_id": "final_decision",
+        "component_id": "image_inspection_ai_explanation_panel",
         "question": question,
         "visible_context": visible_context,
         "inspection_response": inspection_response,

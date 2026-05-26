@@ -198,3 +198,39 @@ def test_agent_explain_existing_image_inspection_request_without_component_id_st
     assert payload["component_id"] is None
     assert payload["grounding_status"] == "grounded"
     assert any(item["source"] == "inspection_response.decision.final_decision" for item in payload["evidence_used"])
+
+
+def test_agent_explain_accepts_image_inspection_ai_panel_component_id() -> None:
+    response = client.post(
+        "/agent/explain",
+        json={
+            "page_id": "image_inspection",
+            "section_id": "final_decision",
+            "component_id": "image_inspection_ai_explanation_panel",
+            "question": "Explain this inspection result.",
+            "visible_context": {"page_title": "Image Inspection"},
+            "inspection_response": {
+                "request_id": "request-0001",
+                "decision": {
+                    "final_decision": "good",
+                    "rule_id": "manual_check_rule",
+                    "recommended_action": "manual_review",
+                },
+                "classification": {"predicted_label": "good"},
+                "detection": {"predicted_box_count": 0},
+                "anomaly": {"quality_status": "review_required_weak_evidence"},
+                "traceability": {"source_endpoint": "/inspect/image"},
+                "warnings": [],
+                "limitations": ["manual review required"],
+                "explanation_context": {"context_version": "image_inspection_explanation_context_v0_1"},
+            },
+            "include_raw_evidence": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["component_id"] == "image_inspection_ai_explanation_panel"
+    assert payload["provider_used"] == "mock"
+    assert payload["grounding_status"] == "grounded"
+    assert any(item["source"] == "inspection_response#decision" for item in payload["evidence_used"])

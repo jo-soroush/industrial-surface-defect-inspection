@@ -132,6 +132,7 @@ def test_agent_explain_api_call_uses_unified_endpoint(monkeypatch) -> None:
     assert captured["timeout"] == 60
     assert captured["json"]["page_id"] == "image_inspection"
     assert captured["json"]["section_id"] == "final_decision"
+    assert captured["json"]["component_id"] == "image_inspection_ai_explanation_panel"
     assert captured["json"]["inspection_response"]["request_id"] == "inspection-0001"
     assert payload["provider_used"] == "mock"
     assert payload["fallback_used"] is True
@@ -147,6 +148,7 @@ def test_image_inspection_agent_request_includes_required_fields() -> None:
 
     assert request_payload["page_id"] == "image_inspection"
     assert request_payload["section_id"] == "final_decision"
+    assert request_payload["component_id"] == "image_inspection_ai_explanation_panel"
     assert request_payload["question"] == "Explain this inspection result."
     assert request_payload["inspection_response"]["request_id"] == "inspection-0001"
     assert request_payload["visible_context"]["final_decision"] == "Defective"

@@ -57,6 +57,7 @@ def test_agent_explain_returns_grounded_mock_answer_for_image_inspection() -> No
     assert payload["section_id"] == "final_decision"
     assert "manual review" in payload["answer"].lower()
     assert any(item["source"] == "inspection_response.decision.final_decision" for item in payload["evidence_used"])
+    assert payload["component_id"] is None
 
 
 def test_agent_explain_rejects_unsupported_page_section_pair() -> None:
@@ -108,3 +109,92 @@ def test_agent_health_stays_mock_first_when_llm_is_requested(monkeypatch) -> Non
     assert any("intentionally disabled" in warning.lower() for warning in payload["warnings"])
     assert any("gemini" in warning.lower() for warning in payload["warnings"])
     assert any("grok" in warning.lower() for warning in payload["warnings"])
+
+
+def test_agent_explain_accepts_classification_component_id() -> None:
+    response = client.post(
+        "/agent/explain",
+        json={
+            "page_id": "classification",
+            "section_id": "detailed_metrics",
+            "component_id": "classification_threshold_curve_chart",
+            "question": "What does this chart mean?",
+            "visible_context": {},
+            "inspection_response": {},
+            "include_raw_evidence": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["component_id"] == "classification_threshold_curve_chart"
+    assert payload["provider_used"] == "mock"
+    assert payload["grounding_status"] == "grounded"
+    assert any(
+        item["source"] == "artifacts/frontend/track_a/threshold_curve_chart_data.json#recommended_threshold"
+        for item in payload["evidence_used"]
+    )
+
+
+def test_agent_explain_accepts_detection_component_id() -> None:
+    response = client.post(
+        "/agent/explain",
+        json={
+            "page_id": "detection",
+            "section_id": "visual_evidence",
+            "component_id": "detection_confidence_chart",
+            "question": "What does detection confidence mean?",
+            "visible_context": {},
+            "inspection_response": {},
+            "include_raw_evidence": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["component_id"] == "detection_confidence_chart"
+    assert any(
+        item["source"]
+        == "artifacts/frontend/detection/yolo_train_v0_2_0/detection_confidence_chart.json#confidence_bins.count"
+        for item in payload["evidence_used"]
+    )
+
+
+def test_agent_explain_rejects_invalid_component_id_safely() -> None:
+    response = client.post(
+        "/agent/explain",
+        json={
+            "page_id": "classification",
+            "section_id": "detailed_metrics",
+            "component_id": "not_a_real_component",
+            "question": "Explain this.",
+            "visible_context": {},
+            "inspection_response": {},
+            "include_raw_evidence": False,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_agent_explain_existing_image_inspection_request_without_component_id_still_works() -> None:
+    response = client.post(
+        "/agent/explain",
+        json={
+            "page_id": "image_inspection",
+            "section_id": "final_decision",
+            "question": "Explain this inspection result.",
+            "visible_context": {"page_title": "Image Inspection"},
+            "inspection_response": {
+                "decision": {"final_decision": "good", "rule_id": "manual_check_rule"},
+                "traceability": {"source_endpoint": "/inspect/image"},
+            },
+            "include_raw_evidence": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["component_id"] is None
+    assert payload["grounding_status"] == "grounded"
+    assert any(item["source"] == "inspection_response.decision.final_decision" for item in payload["evidence_used"])

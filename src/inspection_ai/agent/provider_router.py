@@ -149,6 +149,7 @@ class AgentProviderRouter:
             grounding_status=grounding_status,
             page_id=grounding_context.page_id,  # type: ignore[arg-type]
             section_id=grounding_context.section_id,
+            component_id=grounding_context.component_id,
         )
 
 

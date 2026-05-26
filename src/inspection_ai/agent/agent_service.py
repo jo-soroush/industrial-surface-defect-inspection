@@ -22,6 +22,7 @@ class AgentService:
         grounding_context = build_grounding_context(
             page_id=request.page_id,
             section_id=request.section_id,
+            component_id=request.component_id,
             question=request.question,
             visible_context=request.visible_context,
             inspection_response=request.inspection_response,

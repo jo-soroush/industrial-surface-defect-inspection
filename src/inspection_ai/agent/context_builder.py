@@ -9,6 +9,9 @@ from typing import Any
 
 import yaml
 
+from .component_registry import ComponentRegistryError, ComponentDefinition, get_component_definition
+from .evidence_loader import EvidenceLoadResult, load_component_evidence
+
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
 AGENT_CONFIG_DIR = ROOT_DIR / "configs" / "agent"
@@ -22,6 +25,7 @@ class AgentGroundingContext:
 
     page_id: str
     section_id: str
+    component_id: str | None
     question: str
     visible_context: dict[str, Any]
     inspection_response: dict[str, Any]
@@ -93,34 +97,65 @@ def validate_page_section(page_id: str, section_id: str) -> None:
         )
 
 
+def validate_page_section_component(page_id: str, section_id: str, component_id: str | None) -> None:
+    """Validate page/section and optional component identifiers."""
+    validate_page_section(page_id, section_id)
+    if component_id is None:
+        return
+    try:
+        get_component_definition(page_id, section_id, component_id)
+    except ComponentRegistryError as exc:
+        raise ValueError(str(exc)) from exc
+
+
 def build_grounding_context(
     *,
     page_id: str,
     section_id: str,
+    component_id: str | None = None,
     question: str,
     visible_context: dict[str, Any] | None,
     inspection_response: dict[str, Any] | None,
     include_raw_evidence: bool,
 ) -> AgentGroundingContext:
     """Build an evidence-grounded context object for the provider layer."""
-    validate_page_section(page_id, section_id)
+    validate_page_section_component(page_id, section_id, component_id)
 
     global_context = load_global_context()
     page_definition = get_page_definition(page_id)
     visible_context = visible_context or {}
     inspection_response = inspection_response or {}
+    component_definition: ComponentDefinition | None = None
+    component_evidence_result: EvidenceLoadResult | None = None
+    if component_id is not None:
+        component_definition = get_component_definition(page_id, section_id, component_id)
+        component_evidence_result = load_component_evidence(
+            component_definition,
+            inspection_response=inspection_response,
+            global_context=global_context,
+            include_raw_evidence=include_raw_evidence,
+        )
 
     evidence_used = _build_evidence_used(
         page_id=page_id,
         section_id=section_id,
+        component_definition=component_definition,
+        component_evidence_result=component_evidence_result,
         visible_context=visible_context,
         inspection_response=inspection_response,
-        include_raw_evidence=include_raw_evidence,
+        include_raw_evidence=include_raw_evidence and component_definition is None,
     )
-    limitations = _build_limitations(page_id, inspection_response, global_context)
+    limitations = _build_limitations(
+        page_id=page_id,
+        inspection_response=inspection_response,
+        global_context=global_context,
+        component_evidence_result=component_evidence_result,
+    )
     grounding_status = _determine_grounding_status(
         page_id=page_id,
         section_id=section_id,
+        component_id=component_id,
+        component_evidence_result=component_evidence_result,
         evidence_used=evidence_used,
         inspection_response=inspection_response,
     )
@@ -128,6 +163,7 @@ def build_grounding_context(
     return AgentGroundingContext(
         page_id=page_id,
         section_id=section_id,
+        component_id=component_id,
         question=question,
         visible_context=visible_context,
         inspection_response=inspection_response,
@@ -138,7 +174,9 @@ def build_grounding_context(
         safety_boundaries=list(global_context.get("safety_boundaries", [])),
         forbidden_claims=list(global_context.get("forbidden_claims", [])),
         grounding_status=grounding_status,
-        raw_evidence_included=include_raw_evidence,
+        raw_evidence_included=bool(component_evidence_result.raw_evidence_included)
+        if component_evidence_result is not None
+        else include_raw_evidence,
     )
 
 
@@ -146,6 +184,8 @@ def _build_evidence_used(
     *,
     page_id: str,
     section_id: str,
+    component_definition: ComponentDefinition | None,
+    component_evidence_result: EvidenceLoadResult | None,
     visible_context: dict[str, Any],
     inspection_response: dict[str, Any],
     include_raw_evidence: bool,
@@ -178,7 +218,27 @@ def _build_evidence_used(
     # Always include the requested page/section in the grounding surface.
     evidence.append({"source": "request.page_id", "value": page_id})
     evidence.append({"source": "request.section_id", "value": section_id})
+    if component_definition is not None and component_evidence_result is not None:
+        evidence.append({"source": "request.component_id", "value": component_definition.component_id})
+        evidence.append({"source": "component.user_facing_label", "value": component_definition.user_facing_label})
+        evidence.append({"source": "component.component_type", "value": component_definition.component_type})
+        evidence.extend(_component_evidence(component_evidence_result))
     return evidence
+
+
+def _component_evidence(component_evidence_result: EvidenceLoadResult) -> list[dict[str, Any]]:
+    return [
+        {
+            "source": item.source,
+            "value": {
+                "field_path": item.field_path,
+                "evidence_type": item.evidence_type,
+                "component_id": item.component_id,
+                "value": item.value,
+            },
+        }
+        for item in component_evidence_result.evidence_items
+    ]
 
 
 def _image_inspection_evidence(inspection_response: dict[str, Any]) -> list[dict[str, Any]]:
@@ -278,9 +338,11 @@ def _ai_assistant_evidence(visible_context: dict[str, Any]) -> list[dict[str, An
 
 
 def _build_limitations(
+    *,
     page_id: str,
     inspection_response: dict[str, Any],
     global_context: dict[str, Any],
+    component_evidence_result: EvidenceLoadResult | None = None,
 ) -> list[str]:
     limitations = list(global_context.get("safety_boundaries", []))
     if page_id == "image_inspection":
@@ -289,6 +351,18 @@ def _build_limitations(
             limitations.extend(str(item) for item in response_limitations)
         if not inspection_response.get("warnings"):
             limitations.append("No inspection warnings were returned.")
+    if component_evidence_result is not None:
+        limitations.extend(component_evidence_result.limitations)
+        if component_evidence_result.missing_files:
+            limitations.append(
+                "Some component evidence files were unavailable: "
+                f"{', '.join(component_evidence_result.missing_files[:3])}."
+            )
+        if component_evidence_result.missing_fields:
+            limitations.append(
+                "Some allowlisted component evidence fields were unavailable: "
+                f"{', '.join(component_evidence_result.missing_fields[:5])}."
+            )
     return list(dict.fromkeys(limitations))
 
 
@@ -296,9 +370,16 @@ def _determine_grounding_status(
     *,
     page_id: str,
     section_id: str,
+    component_id: str | None,
+    component_evidence_result: EvidenceLoadResult | None,
     evidence_used: list[dict[str, Any]],
     inspection_response: dict[str, Any],
 ) -> str:
+    if component_id is not None:
+        if component_evidence_result is not None and component_evidence_result.evidence_items:
+            return "grounded"
+        return "insufficient_evidence"
+
     meaningful_evidence = [
         item for item in evidence_used if not str(item.get("source", "")).startswith("request.")
     ]

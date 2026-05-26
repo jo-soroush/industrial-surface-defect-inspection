@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .context_builder import validate_page_section
+from .context_builder import validate_page_section_component
 
 
 AgentPageId = Literal[
@@ -36,6 +36,7 @@ class AgentExplainRequest(BaseModel):
 
     page_id: str = Field(min_length=1)
     section_id: str = Field(min_length=1)
+    component_id: str | None = Field(default=None, min_length=1)
     question: str = Field(min_length=1)
     visible_context: dict[str, Any] = Field(default_factory=dict)
     inspection_response: dict[str, Any] = Field(default_factory=dict)
@@ -43,7 +44,7 @@ class AgentExplainRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_page_section(self) -> "AgentExplainRequest":
-        validate_page_section(self.page_id, self.section_id)
+        validate_page_section_component(self.page_id, self.section_id, self.component_id)
         return self
 
 
@@ -60,6 +61,7 @@ class AgentExplainResponse(BaseModel):
     grounding_status: GroundingStatus
     page_id: AgentPageId
     section_id: str
+    component_id: str | None = None
 
 
 class AgentHealthResponse(BaseModel):

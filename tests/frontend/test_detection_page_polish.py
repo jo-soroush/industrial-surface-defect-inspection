@@ -60,7 +60,20 @@ def test_detection_confidence_agent_panel_is_scoped_to_confidence_chart() -> Non
     source = inspect.getsource(app._render_yolo)
 
     assert "_render_detection_confidence_agent_panel" in source
-    assert "Mock component explanation available for the confidence chart only" in source
-    assert "external LLM not connected" in source
+    assert "no backend agent implemented yet" not in source
+    assert "planned / not active" not in source.lower()
+    assert "future ai explanation" not in source.lower()
+    assert "Mock component explanation available for the confidence chart only" not in source
     assert source.count("_render_detection_confidence_agent_panel") == 1
     assert source.index("_render_detection_confidence_agent_panel") > source.index("Confidence distribution")
+
+
+def test_detection_confidence_active_panel_copy_is_mock_and_not_planned() -> None:
+    source = inspect.getsource(app._render_detection_confidence_agent_panel).lower()
+
+    assert "explain this detection confidence chart" in source
+    assert "mock evidence-grounded explanation" in source
+    assert "external llm not connected" in source
+    assert "manual review still applies" in source
+    assert "planned / not active" not in source
+    assert "no backend agent implemented yet" not in source

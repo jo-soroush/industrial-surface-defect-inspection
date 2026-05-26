@@ -2019,13 +2019,6 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
         "Detection validation bundle",
         accent="green",
     )
-    _render_agent_callout(
-        "Explain detection confidence",
-        "Ask for a plain-language summary of the confidence distribution, class balance, and detection review state.",
-        "Mock component explanation available for the confidence chart only · external LLM not connected · no fake AI",
-        accent="violet",
-    )
-
     if bundles is None:
         st.error("Detection evidence is unavailable because the frontend bundles failed to load.")
         return
@@ -2175,13 +2168,6 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
         for col, (label, value) in zip(gallery_snapshot_cols, snapshot_items):
             with col:
                 st.metric(label, _format_value(value))
-
-    _render_agent_callout(
-        "Explain detection confidence",
-        "Ask for a plain-language summary of the confidence distribution, class balance, and detection review state.",
-        "Mock component explanation available for the confidence chart only · external LLM not connected · no fake AI",
-        accent="violet",
-    )
 
     st.markdown("### Quick take")
     _render_premium_info_card(

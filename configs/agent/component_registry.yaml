@@ -1,0 +1,972 @@
+components:
+  - page_id: overview
+    section_id: status_summary
+    component_id: overview_capability_summary
+    user_facing_label: Overview capability summary
+    component_type: card
+    evidence_files: []
+    allowed_fields:
+      - frontend_bundle_status.track_a
+      - frontend_bundle_status.track_b
+      - frontend_bundle_status.detection
+      - image_inspection.endpoint_status
+    traceability_fields:
+      - frontend_bundle_paths
+    raw_allowed: false
+    safe_explanation_scope: Explain which dashboard evidence areas are available and where to review them.
+    limitations:
+      - Derived from dashboard bundle availability and static page copy.
+      - No production-ready claim.
+      - No deployment-safe claim.
+    readiness_status: PARTIAL_EVIDENCE
+    fallback_message: Overview capability evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: overview
+    section_id: status_summary
+    component_id: overview_readiness_summary
+    user_facing_label: Overview readiness summary
+    component_type: card
+    evidence_files: []
+    allowed_fields:
+      - readiness.production_readiness
+      - readiness.deployment_readiness
+      - readiness.decision_layer
+    traceability_fields:
+      - global_context.safety_boundaries
+    raw_allowed: false
+    safe_explanation_scope: Explain that production and deployment readiness are not claimed.
+    limitations:
+      - Static dashboard boundary text.
+      - No production-ready claim.
+      - No deployment-safe claim.
+      - Manual review still applies.
+    readiness_status: PARTIAL_EVIDENCE
+    fallback_message: Overview readiness evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: overview
+    section_id: review_path
+    component_id: overview_review_path
+    user_facing_label: Recommended review path
+    component_type: card
+    evidence_files: []
+    allowed_fields:
+      - review_steps.classification
+      - review_steps.anomaly
+      - review_steps.detection
+      - review_steps.image_inspection
+      - review_steps.safety
+    traceability_fields:
+      - section_registry.pages.overview
+    raw_allowed: false
+    safe_explanation_scope: Explain the suggested dashboard review order.
+    limitations:
+      - Static reviewer guidance, not a deployment procedure.
+      - No autonomous decision claim.
+    readiness_status: PARTIAL_EVIDENCE
+    fallback_message: Overview review path evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: classification
+    section_id: detailed_metrics
+    component_id: classification_metric_cards
+    user_facing_label: Classification metric cards
+    component_type: card
+    evidence_files:
+      - artifacts/frontend/track_a/metric_cards.json
+      - artifacts/frontend/track_a/frontend_model_recommendation.json
+      - artifacts/frontend/track_a/quality_decision_summary.json
+    allowed_fields:
+      - selected_model_name
+      - selected_model_version
+      - selected_model_run_id
+      - selected_model_quality_status
+      - recommended_threshold
+      - validation_samples
+      - cards.title
+      - cards.value
+      - cards.detail
+    traceability_fields:
+      - source_artifact_paths
+      - run_id
+    raw_allowed: false
+    safe_explanation_scope: Explain governed classification metric cards and selected validation candidate.
+    limitations:
+      - Validation evidence only.
+      - No production-ready claim.
+      - No deployment-safe claim.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Classification metric card evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: classification
+    section_id: detailed_metrics
+    component_id: classification_readiness_cards
+    user_facing_label: Classification readiness cards
+    component_type: card
+    evidence_files:
+      - artifacts/frontend/track_a/metric_cards.json
+      - artifacts/frontend/track_a/quality_decision_summary.json
+    allowed_fields:
+      - production_ready
+      - deployment_candidate
+      - selected_model_quality_status
+      - safe_interpretation
+      - forbidden_wording
+    traceability_fields:
+      - source_artifact_paths
+    raw_allowed: false
+    safe_explanation_scope: Explain why production and deployment readiness are not claimed.
+    limitations:
+      - Readiness cards are safety boundaries, not approvals.
+      - No production-ready claim.
+      - No deployment-safe claim.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Classification readiness evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: classification
+    section_id: detailed_metrics
+    component_id: classification_error_distribution_chart
+    user_facing_label: Surface defect error distribution
+    component_type: chart
+    evidence_files:
+      - artifacts/frontend/track_a/error_distribution_pie_data.json
+    allowed_fields:
+      - segments.label
+      - segments.count
+      - safe_interpretation
+    traceability_fields:
+      - source_artifact_paths
+      - run_id
+    raw_allowed: false
+    safe_explanation_scope: Explain false positives, false negatives, and validation error distribution.
+    limitations:
+      - Validation split evidence only.
+      - Do not infer operational defect rates.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Classification error distribution evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: classification
+    section_id: detailed_metrics
+    component_id: classification_per_class_chart
+    user_facing_label: Surface defect per-class performance
+    component_type: chart
+    evidence_files:
+      - artifacts/frontend/track_a/per_class_bar_chart_data.json
+    allowed_fields:
+      - classes.label
+      - classes.precision
+      - classes.recall
+      - classes.f1
+    traceability_fields:
+      - source_artifact_paths
+      - run_id
+    raw_allowed: false
+    safe_explanation_scope: Explain per-class precision, recall, and F1 from validation evidence.
+    limitations:
+      - Validation split evidence only.
+      - No guarantee for unseen production conditions.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Classification per-class evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: classification
+    section_id: detailed_metrics
+    component_id: classification_threshold_curve_chart
+    user_facing_label: Surface defect threshold behavior
+    component_type: chart
+    evidence_files:
+      - artifacts/frontend/track_a/threshold_curve_chart_data.json
+    allowed_fields:
+      - baseline_threshold
+      - recommended_threshold
+      - rows.threshold
+      - rows.precision
+      - rows.recall
+      - rows.macro_f1
+      - rows.accuracy
+      - rows.false_positive
+      - rows.false_negative
+    traceability_fields:
+      - run_id
+      - source_threshold_analysis_path
+    raw_allowed: false
+    safe_explanation_scope: Explain validation-derived threshold tradeoffs.
+    limitations:
+      - Threshold is validation-derived.
+      - No deployment approval is implied.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Classification threshold curve evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: classification
+    section_id: technical_evidence
+    component_id: classification_model_comparison_table
+    user_facing_label: Classification model comparison
+    component_type: table
+    evidence_files:
+      - artifacts/frontend/track_a/model_comparison_table.json
+    allowed_fields:
+      - rows.rank
+      - rows.selected
+      - rows.model_name
+      - rows.model_version
+      - rows.run_id
+      - rows.macro_f1
+      - rows.accuracy
+      - rows.recall
+      - rows.threshold_used
+      - rows.short_status
+      - safe_wording
+      - comparison_note
+    traceability_fields:
+      - source_artifact_paths
+      - selected_model_run_id
+    raw_allowed: false
+    safe_explanation_scope: Explain selected governed candidate and comparison rows.
+    limitations:
+      - Compares governed candidate runs only.
+      - No production-ready claim.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Classification model comparison evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: classification
+    section_id: technical_evidence
+    component_id: classification_confusion_matrix_table
+    user_facing_label: Classification confusion matrix
+    component_type: table
+    evidence_files:
+      - artifacts/frontend/track_a/confusion_matrix_chart_data.json
+    allowed_fields:
+      - matrix
+      - labels.rows
+      - labels.columns
+      - safe_interpretation
+    traceability_fields:
+      - source_artifact_paths
+      - run_id
+    raw_allowed: false
+    safe_explanation_scope: Explain true/false positives and true/false negatives from validation evidence.
+    limitations:
+      - Validation confusion matrix only.
+      - Do not infer live operational rates.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Classification confusion matrix evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: classification
+    section_id: detailed_metrics
+    component_id: classification_safe_interpretation
+    user_facing_label: Classification safe interpretation
+    component_type: text_summary
+    evidence_files:
+      - artifacts/frontend/track_a/metric_cards.json
+      - artifacts/frontend/track_a/quality_decision_summary.json
+    allowed_fields:
+      - safe_interpretation
+      - safe_wording
+      - limitations
+      - next_recommended_step
+    traceability_fields:
+      - source_artifact_paths
+      - run_id
+    raw_allowed: false
+    safe_explanation_scope: Explain safe interpretation and limitations for the classification evidence package.
+    limitations:
+      - Local review/demo only.
+      - No production-ready claim.
+      - No deployment-safe claim.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Classification safe interpretation evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: anomaly
+    section_id: visual_evidence
+    component_id: anomaly_metric_cards
+    user_facing_label: Anomaly metric cards
+    component_type: card
+    evidence_files:
+      - artifacts/frontend/track_b/metric_cards.json
+      - artifacts/frontend/track_b/frontend_anomaly_summary.json
+      - artifacts/frontend/track_b/quality_decision_summary.json
+    allowed_fields:
+      - model_type
+      - model_version
+      - threshold
+      - quality_status
+      - key_metrics.pr_auc
+      - cards.title
+      - cards.value
+      - cards.detail
+    traceability_fields:
+      - run_id
+      - source_artifact_paths
+    raw_allowed: false
+    safe_explanation_scope: Explain anomaly metric cards as governed review evidence.
+    limitations:
+      - Weak anomaly evidence is review-only.
+      - No production-ready claim.
+      - No deployment-safe claim.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Anomaly metric card evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: anomaly
+    section_id: visual_evidence
+    component_id: anomaly_pr_auc_summary
+    user_facing_label: PR AUC governed evidence note
+    component_type: text_summary
+    evidence_files:
+      - artifacts/frontend/track_b/frontend_anomaly_summary.json
+      - artifacts/frontend/track_b/metric_cards.json
+    allowed_fields:
+      - key_metrics.pr_auc
+      - summary
+      - safe_interpretation
+      - limitations
+    traceability_fields:
+      - run_id
+      - source_artifact_paths
+    raw_allowed: false
+    safe_explanation_scope: Explain PR AUC as governed anomaly score evidence.
+    limitations:
+      - PR AUC does not imply production readiness.
+      - Weak anomaly evidence is review-only.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Anomaly PR AUC evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: anomaly
+    section_id: visual_evidence
+    component_id: anomaly_reconstruction_loss_chart
+    user_facing_label: Surface anomaly reconstruction loss distribution
+    component_type: chart
+    evidence_files:
+      - artifacts/frontend/track_b/reconstruction_loss_summary.json
+    allowed_fields:
+      - sample_level_reconstruction_loss.summary
+      - sample_level_reconstruction_loss.histograms
+      - sample_level_reconstruction_loss.mapping
+    traceability_fields:
+      - run_id
+      - source_artifact_paths
+    raw_allowed: false
+    safe_explanation_scope: Explain reconstruction loss distribution as anomaly review evidence.
+    limitations:
+      - Reconstruction loss is supporting evidence only.
+      - Manual review still applies.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Reconstruction loss evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: anomaly
+    section_id: visual_evidence
+    component_id: anomaly_score_summary_chart
+    user_facing_label: Surface anomaly score distribution
+    component_type: chart
+    evidence_files:
+      - artifacts/frontend/track_b/anomaly_score_summary.json
+      - artifacts/frontend/track_b/frontend_anomaly_summary.json
+    allowed_fields:
+      - summary
+      - histograms
+      - key_metrics.threshold
+      - key_metrics.pr_auc
+      - key_metrics.recall
+    traceability_fields:
+      - run_id
+      - source_artifact_paths
+    raw_allowed: false
+    safe_explanation_scope: Explain anomaly scores as review evidence only.
+    limitations:
+      - Weak anomaly evidence is review-only.
+      - Do not claim perfect anomaly separation.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Anomaly score evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: anomaly
+    section_id: visual_evidence
+    component_id: anomaly_threshold_behavior_chart
+    user_facing_label: Surface anomaly threshold behavior
+    component_type: chart
+    evidence_files:
+      - artifacts/frontend/track_b/threshold_behavior.json
+      - artifacts/frontend/track_b/quality_decision_summary.json
+    allowed_fields:
+      - selected_threshold
+      - rows.threshold
+      - rows.precision
+      - rows.recall
+      - rows.f1
+      - rows.false_positive_rate
+      - rows.false_negative_rate
+      - quality_status
+    traceability_fields:
+      - run_id
+      - source_artifact_paths
+    raw_allowed: false
+    safe_explanation_scope: Explain threshold behavior and weak/review-only anomaly boundary.
+    limitations:
+      - Weak anomaly evidence is review-only.
+      - Threshold behavior does not make the model deployment-safe.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Anomaly threshold behavior evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: anomaly
+    section_id: sample_evidence_summary
+    component_id: anomaly_sample_summary
+    user_facing_label: Anomaly sample evidence summary
+    component_type: gallery
+    evidence_files:
+      - artifacts/frontend/track_b/sample_predictions.json
+      - artifacts/frontend/track_b/sample_anomaly_gallery.json
+    allowed_fields:
+      - sample_count
+      - samples.sample_id
+      - samples.true_label
+      - samples.predicted_label
+      - samples.anomaly_score
+      - samples.threshold
+      - samples.correct
+      - gallery_sample_count
+      - counts_by_error_type
+    traceability_fields:
+      - run_id
+      - source_artifact_paths
+    raw_allowed: false
+    safe_explanation_scope: Explain curated anomaly sample evidence and error categories.
+    limitations:
+      - Sample preview is a small slice of governed evidence.
+      - Manual review still applies.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Anomaly sample evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: anomaly
+    section_id: visual_evidence
+    component_id: anomaly_safe_interpretation
+    user_facing_label: Anomaly safe interpretation
+    component_type: text_summary
+    evidence_files:
+      - artifacts/frontend/track_b/frontend_anomaly_summary.json
+      - artifacts/frontend/track_b/quality_decision_summary.json
+    allowed_fields:
+      - summary
+      - what_it_can_claim
+      - what_it_cannot_claim
+      - limitations
+      - quality_decision.quality_status
+      - quality_decision.dashboard_usage_recommendation
+    traceability_fields:
+      - run_id
+      - source_artifact_paths
+    raw_allowed: false
+    safe_explanation_scope: Explain why anomaly evidence is review-only supporting evidence.
+    limitations:
+      - Weak anomaly evidence is review-only.
+      - No production-ready claim.
+      - No deployment-safe claim.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Anomaly safe interpretation evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: detection
+    section_id: visual_evidence
+    component_id: detection_metric_cards
+    user_facing_label: Detection metric cards
+    component_type: card
+    evidence_files:
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_metric_cards.json
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_overview.json
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_model_metadata.json
+    allowed_fields:
+      - cards.label
+      - cards.value
+      - cards.description
+      - run_id
+      - model_name
+      - model_version
+      - image_count
+      - total_bbox_count
+      - image_with_detections_count
+    traceability_fields:
+      - run_id
+      - generated_at
+    raw_allowed: false
+    safe_explanation_scope: Explain detection validation metric cards and bundle counts.
+    limitations:
+      - Detection bundle is validation/demo evidence only.
+      - Review required before final use.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Detection metric card evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: detection
+    section_id: visual_evidence
+    component_id: detection_readiness_cards
+    user_facing_label: Detection readiness cards
+    component_type: card
+    evidence_files:
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_quality_decision_summary.json
+      - artifacts/frontend/detection/yolo_train_v0_2_0/frontend_detection_recommendation.json
+    allowed_fields:
+      - review_required
+      - recommendation_status
+      - what_it_can_claim
+      - what_it_cannot_claim
+      - next_step
+      - next_recommended_step
+    traceability_fields:
+      - run_id
+      - source_artifacts
+    raw_allowed: false
+    safe_explanation_scope: Explain review status and explicitly forbidden claims.
+    limitations:
+      - No production-ready claim.
+      - No deployment-safe claim.
+      - Manual review still applies.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Detection readiness evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: detection
+    section_id: visual_evidence
+    component_id: detection_confidence_chart
+    user_facing_label: Detection confidence distribution
+    component_type: chart
+    evidence_files:
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_confidence_chart.json
+    allowed_fields:
+      - chart_title
+      - chart_explanation
+      - confidence_bins.label
+      - confidence_bins.count
+      - confidence_bins.percentage
+    traceability_fields:
+      - run_id
+      - generated_at
+    raw_allowed: false
+    safe_explanation_scope: Explain confidence bands as validation evidence, not automatic decisions.
+    limitations:
+      - Confidence scores do not replace review.
+      - Detection evidence requires review before final use.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Detection confidence evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: detection
+    section_id: visual_evidence
+    component_id: detection_class_summary_chart
+    user_facing_label: Detection class summary
+    component_type: chart
+    evidence_files:
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_class_summary.json
+    allowed_fields:
+      - class_rows.class_label
+      - class_rows.bbox_count
+      - class_rows.min_confidence
+      - class_rows.mean_confidence
+      - class_rows.median_confidence
+    traceability_fields:
+      - run_id
+      - generated_at
+    raw_allowed: false
+    safe_explanation_scope: Explain class detection counts and confidence summaries.
+    limitations:
+      - Class counts are validation evidence, not severity ranking.
+      - Class imbalance should be interpreted carefully.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Detection class summary evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: detection
+    section_id: sample_evidence_summary
+    component_id: detection_sample_gallery_summary
+    user_facing_label: Detection sample gallery summary
+    component_type: gallery
+    evidence_files:
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_sample_gallery.json
+    allowed_fields:
+      - gallery_sample_count
+      - category_sample_counts
+      - categories.category_label
+      - categories.sample_count
+      - categories.selection_rule
+    traceability_fields:
+      - run_id
+      - generated_at
+    raw_allowed: false
+    safe_explanation_scope: Explain curated validation samples and gallery selection categories.
+    limitations:
+      - Gallery is curated validation evidence only.
+      - Live uploaded-image boxes are shown on Image Inspection.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Detection sample gallery evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: detection
+    section_id: technical_evidence
+    component_id: detection_artifact_lineage
+    user_facing_label: Detection artifact lineage
+    component_type: table
+    evidence_files:
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_artifact_lineage.json
+      - artifacts/frontend/detection/yolo_train_v0_2_0/frontend_bundle_manifest.json
+    allowed_fields:
+      - source_artifacts.artifact_type
+      - source_artifacts.artifact_path
+      - source_artifacts.artifact_hash
+      - bundle_files
+    traceability_fields:
+      - run_id
+      - generated_at
+    raw_allowed: false
+    safe_explanation_scope: Explain file lineage and bundle membership at a high level.
+    limitations:
+      - Do not expose raw artifacts by default.
+      - Lineage does not imply deployment approval.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Detection artifact lineage evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: detection
+    section_id: visual_evidence
+    component_id: detection_safe_interpretation
+    user_facing_label: Detection safe interpretation
+    component_type: text_summary
+    evidence_files:
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_overview.json
+      - artifacts/frontend/detection/yolo_train_v0_2_0/detection_quality_decision_summary.json
+      - artifacts/frontend/detection/yolo_train_v0_2_0/frontend_detection_recommendation.json
+    allowed_fields:
+      - safe_summary
+      - limitations
+      - recommendation_status
+      - what_it_can_claim
+      - what_it_cannot_claim
+      - next_step
+    traceability_fields:
+      - run_id
+      - generated_at
+    raw_allowed: false
+    safe_explanation_scope: Explain detection evidence as review-oriented validation evidence only.
+    limitations:
+      - No production-ready claim.
+      - No deployment-safe claim.
+      - Manual review still applies.
+    readiness_status: READY_FOR_COMPONENT_RAG
+    fallback_message: Detection safe interpretation evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: image_inspection
+    section_id: final_decision
+    component_id: image_inspection_final_decision_card
+    user_facing_label: Image Inspection final decision
+    component_type: decision
+    evidence_files: []
+    allowed_fields:
+      - inspection_response.decision.final_decision
+      - inspection_response.decision.decision_level
+      - inspection_response.decision.model_agreement_status
+      - inspection_response.decision.primary_signal
+      - inspection_response.decision.rule_id
+      - inspection_response.decision.rule_summary
+      - inspection_response.decision.recommended_action
+      - inspection_response.decision.supporting_signals
+    traceability_fields:
+      - inspection_response.request_id
+      - inspection_response.traceability
+    raw_allowed: false
+    safe_explanation_scope: Explain the current runtime decision from returned model signals only.
+    limitations:
+      - Runtime result only.
+      - Manual review still applies.
+      - No autonomous decision claim.
+    readiness_status: RUNTIME_ONLY
+    fallback_message: No inspection decision response is available yet.
+    explanation_priority: high
+
+  - page_id: image_inspection
+    section_id: unified_results
+    component_id: image_inspection_classification_result_card
+    user_facing_label: Image Inspection classification result
+    component_type: card
+    evidence_files: []
+    allowed_fields:
+      - inspection_response.classification.status
+      - inspection_response.classification.model_name
+      - inspection_response.classification.model_version
+      - inspection_response.classification.run_id
+      - inspection_response.classification.threshold
+      - inspection_response.classification.predicted_label
+      - inspection_response.classification.decision
+      - inspection_response.classification.probability_good
+      - inspection_response.classification.probability_defect
+      - inspection_response.classification.limitations
+    traceability_fields:
+      - inspection_response.classification.traceability
+      - inspection_response.request_id
+    raw_allowed: false
+    safe_explanation_scope: Explain current classification output and confidence values from the inspection response.
+    limitations:
+      - Runtime result only.
+      - Classification output does not finalize operational decisions alone.
+    readiness_status: RUNTIME_ONLY
+    fallback_message: No classification result is available for this inspection.
+    explanation_priority: high
+
+  - page_id: image_inspection
+    section_id: unified_results
+    component_id: image_inspection_detection_result_card
+    user_facing_label: Image Inspection detection result
+    component_type: card
+    evidence_files: []
+    allowed_fields:
+      - inspection_response.detection.status
+      - inspection_response.detection.model_name
+      - inspection_response.detection.model_version
+      - inspection_response.detection.run_id
+      - inspection_response.detection.predicted_box_count
+      - inspection_response.detection.defect_count
+      - inspection_response.detection.review_status
+      - inspection_response.detection.best_detection
+      - inspection_response.detection.detections
+    traceability_fields:
+      - inspection_response.detection.traceability
+      - inspection_response.request_id
+    raw_allowed: false
+    safe_explanation_scope: Explain current detection boxes and review status from the inspection response.
+    limitations:
+      - Runtime result only.
+      - Detection confidence does not replace manual review.
+    readiness_status: RUNTIME_ONLY
+    fallback_message: No detection result is available for this inspection.
+    explanation_priority: high
+
+  - page_id: image_inspection
+    section_id: unified_results
+    component_id: image_inspection_anomaly_result_card
+    user_facing_label: Image Inspection anomaly result
+    component_type: card
+    evidence_files: []
+    allowed_fields:
+      - inspection_response.anomaly.status
+      - inspection_response.anomaly.model_name
+      - inspection_response.anomaly.model_version
+      - inspection_response.anomaly.run_id
+      - inspection_response.anomaly.anomaly_score
+      - inspection_response.anomaly.reconstruction_loss
+      - inspection_response.anomaly.threshold
+      - inspection_response.anomaly.predicted_label
+      - inspection_response.anomaly.decision
+      - inspection_response.anomaly.quality_status
+    traceability_fields:
+      - inspection_response.anomaly.traceability
+      - inspection_response.request_id
+    raw_allowed: false
+    safe_explanation_scope: Explain current anomaly signal and weak-evidence boundary from the inspection response.
+    limitations:
+      - Runtime result only.
+      - Weak anomaly evidence is review-only when reported.
+      - Manual review still applies.
+    readiness_status: RUNTIME_ONLY
+    fallback_message: No anomaly result is available for this inspection.
+    explanation_priority: high
+
+  - page_id: image_inspection
+    section_id: inspection_warnings
+    component_id: image_inspection_warning_summary
+    user_facing_label: Image Inspection warnings
+    component_type: warning
+    evidence_files: []
+    allowed_fields:
+      - inspection_response.warnings
+      - inspection_response.errors
+    traceability_fields:
+      - inspection_response.request_id
+      - inspection_response.traceability.source_endpoint
+    raw_allowed: false
+    safe_explanation_scope: Explain warning text and partial-failure context without changing response values.
+    limitations:
+      - Warnings are review guidance.
+      - Manual review still applies.
+    readiness_status: RUNTIME_ONLY
+    fallback_message: No inspection warnings were returned.
+    explanation_priority: high
+
+  - page_id: image_inspection
+    section_id: limitations
+    component_id: image_inspection_limitations
+    user_facing_label: Image Inspection limitations
+    component_type: limitation
+    evidence_files: []
+    allowed_fields:
+      - inspection_response.limitations
+      - inspection_response.classification.limitations
+      - inspection_response.detection.limitations
+      - inspection_response.anomaly.limitations
+    traceability_fields:
+      - inspection_response.request_id
+      - inspection_response.explanation_context.safety_boundaries
+    raw_allowed: false
+    safe_explanation_scope: Explain returned limitations and safety boundaries.
+    limitations:
+      - Limitations must be preserved, not softened.
+      - No production-ready claim.
+      - No deployment-safe claim.
+    readiness_status: RUNTIME_ONLY
+    fallback_message: No inspection limitations were returned.
+    explanation_priority: high
+
+  - page_id: image_inspection
+    section_id: traceability
+    component_id: image_inspection_traceability_context
+    user_facing_label: Image Inspection traceability and explanation context
+    component_type: expander
+    evidence_files: []
+    allowed_fields:
+      - inspection_response.request_id
+      - inspection_response.traceability
+      - inspection_response.explanation_context
+      - inspection_response.input.filename
+      - inspection_response.input.content_type
+      - inspection_response.input.image_width
+      - inspection_response.input.image_height
+    traceability_fields:
+      - inspection_response.traceability
+      - inspection_response.explanation_context.context_version
+    raw_allowed: false
+    safe_explanation_scope: Explain how to trace the current response to model outputs and evidence sources.
+    limitations:
+      - Raw API response is not exposed by default.
+      - Traceability is audit context, not deployment approval.
+    readiness_status: RUNTIME_ONLY
+    fallback_message: No traceability context is available for this inspection.
+    explanation_priority: high
+
+  - page_id: image_inspection
+    section_id: final_decision
+    component_id: image_inspection_ai_explanation_panel
+    user_facing_label: Image Inspection AI explanation panel
+    component_type: ai_panel
+    evidence_files: []
+    allowed_fields:
+      - inspection_response.decision
+      - inspection_response.classification
+      - inspection_response.detection
+      - inspection_response.anomaly
+      - inspection_response.warnings
+      - inspection_response.limitations
+      - inspection_response.traceability
+    traceability_fields:
+      - inspection_response.request_id
+      - inspection_response.explanation_context
+    raw_allowed: false
+    safe_explanation_scope: Explain current inspection response using mock/offline evidence only.
+    limitations:
+      - Mock-only assistant path.
+      - No external LLM call.
+      - Manual review still applies.
+    readiness_status: RUNTIME_ONLY
+    fallback_message: No inspection result is available for explanation.
+    explanation_priority: high
+
+  - page_id: safety
+    section_id: boundaries
+    component_id: safety_boundary_cards
+    user_facing_label: Safety boundary cards
+    component_type: card
+    evidence_files: []
+    allowed_fields:
+      - global_context.safety_boundaries
+      - global_context.forbidden_claims
+      - dashboard_copy.manual_review_boundary
+      - dashboard_copy.production_readiness
+      - dashboard_copy.deployment_readiness
+    traceability_fields:
+      - configs/agent/global_context.yaml
+    raw_allowed: false
+    safe_explanation_scope: Explain dashboard safety boundaries and forbidden claims.
+    limitations:
+      - Static safety copy and global context only.
+      - No production-ready claim.
+      - No deployment-safe claim.
+      - Manual review still applies.
+    readiness_status: PARTIAL_EVIDENCE
+    fallback_message: Safety boundary evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: safety
+    section_id: boundaries
+    component_id: safety_details
+    user_facing_label: Safety details
+    component_type: limitation
+    evidence_files: []
+    allowed_fields:
+      - global_context.allowed_sources
+      - global_context.safety_boundaries
+      - global_context.forbidden_claims
+      - dashboard_copy.safety_details
+    traceability_fields:
+      - configs/agent/global_context.yaml
+      - configs/agent/section_registry.yaml
+    raw_allowed: false
+    safe_explanation_scope: Explain what the dashboard can and cannot claim.
+    limitations:
+      - Static safety copy and Agent policy only.
+      - Do not overstate deployment readiness.
+    readiness_status: PARTIAL_EVIDENCE
+    fallback_message: Safety detail evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: ai_assistant
+    section_id: preview_status
+    component_id: ai_assistant_status_cards
+    user_facing_label: AI Assistant status cards
+    component_type: card
+    evidence_files: []
+    allowed_fields:
+      - global_context.assistant_name
+      - global_context.purpose
+      - dashboard_copy.ai_assistant_status
+    traceability_fields:
+      - configs/agent/global_context.yaml
+    raw_allowed: false
+    safe_explanation_scope: Explain planned/mock-only assistant status without claiming real LLM capability.
+    limitations:
+      - No external LLM call.
+      - Mock fallback remains required.
+      - Do not claim active Gemini, Grok, or OpenAI integration.
+    readiness_status: PARTIAL_EVIDENCE
+    fallback_message: AI Assistant status evidence is unavailable.
+    explanation_priority: high
+
+  - page_id: ai_assistant
+    section_id: design_notes
+    component_id: ai_assistant_design_notes
+    user_facing_label: AI Assistant design notes
+    component_type: expander
+    evidence_files: []
+    allowed_fields:
+      - global_context.allowed_sources
+      - global_context.safety_boundaries
+      - global_context.forbidden_claims
+      - dashboard_copy.agent_design_notes
+    traceability_fields:
+      - configs/agent/global_context.yaml
+      - configs/agent/section_registry.yaml
+    raw_allowed: false
+    safe_explanation_scope: Explain intended evidence-grounded assistant design boundaries.
+    limitations:
+      - Design notes are not runtime LLM behavior.
+      - Do not claim provider integration.
+      - No invented metrics or predictions.
+    readiness_status: PARTIAL_EVIDENCE
+    fallback_message: AI Assistant design evidence is unavailable.
+    explanation_priority: medium

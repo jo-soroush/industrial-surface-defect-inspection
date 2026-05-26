@@ -119,3 +119,147 @@ def test_mock_provider_rejects_forbidden_claim_requests() -> None:
     assert "human review" in review_response.answer.lower()
     assert deploy_response.provider_used == "mock"
     assert review_response.provider_used == "mock"
+
+
+def test_component_image_inspection_mock_answer_mentions_decision_and_manual_review() -> None:
+    router = AgentProviderRouter()
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        component_id="image_inspection_ai_explanation_panel",
+        question="Explain this inspection result.",
+        visible_context={},
+        inspection_response={
+            "request_id": "request-0001",
+            "decision": {
+                "final_decision": "good",
+                "rule_id": "manual_check_rule",
+                "recommended_action": "manual_review",
+            },
+            "classification": {"predicted_label": "good"},
+            "detection": {"predicted_box_count": 0},
+            "anomaly": {"quality_status": "review_required_weak_evidence"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+            "warnings": [],
+            "limitations": ["manual review required"],
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert response.provider_used == "mock"
+    assert response.fallback_used is True
+    assert response.component_id == "image_inspection_ai_explanation_panel"
+    assert "image inspection ai explanation panel" in response.answer.lower()
+    assert "good" in response.answer.lower()
+    assert "manual review" in response.answer.lower()
+    assert "mock/offline" in response.answer.lower()
+
+
+def test_component_detection_confidence_mock_answer_mentions_confidence_and_review() -> None:
+    response = _component_response(
+        page_id="detection",
+        section_id="visual_evidence",
+        component_id="detection_confidence_chart",
+        question="What does this confidence chart mean?",
+    )
+
+    assert response.provider_used == "mock"
+    assert response.component_id == "detection_confidence_chart"
+    assert "confidence" in response.answer.lower()
+    assert "yolo detection evidence" in response.answer.lower()
+    assert "do not replace review" in response.answer.lower()
+
+
+def test_component_anomaly_threshold_mock_answer_mentions_weak_review_only_boundary() -> None:
+    response = _component_response(
+        page_id="anomaly",
+        section_id="visual_evidence",
+        component_id="anomaly_threshold_behavior_chart",
+        question="What does this anomaly threshold mean?",
+    )
+
+    assert response.provider_used == "mock"
+    assert response.component_id == "anomaly_threshold_behavior_chart"
+    assert "weak/review-only" in response.answer.lower()
+    assert "supporting review evidence" in response.answer.lower()
+
+
+def test_component_classification_threshold_mock_answer_mentions_validation_threshold() -> None:
+    response = _component_response(
+        page_id="classification",
+        section_id="detailed_metrics",
+        component_id="classification_threshold_curve_chart",
+        question="What does this threshold chart mean?",
+    )
+
+    assert response.provider_used == "mock"
+    assert response.component_id == "classification_threshold_curve_chart"
+    assert "validation evidence" in response.answer.lower()
+    assert "threshold" in response.answer.lower()
+    assert "production-ready" not in response.answer.lower()
+    assert "deployment-safe" not in response.answer.lower()
+
+
+def test_component_mock_answers_do_not_claim_readiness_or_provider_integration() -> None:
+    responses = [
+        _component_response("classification", "detailed_metrics", "classification_threshold_curve_chart"),
+        _component_response("anomaly", "visual_evidence", "anomaly_threshold_behavior_chart"),
+        _component_response("detection", "visual_evidence", "detection_confidence_chart"),
+    ]
+
+    for response in responses:
+        normalized_answer = response.answer.lower()
+        assert response.provider_used == "mock"
+        assert response.fallback_used is True
+        assert "production-ready" not in normalized_answer
+        assert "deployment-safe" not in normalized_answer
+        assert "gemini" not in normalized_answer
+        assert "grok" not in normalized_answer
+        assert "openai" not in normalized_answer
+
+
+def test_non_component_image_inspection_mock_answer_still_works() -> None:
+    router = AgentProviderRouter()
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Why is this image defective?",
+        visible_context={},
+        inspection_response={
+            "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert response.component_id is None
+    assert response.provider_used == "mock"
+    assert response.grounding_status == "grounded"
+    assert "inspection result is defective" in response.answer.lower()
+    assert "manual review" in response.answer.lower()
+
+
+def _component_response(
+    page_id: str,
+    section_id: str,
+    component_id: str,
+    question: str = "Explain this component.",
+):
+    router = AgentProviderRouter()
+    grounding_context = build_grounding_context(
+        page_id=page_id,
+        section_id=section_id,
+        component_id=component_id,
+        question=question,
+        visible_context={},
+        inspection_response={},
+        include_raw_evidence=False,
+    )
+    return router.explain(grounding_context)

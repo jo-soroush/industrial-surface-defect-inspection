@@ -160,6 +160,9 @@ def _question_requests_forbidden_claim(question: str, global_context: dict[str, 
 
 
 def _build_mock_answer(grounding_context: AgentGroundingContext) -> tuple[str, str]:
+    if grounding_context.component_id:
+        return _build_component_answer(grounding_context), grounding_context.grounding_status
+
     page_id = grounding_context.page_id
     section_id = grounding_context.section_id
     inspection_response = grounding_context.inspection_response
@@ -180,6 +183,140 @@ def _build_mock_answer(grounding_context: AgentGroundingContext) -> tuple[str, s
     if page_id == "ai_assistant":
         return _build_ai_assistant_answer(section_id, visible_context), grounding_context.grounding_status
     return "The requested section is supported, but no page-specific explanation template is available yet.", "insufficient_evidence"
+
+
+def _build_component_answer(grounding_context: AgentGroundingContext) -> str:
+    component_id = grounding_context.component_id or "requested_component"
+    label = _evidence_value(grounding_context, "component.user_facing_label") or component_id.replace("_", " ")
+    component_type = _evidence_value(grounding_context, "component.component_type") or "component"
+    evidence_types = _component_evidence_types(grounding_context)
+    evidence_text = ", ".join(evidence_types) if evidence_types else "grounded evidence"
+
+    if grounding_context.page_id == "image_inspection":
+        return _build_component_image_inspection_answer(grounding_context, str(label), evidence_text)
+    if grounding_context.page_id == "classification":
+        return _build_component_classification_answer(grounding_context, str(label), str(component_type), evidence_text)
+    if grounding_context.page_id == "anomaly":
+        return _build_component_anomaly_answer(grounding_context, str(label), str(component_type), evidence_text)
+    if grounding_context.page_id == "detection":
+        return _build_component_detection_answer(grounding_context, str(label), str(component_type), evidence_text)
+
+    limitation = _first_relevant_limitation(grounding_context)
+    return (
+        f"{label} is a {component_type} explained from {evidence_text}. "
+        "The mock assistant can summarize the allowlisted evidence for this component without using an external LLM. "
+        f"{limitation} "
+        "Manual review still applies."
+    )
+
+
+def _build_component_image_inspection_answer(
+    grounding_context: AgentGroundingContext,
+    label: str,
+    evidence_text: str,
+) -> str:
+    decision = _dict_evidence_value(
+        grounding_context,
+        "inspection_response#decision",
+        "inspection_response.decision",
+    )
+    classification = _dict_evidence_value(
+        grounding_context,
+        "inspection_response#classification",
+        "inspection_response.classification",
+    )
+    detection = _dict_evidence_value(
+        grounding_context,
+        "inspection_response#detection",
+        "inspection_response.detection",
+    )
+    anomaly = _dict_evidence_value(
+        grounding_context,
+        "inspection_response#anomaly",
+        "inspection_response.anomaly",
+    )
+
+    final_decision = _safe_value(decision, "final_decision")
+    rule_id = _safe_value(decision, "rule_id")
+    classification_label = _safe_value(classification, "predicted_label")
+    box_count = _safe_value(detection, "predicted_box_count")
+    anomaly_status = _safe_value(anomaly, "quality_status")
+    limitation = _first_relevant_limitation(grounding_context)
+
+    return (
+        f"{label} explains the current inspection result from {evidence_text}. "
+        f"The final decision is {final_decision}, using rule {rule_id}. "
+        f"The grounded signals include classification ({classification_label}), detection box count ({box_count}), "
+        f"and anomaly status ({anomaly_status}). "
+        f"{limitation} "
+        "This is a mock/offline explanation, and manual review still applies."
+    )
+
+
+def _build_component_classification_answer(
+    grounding_context: AgentGroundingContext,
+    label: str,
+    component_type: str,
+    evidence_text: str,
+) -> str:
+    threshold = _first_nonempty_evidence_value(
+        grounding_context,
+        "recommended_threshold",
+        "selected_threshold",
+        "baseline_threshold",
+    )
+    chart_explanation = _first_nonempty_evidence_value(
+        grounding_context,
+        "chart_explanation",
+        "safe_interpretation",
+        "safe_summary",
+    )
+    threshold_text = f" The key threshold value available here is {_format_value(threshold)}." if threshold is not None else ""
+    chart_text = f" The governed note says: {_format_value(chart_explanation)}." if chart_explanation else ""
+    return (
+        f"{label} is a {component_type} grounded in validation evidence from {evidence_text}."
+        f"{threshold_text}{chart_text} "
+        "Use it to understand validation tradeoffs, not as an operational approval. "
+        "Manual review still applies."
+    )
+
+
+def _build_component_anomaly_answer(
+    grounding_context: AgentGroundingContext,
+    label: str,
+    component_type: str,
+    evidence_text: str,
+) -> str:
+    threshold = _first_nonempty_evidence_value(grounding_context, "selected_threshold", "threshold")
+    quality_status = _first_nonempty_evidence_value(grounding_context, "quality_status")
+    threshold_text = f" The selected threshold evidence is {_format_value(threshold)}." if threshold is not None else ""
+    status_text = f" The quality status evidence is {_format_value(quality_status)}." if quality_status else ""
+    return (
+        f"{label} is a {component_type} grounded in anomaly review evidence from {evidence_text}."
+        f"{threshold_text}{status_text} "
+        "The anomaly evidence is weak/review-only when that limitation is present, so it should be treated as supporting review evidence. "
+        "Manual review still applies."
+    )
+
+
+def _build_component_detection_answer(
+    grounding_context: AgentGroundingContext,
+    label: str,
+    component_type: str,
+    evidence_text: str,
+) -> str:
+    chart_title = _first_nonempty_evidence_value(grounding_context, "chart_title")
+    chart_explanation = _first_nonempty_evidence_value(grounding_context, "chart_explanation")
+    confidence_counts = _first_nonempty_evidence_value(grounding_context, "confidence_bins.count")
+    title_text = f" It corresponds to {_format_value(chart_title)}." if chart_title else ""
+    explanation_text = f" The governed note says: {_format_value(chart_explanation)}." if chart_explanation else ""
+    counts_text = f" The confidence-bin counts begin with {_format_value(confidence_counts)}." if confidence_counts else ""
+    return (
+        f"{label} is a {component_type} grounded in YOLO detection evidence from {evidence_text}."
+        f"{title_text}{explanation_text}{counts_text} "
+        "Confidence scores summarize detection evidence, but they do not replace review. "
+        "Manual review still applies."
+    )
 
 
 def _build_image_inspection_answer(section_id: str, inspection_response: dict[str, Any]) -> str:
@@ -301,6 +438,76 @@ def _fallback_page_answer(page_title: str, visible_context: dict[str, Any], limi
 def _safe_value(data: dict[str, Any], key: str) -> Any:
     value = data.get(key)
     return "Unavailable" if value in (None, "") else value
+
+
+def _evidence_value(grounding_context: AgentGroundingContext, source: str) -> Any:
+    for item in grounding_context.evidence_used:
+        if item.get("source") == source:
+            value = item.get("value")
+            if isinstance(value, dict) and "value" in value:
+                return value.get("value")
+            return value
+    return None
+
+
+def _dict_evidence_value(grounding_context: AgentGroundingContext, *sources: str) -> dict[str, Any]:
+    for source in sources:
+        value = _evidence_value(grounding_context, source)
+        if isinstance(value, dict):
+            return value
+    return {}
+
+
+def _first_nonempty_evidence_value(grounding_context: AgentGroundingContext, *field_paths: str) -> Any:
+    for field_path in field_paths:
+        for item in grounding_context.evidence_used:
+            source = str(item.get("source", ""))
+            value = item.get("value")
+            nested_field_path = value.get("field_path") if isinstance(value, dict) else None
+            if source.endswith(f"#{field_path}") or nested_field_path == field_path:
+                extracted = value.get("value") if isinstance(value, dict) and "value" in value else value
+                if extracted not in (None, "", []):
+                    return extracted
+    return None
+
+
+def _component_evidence_types(grounding_context: AgentGroundingContext) -> list[str]:
+    labels = {
+        "governed_file": "governed file evidence",
+        "runtime_inspection": "runtime inspection evidence",
+        "global_context": "global context evidence",
+    }
+    evidence_types: list[str] = []
+    for item in grounding_context.evidence_used:
+        value = item.get("value")
+        if not isinstance(value, dict):
+            continue
+        evidence_type = value.get("evidence_type")
+        label = labels.get(str(evidence_type))
+        if label and label not in evidence_types:
+            evidence_types.append(label)
+    return evidence_types
+
+
+def _first_relevant_limitation(grounding_context: AgentGroundingContext) -> str:
+    for limitation in grounding_context.limitations:
+        normalized = limitation.lower()
+        if any(token in normalized for token in ("manual review", "review-only", "weak", "mock", "external llm")):
+            return str(limitation).rstrip(".") + "."
+    return "The explanation is limited to allowlisted governed evidence."
+
+
+def _format_value(value: Any) -> str:
+    if isinstance(value, list):
+        preview = value[:5]
+        suffix = "..." if len(value) > len(preview) else ""
+        return f"{preview}{suffix}"
+    if isinstance(value, dict):
+        keys = list(value)[:5]
+        compact = {key: value[key] for key in keys}
+        suffix = "..." if len(value) > len(compact) else ""
+        return f"{compact}{suffix}"
+    return str(value)
 
 
 def _normalize_text(value: str) -> str:

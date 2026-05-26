@@ -261,6 +261,55 @@ def _build_classification_threshold_agent_request(
     }
 
 
+def _build_anomaly_threshold_visible_context(
+    threshold_behavior: dict[str, Any],
+    frontend_summary: dict[str, Any],
+    metric_cards: dict[str, Any],
+    quality: dict[str, Any],
+) -> dict[str, Any]:
+    """Build compact visible context for the Anomaly threshold behavior chart."""
+    threshold_rows = _extract_threshold_rows(threshold_behavior)
+    return {
+        "page_title": SURFACE_ANOMALY_DETECTION_PAGE_LABEL,
+        "component_label": "Surface anomaly threshold behavior",
+        "selected_threshold": threshold_behavior.get("selected_threshold")
+        or frontend_summary.get("key_metrics", {}).get("threshold")
+        or metric_cards.get("threshold"),
+        "quality_status": quality.get("quality_status")
+        or frontend_summary.get("quality_decision")
+        or frontend_summary.get("canonical_status"),
+        "dashboard_usage_recommendation": quality.get("dashboard_usage_recommendation"),
+        "pr_auc": _extract_pr_auc(frontend_summary, metric_cards),
+        "model_type": frontend_summary.get("model_type") or metric_cards.get("model_type"),
+        "model_version": frontend_summary.get("model_version") or metric_cards.get("model_version"),
+        "run_id": threshold_behavior.get("run_id") or frontend_summary.get("run_id"),
+        "threshold_point_count": len(threshold_rows),
+    }
+
+
+def _build_anomaly_threshold_agent_request(
+    threshold_behavior: dict[str, Any],
+    frontend_summary: dict[str, Any],
+    metric_cards: dict[str, Any],
+    quality: dict[str, Any],
+) -> dict[str, Any]:
+    """Build the agent explain request payload for the Anomaly threshold behavior chart."""
+    return {
+        "page_id": "anomaly",
+        "section_id": "visual_evidence",
+        "component_id": "anomaly_threshold_behavior_chart",
+        "question": "What does this anomaly threshold behavior chart mean?",
+        "visible_context": _build_anomaly_threshold_visible_context(
+            threshold_behavior=threshold_behavior,
+            frontend_summary=frontend_summary,
+            metric_cards=metric_cards,
+            quality=quality,
+        ),
+        "inspection_response": {},
+        "include_raw_evidence": False,
+    }
+
+
 def _agent_explanation_status_caption(provider_used: Any, fallback_used: Any) -> str:
     """Return a short status caption for the agent explanation panel."""
     provider_text = str(provider_used).strip().lower()
@@ -459,6 +508,48 @@ def _render_classification_threshold_agent_panel(
             st.session_state[response_key] = None
             st.session_state[error_key] = (
                 "Classification threshold explanation is temporarily unavailable. The chart remains available for review."
+            )
+
+    error_message = st.session_state.get(error_key)
+    if error_message:
+        st.warning(error_message)
+
+    agent_response = st.session_state.get(response_key)
+    if not isinstance(agent_response, dict):
+        return
+
+    st.caption(_agent_explanation_status_caption(agent_response.get("provider_used"), agent_response.get("fallback_used")))
+    st.write(_safe_text(agent_response.get("answer")))
+
+
+def _render_anomaly_threshold_agent_panel(
+    threshold_behavior: dict[str, Any],
+    frontend_summary: dict[str, Any],
+    metric_cards: dict[str, Any],
+    quality: dict[str, Any],
+) -> None:
+    """Render a focused mock explanation panel for the Anomaly threshold behavior chart."""
+    st.markdown("#### Explain this anomaly threshold behavior chart")
+    st.caption(
+        "Mock evidence-grounded explanation · external LLM not connected · anomaly evidence is review-only · manual review still applies."
+    )
+
+    response_key = "anomaly_threshold_agent_explanation"
+    error_key = "anomaly_threshold_agent_error"
+    if st.button("Mock evidence-grounded explanation", key="anomaly_threshold_agent_button"):
+        request_payload = _build_anomaly_threshold_agent_request(
+            threshold_behavior=threshold_behavior,
+            frontend_summary=frontend_summary,
+            metric_cards=metric_cards,
+            quality=quality,
+        )
+        try:
+            st.session_state[response_key] = _call_agent_explain_api(_get_api_base_url(), request_payload)
+            st.session_state[error_key] = None
+        except Exception:
+            st.session_state[response_key] = None
+            st.session_state[error_key] = (
+                "Anomaly threshold explanation is temporarily unavailable. The chart remains available for review."
             )
 
     error_message = st.session_state.get(error_key)
@@ -1772,13 +1863,6 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
         "The score is grounded in sample-level anomaly evidence and no production claim is made.",
         accent="orange",
     )
-    _render_agent_callout(
-        "Explain anomaly behavior",
-        "Ask for a plain-language summary of the reconstruction, anomaly score, and threshold charts.",
-        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
-        accent="violet",
-    )
-
     st.markdown("### Visual evidence")
     visual_cols = st.columns(3, gap="small", vertical_alignment="top")
     with visual_cols[0]:
@@ -1895,6 +1979,12 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 "No threshold behavior data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
+        _render_anomaly_threshold_agent_panel(
+            threshold_behavior=threshold_behavior,
+            frontend_summary=frontend_summary,
+            metric_cards=metric_cards,
+            quality=quality,
+        )
 
     st.markdown("### Sample evidence summary")
     count_rows = [

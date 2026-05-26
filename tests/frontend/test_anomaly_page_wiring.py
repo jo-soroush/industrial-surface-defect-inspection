@@ -64,3 +64,58 @@ def test_anomaly_page_source_no_longer_shows_stale_unavailable_copy() -> None:
     assert "_render_mini_metric_tile(" in anomaly_source
     assert "_render_premium_info_card(\n                    label," not in anomaly_source
     assert "_render_chart_mini_tile(" in anomaly_source
+
+
+def test_anomaly_threshold_agent_request_is_component_aware() -> None:
+    request = app._build_anomaly_threshold_agent_request(
+        threshold_behavior={
+            "selected_threshold": 0.2043,
+            "run_id": "run-456",
+            "rows": [{"threshold": 0.1}, {"threshold": 0.2}],
+        },
+        frontend_summary={
+            "model_type": "autoencoder",
+            "model_version": "0.1.0",
+            "key_metrics": {"threshold": 0.2043, "pr_auc": 0.718},
+        },
+        metric_cards={},
+        quality={
+            "quality_status": "review_required_weak_evidence",
+            "dashboard_usage_recommendation": "review_only_supporting_signal",
+        },
+    )
+
+    assert request["page_id"] == "anomaly"
+    assert request["section_id"] == "visual_evidence"
+    assert request["component_id"] == "anomaly_threshold_behavior_chart"
+    assert request["question"] == "What does this anomaly threshold behavior chart mean?"
+    assert request["inspection_response"] == {}
+    assert request["include_raw_evidence"] is False
+    assert request["visible_context"]["page_title"] == app.SURFACE_ANOMALY_DETECTION_PAGE_LABEL
+    assert request["visible_context"]["component_label"] == "Surface anomaly threshold behavior"
+    assert request["visible_context"]["selected_threshold"] == pytest.approx(0.2043)
+    assert request["visible_context"]["quality_status"] == "review_required_weak_evidence"
+    assert "localhost" not in str(request)
+
+
+def test_anomaly_threshold_agent_panel_is_scoped_to_threshold_chart() -> None:
+    source = inspect.getsource(app._render_track_b)
+
+    assert "_render_anomaly_threshold_agent_panel" in source
+    assert "Explain anomaly behavior" not in source
+    assert "no backend agent implemented yet" not in source
+    assert "planned / not active" not in source.lower()
+    assert source.count("_render_anomaly_threshold_agent_panel") == 1
+    assert source.index("_render_anomaly_threshold_agent_panel") > source.index("Threshold behavior")
+
+
+def test_anomaly_threshold_active_panel_copy_is_mock_and_review_only() -> None:
+    source = inspect.getsource(app._render_anomaly_threshold_agent_panel).lower()
+
+    assert "explain this anomaly threshold behavior chart" in source
+    assert "mock evidence-grounded explanation" in source
+    assert "external llm not connected" in source
+    assert "anomaly evidence is review-only" in source
+    assert "manual review still applies" in source
+    assert "planned / not active" not in source
+    assert "no backend agent implemented yet" not in source

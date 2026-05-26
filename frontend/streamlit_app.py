@@ -170,6 +170,48 @@ def _build_image_inspection_agent_request(
     }
 
 
+def _build_detection_confidence_visible_context(
+    confidence_chart: dict[str, Any],
+    overview: dict[str, Any],
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
+    """Build compact visible context for the Detection confidence chart."""
+    confidence_bins = confidence_chart.get("confidence_bins", [])
+    return {
+        "page_title": DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL,
+        "component_label": "Detection confidence distribution",
+        "chart_title": confidence_chart.get("chart_title"),
+        "chart_explanation": confidence_chart.get("chart_explanation"),
+        "run_id": metadata.get("run_id") or overview.get("run_id"),
+        "model_name": metadata.get("model_name") or overview.get("model_name"),
+        "model_version": metadata.get("model_version") or overview.get("model_version"),
+        "image_count": overview.get("image_count"),
+        "total_bbox_count": overview.get("total_bbox_count"),
+        "confidence_bin_count": len(confidence_bins) if isinstance(confidence_bins, list) else 0,
+    }
+
+
+def _build_detection_confidence_agent_request(
+    confidence_chart: dict[str, Any],
+    overview: dict[str, Any],
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
+    """Build the agent explain request payload for the Detection confidence chart."""
+    return {
+        "page_id": "detection",
+        "section_id": "visual_evidence",
+        "component_id": "detection_confidence_chart",
+        "question": "What does this detection confidence chart mean?",
+        "visible_context": _build_detection_confidence_visible_context(
+            confidence_chart=confidence_chart,
+            overview=overview,
+            metadata=metadata,
+        ),
+        "inspection_response": {},
+        "include_raw_evidence": False,
+    }
+
+
 def _agent_explanation_status_caption(provider_used: Any, fallback_used: Any) -> str:
     """Return a short status caption for the agent explanation panel."""
     provider_text = str(provider_used).strip().lower()
@@ -304,6 +346,44 @@ def _render_image_inspection_agent_panel(
             st.write("\n".join(f"- {item}" for item in limitations_used))
         else:
             st.info("No limitations were returned.")
+
+
+def _render_detection_confidence_agent_panel(
+    confidence_chart: dict[str, Any],
+    overview: dict[str, Any],
+    metadata: dict[str, Any],
+) -> None:
+    """Render a focused mock explanation panel for the Detection confidence chart."""
+    st.markdown("#### Explain this detection confidence chart")
+    st.caption("Mock evidence-grounded explanation · external LLM not connected · manual review still applies.")
+
+    response_key = "detection_confidence_agent_explanation"
+    error_key = "detection_confidence_agent_error"
+    if st.button("Mock evidence-grounded explanation", key="detection_confidence_agent_button"):
+        request_payload = _build_detection_confidence_agent_request(
+            confidence_chart=confidence_chart,
+            overview=overview,
+            metadata=metadata,
+        )
+        try:
+            st.session_state[response_key] = _call_agent_explain_api(_get_api_base_url(), request_payload)
+            st.session_state[error_key] = None
+        except Exception:
+            st.session_state[response_key] = None
+            st.session_state[error_key] = (
+                "Detection confidence explanation is temporarily unavailable. The chart remains available for review."
+            )
+
+    error_message = st.session_state.get(error_key)
+    if error_message:
+        st.warning(error_message)
+
+    agent_response = st.session_state.get(response_key)
+    if not isinstance(agent_response, dict):
+        return
+
+    st.caption(_agent_explanation_status_caption(agent_response.get("provider_used"), agent_response.get("fallback_used")))
+    st.write(_safe_text(agent_response.get("answer")))
 
 
 def _safe_text(value: Any, default: str = "Unavailable") -> str:
@@ -1942,7 +2022,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     _render_agent_callout(
         "Explain detection confidence",
         "Ask for a plain-language summary of the confidence distribution, class balance, and detection review state.",
-        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        "Mock component explanation available for the confidence chart only · external LLM not connected · no fake AI",
         accent="violet",
     )
 
@@ -2039,6 +2119,11 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
                 "No confidence distribution data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
+        _render_detection_confidence_agent_panel(
+            confidence_chart=confidence_chart,
+            overview=overview,
+            metadata=metadata,
+        )
     with visual_cols[1]:
         st.caption("Class summary")
         class_rows = class_summary.get("class_rows", [])
@@ -2094,7 +2179,7 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
     _render_agent_callout(
         "Explain detection confidence",
         "Ask for a plain-language summary of the confidence distribution, class balance, and detection review state.",
-        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
+        "Mock component explanation available for the confidence chart only · external LLM not connected · no fake AI",
         accent="violet",
     )
 

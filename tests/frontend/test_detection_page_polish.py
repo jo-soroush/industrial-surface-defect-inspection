@@ -24,3 +24,43 @@ def test_detection_page_copy_is_professional() -> None:
 
 def test_detection_review_label_is_user_friendly() -> None:
     assert app._friendly_status_label("review_required") == "Needs review"
+
+
+def test_detection_confidence_agent_request_is_component_aware() -> None:
+    request = app._build_detection_confidence_agent_request(
+        confidence_chart={
+            "chart_title": "Detection confidence distribution",
+            "chart_explanation": "Counts of predicted boxes by confidence band on the validation split.",
+            "confidence_bins": [{"label": "0.50-0.75", "count": 12}],
+        },
+        overview={
+            "run_id": "yolo_train_v0_2_0",
+            "image_count": 230,
+            "total_bbox_count": 573,
+        },
+        metadata={
+            "model_name": "YOLOv8",
+            "model_version": "0.2.0",
+        },
+    )
+
+    assert request["page_id"] == "detection"
+    assert request["section_id"] == "visual_evidence"
+    assert request["component_id"] == "detection_confidence_chart"
+    assert request["question"] == "What does this detection confidence chart mean?"
+    assert request["inspection_response"] == {}
+    assert request["include_raw_evidence"] is False
+    assert request["visible_context"]["page_title"] == app.DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL
+    assert request["visible_context"]["component_label"] == "Detection confidence distribution"
+    assert request["visible_context"]["chart_title"] == "Detection confidence distribution"
+    assert "localhost" not in str(request)
+
+
+def test_detection_confidence_agent_panel_is_scoped_to_confidence_chart() -> None:
+    source = inspect.getsource(app._render_yolo)
+
+    assert "_render_detection_confidence_agent_panel" in source
+    assert "Mock component explanation available for the confidence chart only" in source
+    assert "external LLM not connected" in source
+    assert source.count("_render_detection_confidence_agent_panel") == 1
+    assert source.index("_render_detection_confidence_agent_panel") > source.index("Confidence distribution")

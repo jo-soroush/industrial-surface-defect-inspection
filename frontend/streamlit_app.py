@@ -212,6 +212,55 @@ def _build_detection_confidence_agent_request(
     }
 
 
+def _build_classification_threshold_visible_context(
+    threshold_curve: dict[str, Any],
+    recommendation: dict[str, Any],
+    metric_cards: dict[str, Any],
+) -> dict[str, Any]:
+    """Build compact visible context for the Classification threshold chart."""
+    threshold_rows = threshold_curve.get("rows", [])
+    return {
+        "page_title": SURFACE_DEFECT_CLASSIFICATION_PAGE_LABEL,
+        "component_label": "Surface defect threshold behavior",
+        "chart_title": threshold_curve.get("chart_title"),
+        "chart_explanation": threshold_curve.get("chart_explanation"),
+        "baseline_threshold": threshold_curve.get("baseline_threshold"),
+        "recommended_threshold": threshold_curve.get("recommended_threshold")
+        or recommendation.get("selected_threshold")
+        or metric_cards.get("recommended_threshold"),
+        "selected_model_name": recommendation.get("selected_model_name")
+        or metric_cards.get("selected_model_name"),
+        "selected_model_version": recommendation.get("selected_model_version")
+        or metric_cards.get("selected_model_version"),
+        "run_id": recommendation.get("selected_run_id")
+        or threshold_curve.get("run_id")
+        or metric_cards.get("selected_model_run_id"),
+        "validation_samples": metric_cards.get("validation_samples"),
+        "threshold_point_count": len(threshold_rows) if isinstance(threshold_rows, list) else 0,
+    }
+
+
+def _build_classification_threshold_agent_request(
+    threshold_curve: dict[str, Any],
+    recommendation: dict[str, Any],
+    metric_cards: dict[str, Any],
+) -> dict[str, Any]:
+    """Build the agent explain request payload for the Classification threshold chart."""
+    return {
+        "page_id": "classification",
+        "section_id": "detailed_metrics",
+        "component_id": "classification_threshold_curve_chart",
+        "question": "What does this classification threshold chart mean?",
+        "visible_context": _build_classification_threshold_visible_context(
+            threshold_curve=threshold_curve,
+            recommendation=recommendation,
+            metric_cards=metric_cards,
+        ),
+        "inspection_response": {},
+        "include_raw_evidence": False,
+    }
+
+
 def _agent_explanation_status_caption(provider_used: Any, fallback_used: Any) -> str:
     """Return a short status caption for the agent explanation panel."""
     provider_text = str(provider_used).strip().lower()
@@ -372,6 +421,44 @@ def _render_detection_confidence_agent_panel(
             st.session_state[response_key] = None
             st.session_state[error_key] = (
                 "Detection confidence explanation is temporarily unavailable. The chart remains available for review."
+            )
+
+    error_message = st.session_state.get(error_key)
+    if error_message:
+        st.warning(error_message)
+
+    agent_response = st.session_state.get(response_key)
+    if not isinstance(agent_response, dict):
+        return
+
+    st.caption(_agent_explanation_status_caption(agent_response.get("provider_used"), agent_response.get("fallback_used")))
+    st.write(_safe_text(agent_response.get("answer")))
+
+
+def _render_classification_threshold_agent_panel(
+    threshold_curve: dict[str, Any],
+    recommendation: dict[str, Any],
+    metric_cards: dict[str, Any],
+) -> None:
+    """Render a focused mock explanation panel for the Classification threshold chart."""
+    st.markdown("#### Explain this classification threshold chart")
+    st.caption("Mock evidence-grounded explanation · external LLM not connected · manual review still applies.")
+
+    response_key = "classification_threshold_agent_explanation"
+    error_key = "classification_threshold_agent_error"
+    if st.button("Mock evidence-grounded explanation", key="classification_threshold_agent_button"):
+        request_payload = _build_classification_threshold_agent_request(
+            threshold_curve=threshold_curve,
+            recommendation=recommendation,
+            metric_cards=metric_cards,
+        )
+        try:
+            st.session_state[response_key] = _call_agent_explain_api(_get_api_base_url(), request_payload)
+            st.session_state[error_key] = None
+        except Exception:
+            st.session_state[response_key] = None
+            st.session_state[error_key] = (
+                "Classification threshold explanation is temporarily unavailable. The chart remains available for review."
             )
 
     error_message = st.session_state.get(error_key)
@@ -1489,13 +1576,11 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                 "No threshold sweep data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
-
-    _render_agent_callout(
-        "Explain these classification charts",
-        "Ask for a plain-language summary of the error distribution, per-class performance, and threshold behavior charts.",
-        "Agent layer planned · no backend agent implemented yet · no fake AI · future explanations should use governed evidence and prediction responses",
-        accent="violet",
-    )
+        _render_classification_threshold_agent_panel(
+            threshold_curve=threshold_curve,
+            recommendation=recommendation,
+            metric_cards=metric_cards,
+        )
 
     st.markdown("### Sample evidence summary")
     gallery_cols = st.columns([0.7, 1.3])

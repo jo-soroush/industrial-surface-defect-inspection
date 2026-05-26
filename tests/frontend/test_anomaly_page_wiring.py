@@ -107,11 +107,14 @@ def test_anomaly_threshold_agent_panel_is_scoped_to_threshold_chart() -> None:
     assert "planned / not active" not in source.lower()
     assert source.count("_render_anomaly_threshold_agent_panel") == 1
     assert source.index("_render_anomaly_threshold_agent_panel") > source.index("Threshold behavior")
+    assert source.index("_render_anomaly_threshold_agent_panel") > source.index("with visual_cols[2]:")
+    assert source.index("_render_anomaly_threshold_agent_panel") < source.index('st.markdown("### Sample evidence summary")')
 
 
 def test_anomaly_threshold_active_panel_copy_is_mock_and_review_only() -> None:
     source = inspect.getsource(app._render_anomaly_threshold_agent_panel).lower()
 
+    assert "_render_component_agent_explanation_panel" in source
     assert "explain this anomaly threshold behavior chart" in source
     assert "mock evidence-grounded explanation" in source
     assert "external llm not connected" in source
@@ -119,3 +122,15 @@ def test_anomaly_threshold_active_panel_copy_is_mock_and_review_only() -> None:
     assert "manual review still applies" in source
     assert "planned / not active" not in source
     assert "no backend agent implemented yet" not in source
+    assert "st.button" not in source
+    assert "_call_agent_explain_api" not in source
+
+
+def test_all_chart_agent_panels_use_shared_component_helper() -> None:
+    detection_source = inspect.getsource(app._render_detection_confidence_agent_panel)
+    classification_source = inspect.getsource(app._render_classification_threshold_agent_panel)
+    anomaly_source = inspect.getsource(app._render_anomaly_threshold_agent_panel)
+
+    for source in (detection_source, classification_source, anomaly_source):
+        assert "_render_component_agent_explanation_panel" in source
+        assert source.count("_render_component_agent_explanation_panel") == 1

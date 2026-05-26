@@ -452,36 +452,22 @@ def _render_detection_confidence_agent_panel(
     metadata: dict[str, Any],
 ) -> None:
     """Render a focused mock explanation panel for the Detection confidence chart."""
-    st.markdown("#### Explain this detection confidence chart")
-    st.caption("Mock evidence-grounded explanation · external LLM not connected · manual review still applies.")
-
-    response_key = "detection_confidence_agent_explanation"
-    error_key = "detection_confidence_agent_error"
-    if st.button("Mock evidence-grounded explanation", key="detection_confidence_agent_button"):
-        request_payload = _build_detection_confidence_agent_request(
+    _render_component_agent_explanation_panel(
+        title="Explain this detection confidence chart",
+        caption="Mock evidence-grounded explanation · external LLM not connected · manual review still applies.",
+        button_label="Mock evidence-grounded explanation",
+        button_key="detection_confidence_agent_button",
+        response_key="detection_confidence_agent_explanation",
+        error_key="detection_confidence_agent_error",
+        request_payload=_build_detection_confidence_agent_request(
             confidence_chart=confidence_chart,
             overview=overview,
             metadata=metadata,
-        )
-        try:
-            st.session_state[response_key] = _call_agent_explain_api(_get_api_base_url(), request_payload)
-            st.session_state[error_key] = None
-        except Exception:
-            st.session_state[response_key] = None
-            st.session_state[error_key] = (
-                "Detection confidence explanation is temporarily unavailable. The chart remains available for review."
-            )
-
-    error_message = st.session_state.get(error_key)
-    if error_message:
-        st.warning(error_message)
-
-    agent_response = st.session_state.get(response_key)
-    if not isinstance(agent_response, dict):
-        return
-
-    st.caption(_agent_explanation_status_caption(agent_response.get("provider_used"), agent_response.get("fallback_used")))
-    st.write(_safe_text(agent_response.get("answer")))
+        ),
+        unavailable_error_message=(
+            "Detection confidence explanation is temporarily unavailable. The chart remains available for review."
+        ),
+    )
 
 
 def _render_classification_threshold_agent_panel(
@@ -490,36 +476,22 @@ def _render_classification_threshold_agent_panel(
     metric_cards: dict[str, Any],
 ) -> None:
     """Render a focused mock explanation panel for the Classification threshold chart."""
-    st.markdown("#### Explain this classification threshold chart")
-    st.caption("Mock evidence-grounded explanation · external LLM not connected · manual review still applies.")
-
-    response_key = "classification_threshold_agent_explanation"
-    error_key = "classification_threshold_agent_error"
-    if st.button("Mock evidence-grounded explanation", key="classification_threshold_agent_button"):
-        request_payload = _build_classification_threshold_agent_request(
+    _render_component_agent_explanation_panel(
+        title="Explain this classification threshold chart",
+        caption="Mock evidence-grounded explanation · external LLM not connected · manual review still applies.",
+        button_label="Mock evidence-grounded explanation",
+        button_key="classification_threshold_agent_button",
+        response_key="classification_threshold_agent_explanation",
+        error_key="classification_threshold_agent_error",
+        request_payload=_build_classification_threshold_agent_request(
             threshold_curve=threshold_curve,
             recommendation=recommendation,
             metric_cards=metric_cards,
-        )
-        try:
-            st.session_state[response_key] = _call_agent_explain_api(_get_api_base_url(), request_payload)
-            st.session_state[error_key] = None
-        except Exception:
-            st.session_state[response_key] = None
-            st.session_state[error_key] = (
-                "Classification threshold explanation is temporarily unavailable. The chart remains available for review."
-            )
-
-    error_message = st.session_state.get(error_key)
-    if error_message:
-        st.warning(error_message)
-
-    agent_response = st.session_state.get(response_key)
-    if not isinstance(agent_response, dict):
-        return
-
-    st.caption(_agent_explanation_status_caption(agent_response.get("provider_used"), agent_response.get("fallback_used")))
-    st.write(_safe_text(agent_response.get("answer")))
+        ),
+        unavailable_error_message=(
+            "Classification threshold explanation is temporarily unavailable. The chart remains available for review."
+        ),
+    )
 
 
 def _render_anomaly_threshold_agent_panel(
@@ -529,39 +501,71 @@ def _render_anomaly_threshold_agent_panel(
     quality: dict[str, Any],
 ) -> None:
     """Render a focused mock explanation panel for the Anomaly threshold behavior chart."""
-    st.markdown("#### Explain this anomaly threshold behavior chart")
-    st.caption(
-        "Mock evidence-grounded explanation · external LLM not connected · anomaly evidence is review-only · manual review still applies."
-    )
-
-    response_key = "anomaly_threshold_agent_explanation"
-    error_key = "anomaly_threshold_agent_error"
-    if st.button("Mock evidence-grounded explanation", key="anomaly_threshold_agent_button"):
-        request_payload = _build_anomaly_threshold_agent_request(
+    _render_component_agent_explanation_panel(
+        title="Explain this anomaly threshold behavior chart",
+        caption=(
+            "Mock evidence-grounded explanation · external LLM not connected · "
+            "anomaly evidence is review-only · manual review still applies."
+        ),
+        button_label="Mock evidence-grounded explanation",
+        button_key="anomaly_threshold_agent_button",
+        response_key="anomaly_threshold_agent_explanation",
+        error_key="anomaly_threshold_agent_error",
+        request_payload=_build_anomaly_threshold_agent_request(
             threshold_behavior=threshold_behavior,
             frontend_summary=frontend_summary,
             metric_cards=metric_cards,
             quality=quality,
+        ),
+        unavailable_error_message=(
+            "Anomaly threshold explanation is temporarily unavailable. The chart remains available for review."
+        ),
+    )
+
+
+def _render_component_agent_explanation_panel(
+    *,
+    title: str,
+    caption: str,
+    button_label: str,
+    button_key: str,
+    response_key: str,
+    error_key: str,
+    request_payload: dict[str, Any],
+    unavailable_error_message: str,
+) -> None:
+    """Render a reusable full-width mock component explanation panel."""
+    with st.container(border=True):
+        st.markdown(f"#### {title}")
+        st.caption(caption)
+        submitted = st.button(button_label, key=button_key)
+        st.caption("Uses governed component evidence only. No external provider call is made.")
+
+        if submitted:
+            try:
+                st.session_state[response_key] = _call_agent_explain_api(_get_api_base_url(), request_payload)
+                st.session_state[error_key] = None
+            except Exception:
+                st.session_state[response_key] = None
+                st.session_state[error_key] = unavailable_error_message
+
+        error_message = st.session_state.get(error_key)
+        if error_message:
+            st.warning(error_message)
+
+        agent_response = st.session_state.get(response_key)
+        if not isinstance(agent_response, dict):
+            return
+
+        provider_used = agent_response.get("provider_used")
+        fallback_used = agent_response.get("fallback_used")
+        st.caption(
+            "Provider: "
+            f"{_safe_text(provider_used)} · "
+            f"Fallback: {_friendly_status_label(fallback_used)} · "
+            f"{_agent_explanation_status_caption(provider_used, fallback_used)}"
         )
-        try:
-            st.session_state[response_key] = _call_agent_explain_api(_get_api_base_url(), request_payload)
-            st.session_state[error_key] = None
-        except Exception:
-            st.session_state[response_key] = None
-            st.session_state[error_key] = (
-                "Anomaly threshold explanation is temporarily unavailable. The chart remains available for review."
-            )
-
-    error_message = st.session_state.get(error_key)
-    if error_message:
-        st.warning(error_message)
-
-    agent_response = st.session_state.get(response_key)
-    if not isinstance(agent_response, dict):
-        return
-
-    st.caption(_agent_explanation_status_caption(agent_response.get("provider_used"), agent_response.get("fallback_used")))
-    st.write(_safe_text(agent_response.get("answer")))
+        st.write(_safe_text(agent_response.get("answer")))
 
 
 def _safe_text(value: Any, default: str = "Unavailable") -> str:
@@ -1667,11 +1671,12 @@ def _render_track_a(bundles: dict[str, dict[str, Any]] | None) -> None:
                 "No threshold sweep data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
-        _render_classification_threshold_agent_panel(
-            threshold_curve=threshold_curve,
-            recommendation=recommendation,
-            metric_cards=metric_cards,
-        )
+
+    _render_classification_threshold_agent_panel(
+        threshold_curve=threshold_curve,
+        recommendation=recommendation,
+        metric_cards=metric_cards,
+    )
 
     st.markdown("### Sample evidence summary")
     gallery_cols = st.columns([0.7, 1.3])
@@ -1979,12 +1984,13 @@ def _render_track_b(bundles: dict[str, dict[str, Any]] | None) -> None:
                 "No threshold behavior data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
-        _render_anomaly_threshold_agent_panel(
-            threshold_behavior=threshold_behavior,
-            frontend_summary=frontend_summary,
-            metric_cards=metric_cards,
-            quality=quality,
-        )
+
+    _render_anomaly_threshold_agent_panel(
+        threshold_behavior=threshold_behavior,
+        frontend_summary=frontend_summary,
+        metric_cards=metric_cards,
+        quality=quality,
+    )
 
     st.markdown("### Sample evidence summary")
     count_rows = [
@@ -2287,11 +2293,6 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
                 "No confidence distribution data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
-        _render_detection_confidence_agent_panel(
-            confidence_chart=confidence_chart,
-            overview=overview,
-            metadata=metadata,
-        )
     with visual_cols[1]:
         st.caption("Class summary")
         class_rows = class_summary.get("class_rows", [])
@@ -2315,6 +2316,12 @@ def _render_yolo(bundles: dict[str, dict[str, Any]] | None) -> None:
                 "No class summary data is available in the governed bundle, so this visual is hidden.",
                 accent="gray",
             )
+
+    _render_detection_confidence_agent_panel(
+        confidence_chart=confidence_chart,
+        overview=overview,
+        metadata=metadata,
+    )
 
     summary_cols = st.columns(2)
     with summary_cols[0]:

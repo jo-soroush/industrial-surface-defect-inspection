@@ -64,14 +64,19 @@ def test_classification_threshold_agent_panel_is_scoped_to_threshold_chart() -> 
     assert "planned / not active" not in source.lower()
     assert source.count("_render_classification_threshold_agent_panel") == 1
     assert source.index("_render_classification_threshold_agent_panel") > source.index("Threshold behavior")
+    assert source.index("_render_classification_threshold_agent_panel") > source.index("with visual_cols[2]:")
+    assert source.index("_render_classification_threshold_agent_panel") < source.index('st.markdown("### Sample evidence summary")')
 
 
 def test_classification_threshold_active_panel_copy_is_mock_and_not_planned() -> None:
     source = inspect.getsource(app._render_classification_threshold_agent_panel).lower()
 
+    assert "_render_component_agent_explanation_panel" in source
     assert "explain this classification threshold chart" in source
     assert "mock evidence-grounded explanation" in source
     assert "external llm not connected" in source
     assert "manual review still applies" in source
     assert "planned / not active" not in source
     assert "no backend agent implemented yet" not in source
+    assert "st.button" not in source
+    assert "_call_agent_explain_api" not in source

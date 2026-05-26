@@ -66,14 +66,29 @@ def test_detection_confidence_agent_panel_is_scoped_to_confidence_chart() -> Non
     assert "Mock component explanation available for the confidence chart only" not in source
     assert source.count("_render_detection_confidence_agent_panel") == 1
     assert source.index("_render_detection_confidence_agent_panel") > source.index("Confidence distribution")
+    assert source.index("_render_detection_confidence_agent_panel") > source.index("with visual_cols[1]:")
+    assert source.index("_render_detection_confidence_agent_panel") < source.index("summary_cols = st.columns(2)")
 
 
 def test_detection_confidence_active_panel_copy_is_mock_and_not_planned() -> None:
     source = inspect.getsource(app._render_detection_confidence_agent_panel).lower()
 
+    assert "_render_component_agent_explanation_panel" in source
     assert "explain this detection confidence chart" in source
     assert "mock evidence-grounded explanation" in source
     assert "external llm not connected" in source
     assert "manual review still applies" in source
     assert "planned / not active" not in source
     assert "no backend agent implemented yet" not in source
+    assert "st.button" not in source
+    assert "_call_agent_explain_api" not in source
+
+
+def test_shared_component_agent_panel_is_horizontal_and_full_width() -> None:
+    source = inspect.getsource(app._render_component_agent_explanation_panel)
+
+    assert "with st.container(border=True):" in source
+    assert "st.columns([0.32, 0.68]" not in source
+    assert "status_cols = st.columns(3)" not in source
+    assert "submitted = st.button(button_label, key=button_key)" in source
+    assert "Uses governed component evidence only. No external provider call is made." in source

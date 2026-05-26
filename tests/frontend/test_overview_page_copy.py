@@ -13,9 +13,10 @@ def test_overview_copy_is_professional_and_grounded() -> None:
     assert "not production-ready" in source
     assert "not deployment-safe" in source
     assert "inspection capability summary" not in source
-    assert "future ai explanation" in source
+    assert "mock agent status" in source
+    assert "external llm providers are not connected" in source
     assert "ai explanation assistant" in source
-    assert "planned / not active" in source
+    assert "mock backend agent is available for selected evidence-grounded explanations" in source
     assert "recommended review path" in source
     assert "run image inspection" in source
     assert "check safety & limitations" in source

@@ -218,8 +218,8 @@ def test_frontend_source_no_longer_uses_classification_only_flow() -> None:
     assert "Mock explanation MVP active for the current inspection result. The panel uses governed response evidence, model outputs, warnings, limitations, and traceability." in source
     assert "One-shot, evidence-grounded explanation for the current inspection result." in source
     assert "Mock MVP active · external LLM not connected · no fake AI" in source
-    assert 'badge_label: str = "Planned / not active"' in source
-    assert '>Planned / not active<' in source
+    assert 'badge_label: str = "Future LLM layer planned"' in source
+    assert "Mock Agent active" in source
     assert "Detection box details" in source
     assert "Classification details" in source
     assert "Detection details" in source

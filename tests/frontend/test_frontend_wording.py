@@ -27,3 +27,15 @@ def test_frontend_source_no_longer_shows_global_ai_placeholder_sentence() -> Non
     source = inspect.getsource(app)
     lower = source.lower()
     assert "the future ai explanation assistant is a placeholder only." not in lower
+    assert "no backend agent implemented yet" not in lower
+    assert "no backend agent" not in lower
+    assert "no llm call" not in lower
+    assert "no fake ai behavior" not in lower
+    assert "planned / not active" not in lower
+    assert "gemini is connected" not in lower
+    assert "grok is connected" not in lower
+    assert "openai is connected" not in lower
+    assert "production-ready" in lower
+    assert "deployment-safe" in lower
+    assert "is production-ready" not in lower
+    assert "is deployment-safe" not in lower

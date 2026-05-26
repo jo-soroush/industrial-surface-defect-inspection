@@ -15,8 +15,15 @@ def test_safety_page_copy_is_current() -> None:
     assert "not production-ready" in source
     assert "not deployment-safe" in source
     assert "manual review" in source or "expert/manual review" in source
-    assert "planned / not active" in source
+    assert "mock component explanations exist for selected" in source
+    assert "real llm providers are not connected" in source
+    assert "gemini/grok/openai are not active" in source
+    assert "mock selected components" in source
+    assert "no backend agent" not in source
+    assert "planned / not active" not in source
     assert "track a only" not in source
     assert "prototype" not in source
     assert "scaffold" not in source
-    assert "fake ai" in source
+    assert "gemini is connected" not in source
+    assert "grok is connected" not in source
+    assert "openai is connected" not in source

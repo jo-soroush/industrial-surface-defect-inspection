@@ -23,6 +23,7 @@ The current repository baseline already provides:
 - A verified Gemini G3 package decision that selects `google-genai` for the future real provider.
 - A Gemini G3 entry checklist and first-slice plan that keeps implementation small, reversible, and offline-only.
 - A first G3 readiness-scaffolding slice that models SDK-missing and key-missing behavior without real Gemini execution.
+- A second G3 offline-only lazy SDK loader boundary that stays SDK-free at module import time.
 
 ## Non-Negotiable Integration Rules
 
@@ -154,6 +155,7 @@ The package verification artifact has separately confirmed `google-genai` as the
 The package verification artifact is documented in `docs/agent/gemini_g3_package_verification.md`.
 The G3 entry checklist and first-slice plan are documented in `docs/agent/gemini_phase_g3_entry_checklist.md`.
 The first readiness-scaffolding slice is implemented and tested, but real Gemini provider integration has not started.
+The second offline-only lazy SDK loader boundary is implemented and tested, but real Gemini provider integration has not started.
 
 What this means:
 

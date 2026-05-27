@@ -2,15 +2,15 @@
 
 This module is offline-only and intentionally does not implement real Gemini
 execution. It contains the Phase G1 provider config/stub, the Phase G2
-mocked-client seam, and the Phase G3 readiness scaffolding so the repository
-can define provider behavior before any network-enabled Gemini integration is
-considered.
+mocked-client seam, the Phase G3 readiness scaffolding, and the G3 lazy SDK
+loader boundary so the repository can define provider behavior before any
+network-enabled Gemini integration is considered.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Literal, Protocol
+from typing import Any, Callable, Iterable, Literal, Protocol
 
 from .safety_guard import guard_post_generation_text
 from .provider_contracts import (
@@ -34,6 +34,7 @@ GeminiG3ReadinessStatus = Literal[
     "disabled",
     "unavailable",
     "sdk_missing",
+    "load_error",
     "not_implemented",
     "gated",
 ]
@@ -67,6 +68,58 @@ class GeminiSdkStatus:
 
 
 @dataclass(frozen=True, slots=True)
+class GeminiSdkLoadResult:
+    """Offline SDK load status used by the G3 readiness scaffolding."""
+
+    checked: bool = False
+    sdk_available: bool = False
+    status: Literal["not_checked", "missing", "available", "load_error"] = "not_checked"
+    reason: str = "SDK availability has not been checked."
+    error_category: str | None = None
+    sdk_name: str = "google-genai"
+    import_style: str = "from google import genai"
+
+
+class GeminiSdkLoader:
+    """Injectable offline SDK loader boundary for future Gemini readiness."""
+
+    def __init__(
+        self,
+        checker: Callable[[], GeminiSdkLoadResult] | None = None,
+        *,
+        sdk_name: str = "google-genai",
+        import_style: str = "from google import genai",
+    ) -> None:
+        self._checker = checker
+        self.sdk_name = sdk_name
+        self.import_style = import_style
+
+    def load_status(self) -> GeminiSdkLoadResult:
+        if self._checker is None:
+            return GeminiSdkLoadResult(
+                checked=False,
+                sdk_available=False,
+                status="not_checked",
+                reason="SDK availability not checked in this slice.",
+                sdk_name=self.sdk_name,
+                import_style=self.import_style,
+            )
+
+        result = self._checker()
+        if result.sdk_name != self.sdk_name or result.import_style != self.import_style:
+            result = GeminiSdkLoadResult(
+                checked=result.checked,
+                sdk_available=result.sdk_available,
+                status=result.status,
+                reason=result.reason,
+                error_category=result.error_category,
+                sdk_name=self.sdk_name,
+                import_style=self.import_style,
+            )
+        return result
+
+
+@dataclass(frozen=True, slots=True)
 class GeminiReadinessGates:
     """Non-secret Gemini G3 readiness gates."""
 
@@ -76,6 +129,9 @@ class GeminiReadinessGates:
     activation_allowed: bool = False
     sdk_available: bool = False
     real_provider_implemented: bool = False
+    sdk_checked: bool = False
+    sdk_status: str = "not_checked"
+    sdk_reason: str = "SDK availability not checked."
 
 
 @dataclass(frozen=True, slots=True)
@@ -312,12 +368,20 @@ def evaluate_gemini_provider_readiness(
 def evaluate_gemini_g3_readiness(
     settings: ProviderRuntimeSettings,
     *,
-    sdk_available: bool = False,
+    sdk_available: bool | None = None,
+    sdk_loader: GeminiSdkLoader | Callable[[], GeminiSdkLoadResult] | None = None,
+    sdk_load_result: GeminiSdkLoadResult | None = None,
     real_provider_implemented: bool = False,
 ) -> GeminiG3Readiness:
     """Return the Phase G3 readiness snapshot without importing or calling Gemini."""
 
     provider_allowed = "gemini" in settings.provider_order or settings.default_provider == "gemini"
+    sdk_result = _resolve_gemini_sdk_load_result(
+        settings=settings,
+        sdk_available=sdk_available,
+        sdk_loader=sdk_loader,
+        sdk_load_result=sdk_load_result,
+    )
     gates = GeminiReadinessGates(
         llm_enabled=settings.enable_llm,
         api_key_present=settings.gemini_key_present,
@@ -325,12 +389,15 @@ def evaluate_gemini_g3_readiness(
         activation_allowed=(
             settings.enable_llm
             and settings.gemini_key_present
-            and sdk_available
+            and sdk_result.sdk_available
             and provider_allowed
             and real_provider_implemented
         ),
-        sdk_available=sdk_available,
+        sdk_available=sdk_result.sdk_available,
         real_provider_implemented=real_provider_implemented,
+        sdk_checked=sdk_result.checked,
+        sdk_status=sdk_result.status,
+        sdk_reason=sdk_result.reason,
     )
 
     if not settings.enable_llm:
@@ -347,7 +414,14 @@ def evaluate_gemini_g3_readiness(
             "Gemini is unavailable because GEMINI_API_KEY is missing.",
             "Mock fallback remains the safe path.",
         )
-    elif not sdk_available:
+    elif sdk_result.status == "load_error":
+        status = "load_error"
+        reason = "Gemini SDK load failed in this slice."
+        warnings = (
+            "Gemini is unavailable because the SDK loader reported an error.",
+            "Mock fallback remains the safe path.",
+        )
+    elif not sdk_result.sdk_available:
         status = "sdk_missing"
         reason = "The google-genai SDK is not available in this slice."
         warnings = (
@@ -404,12 +478,71 @@ def evaluate_gemini_g3_readiness(
             fallback_reason="Gemini remains unavailable in the G3 readiness slice; mock fallback remains the safe path.",
         ),
         sdk_status=GeminiSdkStatus(
-            sdk_available=sdk_available,
+            sdk_available=sdk_result.sdk_available,
             note="SDK availability is modeled through an explicit readiness flag; the package is not imported here.",
         ),
         gates=gates,
         availability=availability,
     )
+
+
+def check_gemini_sdk_available(
+    loader: GeminiSdkLoader | None = None,
+    *,
+    sdk_available: bool | None = None,
+) -> GeminiSdkLoadResult:
+    """Return the offline SDK load result without importing Gemini."""
+
+    if sdk_available is not None:
+        return GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=sdk_available,
+            status="available" if sdk_available else "missing",
+            reason="SDK availability was provided explicitly for the readiness slice.",
+            sdk_name="google-genai",
+            import_style="from google import genai",
+        )
+    if loader is None:
+        return GeminiSdkLoadResult()
+    return loader.load_status()
+
+
+load_gemini_sdk_status = check_gemini_sdk_available
+sdk_loader = GeminiSdkLoader
+sdk_load_error = GeminiProviderError
+
+
+def _resolve_gemini_sdk_load_result(
+    *,
+    settings: ProviderRuntimeSettings,
+    sdk_available: bool | None,
+    sdk_loader: GeminiSdkLoader | Callable[[], GeminiSdkLoadResult] | None,
+    sdk_load_result: GeminiSdkLoadResult | None,
+) -> GeminiSdkLoadResult:
+    if not settings.enable_llm or not settings.gemini_key_present:
+        return GeminiSdkLoadResult(
+            checked=False,
+            sdk_available=False,
+            status="not_checked",
+            reason="SDK check is skipped while Gemini is disabled or the API key is missing.",
+        )
+    if sdk_load_result is not None:
+        return sdk_load_result
+    if sdk_loader is not None:
+        if hasattr(sdk_loader, "load_status"):
+            return sdk_loader.load_status()
+        if callable(sdk_loader):
+            result = sdk_loader()
+            if isinstance(result, GeminiSdkLoadResult):
+                return result
+            return GeminiSdkLoadResult(
+                checked=True,
+                sdk_available=False,
+                status="load_error",
+                reason="SDK loader callable did not return a GeminiSdkLoadResult.",
+                error_category="invalid_loader_result",
+            )
+    return check_gemini_sdk_available(sdk_available=sdk_available if sdk_available is not None else False)
 
 
 def _collect_request_evidence_values(request: AgentProviderRequest) -> list[Any]:

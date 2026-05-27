@@ -6,7 +6,13 @@ import ast
 from pathlib import Path
 
 from src.inspection_ai.agent.context_builder import build_grounding_context
-from src.inspection_ai.agent.gemini_provider import evaluate_gemini_g3_readiness
+from src.inspection_ai.agent.gemini_provider import (
+    GeminiSdkLoadResult,
+    GeminiSdkLoader,
+    check_gemini_sdk_available,
+    evaluate_gemini_g3_readiness,
+    load_gemini_sdk_status,
+)
 from src.inspection_ai.agent.provider_contracts import ProviderRuntimeSettings
 from src.inspection_ai.agent.provider_router import AgentProviderRouter
 
@@ -16,6 +22,7 @@ GEMINI_PROVIDER_PATH = REPO_ROOT / "src/inspection_ai/agent/gemini_provider.py"
 
 
 def test_gemini_g3_readiness_is_disabled_when_llm_disabled_and_key_missing() -> None:
+    loader = _RecordingLoader(GeminiSdkLoadResult(status="missing", sdk_available=False))
     readiness = evaluate_gemini_g3_readiness(
         ProviderRuntimeSettings(
             enable_llm=False,
@@ -26,7 +33,7 @@ def test_gemini_g3_readiness_is_disabled_when_llm_disabled_and_key_missing() -> 
             grok_key_present=False,
             openai_key_present=False,
         ),
-        sdk_available=False,
+        sdk_loader=loader.loader,
     )
 
     assert readiness.status == "disabled"
@@ -41,9 +48,11 @@ def test_gemini_g3_readiness_is_disabled_when_llm_disabled_and_key_missing() -> 
     assert "disabled" in readiness.reason.lower()
     assert "key" not in readiness.reason.lower()
     assert any("mock fallback" in warning.lower() for warning in readiness.warnings)
+    assert loader.calls == 0
 
 
 def test_gemini_g3_readiness_stays_disabled_when_key_present_but_llm_disabled() -> None:
+    loader = _RecordingLoader(GeminiSdkLoadResult(status="available", sdk_available=True))
     readiness = evaluate_gemini_g3_readiness(
         ProviderRuntimeSettings(
             enable_llm=False,
@@ -54,7 +63,7 @@ def test_gemini_g3_readiness_stays_disabled_when_key_present_but_llm_disabled() 
             grok_key_present=False,
             openai_key_present=False,
         ),
-        sdk_available=False,
+        sdk_loader=loader.loader,
     )
 
     assert readiness.status == "disabled"
@@ -65,9 +74,11 @@ def test_gemini_g3_readiness_stays_disabled_when_key_present_but_llm_disabled() 
     assert readiness.availability.configured is True
     assert "disabled" in readiness.availability.reason.lower()
     assert "mock fallback" in readiness.fallback_policy.fallback_reason.lower()
+    assert loader.calls == 0
 
 
 def test_gemini_g3_readiness_is_unavailable_when_key_missing_and_llm_enabled() -> None:
+    loader = _RecordingLoader(GeminiSdkLoadResult(status="available", sdk_available=True))
     readiness = evaluate_gemini_g3_readiness(
         ProviderRuntimeSettings(
             enable_llm=True,
@@ -78,7 +89,7 @@ def test_gemini_g3_readiness_is_unavailable_when_key_missing_and_llm_enabled() -
             grok_key_present=False,
             openai_key_present=False,
         ),
-        sdk_available=False,
+        sdk_loader=loader.loader,
     )
 
     assert readiness.status == "unavailable"
@@ -89,9 +100,19 @@ def test_gemini_g3_readiness_is_unavailable_when_key_missing_and_llm_enabled() -
     assert readiness.availability.status == "unavailable"
     assert "missing" in readiness.reason.lower()
     assert "google-genai" not in readiness.reason.lower()
+    assert loader.calls == 0
 
 
 def test_gemini_g3_readiness_is_sdk_missing_when_sdk_is_not_available() -> None:
+    loader = _RecordingLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=False,
+            status="missing",
+            reason="google-genai is missing in the test seam.",
+            error_category="missing",
+        )
+    )
     readiness = evaluate_gemini_g3_readiness(
         ProviderRuntimeSettings(
             enable_llm=True,
@@ -102,7 +123,7 @@ def test_gemini_g3_readiness_is_sdk_missing_when_sdk_is_not_available() -> None:
             grok_key_present=False,
             openai_key_present=False,
         ),
-        sdk_available=False,
+        sdk_loader=loader.loader,
     )
 
     assert readiness.status == "sdk_missing"
@@ -114,6 +135,71 @@ def test_gemini_g3_readiness_is_sdk_missing_when_sdk_is_not_available() -> None:
     assert readiness.availability.status == "unavailable"
     assert "sdk" in readiness.reason.lower()
     assert "google-genai" in readiness.warnings[0].lower()
+    assert loader.calls == 1
+
+
+def test_gemini_g3_readiness_reports_load_error_safely() -> None:
+    loader = _RecordingLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=False,
+            status="load_error",
+            reason="SDK import failed in the injected test seam.",
+            error_category="import_error",
+        )
+    )
+    readiness = evaluate_gemini_g3_readiness(
+        ProviderRuntimeSettings(
+            enable_llm=True,
+            default_provider="mock",
+            provider_order=("mock", "gemini", "grok"),
+            enable_fallback=True,
+            gemini_key_present=True,
+            grok_key_present=False,
+            openai_key_present=False,
+        ),
+        sdk_loader=loader.loader,
+    )
+
+    assert readiness.status == "load_error"
+    assert readiness.available is False
+    assert readiness.gates.sdk_checked is True
+    assert readiness.gates.sdk_status == "load_error"
+    assert readiness.gates.activation_allowed is False
+    assert readiness.availability.status == "unavailable"
+    assert "load failed" in readiness.reason.lower()
+    assert loader.calls == 1
+
+
+def test_gemini_g3_readiness_uses_loader_available_but_stays_not_implemented() -> None:
+    loader = _RecordingLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai is available in the injected test seam.",
+        )
+    )
+    readiness = evaluate_gemini_g3_readiness(
+        ProviderRuntimeSettings(
+            enable_llm=True,
+            default_provider="mock",
+            provider_order=("mock", "gemini", "grok"),
+            enable_fallback=True,
+            gemini_key_present=True,
+            grok_key_present=False,
+            openai_key_present=False,
+        ),
+        sdk_loader=loader.loader,
+    )
+
+    assert readiness.status == "not_implemented"
+    assert readiness.available is False
+    assert readiness.gates.sdk_available is True
+    assert readiness.gates.real_provider_implemented is False
+    assert readiness.gates.activation_allowed is False
+    assert readiness.availability.available is False
+    assert loader.calls == 1
 
 
 def test_gemini_g3_readiness_remains_not_implemented_even_when_all_gates_pass() -> None:
@@ -202,3 +288,25 @@ def test_gemini_g3_readiness_does_not_change_mock_router_path() -> None:
     assert response.provider_used == "mock"
     assert response.fallback_used is True
     assert "manual review" in response.answer.lower()
+
+
+def test_gemini_g3_sdk_loader_status_helpers_are_available() -> None:
+    explicit_available = check_gemini_sdk_available(sdk_available=True)
+    explicit_missing = load_gemini_sdk_status(sdk_available=False)
+
+    assert explicit_available.checked is True
+    assert explicit_available.sdk_available is True
+    assert explicit_available.status == "available"
+    assert explicit_missing.checked is True
+    assert explicit_missing.sdk_available is False
+    assert explicit_missing.status == "missing"
+
+
+class _RecordingLoader:
+    def __init__(self, result: GeminiSdkLoadResult) -> None:
+        self.result = result
+        self.calls = 0
+
+    def loader(self) -> GeminiSdkLoadResult:
+        self.calls += 1
+        return self.result

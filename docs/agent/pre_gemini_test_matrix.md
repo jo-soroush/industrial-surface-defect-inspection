@@ -14,6 +14,7 @@ Current conclusion:
 - The G3 package verification artifact exists and records the verified future `google-genai` dependency decision.
 - The G3 entry checklist and first-slice plan exist and define the first implementation boundary.
 - The first G3 readiness-scaffolding slice is implemented and tested, while real Gemini provider execution remains inactive.
+- The second G3 lazy SDK loader boundary is implemented and tested, while real Gemini provider execution remains inactive.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -202,6 +203,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | First readiness-scaffolding slice models disabled, missing-key, missing-SDK, and not-implemented states | `tests/agent/test_gemini_g3_readiness.py` | PASS | The repository now models G3 readiness without importing the SDK, while keeping Gemini unavailable and mock fallback safe. | Real Gemini provider code is still not started. | No |
 
+### 10.7 Gemini Provider G3 Lazy SDK Loader Boundary
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Lazy SDK loader boundary exists, is injectable, and remains offline-only | `tests/agent/test_gemini_g3_readiness.py` | PASS | The repository now exposes a test-injectable SDK loader/status boundary without adding a real SDK import or activating Gemini. | Real Gemini provider code is still not started. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -249,6 +256,7 @@ The following are currently covered well enough to count as PASS in the current 
 - Gemini provider G3 package verification
 - Gemini provider G3 entry checklist
 - Gemini provider G3 first slice readiness scaffolding
+- Gemini provider G3 lazy SDK loader boundary
 - frontend wording consistency
 - the Safety truncation/UI polish fix
 

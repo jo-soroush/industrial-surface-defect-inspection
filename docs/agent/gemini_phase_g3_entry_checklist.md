@@ -42,6 +42,23 @@ What this does not mean:
 - Gemini is active.
 - A Gemini API call is implemented.
 
+## Second Slice Status
+
+The lazy SDK loader boundary is implemented and tested.
+
+What this means:
+
+- SDK availability can be modeled through an injected loader boundary.
+- The module still does not import or load the real SDK at import time.
+- The normal runtime remains mock-first and offline-only.
+
+What this does not mean:
+
+- Google Gen AI SDK is installed.
+- Gemini is active.
+- Gemini runtime activation is enabled.
+- A real Gemini client has been created.
+
 ## First Slice Objective
 
 The first G3 coding slice should be:

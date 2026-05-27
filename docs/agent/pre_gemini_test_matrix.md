@@ -8,7 +8,8 @@ Current conclusion:
 
 - The core Agent foundation is implemented and well covered by targeted tests.
 - The formal test matrix now exists and ties the main pre-Gemini requirements to repository evidence.
-- The remaining gaps are not in the basic mock Agent or safety plumbing; they are in the remaining Gemini provider planning.
+- Phase G1 stub/config implementation is complete; real Gemini provider integration has not started.
+- The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
 
 ## Current Validated State
@@ -148,6 +149,15 @@ Validated in the repository state referenced by this audit:
 | `provider_router` uses readiness for health/fallback semantics | `tests/agent/test_provider_router.py::test_health_reports_mock_first_mvp_state`, `::test_missing_provider_keys_do_not_break_mock_health`, `src/inspection_ai/agent/provider_router.py` | PASS | Health uses the readiness snapshot and still reports mock-only runtime behavior. | None in the current evidence set. | No |
 | Response API shape remains compatible | `tests/api/test_agent_endpoint.py`, `tests/agent/test_provider_router.py` | PASS | Existing API tests continue to pass with the same response shape. | None in the current evidence set. | No |
 
+### 10.1 Gemini Provider G1 Stub
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Gemini provider stub can be constructed without SDK or API key | `tests/agent/test_gemini_provider_stub.py::test_gemini_provider_stub_can_be_constructed_without_sdk_or_api_key` | PASS | The stub is constructible and remains offline-only. | None in the current evidence set. | No |
+| Gemini stub refuses real generation in G1 | `tests/agent/test_gemini_provider_stub.py::test_gemini_provider_stub_refuses_real_generation` | PASS | The stub raises a safe disabled-state error instead of generating. | None in the current evidence set. | No |
+| Gemini stub remains unavailable even with key and LLM enabled | `tests/agent/test_gemini_provider_stub.py::test_gemini_provider_stub_reports_disabled_state_even_with_key_and_llm_enabled`, `::test_gemini_provider_readiness_keeps_gemini_unavailable_for_runtime_settings` | PASS | G1 keeps Gemini unavailable and disabled for real execution. | None in the current evidence set. | No |
+| Gemini stub does not import provider SDKs or network libraries | `tests/agent/test_gemini_provider_stub.py::test_gemini_provider_stub_does_not_import_provider_sdks_or_network_libraries`, `::test_gemini_stub_module_text_does_not_reference_provider_sdk_imports` | PASS | Source inspection confirms the stub is offline-only and import-safe. | None in the current evidence set. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -189,6 +199,7 @@ The following are currently covered well enough to count as PASS in the current 
 - mock provider behavior
 - deterministic safety guard
 - provider contract/readiness layer
+- Gemini provider G1 stub
 - frontend wording consistency
 - the Safety truncation/UI polish fix
 

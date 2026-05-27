@@ -135,14 +135,35 @@ Before any Gemini implementation begins, the following tests must exist or be up
 
 Future Gemini work should follow these phases:
 
-- Phase G0 - readiness plan only
-- Phase G1 - provider config / stub only, no network
-- Phase G2 - mocked Gemini client tests
+- Phase G0 - readiness plan only: complete
+- Phase G1 - provider config / stub only, no network: complete
+- Phase G2 - mocked Gemini client tests: pending
 - Phase G3 - real Gemini provider behind `AGENT_ENABLE_LLM` and key
 - Phase G4 - local manual Gemini smoke
 - Phase G5 - Docker / Compose Gemini-enabled optional smoke
 - Phase G6 - EC2 secret-managed deployment plan
 - Phase G7 - monitoring, limits, rollback
+
+## G1 Completion Note
+
+Phase G1 stub/config implementation is complete.
+
+What this means:
+
+- The Gemini stub exists.
+- The stub refuses real execution.
+- No Gemini SDK is imported.
+- No Gemini API call is implemented.
+- No real LLM execution is active.
+- Gemini runtime activation is not active.
+- No network call is made.
+- The runtime remains mock-first.
+
+What this does not mean:
+
+- Real Gemini provider integration has not started.
+- Gemini is not connected.
+- Gemini is not active.
 
 ## Failure Behavior
 
@@ -177,7 +198,7 @@ It must not log raw prompts or secrets by default.
 
 Gemini implementation must not start until:
 
-- This plan is committed.
+- This plan exists in the repository and is reviewed.
 - Current tests pass.
 - The LLM-disabled Docker / Compose smoke evidence remains PASS.
 - Safety guard tests remain PASS.
@@ -192,6 +213,10 @@ Gemini implementation must not start until:
 
 ## Explicit Statement
 
-Gemini implementation has not started.
+Phase G1 stub/config implementation is complete.
+Real Gemini provider integration has not started.
+No Gemini API call is implemented.
+No real LLM execution is active.
+Gemini runtime activation is not active.
 Gemini, Grok, and OpenAI remain inactive.
 The system remains mock-first and offline by default.

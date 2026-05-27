@@ -27,6 +27,11 @@ What is still missing before any Gemini work:
 - The provider contract/readiness layer exists and is used by the provider router.
 - The active explainability scope has been formally accepted for the pre-Gemini phase and is intentionally limited to four priority components.
 - The formal requirement-to-test matrix now exists and maps the main pre-Gemini requirements to repository tests and validations.
+- Phase G1 stub/config implementation is complete.
+- Real Gemini provider integration has not started.
+- No Gemini API call is implemented.
+- No real LLM execution is active.
+- Gemini runtime activation is not active.
 - Frontend component-aware explanation panels are active for:
   - Image Inspection AI panel
   - Detection confidence chart

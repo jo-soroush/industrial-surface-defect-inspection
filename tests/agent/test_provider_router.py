@@ -32,6 +32,7 @@ def test_health_reports_mock_first_mvp_state() -> None:
     assert health.available_providers == ["mock"]
     assert health.fallback_available is True
     assert health.grounding_ready is True
+    assert any("phase g1" in warning.lower() for warning in health.warnings)
 
 
 def test_missing_provider_keys_do_not_break_mock_health(monkeypatch) -> None:
@@ -59,6 +60,7 @@ def test_missing_provider_keys_do_not_break_mock_health(monkeypatch) -> None:
     assert any("intentionally disabled" in warning.lower() for warning in health.warnings)
     assert any("gemini" in warning.lower() for warning in health.warnings)
     assert any("grok" in warning.lower() for warning in health.warnings)
+    assert any("phase g1" in warning.lower() for warning in health.warnings)
 
 
 def test_mock_provider_grounded_answer_mentions_manual_review() -> None:

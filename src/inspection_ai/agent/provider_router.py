@@ -11,6 +11,7 @@ import os
 from typing import Any
 
 from .context_builder import AgentGroundingContext, load_global_context
+from .gemini_provider import evaluate_gemini_provider_readiness
 from .provider_contracts import (
     AgentProviderRequest,
     AgentProviderResponse,
@@ -115,6 +116,7 @@ class AgentProviderRouter:
             )
         warnings.extend(readiness["gemini"].warnings)
         warnings.extend(readiness["grok"].warnings)
+        warnings.extend(evaluate_gemini_provider_readiness(provider_runtime_settings).warnings)
         if self.settings.default_provider != "mock":
             warnings.append("Mock remains the default safe provider for this MVP.")
         return AgentHealthResponse(

@@ -39,6 +39,7 @@ What is still missing before any Gemini work:
 - No real LLM execution is active.
 - Gemini runtime activation is not active.
 - Phase 12 LLM-disabled Docker / Compose validation has passed locally and is documented in `docs/agent/llm_disabled_docker_compose_validation_evidence.md`.
+- EC2 readiness planning with LLM disabled is documented in `docs/deployment/ec2_llm_disabled_readiness_audit.md`.
 - Frontend component-aware explanation panels are active for:
   - Image Inspection AI panel
   - Detection confidence chart
@@ -186,6 +187,7 @@ Required next action: continue with EC2 readiness planning while keeping LLM dis
 - The pre-Gemini requirement-to-test matrix exists and is current.
 - The LLM-disabled Docker / Compose smoke validation has passed.
 - The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the local PASS.
+- The EC2 readiness planning audit exists and records the next LLM-disabled deployment planning step.
 - The repository still passes the focused compile and pytest checks.
 - The project has not introduced any production/deployment claims.
 

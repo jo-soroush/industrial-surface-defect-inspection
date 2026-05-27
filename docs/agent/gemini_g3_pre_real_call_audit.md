@@ -58,6 +58,7 @@ The following items are complete and established in the repository:
 - Phase 12 LLM-disabled Docker / Compose readiness audit
 - Phase 12 LLM-disabled Docker / Compose validation evidence
 - Phase 12 LLM-disabled Docker / Compose validation is PASS and remains local-only
+- EC2 LLM-disabled readiness planning is documented for the next deployment step
 - deterministic safety guard
 - provider contract and readiness layer
 - mock-first runtime

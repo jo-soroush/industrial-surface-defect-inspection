@@ -39,6 +39,7 @@ The current repository baseline already provides:
 - A Phase 12 LLM-disabled Docker / Compose readiness audit that records the read-only validation plan before any actual Docker / Compose run.
 - A Phase 12 LLM-disabled Docker / Compose validation evidence document that records the actual local Docker / Compose pass.
 - The Phase 12 LLM-disabled Docker / Compose validation is PASS and remains local-only.
+- An EC2 LLM-disabled readiness audit documents the next planning step for later deployment.
 
 ## Non-Negotiable Integration Rules
 

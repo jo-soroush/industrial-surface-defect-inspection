@@ -28,6 +28,7 @@ Current conclusion:
 - The Phase 12 LLM-disabled Docker / Compose readiness audit exists and records the read-only compose validation plan before any actual Docker / Compose run.
 - The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the actual local Docker / Compose validation pass.
 - Phase 12 local LLM-disabled Docker / Compose validation is PASS.
+- The EC2 LLM-disabled readiness audit exists and records the planning-only next step for later deployment.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.

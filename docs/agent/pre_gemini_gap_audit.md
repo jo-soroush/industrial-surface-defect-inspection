@@ -13,7 +13,6 @@ What is confirmed:
 
 What is still missing before any Gemini work:
 
-- A final LLM-disabled Docker/Compose smoke validation after the remaining gaps are closed.
 - A Gemini provider integration readiness plan.
 - Keep the requirement-to-test matrix current if scope changes.
 
@@ -58,7 +57,7 @@ What is still missing before any Gemini work:
 | Phase 9 - Safety Guard Layer Before LLM | PASS | `src/inspection_ai/agent/safety_guard.py` provides deterministic pre- and post-generation checks, and the provider router exercises the guard on the mock Agent path. | Future provider-specific policy wiring will still need to reuse the same guard contract, but the formal safety layer now exists. | Preserve the guard contract and keep expanding its tests before any real provider work. | No |
 | Phase 10 - Provider Interface, Still No Gemini | PASS | `src/inspection_ai/agent/provider_contracts.py` defines typed provider request/response/status/readiness contracts, and `src/inspection_ai/agent/provider_router.py` uses the readiness snapshot for health and fallback semantics. | Future Gemini/Grok/OpenAI provider code will still need to reuse this contract, but the readiness layer itself now exists and is exercised. | Preserve the contract and keep future provider work behind the same mock-first guardrails. | No |
 | Phase 11 - Full Test Matrix Before Gemini | PASS | `docs/agent/pre_gemini_test_matrix.md` now provides a formal requirement-to-test matrix that maps the main pre-Gemini requirements to specific tests and validation commands. | Remaining updates may be needed if new scope is added later, but the matrix now exists. | Keep the matrix current when scope changes. | No |
-| Phase 12 - Local Validation Before Gemini | PARTIAL | Python compilation and pytest validations pass. | LLM-disabled Docker/Compose smoke validation is still pending after the remaining pre-Gemini work is completed. | Run the final Docker/Compose validation with LLM disabled before any Gemini plan begins. | Yes |
+| Phase 12 - Local Validation Before Gemini | PASS | Python compilation, pytest validations, and the LLM-disabled Docker/Compose smoke validation all pass. | The final smoke path is validated; future changes should re-run it if the deployment surface changes. | Keep the smoke validation current if Docker, Compose, or runtime assets change. | No |
 
 ## Detailed Phase Notes
 
@@ -147,15 +146,14 @@ Required next action: keep the matrix current whenever scope changes.
 
 ### Phase 12 - Local Validation Before Gemini
 
-Status: PARTIAL
+Status: PASS
 
-Python compilation and pytest validations have passed, which is a strong local signal. The remaining item is the planned Docker/Compose smoke run with LLM disabled after the outstanding pre-Gemini work is complete.
+Python compilation, pytest validations, and the LLM-disabled Docker / Compose smoke validation have passed. The local deployment path is now validated in mock-first mode.
 
-Required next action: run the final Docker/Compose validation with LLM disabled, then record the result.
+Required next action: re-run the smoke if the deployment surface, Dockerfiles, Compose file, or runtime assets change.
 
 ## Blocking Items Before Gemini
 
-- Final LLM-disabled Docker/Compose validation is not yet run after the remaining work.
 - Gemini provider integration readiness plan is not yet written/reviewed.
 - Keep the requirement-to-test matrix current if scope changes.
 
@@ -165,9 +163,8 @@ Required next action: run the final Docker/Compose validation with LLM disabled,
 2. Formal Safety Guard Layer
 3. Provider Interface Readiness
 4. Formal Pre-Gemini Test Matrix
-5. Local Docker/Compose validation with LLM disabled
-6. Gemini Provider Integration Readiness Plan
-7. Gemini implementation only after all previous items PASS
+5. Gemini Provider Integration Readiness Plan
+6. Gemini implementation only after all previous items PASS
 
 ## Gemini Must Not Start Until...
 
@@ -175,6 +172,6 @@ Required next action: run the final Docker/Compose validation with LLM disabled,
 - The safety guard layer has explicit tests.
 - Provider readiness and contract rules are documented and validated.
 - The pre-Gemini requirement-to-test matrix exists and is current.
-- Local Docker/Compose validation with LLM disabled has passed after the remaining work.
+- The LLM-disabled Docker / Compose smoke validation has passed.
 - The repository still passes the focused compile and pytest checks.
 - The project has not introduced any production/deployment claims.

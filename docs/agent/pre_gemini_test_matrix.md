@@ -8,7 +8,7 @@ Current conclusion:
 
 - The core Agent foundation is implemented and well covered by targeted tests.
 - The formal test matrix now exists and ties the main pre-Gemini requirements to repository evidence.
-- The remaining gaps are not in the basic mock Agent or safety plumbing; they are in final local deployment validation and the remaining Gemini provider planning.
+- The remaining gaps are not in the basic mock Agent or safety plumbing; they are in the remaining Gemini provider planning.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
 
 ## Current Validated State
@@ -163,15 +163,15 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | Python compile and pytest validations pass | `python -m compileall ...`, `pytest tests/agent/ -q`, `pytest tests/api/test_agent_endpoint.py -q`, `pytest tests/frontend/ -q` | PASS | The current local Python and pytest validation set passes. | None in the current evidence set. | No |
-| Docker / Compose LLM-disabled smoke validation is pending | Not yet run in the current evidence set | PENDING | The repository still needs the final Docker/Compose smoke run with LLM disabled. | This is a real deployment-prep gap, not a test gap. | Yes |
-| Runtime asset check may still be pending if not already covered | No explicit current command in this matrix | PENDING | The repo documents runtime assets well, but this matrix does not prove a final end-to-end asset check. | A dedicated runtime-assets validation command may still be needed. | Yes |
+| Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_docker_compose_smoke_validation.md` | PASS | The mock-first Docker / Compose stack started successfully with LLM disabled, the API and Agent health endpoints returned expected results, the component-aware mock explain smoke succeeded, and the frontend served HTTP responses. | Re-run if Docker, Compose, or runtime assets change. | No |
+| Runtime asset validation / maintenance | `docs/agent/pre_gemini_docker_compose_smoke_validation.md` | MANUAL | The smoke validated the current mock-first API, Agent, and frontend path with LLM disabled; runtime assets should be rechecked if model/runtime assets, Dockerfiles, Compose, or serving surfaces change. | Re-run the smoke when the deployment surface changes. | No |
 | Final manual visual checks are either PASS or pending based on actual evidence | `tests/frontend/*`, prior manual UI validation notes | MANUAL | Visual checks have been performed for the active panels, but a new future UI change would require re-review. | Manual review remains relevant for UI polish and copy drift. | No |
 
 ### 13. Explicit Remaining Blockers Before Gemini
 
 | Blocker | Evidence / source | Status | Notes | Blocks Gemini |
 |---|---|---|---|---|
-| Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_gap_audit.md` | PENDING | The final local deployment smoke is still pending. | Yes |
+| Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_docker_compose_smoke_validation.md` | PASS | The final local deployment smoke passed in mock-first, LLM-disabled mode. | Re-run if Docker, Compose, or runtime assets change. | No |
 | Gemini Provider Integration Readiness Plan | `docs/agent/pre_gemini_gap_audit.md` | PENDING | Future provider planning exists, but a formal Gemini readiness plan is still required before any implementation. | Yes |
 | Keep the matrix current if scope changes | `docs/agent/pre_gemini_test_matrix.md`, `docs/agent/active_explainability_scope_acceptance.md` | MANUAL | If the accepted scope changes, this matrix must be updated. | Depends |
 | Any new requirement added after this matrix | Future repo state | MANUAL | A new requirement would need its own test mapping. | Depends |
@@ -196,17 +196,14 @@ The following are currently covered well enough to count as PASS in the current 
 
 The following remain incomplete or not yet fully proven:
 
-- final Docker / Compose LLM-disabled smoke validation
-- final runtime asset validation if not already separately performed
 - future Gemini readiness planning
 
 ## Gemini Blockers Remaining
 
 Current blockers supported by the audit docs:
 
-1. Docker / Compose LLM-disabled smoke validation is still pending.
-2. The Gemini readiness plan still needs to be written before any integration work begins.
-3. The matrix must stay current if scope changes.
+1. The Gemini readiness plan still needs to be written before any integration work begins.
+2. The matrix must stay current if scope changes.
 
 ## Required Next Sequence
 

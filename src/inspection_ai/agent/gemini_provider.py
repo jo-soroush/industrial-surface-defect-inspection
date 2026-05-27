@@ -200,6 +200,35 @@ class GeminiClientProtocol(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class GeminiGenerationRequest:
+    """Internal request envelope for the injected Gemini provider skeleton."""
+
+    provider_request: AgentProviderRequest
+    allowed_evidence_values: tuple[Any, ...] = field(default_factory=tuple)
+    client_name: str = "injected-sdk-seam"
+
+
+@dataclass(frozen=True, slots=True)
+class GeminiGenerationResult:
+    """Safe result envelope for the injected Gemini provider skeleton."""
+
+    provider_response: AgentProviderResponse
+    status: str
+    safe_to_send: bool
+    safe_to_display: bool
+    provider_error: str | None = None
+    fallback_reason: str | None = None
+    client_name: str = "injected-sdk-seam"
+
+
+class GeminiInjectedClientProtocol(Protocol):
+    """Protocol for an injected SDK-like client used only by tests."""
+
+    def generate(self, request: GeminiGenerationRequest) -> Any:
+        ...
+
+
+@dataclass(frozen=True, slots=True)
 class GeminiMockedClientEvaluation:
     """Safe evaluation result for mocked Gemini client outputs."""
 
@@ -356,6 +385,151 @@ class GeminiProviderStub:
         )
 
     translate_mocked_client_result = evaluate_mocked_client_result
+
+
+@dataclass(frozen=True, slots=True)
+class GeminiProviderSkeleton:
+    """Offline provider skeleton that only works with an injected test client."""
+
+    client: GeminiInjectedClientProtocol | Callable[[GeminiGenerationRequest], Any] | None = None
+    client_name: str = "injected-sdk-seam"
+
+    def generate(
+        self,
+        request: AgentProviderRequest | GeminiGenerationRequest,
+        *,
+        allowed_evidence_values: Iterable[Any] | None = None,
+    ) -> GeminiGenerationResult:
+        generation_request = _coerce_gemini_generation_request(
+            request,
+            allowed_evidence_values=allowed_evidence_values,
+            client_name=self.client_name,
+        )
+
+        if self.client is None:
+            return _build_skeleton_not_implemented_generation_result(generation_request)
+
+        try:
+            raw_result = self._invoke_client(generation_request)
+        except GeminiProviderTimeoutError as exc:
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="timeout",
+                fallback_reason="Gemini injected client timed out; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini injected client timeout.",
+            )
+        except GeminiProviderRateLimitError as exc:
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="rate_limit",
+                fallback_reason="Gemini injected client was rate limited; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini injected client was rate limited.",
+            )
+        except GeminiProviderEmptyResponseError as exc:
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="empty",
+                fallback_reason="Gemini injected client returned no usable text; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini injected client returned an empty response.",
+            )
+        except GeminiProviderMalformedResponseError as exc:
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="malformed",
+                fallback_reason="Gemini injected client returned a malformed payload; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini injected client returned a malformed response.",
+            )
+        except GeminiProviderError as exc:
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="provider_error",
+                fallback_reason="Gemini injected client raised a provider error; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini injected client raised a provider error.",
+            )
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="provider_error",
+                fallback_reason="Gemini injected client raised an unexpected error; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini injected client raised an unexpected error.",
+            )
+
+        normalized_result = _coerce_gemini_client_result(raw_result)
+        if normalized_result is None:
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="malformed",
+                fallback_reason="Gemini injected client returned a malformed payload; mock fallback remains the safe path.",
+                provider_error="Gemini injected client returned a malformed response.",
+            )
+
+        if normalized_result.error_kind == "timeout":
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="timeout",
+                fallback_reason="Gemini injected client timed out; mock fallback remains the safe path.",
+                provider_error="Gemini injected client timeout.",
+            )
+        if normalized_result.error_kind == "provider_error":
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="provider_error",
+                fallback_reason="Gemini injected client raised a provider error; mock fallback remains the safe path.",
+                provider_error="Gemini injected client raised a provider error.",
+            )
+        if normalized_result.error_kind == "rate_limit":
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="rate_limit",
+                fallback_reason="Gemini injected client was rate limited; mock fallback remains the safe path.",
+                provider_error="Gemini injected client was rate limited.",
+            )
+        if normalized_result.error_kind == "empty":
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="empty",
+                fallback_reason="Gemini injected client returned no usable text; mock fallback remains the safe path.",
+                provider_error="Gemini injected client returned an empty response.",
+            )
+        if normalized_result.error_kind == "malformed":
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="malformed",
+                fallback_reason="Gemini injected client returned a malformed payload; mock fallback remains the safe path.",
+                provider_error="Gemini injected client returned a malformed response.",
+            )
+
+        if normalized_result.text is None or not normalized_result.text.strip():
+            return _build_skeleton_fallback_generation_result(
+                generation_request,
+                status="empty",
+                fallback_reason="Gemini injected client returned no usable text; mock fallback remains the safe path.",
+                provider_error="Gemini injected client returned an empty response.",
+            )
+
+        mocked_evaluation = GeminiProviderStub().evaluate_mocked_client_result(
+            generation_request.provider_request,
+            normalized_result,
+            allowed_evidence_values=generation_request.allowed_evidence_values,
+        )
+        return GeminiGenerationResult(
+            provider_response=mocked_evaluation.provider_response,
+            status=mocked_evaluation.status,
+            safe_to_send=mocked_evaluation.safe_to_send,
+            safe_to_display=mocked_evaluation.safe_to_display,
+            provider_error=mocked_evaluation.provider_error,
+            fallback_reason=mocked_evaluation.fallback_reason,
+            client_name=generation_request.client_name,
+        )
+
+    def _invoke_client(self, request: GeminiGenerationRequest) -> Any:
+        if self.client is None:  # pragma: no cover - defensive guard
+            return None
+        if hasattr(self.client, "generate"):
+            return self.client.generate(request)
+        if callable(self.client):
+            return self.client(request)
+        raise GeminiProviderError("Injected Gemini client does not support generate().")
 
 
 def evaluate_gemini_provider_readiness(
@@ -615,4 +789,119 @@ def _build_mock_fallback_evaluation(
         safe_to_display=True,
         provider_error=provider_error,
         fallback_reason=fallback_reason,
+    )
+
+
+def _coerce_gemini_generation_request(
+    request: AgentProviderRequest | GeminiGenerationRequest,
+    *,
+    allowed_evidence_values: Iterable[Any] | None,
+    client_name: str,
+) -> GeminiGenerationRequest:
+    if isinstance(request, GeminiGenerationRequest):
+        if allowed_evidence_values is None:
+            return request
+        merged_allowed_values = tuple(
+            dict.fromkeys(request.allowed_evidence_values + tuple(allowed_evidence_values))
+        )
+        return GeminiGenerationRequest(
+            provider_request=request.provider_request,
+            allowed_evidence_values=merged_allowed_values,
+            client_name=request.client_name or client_name,
+        )
+
+    if allowed_evidence_values is None:
+        allowed = tuple()
+    else:
+        allowed = tuple(allowed_evidence_values)
+
+    return GeminiGenerationRequest(
+        provider_request=request,
+        allowed_evidence_values=allowed,
+        client_name=client_name,
+    )
+
+
+def _coerce_gemini_client_result(raw_result: Any) -> GeminiClientResult | None:
+    if isinstance(raw_result, GeminiClientResult):
+        return raw_result
+    if isinstance(raw_result, str):
+        return GeminiClientResult(text=raw_result)
+    if isinstance(raw_result, dict):
+        if not any(key in raw_result for key in ("text", "payload", "error_kind", "error_message")):
+            return None
+        return GeminiClientResult(
+            text=raw_result.get("text"),
+            payload=raw_result.get("payload"),
+            error_kind=raw_result.get("error_kind"),
+            error_message=raw_result.get("error_message"),
+        )
+
+    text = getattr(raw_result, "text", None)
+    payload = getattr(raw_result, "payload", None)
+    error_kind = getattr(raw_result, "error_kind", None)
+    error_message = getattr(raw_result, "error_message", None)
+    if any(value is not None for value in (text, payload, error_kind, error_message)):
+        return GeminiClientResult(
+            text=text,
+            payload=payload,
+            error_kind=error_kind,
+            error_message=error_message,
+        )
+    return None
+
+
+def _build_skeleton_not_implemented_generation_result(
+    request: GeminiGenerationRequest,
+) -> GeminiGenerationResult:
+    response = build_provider_response(
+        answer=(
+            "I can’t provide a Gemini answer in this slice. "
+            "Mock fallback remains the safe path. Manual review still applies."
+        ),
+        provider_used="mock",
+        fallback_used=True,
+        fallback_reason="Gemini provider skeleton is not implemented in this slice; mock fallback remains the safe path.",
+        grounding_status=_request_grounding_status(request.provider_request),
+        safety_status="pass",
+        limitations=_request_limitations(
+            request.provider_request,
+            [
+                "Gemini provider skeleton is not implemented in this slice; mock fallback remains the safe path.",
+            ],
+        ),
+        evidence_used=_request_evidence_items(request.provider_request),
+        provider_error="Gemini provider skeleton is not implemented in this slice.",
+    )
+    return GeminiGenerationResult(
+        provider_response=response,
+        status="not_implemented",
+        safe_to_send=False,
+        safe_to_display=True,
+        provider_error="Gemini provider skeleton is not implemented in this slice.",
+        fallback_reason=response.fallback_reason,
+        client_name=request.client_name,
+    )
+
+
+def _build_skeleton_fallback_generation_result(
+    request: GeminiGenerationRequest,
+    *,
+    status: str,
+    fallback_reason: str,
+    provider_error: str,
+) -> GeminiGenerationResult:
+    evaluation = _build_mock_fallback_evaluation(
+        request=request.provider_request,
+        fallback_reason=fallback_reason,
+        provider_error=provider_error,
+    )
+    return GeminiGenerationResult(
+        provider_response=evaluation.provider_response,
+        status=status,
+        safe_to_send=True,
+        safe_to_display=evaluation.safe_to_display,
+        provider_error=provider_error,
+        fallback_reason=fallback_reason,
+        client_name=request.client_name,
     )

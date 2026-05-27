@@ -16,6 +16,7 @@ Current conclusion:
 - The first G3 readiness-scaffolding slice is implemented and tested, while real Gemini provider execution remains inactive.
 - The second G3 lazy SDK loader boundary is implemented and tested, while real Gemini provider execution remains inactive.
 - The third G3 health/readiness integration slice is implemented and tested, while real Gemini provider execution remains inactive.
+- The G3 provider skeleton with mocked / injected SDK object is implemented and tested, while real Gemini provider execution remains inactive.
 - The G3 pre-real-call audit exists and defines the final activation gates before any real Gemini implementation.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
@@ -236,6 +237,12 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | `google-genai` is added to the backend/API requirements file only | `requirements-api.txt`, `docs/agent/gemini_g3_dependency_decision.md` | PASS | The backend/API dependency file now includes `google-genai`; frontend, dev, and top-level requirement files remain unchanged. | Exact version pinning remains pending. | No |
+
+### 10.12 Gemini Provider G3 Provider Skeleton with Mocked / Injected SDK Object
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Provider skeleton exists for injected test clients only and stays offline-only | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_provider_skeleton_without_injected_client_returns_not_implemented`, `::test_gemini_provider_skeleton_with_fake_safe_client_returns_safe_provider_result`, `::test_gemini_provider_skeleton_blocks_fake_unsafe_output_by_safety_guard`, `::test_gemini_provider_skeleton_blocks_fake_invented_metric_output`, `::test_gemini_provider_skeleton_blocks_fake_path_and_secret_like_output`, `::test_gemini_provider_skeleton_handles_timeout_provider_error_rate_limit_and_empty_or_malformed_outputs` | PASS | The provider skeleton can translate injected test-client behavior into safe provider-style results without real SDK import, network access, or runtime activation. | Real Gemini provider execution is still not started. | No |
 
 ### 11. Frontend / Wording Consistency
 

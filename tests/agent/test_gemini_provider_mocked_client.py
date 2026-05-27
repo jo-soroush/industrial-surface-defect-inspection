@@ -8,6 +8,13 @@ from pathlib import Path
 from src.inspection_ai.agent.context_builder import build_grounding_context
 from src.inspection_ai.agent.gemini_provider import (
     GeminiClientResult,
+    GeminiGenerationRequest,
+    GeminiProviderError,
+    GeminiProviderEmptyResponseError,
+    GeminiProviderMalformedResponseError,
+    GeminiProviderRateLimitError,
+    GeminiProviderSkeleton,
+    GeminiProviderTimeoutError,
     GeminiProviderStub,
 )
 from src.inspection_ai.agent.provider_contracts import build_provider_request
@@ -197,6 +204,132 @@ def test_gemini_provider_module_does_not_import_provider_sdks_or_network_librari
     assert imported_roots.isdisjoint(banned_roots)
 
 
+def test_gemini_provider_skeleton_without_injected_client_returns_not_implemented() -> None:
+    skeleton = GeminiProviderSkeleton()
+    request = _build_gemini_provider_request()
+
+    result = skeleton.generate(request)
+
+    assert result.status == "not_implemented"
+    assert result.provider_response.provider_used == "mock"
+    assert result.provider_response.fallback_used is True
+    assert result.safe_to_send is False
+    assert result.safe_to_display is True
+    assert result.provider_error is not None
+    assert "not implemented" in result.provider_error.lower()
+    assert result.fallback_reason is not None
+    assert "mock fallback" in result.fallback_reason.lower()
+
+
+def test_gemini_provider_skeleton_accepts_generation_request_envelope() -> None:
+    skeleton = GeminiProviderSkeleton(client=_FakeGeminiClient("safe"))
+    request = GeminiGenerationRequest(provider_request=_build_gemini_provider_request())
+
+    result = skeleton.generate(request)
+
+    assert result.status in {"pass", "limited"}
+    assert result.provider_response.provider_used == "gemini"
+    assert result.provider_response.fallback_used is False
+    assert result.safe_to_display is True
+
+
+def test_gemini_provider_skeleton_with_fake_safe_client_returns_safe_provider_result() -> None:
+    skeleton = GeminiProviderSkeleton(client=_FakeGeminiClient("safe"))
+    request = _build_gemini_provider_request()
+
+    result = skeleton.generate(request)
+
+    assert result.status in {"pass", "limited"}
+    assert result.provider_response.provider_used == "gemini"
+    assert result.provider_response.fallback_used is False
+    assert result.safe_to_send is True
+    assert result.safe_to_display is True
+    assert result.provider_response.raw_provider_response_allowed is False
+    assert "manual review" in result.provider_response.answer.lower()
+
+
+def test_gemini_provider_skeleton_blocks_fake_unsafe_output_by_safety_guard() -> None:
+    skeleton = GeminiProviderSkeleton(client=_FakeGeminiClient("unsafe"))
+    request = _build_gemini_provider_request()
+
+    result = skeleton.generate(request)
+
+    assert result.provider_response.provider_used == "mock"
+    assert result.provider_response.fallback_used is True
+    assert result.provider_response.safety_status == "blocked"
+    assert result.safe_to_display is False
+    assert result.provider_error is not None
+    assert "safety guard" in result.provider_error.lower()
+
+
+def test_gemini_provider_skeleton_blocks_fake_invented_metric_output() -> None:
+    skeleton = GeminiProviderSkeleton(client=_FakeGeminiClient("metric"))
+    request = _build_gemini_provider_request()
+
+    result = skeleton.generate(request)
+
+    assert result.provider_response.provider_used == "mock"
+    assert result.provider_response.fallback_used is True
+    assert result.provider_response.safety_status == "blocked"
+    assert result.safe_to_display is False
+    assert result.provider_error is not None
+
+
+def test_gemini_provider_skeleton_blocks_fake_path_and_secret_like_output() -> None:
+    skeleton = GeminiProviderSkeleton(client=_FakeGeminiClient("path"))
+    request = _build_gemini_provider_request(question="Explain /Users/jo.soroush/secret.key")
+
+    result = skeleton.generate(request)
+
+    assert result.provider_response.provider_used == "mock"
+    assert result.provider_response.fallback_used is True
+    assert result.provider_response.safety_status == "blocked"
+    assert result.safe_to_display is False
+    assert "/Users/jo.soroush/secret.key" not in result.provider_response.answer
+    assert result.provider_error is not None
+
+
+def test_gemini_provider_skeleton_handles_timeout_provider_error_rate_limit_and_empty_or_malformed_outputs() -> None:
+    request = _build_gemini_provider_request()
+
+    timeout_result = GeminiProviderSkeleton(client=_FakeExceptionClient(GeminiProviderTimeoutError("timeout"))).generate(request)
+    provider_error_result = GeminiProviderSkeleton(client=_FakeExceptionClient(GeminiProviderError("error"))).generate(request)
+    rate_limit_result = GeminiProviderSkeleton(client=_FakeExceptionClient(GeminiProviderRateLimitError("rate"))).generate(request)
+    empty_exception_result = GeminiProviderSkeleton(client=_FakeExceptionClient(GeminiProviderEmptyResponseError("empty"))).generate(request)
+    malformed_exception_result = GeminiProviderSkeleton(client=_FakeExceptionClient(GeminiProviderMalformedResponseError("malformed"))).generate(request)
+    empty_result = GeminiProviderSkeleton(client=_FakeGeminiClient("empty")).generate(request)
+    malformed_result = GeminiProviderSkeleton(client=_FakeGeminiClient("malformed")).generate(request)
+
+    assert timeout_result.status == "timeout"
+    assert timeout_result.provider_response.provider_used == "mock"
+    assert timeout_result.provider_response.fallback_used is True
+    assert timeout_result.safe_to_display is True
+
+    assert provider_error_result.status == "provider_error"
+    assert provider_error_result.provider_response.provider_used == "mock"
+    assert provider_error_result.provider_response.fallback_used is True
+
+    assert rate_limit_result.status == "rate_limit"
+    assert rate_limit_result.provider_response.provider_used == "mock"
+    assert rate_limit_result.provider_response.fallback_used is True
+
+    assert empty_exception_result.status == "empty"
+    assert empty_exception_result.provider_response.provider_used == "mock"
+    assert empty_exception_result.provider_response.fallback_used is True
+
+    assert malformed_exception_result.status == "malformed"
+    assert malformed_exception_result.provider_response.provider_used == "mock"
+    assert malformed_exception_result.provider_response.fallback_used is True
+
+    assert empty_result.status == "empty"
+    assert empty_result.provider_response.provider_used == "mock"
+    assert empty_result.provider_response.fallback_used is True
+
+    assert malformed_result.status == "malformed"
+    assert malformed_result.provider_response.provider_used == "mock"
+    assert malformed_result.provider_response.fallback_used is True
+
+
 def test_existing_agent_provider_router_normal_mock_path_remains_unchanged() -> None:
     router = AgentProviderRouter()
     grounding_context = build_grounding_context(
@@ -249,3 +382,37 @@ def _build_gemini_provider_request(*, question: str = "What does this chart mean
         safety_status="pass",
         llm_enabled=True,
     )
+
+
+class _FakeGeminiClient:
+    def __init__(self, mode: str) -> None:
+        self.mode = mode
+
+    def generate(self, request: GeminiGenerationRequest):
+        if self.mode == "safe":
+            return (
+                "This threshold chart summarizes validation evidence and threshold behavior. "
+                "Manual review still applies."
+            )
+        if self.mode == "unsafe":
+            return (
+                "This model is production-ready, deployment-safe, and Gemini is active. "
+                "Manual review is not required."
+            )
+        if self.mode == "metric":
+            return "The threshold is 0.99 and the F1 score is 0.87. Manual review still applies."
+        if self.mode == "path":
+            return "Here is the file path: /Users/jo.soroush/secret.key"
+        if self.mode == "empty":
+            return ""
+        if self.mode == "malformed":
+            return {"unexpected": "structure"}
+        return GeminiClientResult(text="This is a safe mocked Gemini answer. Manual review still applies.")
+
+
+class _FakeExceptionClient:
+    def __init__(self, exc: Exception) -> None:
+        self.exc = exc
+
+    def generate(self, request: GeminiGenerationRequest):
+        raise self.exc

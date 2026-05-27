@@ -25,6 +25,7 @@ The current repository baseline already provides:
 - A first G3 readiness-scaffolding slice that models SDK-missing and key-missing behavior without real Gemini execution.
 - A second G3 offline-only lazy SDK loader boundary that stays SDK-free at module import time.
 - A third G3 health/readiness integration slice that threads safe Gemini metadata into the existing health surface without activating Gemini.
+- A G3 provider skeleton with mocked / injected SDK object that stays offline-only and does not activate Gemini.
 - A G3 pre-real-call audit that defines the final activation gates before any real Gemini implementation.
 - A G3 dependency decision artifact that keeps the requirements change as an explicit, pending decision.
 - A G3 dependency slice that adds `google-genai` to the backend/API requirements only.
@@ -161,6 +162,7 @@ The G3 entry checklist and first-slice plan are documented in `docs/agent/gemini
 The first readiness-scaffolding slice is implemented and tested, but real Gemini provider integration has not started.
 The second offline-only lazy SDK loader boundary is implemented and tested, but real Gemini provider integration has not started.
 The third health/readiness integration slice is implemented and tested, but real Gemini provider integration has not started.
+The provider skeleton with mocked / injected SDK object is implemented and tested, but real Gemini provider integration has not started.
 The G3 pre-real-call audit is implemented and reviewed, but real Gemini provider integration has not started.
 The G3 dependency decision artifact is implemented and reviewed, and the backend/API requirements slice is applied.
 

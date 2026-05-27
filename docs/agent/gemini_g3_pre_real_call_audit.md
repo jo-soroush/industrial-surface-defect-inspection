@@ -41,6 +41,7 @@ The following items are complete and established in the repository:
 - G3 first coding slice readiness scaffolding
 - G3 second coding slice lazy SDK loader boundary
 - G3 third coding slice health / readiness metadata
+- G3 provider skeleton with mocked / injected SDK object
 - G3 dependency decision artifact
 - G3 backend/API requirements slice (`google-genai`)
 - deterministic safety guard

@@ -77,6 +77,23 @@ What this does not mean:
 - A Gemini API call is implemented.
 - Real Gemini provider execution has started.
 
+## Fourth Slice Status
+
+The provider skeleton with mocked / injected SDK object is implemented and tested.
+
+What this means:
+
+- The future provider boundary can be exercised through injected test clients only.
+- The module remains offline-only and does not create a real Gemini client.
+- Safe fallback behavior remains in place when no injected client is provided.
+
+What this does not mean:
+
+- Google Gen AI SDK is installed.
+- Real Gemini provider execution has started.
+- Gemini is connected.
+- Gemini is active.
+
 ## Pre-Real-Call Audit Status
 
 The pre-real-call audit is implemented and reviewed.
@@ -232,7 +249,8 @@ G3 real provider implementation has not started.
 No Gemini API call is implemented.
 No real LLM execution is active.
 Gemini runtime activation is not active.
+The provider skeleton with mocked / injected SDK object is implemented, but it does not activate Gemini or change runtime behavior.
 The health/readiness metadata slice is implemented, but it does not activate Gemini.
 The pre-real-call audit is implemented, but it does not activate Gemini or change runtime behavior.
-The dependency decision is documented, but the requirements change remains pending until a separate approved slice.
+The dependency decision is documented, and the backend/API requirements slice is applied. Exact version pinning remains a separate review item.
 The backend/API requirements slice is applied, but it does not activate Gemini or change runtime behavior.

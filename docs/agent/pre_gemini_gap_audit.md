@@ -10,6 +10,19 @@ What is confirmed:
 - Component registry, evidence loader, context builder, and component-aware frontend wiring are implemented for selected components.
 - Mock answers are evidence-aware and remain offline.
 - Frontend wording has been aligned so it no longer claims that no backend Agent exists.
+- The latest validated commit is `4ca66ad [docs] Add EC2 LLM-disabled validation evidence`.
+- The working tree after that commit and validation is clean.
+- Python compileall passed.
+- `pytest tests/agent/ -q` passed with 138 tests.
+- EC2 LLM-disabled validation evidence is PASS.
+- Real Gemini/Grok/OpenAI calls were not run.
+- `GEMINI_API_KEY` was not read, printed, used, validated, or inspected.
+- Real LLM runtime remains inactive.
+- Provider routing activation remains disabled.
+- Production readiness is not claimed.
+- HTTPS/domain readiness is not claimed.
+- Real LLM readiness is not claimed.
+- The EC2 instance was stopped after validation, not terminated.
 
 What is still missing before any Gemini work:
 
@@ -52,8 +65,8 @@ What is still missing before any Gemini work:
   - `python -m compileall frontend tests api src/inspection_ai scripts`
   - `pytest tests/docker/ -q`
   - `pytest tests/frontend/ -q`
-  - `pytest tests/api/test_agent_endpoint.py -q`
-  - `pytest tests/agent/ -q`
+- `pytest tests/api/test_agent_endpoint.py -q`
+- `pytest tests/agent/ -q` (138 passed)
 
 ## Phase-by-Phase Status
 

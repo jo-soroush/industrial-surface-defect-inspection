@@ -11,6 +11,7 @@ import os
 from typing import Any
 
 from .context_builder import AgentGroundingContext, load_global_context
+from .safety_guard import guard_post_generation_text, guard_pre_generation_context
 from .schemas import AgentExplainResponse, AgentHealthResponse, AgentEvidenceItem
 
 
@@ -123,7 +124,14 @@ class AgentProviderRouter:
 
     def explain(self, grounding_context: AgentGroundingContext) -> AgentExplainResponse:
         """Return a grounded mock explanation response."""
-        if _question_requests_forbidden_claim(grounding_context.question, self._global_context):
+        pre_guard = guard_pre_generation_context(grounding_context)
+        if pre_guard.blocked:
+            answer = pre_guard.sanitized_text or (
+                "I can’t provide that answer because the requested prompt is unsafe under the Agent safety guard. "
+                "Manual review still applies."
+            )
+            grounding_status = "unsupported"
+        elif _question_requests_forbidden_claim(grounding_context.question, self._global_context):
             answer = (
                 "I can’t provide a claim about production readiness, deployment safety, autonomous decisions, "
                 "replacing human review, or invented evidence. This assistant is limited to grounded explanations "
@@ -132,6 +140,13 @@ class AgentProviderRouter:
             grounding_status = "unsupported"
         else:
             answer, grounding_status = _build_mock_answer(grounding_context)
+            post_guard = guard_post_generation_text(answer, grounding_context=grounding_context)
+            if post_guard.blocked:
+                answer = post_guard.sanitized_text or (
+                    "I can’t provide that answer because the generated text is unsafe under the Agent safety guard. "
+                    "Manual review still applies."
+                )
+                grounding_status = "unsupported"
 
         evidence_used = [AgentEvidenceItem(**item) for item in grounding_context.evidence_used]
         limitations = list(dict.fromkeys(grounding_context.limitations + [

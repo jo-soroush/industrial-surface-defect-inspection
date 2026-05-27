@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from src.inspection_ai.agent.context_builder import build_grounding_context
+import src.inspection_ai.agent.provider_router as provider_router_module
 from src.inspection_ai.agent.provider_router import AgentProviderRouter, AgentProviderSettings
 
 
@@ -116,7 +119,7 @@ def test_mock_provider_rejects_forbidden_claim_requests() -> None:
     assert deploy_response.grounding_status == "unsupported"
     assert review_response.grounding_status == "unsupported"
     assert "deployment" in deploy_response.answer.lower()
-    assert "human review" in review_response.answer.lower()
+    assert "manual review still applies" in review_response.answer.lower()
     assert deploy_response.provider_used == "mock"
     assert review_response.provider_used == "mock"
 
@@ -244,6 +247,70 @@ def test_non_component_image_inspection_mock_answer_still_works() -> None:
     assert response.grounding_status == "grounded"
     assert "inspection result is defective" in response.answer.lower()
     assert "manual review" in response.answer.lower()
+
+
+def test_mock_provider_routes_through_safety_guard(monkeypatch) -> None:
+    calls: list[tuple[str, str | None]] = []
+
+    def fake_pre_generation_guard(grounding_context):
+        calls.append(("pre", grounding_context.component_id))
+        return SimpleNamespace(
+            blocked=False,
+            sanitized_text=None,
+            reasons=(),
+            warnings=(),
+            limitations=(),
+            sanitized_context={},
+            safe_to_send=True,
+            safe_to_display=True,
+        )
+
+    def fake_post_generation_guard(answer_text, *, grounding_context=None, allowed_evidence_values=None):
+        calls.append(("post", grounding_context.component_id if grounding_context else None))
+        return SimpleNamespace(
+            blocked=False,
+            sanitized_text=answer_text,
+            reasons=(),
+            warnings=(),
+            limitations=(),
+            sanitized_context={},
+            safe_to_send=True,
+            safe_to_display=True,
+        )
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "guard_pre_generation_context",
+        fake_pre_generation_guard,
+    )
+    monkeypatch.setattr(
+        provider_router_module,
+        "guard_post_generation_text",
+        fake_post_generation_guard,
+    )
+
+    router = AgentProviderRouter()
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Why is this image defective?",
+        visible_context={},
+        inspection_response={
+            "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert calls[0] == ("pre", None)
+    assert calls[1] == ("post", None)
+    assert response.provider_used == "mock"
+    assert response.grounding_status == "grounded"
 
 
 def _component_response(

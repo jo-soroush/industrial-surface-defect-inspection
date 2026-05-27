@@ -13,8 +13,7 @@ What is confirmed:
 
 What is still missing before any Gemini work:
 
-- A formal full-component coverage audit across the entire dashboard.
-- A dedicated safety-guard layer for pre- and post-LLM behavior.
+- Active explainability coverage still needs explicit scope acceptance before Gemini.
 - A formal provider readiness/contract layer.
 - A requirements-to-test matrix that explicitly maps every Gemini blocker to a test.
 - A final LLM-disabled Docker/Compose smoke validation after the remaining gaps are closed.
@@ -27,6 +26,7 @@ What is still missing before any Gemini work:
 - The evidence loader exists and loads compact governed evidence for registry-backed components.
 - The context builder supports optional `component_id`.
 - The Agent API schema supports optional `component_id`.
+- The Agent safety guard module exists and is exercised by the mock provider path.
 - Frontend component-aware explanation panels are active for:
   - Image Inspection AI panel
   - Detection confidence chart
@@ -53,7 +53,7 @@ What is still missing before any Gemini work:
 | Phase 6 - Agent API Schema Upgrade | PASS | `AgentExplainRequest` and `AgentExplainResponse` support optional `component_id`; invalid component IDs return validation errors. | No schema gap in the current implementation. | Preserve backward compatibility for non-component requests. | No |
 | Phase 7 - Frontend Component Wiring | PARTIAL | Frontend wiring exists for the active priority components. | Only the priority components are wired; the full dashboard is not component-wired. | Wire additional components only after coverage audit and safety guard completion. | Yes |
 | Phase 8 - Mock Answer Upgrade Based on Evidence | PASS | Mock answers are evidence-aware and component-specific for the active surfaces. | Future richer language output is still limited to mock behavior. | Keep mock answers offline and bounded by evidence. | No |
-| Phase 9 - Safety Guard Layer Before LLM | PARTIAL | Current pages and callouts preserve manual review and avoid production/deployment claims. | There is no formal guard module that sits between future LLM prompts and the Agent outputs. | Add a dedicated safety guard layer with refusal and claim-blocking tests. | Yes |
+| Phase 9 - Safety Guard Layer Before LLM | PASS | `src/inspection_ai/agent/safety_guard.py` provides deterministic pre- and post-generation checks, and the provider router exercises the guard on the mock Agent path. | Future provider-specific policy wiring will still need to reuse the same guard contract, but the formal safety layer now exists. | Preserve the guard contract and keep expanding its tests before any real provider work. | No |
 | Phase 10 - Provider Interface, Still No Gemini | PARTIAL | Provider routing is mock-first, and health state confirms no real provider execution. | A formal provider readiness/contract layer for future Gemini/Grok/OpenAI integration is still needed. | Finalize provider contract/readiness checks before any real provider work. | Yes |
 | Phase 11 - Full Test Matrix Before Gemini | PARTIAL | The current test suite is strong and covers the working Agent foundation and frontend wiring. | There is no formal requirement-to-test matrix that maps every Gemini blocker to a test. | Produce and maintain a pre-Gemini requirement-to-test matrix. | Yes |
 | Phase 12 - Local Validation Before Gemini | PARTIAL | Python compilation and pytest validations pass. | LLM-disabled Docker/Compose smoke validation is still pending after the remaining pre-Gemini work is completed. | Run the final Docker/Compose validation with LLM disabled before any Gemini plan begins. | Yes |
@@ -125,11 +125,9 @@ The mock provider now produces evidence-aware answers that reference selected co
 
 ### Phase 9 - Safety Guard Layer Before LLM
 
-Status: PARTIAL
+Status: PASS
 
-Current wording and response text preserve manual review boundaries and avoid production/deployment claims. That is useful, but it is not yet a formal guard layer with explicit pre/post LLM enforcement.
-
-Required next action: introduce a formal safety guard module that blocks claim drift before any future LLM integration.
+The repository now has a formal, deterministic safety guard module and the mock Agent path exercises it before and after answer generation. The guard enforces claim-blocking and redaction rules for future provider work without changing the current safe mock behavior.
 
 ### Phase 10 - Provider Interface, Still No Gemini
 
@@ -157,8 +155,7 @@ Required next action: run the final Docker/Compose validation with LLM disabled,
 
 ## Blocking Items Before Gemini
 
-- Formal full dashboard component coverage audit is not yet complete.
-- Formal safety guard layer is not yet implemented.
+- Active explainability scope is not yet formally accepted for Gemini use.
 - Provider readiness/contract layer is not yet finalized.
 - Requirement-to-test matrix is not yet formalized.
 - Final LLM-disabled Docker/Compose validation is not yet run after the remaining work.
@@ -182,4 +179,3 @@ Required next action: run the final Docker/Compose validation with LLM disabled,
 - Local Docker/Compose validation with LLM disabled has passed after the remaining work.
 - The repository still passes the focused compile and pytest checks.
 - The project has not introduced any production/deployment claims.
-

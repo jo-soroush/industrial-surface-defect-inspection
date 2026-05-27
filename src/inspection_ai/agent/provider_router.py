@@ -11,6 +11,14 @@ import os
 from typing import Any
 
 from .context_builder import AgentGroundingContext, load_global_context
+from .provider_contracts import (
+    AgentProviderRequest,
+    AgentProviderResponse,
+    ProviderRuntimeSettings,
+    build_provider_request,
+    build_provider_response,
+    evaluate_provider_readiness,
+)
 from .safety_guard import guard_post_generation_text, guard_pre_generation_context
 from .schemas import AgentExplainResponse, AgentHealthResponse, AgentEvidenceItem
 
@@ -89,12 +97,14 @@ class AgentProviderRouter:
     @property
     def available_providers(self) -> list[str]:
         """Return providers that are actually available in the MVP runtime."""
-        return ["mock"]
+        readiness = evaluate_provider_readiness(self._provider_runtime_settings())
+        return [name for name, result in readiness.items() if result.availability.available and name == "mock"]
 
     def health(self) -> AgentHealthResponse:
         """Return a safe health snapshot for the agent layer."""
-        warnings = []
-        warnings.append("Mock fallback is active in the current MVP.")
+        provider_runtime_settings = self._provider_runtime_settings()
+        readiness = evaluate_provider_readiness(provider_runtime_settings)
+        warnings = list(readiness["mock"].warnings)
         if not self.settings.enable_fallback:
             warnings.append(
                 "LLM_ENABLE_FALLBACK was disabled, but mock fallback is mandatory in this MVP slice."
@@ -103,10 +113,8 @@ class AgentProviderRouter:
             warnings.append(
                 "AGENT_ENABLE_LLM was requested, but real provider execution is intentionally disabled in this MVP slice."
             )
-        if not self.settings.gemini_api_key:
-            warnings.append("GEMINI_API_KEY is missing; Gemini is unavailable in this MVP slice.")
-        if not self.settings.grok_api_key:
-            warnings.append("GROK_API_KEY is missing; Grok is unavailable in this MVP slice.")
+        warnings.extend(readiness["gemini"].warnings)
+        warnings.extend(readiness["grok"].warnings)
         if self.settings.default_provider != "mock":
             warnings.append("Mock remains the default safe provider for this MVP.")
         return AgentHealthResponse(
@@ -125,6 +133,13 @@ class AgentProviderRouter:
     def explain(self, grounding_context: AgentGroundingContext) -> AgentExplainResponse:
         """Return a grounded mock explanation response."""
         pre_guard = guard_pre_generation_context(grounding_context)
+        provider_request = build_provider_request(
+            provider_name="mock",
+            grounding_context=grounding_context,
+            sanitized_context=pre_guard.sanitized_context,
+            safety_status=pre_guard.status,
+            llm_enabled=self.settings.enable_llm,
+        )
         if pre_guard.blocked:
             answer = pre_guard.sanitized_text or (
                 "I can’t provide that answer because the requested prompt is unsafe under the Agent safety guard. "
@@ -148,23 +163,44 @@ class AgentProviderRouter:
                 )
                 grounding_status = "unsupported"
 
-        evidence_used = [AgentEvidenceItem(**item) for item in grounding_context.evidence_used]
         limitations = list(dict.fromkeys(grounding_context.limitations + [
-            "This assistant is planned / not active as an external provider integration.",
-            "No backend agent or LLM call is used in the MVP mock path.",
+            "Mock backend Agent is active in the current MVP path.",
+            "External LLM provider integration is not active in this MVP slice.",
+            "No real LLM provider call is made in the MVP mock path.",
             "Manual review still applies.",
         ]))
 
-        return AgentExplainResponse(
+        provider_response = build_provider_response(
             answer=answer,
-            evidence_used=evidence_used,
-            limitations=limitations,
             provider_used="mock",
             fallback_used=True,
+            fallback_reason="Mock provider is the MVP fallback.",
             grounding_status=grounding_status,
+            safety_status=pre_guard.status,
+            limitations=limitations,
+            evidence_used=provider_request.grounding_context.get("evidence_used", []),
+        )
+
+        return AgentExplainResponse(
+            answer=provider_response.answer,
+            evidence_used=[AgentEvidenceItem(**item) for item in provider_response.evidence_used],
+            limitations=list(provider_response.limitations),
+            provider_used=provider_response.provider_used,
+            fallback_used=provider_response.fallback_used,
+            grounding_status=provider_response.grounding_status,
             page_id=grounding_context.page_id,  # type: ignore[arg-type]
             section_id=grounding_context.section_id,
             component_id=grounding_context.component_id,
+        )
+
+    def _provider_runtime_settings(self) -> ProviderRuntimeSettings:
+        return ProviderRuntimeSettings(
+            enable_llm=self.settings.enable_llm,
+            default_provider=self.settings.default_provider,
+            provider_order=self.settings.provider_order,
+            enable_fallback=self.settings.enable_fallback,
+            gemini_key_present=bool(self.settings.gemini_api_key),
+            grok_key_present=bool(self.settings.grok_api_key),
         )
 
 
@@ -422,7 +458,10 @@ def _build_safety_answer(section_id: str, visible_context: dict[str, Any], limit
     if section_id == "manual_review":
         return "Manual review remains required because the dashboard aggregates governed evidence instead of replacing human judgment."
     if section_id == "ai_assistant_state":
-        return "The AI assistant is planned / not active. It is a placeholder for future evidence-grounded explanations."
+        return (
+            "The AI assistant is a mock backend Agent surface for selected evidence-grounded explanations. "
+            "External LLM provider integration is not active in this MVP slice."
+        )
     if section_id == "docker_release":
         return "Docker and release work are later phases and should not be interpreted as completed deployment readiness."
     return _fallback_page_answer("Safety & Limitations", visible_context, limitations=limitations)
@@ -430,7 +469,10 @@ def _build_safety_answer(section_id: str, visible_context: dict[str, Any], limit
 
 def _build_ai_assistant_answer(section_id: str, visible_context: dict[str, Any]) -> str:
     if section_id == "preview_status":
-        return "The AI Explanation Assistant is a planned future capability, not an active agent."
+        return (
+            "The AI Explanation Assistant currently uses a mock backend Agent for selected evidence-grounded "
+            "explanations. Broader external LLM provider integration remains planned for a later phase."
+        )
     if section_id == "future_scope":
         return "Future explanations should stay grounded in governed evidence, page summaries, chart summaries, and current inspection results."
     if section_id == "boundaries":

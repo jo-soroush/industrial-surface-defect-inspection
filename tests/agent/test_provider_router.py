@@ -92,6 +92,12 @@ def test_mock_provider_grounded_answer_mentions_manual_review() -> None:
     assert "manual review" in response.answer.lower()
     assert any(item.source == "inspection_response.decision.final_decision" for item in response.evidence_used)
     assert any("production-ready" in limitation.lower() for limitation in response.limitations)
+    assert any("mock backend agent" in limitation.lower() for limitation in response.limitations)
+    assert any("external llm" in limitation.lower() for limitation in response.limitations)
+    assert any("no real llm provider call" in limitation.lower() for limitation in response.limitations)
+    assert all("no backend agent" not in limitation.lower() for limitation in response.limitations)
+    assert all("planned / not active" not in limitation.lower() for limitation in response.limitations)
+    assert all("no backend agent or llm call" not in limitation.lower() for limitation in response.limitations)
 
 
 def test_mock_provider_rejects_forbidden_claim_requests() -> None:
@@ -256,6 +262,7 @@ def test_mock_provider_routes_through_safety_guard(monkeypatch) -> None:
         calls.append(("pre", grounding_context.component_id))
         return SimpleNamespace(
             blocked=False,
+            status="pass",
             sanitized_text=None,
             reasons=(),
             warnings=(),
@@ -269,6 +276,7 @@ def test_mock_provider_routes_through_safety_guard(monkeypatch) -> None:
         calls.append(("post", grounding_context.component_id if grounding_context else None))
         return SimpleNamespace(
             blocked=False,
+            status="pass",
             sanitized_text=answer_text,
             reasons=(),
             warnings=(),
@@ -311,6 +319,26 @@ def test_mock_provider_routes_through_safety_guard(monkeypatch) -> None:
     assert calls[1] == ("post", None)
     assert response.provider_used == "mock"
     assert response.grounding_status == "grounded"
+
+
+def test_ai_assistant_copy_uses_current_mock_agent_language() -> None:
+    router = AgentProviderRouter()
+    grounding_context = build_grounding_context(
+        page_id="ai_assistant",
+        section_id="preview_status",
+        question="What is the assistant state?",
+        visible_context={},
+        inspection_response={},
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    normalized_answer = response.answer.lower()
+    assert "mock backend agent" in normalized_answer
+    assert "external llm" in normalized_answer
+    assert "planned future capability" not in normalized_answer
+    assert "planned / not active" not in normalized_answer
 
 
 def _component_response(

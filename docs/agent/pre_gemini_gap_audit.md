@@ -14,7 +14,6 @@ What is confirmed:
 What is still missing before any Gemini work:
 
 - Active explainability coverage still needs explicit scope acceptance before Gemini.
-- A formal provider readiness/contract layer.
 - A requirements-to-test matrix that explicitly maps every Gemini blocker to a test.
 - A final LLM-disabled Docker/Compose smoke validation after the remaining gaps are closed.
 
@@ -27,6 +26,7 @@ What is still missing before any Gemini work:
 - The context builder supports optional `component_id`.
 - The Agent API schema supports optional `component_id`.
 - The Agent safety guard module exists and is exercised by the mock provider path.
+- The provider contract/readiness layer exists and is used by the provider router.
 - Frontend component-aware explanation panels are active for:
   - Image Inspection AI panel
   - Detection confidence chart
@@ -54,7 +54,7 @@ What is still missing before any Gemini work:
 | Phase 7 - Frontend Component Wiring | PARTIAL | Frontend wiring exists for the active priority components. | Only the priority components are wired; the full dashboard is not component-wired. | Wire additional components only after coverage audit and safety guard completion. | Yes |
 | Phase 8 - Mock Answer Upgrade Based on Evidence | PASS | Mock answers are evidence-aware and component-specific for the active surfaces. | Future richer language output is still limited to mock behavior. | Keep mock answers offline and bounded by evidence. | No |
 | Phase 9 - Safety Guard Layer Before LLM | PASS | `src/inspection_ai/agent/safety_guard.py` provides deterministic pre- and post-generation checks, and the provider router exercises the guard on the mock Agent path. | Future provider-specific policy wiring will still need to reuse the same guard contract, but the formal safety layer now exists. | Preserve the guard contract and keep expanding its tests before any real provider work. | No |
-| Phase 10 - Provider Interface, Still No Gemini | PARTIAL | Provider routing is mock-first, and health state confirms no real provider execution. | A formal provider readiness/contract layer for future Gemini/Grok/OpenAI integration is still needed. | Finalize provider contract/readiness checks before any real provider work. | Yes |
+| Phase 10 - Provider Interface, Still No Gemini | PASS | `src/inspection_ai/agent/provider_contracts.py` defines typed provider request/response/status/readiness contracts, and `src/inspection_ai/agent/provider_router.py` uses the readiness snapshot for health and fallback semantics. | Future Gemini/Grok/OpenAI provider code will still need to reuse this contract, but the readiness layer itself now exists and is exercised. | Preserve the contract and keep future provider work behind the same mock-first guardrails. | No |
 | Phase 11 - Full Test Matrix Before Gemini | PARTIAL | The current test suite is strong and covers the working Agent foundation and frontend wiring. | There is no formal requirement-to-test matrix that maps every Gemini blocker to a test. | Produce and maintain a pre-Gemini requirement-to-test matrix. | Yes |
 | Phase 12 - Local Validation Before Gemini | PARTIAL | Python compilation and pytest validations pass. | LLM-disabled Docker/Compose smoke validation is still pending after the remaining pre-Gemini work is completed. | Run the final Docker/Compose validation with LLM disabled before any Gemini plan begins. | Yes |
 
@@ -131,11 +131,9 @@ The repository now has a formal, deterministic safety guard module and the mock 
 
 ### Phase 10 - Provider Interface, Still No Gemini
 
-Status: PARTIAL
+Status: PASS
 
-Provider routing is mock-first and no real provider is active. That said, the repository still lacks a formal provider readiness layer that defines how Gemini/Grok/OpenAI would be enabled later without changing the safety contract.
-
-Required next action: define provider contract and readiness checks before any provider implementation work.
+The repository now has a formal provider contract/readiness layer and the provider router uses it for health and fallback semantics. The mock-first runtime remains intact, and no real provider execution is enabled.
 
 ### Phase 11 - Full Test Matrix Before Gemini
 

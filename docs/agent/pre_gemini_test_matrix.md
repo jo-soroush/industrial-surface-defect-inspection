@@ -24,6 +24,7 @@ Current conclusion:
 - The G3 final real-smoke execution checklist exists and defines the mandatory pre-execution review items, but it has not approved execution.
 - The G3 harness dry-run verification evidence exists and records the disabled-by-default harness behavior, but it is not real smoke evidence.
 - The first safe Gemini code slice exists as regression coverage for the disabled-by-default Gemini boundary and keeps the runtime mock-first.
+- The second safe Gemini slice exists as regression coverage proving provider router health, `/agent/explain`, and API health remain mock-first and secret-safe even when fake Gemini/Grok key-like values are present.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
 - The Phase 12 LLM-disabled Docker / Compose readiness audit exists and records the read-only compose validation plan before any actual Docker / Compose run.
@@ -113,7 +114,7 @@ Validated in the repository state referenced by this audit:
 | Optional `component_id` is accepted | `tests/api/test_agent_endpoint.py::test_agent_explain_accepts_classification_component_id`, `::test_agent_explain_accepts_detection_component_id`, `::test_agent_explain_accepts_image_inspection_ai_panel_component_id` | PASS | The endpoint accepts component-aware requests. | None in the current evidence set. | No |
 | Old requests without `component_id` still work | `tests/api/test_agent_endpoint.py::test_agent_explain_existing_image_inspection_request_without_component_id_still_works` | PASS | Backward compatibility is preserved. | None in the current evidence set. | No |
 | Invalid `component_id` gives a safe error | `tests/api/test_agent_endpoint.py::test_agent_explain_rejects_invalid_component_id_safely` | PASS | Invalid components fail safely and deterministically. | None in the current evidence set. | No |
-| `provider_used` remains mock | `tests/api/test_agent_endpoint.py::test_agent_health_reports_mock_only_mvp_state`, `tests/api/test_agent_endpoint.py::test_agent_explain_returns_grounded_mock_answer_for_image_inspection` | PASS | The API remains mock-first. | None in the current evidence set. | No |
+| `provider_used` remains mock | `tests/api/test_agent_endpoint.py::test_agent_health_reports_mock_only_mvp_state`, `tests/api/test_agent_endpoint.py::test_agent_explain_returns_grounded_mock_answer_for_image_inspection`, `tests/api/test_agent_endpoint.py::test_agent_health_stays_mock_first_with_fake_key_present` | PASS | The API remains mock-first, including when fake key-like values are present. | None in the current evidence set. | No |
 | `fallback_used` remains compatible | `tests/api/test_agent_endpoint.py::test_agent_explain_returns_grounded_mock_answer_for_image_inspection`, related mock provider tests | PASS | Fallback semantics remain stable. | None in the current evidence set. | No |
 | `grounding_status` is preserved | `tests/api/test_agent_endpoint.py`, `tests/agent/test_provider_router.py` | PASS | Grounding status remains part of the response contract and is exercised in the tests. | No formal contract drift identified. | No |
 
@@ -230,7 +231,7 @@ Validated in the repository state referenced by this audit:
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
-| Gemini readiness metadata is threaded into the existing health surface without activating Gemini | `tests/agent/test_provider_router.py::test_health_reports_mock_first_mvp_state`, `::test_missing_provider_keys_do_not_break_mock_health`, `::test_gemini_health_metadata_does_not_expose_raw_key_values`, `tests/api/test_agent_endpoint.py::test_agent_health_reports_mock_only_mvp_state` | PASS | Health and readiness now expose safe Gemini metadata in warnings and router helpers while keeping mock-only runtime behavior and no secret exposure. | Real Gemini provider code is still not started. | No |
+| Gemini readiness metadata is threaded into the existing health surface without activating Gemini | `tests/agent/test_provider_router.py::test_health_reports_mock_first_mvp_state`, `::test_missing_provider_keys_do_not_break_mock_health`, `::test_gemini_health_metadata_does_not_expose_raw_key_values`, `::test_health_stays_mock_first_with_fake_key_present_and_llm_requested`, `::test_router_explain_stays_mock_first_with_fake_key_present`, `tests/api/test_agent_endpoint.py::test_agent_health_reports_mock_only_mvp_state`, `::test_agent_health_stays_mock_first_when_llm_is_requested`, `::test_agent_health_stays_mock_first_with_fake_key_present` | PASS | Health and readiness now expose safe Gemini metadata in warnings and router helpers while keeping mock-only runtime behavior and no secret exposure, even when fake key-like values are present. | Real Gemini provider code is still not started. | No |
 
 ### 10.9 Gemini Provider G3 Pre-Real-Call Audit
 
@@ -266,7 +267,7 @@ Validated in the repository state referenced by this audit:
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
-| Router activation tests prove Gemini remains mock-first unless all gates pass | `tests/agent/test_provider_router.py::test_gemini_route_decision_stays_mock_when_llm_disabled_even_with_key`, `::test_gemini_route_decision_stays_mock_when_key_is_missing`, `::test_gemini_route_decision_stays_mock_when_real_provider_is_not_implemented`, `::test_gemini_route_decision_stays_mock_when_sdk_is_available_but_activation_is_disabled` | PASS | The router helper reports mock fallback and disabled-by-default routing when any required gate fails, while the normal `/agent/explain` path remains mock-only. | Real Gemini provider execution is still not started. | No |
+| Router activation tests prove Gemini remains mock-first unless all gates pass | `tests/agent/test_provider_router.py::test_gemini_route_decision_stays_mock_when_llm_disabled_even_with_key`, `::test_gemini_route_decision_stays_mock_when_key_is_missing`, `::test_gemini_route_decision_stays_mock_when_real_provider_is_not_implemented`, `::test_gemini_route_decision_stays_mock_when_sdk_is_available_but_activation_is_disabled`, `::test_health_stays_mock_first_with_fake_key_present_and_llm_requested`, `::test_router_explain_stays_mock_first_with_fake_key_present` | PASS | The router helper reports mock fallback and disabled-by-default routing when any required gate fails, while the normal `/agent/explain` path remains mock-only even when fake key-like values are present. | Real Gemini provider execution is still not started. | No |
 
 ### 10.15 Gemini Provider G3 Real Provider Execution Boundary
 

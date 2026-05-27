@@ -252,7 +252,7 @@ Observed result:
 - `tests/docker`: 15 passed
 - `tests/api/test_agent_endpoint.py`: 10 passed
 - `tests/frontend`: 34 passed
-- `tests/agent`: 139 passed
+- `tests/agent`: 141 passed
 
 ## PASS Criteria Result
 

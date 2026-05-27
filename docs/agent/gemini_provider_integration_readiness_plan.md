@@ -35,6 +35,7 @@ The current repository baseline already provides:
 - A G3 final real-smoke execution checklist that defines the mandatory pre-execution review items only.
 - A G3 harness dry-run verification evidence document that records the harness verification but does not claim a real smoke.
 - A first safe Gemini code slice that adds regression coverage for the disabled-by-default Gemini boundary without changing runtime behavior.
+- A second safe Gemini code slice that adds regression coverage proving provider router health, `/agent/explain`, and API health remain mock-first and secret-safe even when fake key-like values are present.
 - A G3 dependency decision artifact that keeps the requirements change as an explicit, pending decision.
 - A G3 dependency slice that adds `google-genai` to the backend/API requirements only.
 - A Phase 12 LLM-disabled Docker / Compose readiness audit that records the read-only validation plan before any actual Docker / Compose run.
@@ -182,6 +183,7 @@ The G3 local real-smoke harness skeleton is implemented and tested, but real Gem
 The G3 final real-smoke execution checklist is implemented as documentation only, but real Gemini provider integration has not started.
 The G3 harness dry-run verification evidence is implemented as documentation only, but real Gemini provider integration has not started.
 The first safe Gemini code slice is implemented as regression coverage only, but real Gemini provider integration has not started.
+The second safe Gemini code slice is implemented as regression coverage only, but real Gemini provider integration has not started.
 The Phase 12 LLM-disabled Docker / Compose validation evidence is implemented as documentation only and records the local PASS.
 The EC2 LLM-disabled validation evidence now records the actual EC2 PASS and confirms the instance was stopped after validation.
 The G3 dependency decision artifact is implemented and reviewed, and the backend/API requirements slice is applied.

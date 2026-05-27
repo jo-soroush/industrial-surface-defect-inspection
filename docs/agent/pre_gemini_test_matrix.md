@@ -1,0 +1,226 @@
+# Pre-Gemini Requirement-to-Test Matrix
+
+## Executive Summary
+
+This document maps the current pre-Gemini Agent/RAG foundation requirements to the concrete tests and validation commands that support them.
+
+Current conclusion:
+
+- The core Agent foundation is implemented and well covered by targeted tests.
+- The formal test matrix now exists and ties the main pre-Gemini requirements to repository evidence.
+- The remaining gaps are not in the basic mock Agent or safety plumbing; they are in final local deployment validation and any remaining Gemini-readiness scope acceptance.
+- This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
+
+## Current Validated State
+
+Validated in the repository state referenced by this audit:
+
+- `python -m compileall frontend tests api src/inspection_ai scripts`
+- `pytest tests/agent/ -q`
+- `pytest tests/api/test_agent_endpoint.py -q`
+- `pytest tests/frontend/ -q`
+- `git status --short --untracked-files=all` was clean at the validated baseline referenced in the audit history.
+
+## Matrix Status Legend
+
+| Status | Meaning |
+|---|---|
+| PASS | Requirement is implemented and covered by explicit tests or validation commands. |
+| PARTIAL | Requirement is implemented in part, but the coverage or scope proof is not complete. |
+| PENDING | Requirement is expected but not yet validated in the current evidence set. |
+| MANUAL | Requirement depends on a manual review or a non-automated control. |
+
+## Requirement-to-Test Matrix
+
+### 1. Baseline and Repository Cleanliness
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Python source compiles cleanly | `python -m compileall frontend tests api src/inspection_ai scripts` | PASS | Current validation set passes. | None in the current evidence set. | No |
+| Focused pytest suites pass | `pytest tests/agent/ -q`, `pytest tests/api/test_agent_endpoint.py -q`, `pytest tests/frontend/ -q` | PASS | Agent, API, and frontend targeted suites pass. | None in the current evidence set. | No |
+| Repository cleanliness is maintained at the validated baseline | `git status --short --untracked-files=all` | PASS | The validated baseline was clean; later work may add uncommitted changes, but the baseline itself was clean. | None for the documented baseline. | No |
+
+### 2. Component Registry Contract
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Component IDs are unique and snake_case | `tests/agent/test_component_registry.py::test_all_component_ids_are_unique`, `::test_all_component_ids_are_snake_case` | PASS | Registry tests enforce uniqueness and ID shape. | None in current tests. | No |
+| Registry entries have expected fields and allowed values | `tests/agent/test_component_registry.py::test_registry_loads_successfully`, `::test_required_high_priority_components_exist`, `::test_invalid_registry_examples_fail_validation` | PASS | Loader validation and invalid-registry tests cover shape and required fields. | Additional future components may still be added. | No |
+| Raw evidence defaults remain blocked | `tests/agent/test_component_registry.py::test_raw_evidence_is_disabled_for_all_initial_components` | PASS | Initial registry entries keep `raw_allowed=False`. | None in the current evidence set. | No |
+| Documented non-explainable components are explicit | `docs/agent/component_registry_coverage_audit.md` plus `tests/frontend/test_ai_assistant_page_copy.py`, `tests/frontend/test_safety_page_copy.py` | PASS | AI Assistant and Safety/Limitations remain fixed boundary copy, not active explainability targets. | Future scope changes would need a new audit. | No |
+
+### 3. Component Registry Coverage
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Coverage audit exists | `docs/agent/component_registry_coverage_audit.md` | PASS | The registry coverage audit was written and reviewed. | None in the audit artifact itself. | No |
+| Missing registry entries are zero in the static review | `docs/agent/component_registry_coverage_audit.md` | PASS | The audit found no missing registry entries in the static review. | Future visible components may still require a new review if the UI changes. | No |
+| Active explainability coverage is still scope-limited | `docs/agent/component_registry_coverage_audit.md`, `tests/frontend/test_detection_page_polish.py`, `tests/frontend/test_classification_page_polish.py`, `tests/frontend/test_anomaly_page_wiring.py`, `tests/frontend/test_image_inspection_page.py` | PARTIAL | Four priority components are actively wired; the rest are registry-ready but not active. | Full active coverage has not been selected or implemented for every visible component. | Yes |
+| Explicit scope acceptance before Gemini remains required | `docs/agent/pre_gemini_gap_audit.md`, `docs/agent/component_registry_coverage_audit.md` | PARTIAL | The audits still require a scope decision before Gemini. | A final Gemini scope acceptance step is not complete. | Yes |
+
+### 4. Evidence Loader
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Governed evidence loads | `tests/agent/test_evidence_loader.py::test_classification_threshold_curve_chart_loads_compact_evidence`, `::test_detection_confidence_chart_loads_yolo_confidence_evidence` | PASS | Governed frontend evidence loads compactly and deterministically. | None in the current evidence set. | No |
+| Runtime evidence loads | `tests/agent/test_evidence_loader.py::test_image_inspection_final_decision_card_loads_runtime_evidence` | PASS | Runtime inspection response evidence is supported. | None in the current evidence set. | No |
+| Global context evidence loads | `tests/agent/test_evidence_loader.py::test_partial_evidence_uses_global_context_without_fabricating_dashboard_copy` | PASS | Global context is used without inventing dashboard copy. | None in the current evidence set. | No |
+| Missing files do not crash | `tests/agent/test_evidence_loader.py::test_missing_governed_evidence_file_does_not_crash` | PASS | Missing governed files are reported as limitations, not exceptions. | None in the current evidence set. | No |
+| Missing fields are reported | `tests/agent/test_evidence_loader.py::test_missing_allowed_field_does_not_crash` | PASS | Missing allowlisted fields are surfaced safely. | None in the current evidence set. | No |
+| Invalid JSON is handled safely | `tests/agent/test_evidence_loader.py::test_invalid_json_evidence_file_produces_limitation_not_exception` | PASS | Invalid JSON becomes a limitation, not a crash. | None in the current evidence set. | No |
+| Raw evidence is blocked by default | `tests/agent/test_evidence_loader.py::test_include_raw_evidence_does_not_include_raw_when_component_disallows_it` | PASS | Raw evidence is not exposed unless explicitly allowed. | None in the current evidence set. | No |
+| Path safety is enforced | `tests/agent/test_evidence_loader.py::test_no_evidence_item_source_is_absolute` | PASS | Evidence source paths remain repo-relative or runtime-scoped. | None in the current evidence set. | No |
+
+### 5. Context Builder
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Legacy page/section requests still work | `tests/agent/test_context_builder.py::test_build_grounding_context_extracts_image_inspection_evidence`, `tests/api/test_agent_endpoint.py::test_agent_explain_existing_image_inspection_request_without_component_id_still_works` | PASS | Non-component requests remain compatible. | None in the current evidence set. | No |
+| `component_id` requests validate against the registry | `tests/agent/test_context_builder.py::test_component_context_rejects_invalid_component_id` | PASS | Invalid component IDs fail safely. | None in the current evidence set. | No |
+| Compact evidence is attached for component requests | `tests/agent/test_context_builder.py::test_component_context_loads_classification_threshold_curve_evidence`, `::test_component_context_loads_detection_confidence_evidence`, `::test_component_context_loads_image_inspection_runtime_evidence` | PASS | Component-aware grounding contains compact evidence. | None in the current evidence set. | No |
+| Limitations are preserved | `tests/agent/test_context_builder.py::test_component_context_preserves_anomaly_review_only_limitation`, `tests/agent/test_evidence_loader.py::test_anomaly_threshold_behavior_preserves_review_only_limitation` | PASS | Review-only boundary text survives the context build path. | None in the current evidence set. | No |
+| Raw evidence remains blocked | `tests/agent/test_context_builder.py::test_component_context_blocks_raw_evidence_when_component_disallows_it` | PASS | Raw evidence does not flow through component context when disallowed. | None in the current evidence set. | No |
+
+### 6. API Schema and Endpoint
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Optional `component_id` is accepted | `tests/api/test_agent_endpoint.py::test_agent_explain_accepts_classification_component_id`, `::test_agent_explain_accepts_detection_component_id`, `::test_agent_explain_accepts_image_inspection_ai_panel_component_id` | PASS | The endpoint accepts component-aware requests. | None in the current evidence set. | No |
+| Old requests without `component_id` still work | `tests/api/test_agent_endpoint.py::test_agent_explain_existing_image_inspection_request_without_component_id_still_works` | PASS | Backward compatibility is preserved. | None in the current evidence set. | No |
+| Invalid `component_id` gives a safe error | `tests/api/test_agent_endpoint.py::test_agent_explain_rejects_invalid_component_id_safely` | PASS | Invalid components fail safely and deterministically. | None in the current evidence set. | No |
+| `provider_used` remains mock | `tests/api/test_agent_endpoint.py::test_agent_health_reports_mock_only_mvp_state`, `tests/api/test_agent_endpoint.py::test_agent_explain_returns_grounded_mock_answer_for_image_inspection` | PASS | The API remains mock-first. | None in the current evidence set. | No |
+| `fallback_used` remains compatible | `tests/api/test_agent_endpoint.py::test_agent_explain_returns_grounded_mock_answer_for_image_inspection`, related mock provider tests | PASS | Fallback semantics remain stable. | None in the current evidence set. | No |
+| `grounding_status` is preserved | `tests/api/test_agent_endpoint.py`, `tests/agent/test_provider_router.py` | PASS | Grounding status remains part of the response contract and is exercised in the tests. | No formal contract drift identified. | No |
+
+### 7. Frontend Component Wiring
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Image Inspection component ID is sent | `tests/frontend/test_image_inspection_page.py::test_image_inspection_agent_request_includes_required_fields`, `::test_agent_explanation_status_caption_reports_mock_fallback` | PASS | The Image Inspection panel sends the component-aware request. | None in the current evidence set. | No |
+| Detection confidence chart component ID is sent | `tests/frontend/test_detection_page_polish.py::test_detection_confidence_agent_request_is_component_aware` | PASS | Detection chart wiring is active. | None in the current evidence set. | No |
+| Classification threshold component ID is sent | `tests/frontend/test_classification_page_polish.py::test_classification_threshold_agent_request_is_component_aware` | PASS | Classification chart wiring is active. | None in the current evidence set. | No |
+| Anomaly threshold component ID is sent | `tests/frontend/test_anomaly_page_wiring.py::test_anomaly_threshold_agent_request_is_component_aware` | PASS | Anomaly chart wiring is active. | None in the current evidence set. | No |
+| Full-width component Agent panels remain | `tests/frontend/test_detection_page_polish.py::test_shared_component_agent_panel_is_horizontal_and_full_width`, similar classification/anomaly helper tests | PASS | The shared panel structure is present and tested. | None in the current evidence set. | No |
+| Stale “no backend agent implemented yet” wording does not return | `tests/frontend/test_frontend_wording.py`, `tests/frontend/test_ai_assistant_page_copy.py`, page-specific polish tests | PASS | Wording tests protect against stale placeholder copy. | Future copy changes should preserve these assertions. | No |
+| External LLM not connected wording remains clear | `tests/frontend/test_frontend_wording.py`, `tests/frontend/test_ai_assistant_page_copy.py` | PASS | The page copy reflects the mock/pre-Gemini state. | None in the current evidence set. | No |
+| Manual review wording remains clear | `tests/frontend/test_frontend_wording.py`, page-specific panel tests | PASS | Manual review boundaries remain visible. | None in the current evidence set. | No |
+
+### 8. Mock Provider Behavior
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Safe evidence-grounded mock answers pass | `tests/agent/test_provider_router.py::test_mock_provider_grounded_answer_mentions_manual_review`, `::test_non_component_image_inspection_mock_answer_still_works` | PASS | The mock provider returns grounded answers without external LLM calls. | None in the current evidence set. | No |
+| Component-aware mock answers use evidence | `tests/agent/test_provider_router.py::test_component_image_inspection_mock_answer_mentions_decision_and_manual_review`, `::test_component_detection_confidence_mock_answer_mentions_confidence_and_review`, `::test_component_anomaly_threshold_mock_answer_mentions_weak_review_only_boundary`, `::test_component_classification_threshold_mock_answer_mentions_validation_threshold` | PASS | Component-specific answers reference the governed evidence surface. | None in the current evidence set. | No |
+| Non-component Image Inspection behavior still works | `tests/agent/test_provider_router.py::test_non_component_image_inspection_mock_answer_still_works` | PASS | Legacy non-component path remains compatible. | None in the current evidence set. | No |
+| No production/deployment claims are made | `tests/agent/test_provider_router.py::test_component_mock_answers_do_not_claim_readiness_or_provider_integration`, `tests/agent/test_safety_guard.py` | PASS | Guarded outputs block readiness claims. | None in the current evidence set. | No |
+| No provider integration claims are made | `tests/agent/test_provider_router.py::test_component_mock_answers_do_not_claim_readiness_or_provider_integration`, `tests/agent/test_safety_guard.py` | PASS | Outputs do not claim Gemini/Grok/OpenAI integration. | None in the current evidence set. | No |
+
+### 9. Safety Guard
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Pre-generation safe compact context passes | `tests/agent/test_safety_guard.py::test_pre_generation_guard_passes_safe_compact_context` | PASS | Safe compact context is allowed. | None in the current evidence set. | No |
+| Raw evidence is blocked | `tests/agent/test_safety_guard.py::test_pre_generation_guard_blocks_raw_evidence_when_present` | PASS | Raw evidence is blocked before generation. | None in the current evidence set. | No |
+| Secret-like values are redacted | `tests/agent/test_safety_guard.py::test_pre_generation_guard_redacts_secret_like_and_absolute_path_values` | PASS | Secret-like values are redacted deterministically. | None in the current evidence set. | No |
+| Local absolute paths are redacted | `tests/agent/test_safety_guard.py::test_pre_generation_guard_redacts_secret_like_and_absolute_path_values` | PASS | Local absolute paths are removed from the prompt context. | None in the current evidence set. | No |
+| Manual review and traceability are preserved | `tests/agent/test_safety_guard.py::test_pre_generation_guard_preserves_manual_review_and_traceability` | PASS | Traceability survives sanitization. | None in the current evidence set. | No |
+| Production/deployment readiness claims are blocked | `tests/agent/test_safety_guard.py::test_post_generation_guard_blocks_prohibited_claims`, `::test_post_generation_guard_blocks_mixed_readiness_claims` | PASS | Unsafe readiness claims are blocked, including mixed claims. | None in the current evidence set. | No |
+| Manual-review replacement claims are blocked | `tests/agent/test_safety_guard.py::test_post_generation_guard_blocks_prohibited_claims` | PASS | Claims that replace manual review are blocked. | None in the current evidence set. | No |
+| Autonomous decision claims are blocked | `tests/agent/test_safety_guard.py::test_post_generation_guard_blocks_prohibited_claims` | PASS | Autonomous-final-decision language is blocked. | None in the current evidence set. | No |
+| Provider-connected claims are blocked | `tests/agent/test_safety_guard.py::test_post_generation_guard_blocks_mixed_provider_claims`, `::test_post_generation_guard_allows_provider_disabled_statements` | PASS | Disabled-provider statements pass, mixed connected claims are blocked. | None in the current evidence set. | No |
+| Invented metric-like values are blocked | `tests/agent/test_safety_guard.py::test_post_generation_guard_blocks_prohibited_claims` | PASS | The guard catches obviously invented metric/threshold claims. | The check is intentionally conservative and deterministic. | No |
+| Safe disclaimers such as not production-ready / not deployment-safe pass | `tests/agent/test_safety_guard.py::test_post_generation_guard_allows_not_ready_disclaimers` | PASS | Safe disclaimers remain allowed. | Mixed unsafe claims are still blocked, by design. | No |
+| Mixed unsafe claims are blocked | `tests/agent/test_safety_guard.py::test_post_generation_guard_blocks_mixed_readiness_claims`, `::test_post_generation_guard_blocks_mixed_provider_claims` | PASS | Mixed safe/unsafe text is handled conservatively. | None in the current evidence set. | No |
+| Safe provider-disabled statements pass | `tests/agent/test_safety_guard.py::test_post_generation_guard_allows_provider_disabled_statements` | PASS | “Not active / not connected” provider statements are allowed when they are cleanly phrased. | None in the current evidence set. | No |
+| Safety guard is exercised by `provider_router` | `tests/agent/test_provider_router.py::test_mock_provider_routes_through_safety_guard`, `src/inspection_ai/agent/provider_router.py` | PASS | The mock provider path invokes the safety guard before and after generation. | Future provider-specific integration will still reuse this layer. | No |
+
+### 10. Provider Contract / Readiness
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Provider request / response / status contracts construct correctly | `tests/agent/test_provider_contracts.py::test_provider_contract_objects_can_be_constructed`, `::test_provider_status_objects_can_be_constructed` | PASS | The contract layer is typed, constructible, and deterministic. | None in the current evidence set. | No |
+| Raw provider response exposure defaults to false | `tests/agent/test_provider_contracts.py::test_provider_contract_objects_can_be_constructed` | PASS | Raw provider response exposure is off by default. | None in the current evidence set. | No |
+| Fallback reason can be represented | `tests/agent/test_provider_contracts.py::test_provider_contract_objects_can_be_constructed`, `src/inspection_ai/agent/provider_contracts.py` | PASS | Fallback reason is explicit in the contract. | None in the current evidence set. | No |
+| Mock provider is available | `tests/agent/test_provider_contracts.py::test_provider_readiness_keeps_mock_available_and_real_providers_unavailable_without_keys`, `tests/agent/test_provider_router.py::test_health_reports_mock_first_mvp_state` | PASS | Mock readiness is always available. | None in the current evidence set. | No |
+| Gemini/Grok/OpenAI remain unavailable / disabled | `tests/agent/test_provider_contracts.py::test_provider_readiness_keeps_mock_available_and_real_providers_unavailable_without_keys`, `::test_provider_readiness_allows_ready_for_future_use_when_llm_enabled_and_keys_present` | PASS | Future providers are readiness-tracked but do not execute. | None in the current evidence set. | No |
+| Readiness does not expose secret values | `tests/agent/test_provider_contracts.py::test_provider_readiness_does_not_expose_secret_values` | PASS | Readiness warnings do not leak keys. | None in the current evidence set. | No |
+| No provider SDK/network call is required | `src/inspection_ai/agent/provider_contracts.py`, `src/inspection_ai/agent/provider_router.py`, the test suite | PASS | The contract/readiness layer is local-only and offline. | None in the current evidence set. | No |
+| `provider_router` uses readiness for health/fallback semantics | `tests/agent/test_provider_router.py::test_health_reports_mock_first_mvp_state`, `::test_missing_provider_keys_do_not_break_mock_health`, `src/inspection_ai/agent/provider_router.py` | PASS | Health uses the readiness snapshot and still reports mock-only runtime behavior. | None in the current evidence set. | No |
+| Response API shape remains compatible | `tests/api/test_agent_endpoint.py`, `tests/agent/test_provider_router.py` | PASS | Existing API tests continue to pass with the same response shape. | None in the current evidence set. | No |
+
+### 11. Frontend / Wording Consistency
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| AI Assistant page wording reflects mock backend Agent | `tests/frontend/test_ai_assistant_page_copy.py::test_ai_assistant_page_copy_reflects_mock_agent_and_future_llm_boundary` | PASS | The page copy acknowledges the mock Agent and future LLM boundary. | None in the current evidence set. | No |
+| Safety page wording reflects mock Agent and LLM disabled | `tests/frontend/test_safety_page_copy.py::test_safety_page_copy_is_current` | PASS | Safety copy reflects the active mock Agent state and external LLM boundaries. | None in the current evidence set. | No |
+| No stale “no backend agent implemented yet” wording | `tests/frontend/test_frontend_wording.py::test_frontend_source_no_longer_shows_global_ai_placeholder_sentence`, plus page-specific wording tests | PASS | The stale placeholder sentence is no longer present. | Future wording changes should keep the assertion updated. | No |
+| No misleading production/deployment readiness claims | `tests/frontend/test_frontend_wording.py`, `tests/agent/test_safety_guard.py` | PASS | Copy and guard logic stay aligned on non-readiness. | None in the current evidence set. | No |
+| UI truncation fix is preserved | `tests/frontend/test_safety_page_copy.py`, `tests/frontend/test_visual_presentation_polish.py` | PASS | The Safety multi-model signal label is shortened and the broader presentation polish remains stable. | None in the current evidence set. | No |
+
+### 12. Local Validation Before Gemini
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Python compile and pytest validations pass | `python -m compileall ...`, `pytest tests/agent/ -q`, `pytest tests/api/test_agent_endpoint.py -q`, `pytest tests/frontend/ -q` | PASS | The current local Python and pytest validation set passes. | None in the current evidence set. | No |
+| Docker / Compose LLM-disabled smoke validation is pending | Not yet run in the current evidence set | PENDING | The repository still needs the final Docker/Compose smoke run with LLM disabled. | This is a real deployment-prep gap, not a test gap. | Yes |
+| Runtime asset check may still be pending if not already covered | No explicit current command in this matrix | PENDING | The repo documents runtime assets well, but this matrix does not prove a final end-to-end asset check. | A dedicated runtime-assets validation command may still be needed. | Yes |
+| Final manual visual checks are either PASS or pending based on actual evidence | `tests/frontend/*`, prior manual UI validation notes | MANUAL | Visual checks have been performed for the active panels, but a new future UI change would require re-review. | Manual review remains relevant for UI polish and copy drift. | No |
+
+### 13. Explicit Remaining Blockers Before Gemini
+
+| Blocker | Evidence / source | Status | Notes | Blocks Gemini |
+|---|---|---|---|---|
+| Active explainability scope acceptance | `docs/agent/component_registry_coverage_audit.md`, `docs/agent/pre_gemini_gap_audit.md` | PARTIAL | The repo has the active priority panels, but a formal acceptance of the active explainable scope is still required before Gemini. | Yes |
+| Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_gap_audit.md` | PENDING | The final local deployment smoke is still pending. | Yes |
+| Gemini Provider Integration Readiness Plan | `docs/agent/pre_gemini_gap_audit.md` | PENDING | Future provider planning exists, but a formal Gemini readiness plan is still required before any implementation. | Yes |
+| Any new requirement added after this matrix | Future repo state | MANUAL | A new requirement would need its own test mapping. | Depends |
+
+## PASS Items
+
+The following are currently covered well enough to count as PASS in the current evidence set:
+
+- compileall and focused pytest suites
+- component registry contract
+- component evidence loader
+- context builder with optional `component_id`
+- Agent API schema and endpoint compatibility
+- active component wiring for the four priority surfaces
+- mock provider behavior
+- deterministic safety guard
+- provider contract/readiness layer
+- frontend wording consistency
+- the Safety truncation/UI polish fix
+
+## PARTIAL / PENDING Items
+
+The following remain incomplete or not yet fully proven:
+
+- full dashboard active explainability scope acceptance
+- final Docker / Compose LLM-disabled smoke validation
+- final runtime asset validation if not already separately performed
+- future Gemini readiness planning
+
+## Gemini Blockers Remaining
+
+Current blockers supported by the audit docs:
+
+1. Active explainability scope acceptance is still partial.
+2. Docker / Compose LLM-disabled smoke validation is still pending.
+3. The Gemini readiness plan still needs to be written before any integration work begins.
+
+## Required Next Sequence
+
+1. Resolve active explainability scope acceptance.
+2. Run the final Docker / Compose LLM-disabled smoke validation.
+3. Draft the Gemini provider integration readiness plan.
+4. Re-run the requirement-to-test matrix if the scope changes.
+
+## Gemini Must Not Start Until...
+
+- The active explainability scope is explicitly accepted.
+- The final LLM-disabled Docker / Compose smoke validation has passed.
+- The Gemini readiness plan exists and is reviewed.
+- The requirement-to-test matrix remains current after any scope change.
+- The mock Agent foundation continues to pass compile and pytest validation.
+

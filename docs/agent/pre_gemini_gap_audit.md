@@ -27,6 +27,7 @@ What is still missing before any Gemini work:
 - The Agent API schema supports optional `component_id`.
 - The Agent safety guard module exists and is exercised by the mock provider path.
 - The provider contract/readiness layer exists and is used by the provider router.
+- The formal requirement-to-test matrix now exists and maps the main pre-Gemini requirements to repository tests and validations.
 - Frontend component-aware explanation panels are active for:
   - Image Inspection AI panel
   - Detection confidence chart
@@ -55,7 +56,7 @@ What is still missing before any Gemini work:
 | Phase 8 - Mock Answer Upgrade Based on Evidence | PASS | Mock answers are evidence-aware and component-specific for the active surfaces. | Future richer language output is still limited to mock behavior. | Keep mock answers offline and bounded by evidence. | No |
 | Phase 9 - Safety Guard Layer Before LLM | PASS | `src/inspection_ai/agent/safety_guard.py` provides deterministic pre- and post-generation checks, and the provider router exercises the guard on the mock Agent path. | Future provider-specific policy wiring will still need to reuse the same guard contract, but the formal safety layer now exists. | Preserve the guard contract and keep expanding its tests before any real provider work. | No |
 | Phase 10 - Provider Interface, Still No Gemini | PASS | `src/inspection_ai/agent/provider_contracts.py` defines typed provider request/response/status/readiness contracts, and `src/inspection_ai/agent/provider_router.py` uses the readiness snapshot for health and fallback semantics. | Future Gemini/Grok/OpenAI provider code will still need to reuse this contract, but the readiness layer itself now exists and is exercised. | Preserve the contract and keep future provider work behind the same mock-first guardrails. | No |
-| Phase 11 - Full Test Matrix Before Gemini | PARTIAL | The current test suite is strong and covers the working Agent foundation and frontend wiring. | There is no formal requirement-to-test matrix that maps every Gemini blocker to a test. | Produce and maintain a pre-Gemini requirement-to-test matrix. | Yes |
+| Phase 11 - Full Test Matrix Before Gemini | PASS | `docs/agent/pre_gemini_test_matrix.md` now provides a formal requirement-to-test matrix that maps the main pre-Gemini requirements to specific tests and validation commands. | Remaining updates may be needed if new scope is added later, but the matrix now exists. | Keep the matrix current when scope changes. | No |
 | Phase 12 - Local Validation Before Gemini | PARTIAL | Python compilation and pytest validations pass. | LLM-disabled Docker/Compose smoke validation is still pending after the remaining pre-Gemini work is completed. | Run the final Docker/Compose validation with LLM disabled before any Gemini plan begins. | Yes |
 
 ## Detailed Phase Notes
@@ -137,11 +138,11 @@ The repository now has a formal provider contract/readiness layer and the provid
 
 ### Phase 11 - Full Test Matrix Before Gemini
 
-Status: PARTIAL
+Status: PASS
 
-The tests are strong and already cover the implemented foundation. What is missing is a formal matrix that maps each Gemini blocker to a specific test or validation gate.
+The formal requirement-to-test matrix now exists in `docs/agent/pre_gemini_test_matrix.md`. It maps the main pre-Gemini requirements to concrete repository tests and validation commands, including the remaining PENDING and MANUAL items.
 
-Required next action: produce a requirement-to-test matrix for all pre-Gemini gates.
+Required next action: keep the matrix current whenever scope changes.
 
 ### Phase 12 - Local Validation Before Gemini
 
@@ -154,9 +155,8 @@ Required next action: run the final Docker/Compose validation with LLM disabled,
 ## Blocking Items Before Gemini
 
 - Active explainability scope is not yet formally accepted for Gemini use.
-- Provider readiness/contract layer is not yet finalized.
-- Requirement-to-test matrix is not yet formalized.
 - Final LLM-disabled Docker/Compose validation is not yet run after the remaining work.
+- Gemini provider integration readiness plan is not yet written/reviewed.
 
 ## Recommended Next Sequence
 

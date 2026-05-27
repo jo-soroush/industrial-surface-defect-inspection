@@ -26,6 +26,7 @@ The current repository baseline already provides:
 - A second G3 offline-only lazy SDK loader boundary that stays SDK-free at module import time.
 - A third G3 health/readiness integration slice that threads safe Gemini metadata into the existing health surface without activating Gemini.
 - A G3 provider skeleton with mocked / injected SDK object that stays offline-only and does not activate Gemini.
+- A G3 execution gate design that keeps Gemini disabled by default and blocks router activation until all gates pass.
 - A G3 pre-real-call audit that defines the final activation gates before any real Gemini implementation.
 - A G3 dependency decision artifact that keeps the requirements change as an explicit, pending decision.
 - A G3 dependency slice that adds `google-genai` to the backend/API requirements only.
@@ -165,6 +166,7 @@ The third health/readiness integration slice is implemented and tested, but real
 The provider skeleton with mocked / injected SDK object is implemented and tested, but real Gemini provider integration has not started.
 The G3 pre-real-call audit is implemented and reviewed, but real Gemini provider integration has not started.
 The G3 dependency decision artifact is implemented and reviewed, and the backend/API requirements slice is applied.
+The execution gate design is implemented and reviewed, and it keeps Gemini disabled by default.
 
 What this means:
 
@@ -175,6 +177,7 @@ What this means:
 - The runtime remains mock-first.
 - Health/readiness metadata is safe and does not activate Gemini.
 - The pre-real-call activation gates are documented and remain blocking for any real provider work.
+- The disabled-by-default router gate design is documented and remains blocking for any real provider work.
 - The dependency decision is documented and the backend/API requirements slice has been applied without changing runtime behavior.
 
 What this does not mean:
@@ -262,6 +265,7 @@ Gemini implementation must not start until:
 - The G3 preparation audit exists and is reviewed.
 - The G3 entry checklist exists and is reviewed.
 - The G3 pre-real-call audit exists and is reviewed.
+- The G3 execution gate design exists and is reviewed.
 - The G3 dependency decision artifact exists and is reviewed.
 - The backend/API `google-genai` requirements slice exists and is reviewed.
 - Current tests pass.
@@ -282,6 +286,7 @@ Phase G1 stub/config implementation is complete.
 Phase G2 mocked-client test layer is complete.
 The G3 pre-real-call audit exists and is reviewed.
 The G3 preparation audit exists and is reviewed.
+The G3 execution gate design exists and is reviewed.
 Real Gemini provider integration has not started.
 No Gemini API call is implemented.
 No real LLM execution is active.

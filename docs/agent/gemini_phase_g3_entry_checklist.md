@@ -20,6 +20,7 @@ The following prerequisites are complete:
 - Phase G2 mocked Gemini client seam
 - Phase G3 preparation audit
 - Phase G3 package verification
+- Phase G3 execution gate design
 - current tests are green
 - working tree was clean at the start of the validated baseline
 
@@ -93,6 +94,23 @@ What this does not mean:
 - Real Gemini provider execution has started.
 - Gemini is connected.
 - Gemini is active.
+
+## Fifth Slice Status
+
+The execution gate design for disabled-by-default router activation is implemented and reviewed.
+
+What this means:
+
+- The routing gate strategy is documented before any runtime routing code exists.
+- The default runtime remains mock-first and disabled-by-default.
+- Gemini cannot become active through dependency installation alone.
+
+What this does not mean:
+
+- Provider routing to Gemini is implemented.
+- Gemini is connected.
+- Gemini is active.
+- A Gemini API call is implemented.
 
 ## Pre-Real-Call Audit Status
 
@@ -252,5 +270,6 @@ Gemini runtime activation is not active.
 The provider skeleton with mocked / injected SDK object is implemented, but it does not activate Gemini or change runtime behavior.
 The health/readiness metadata slice is implemented, but it does not activate Gemini.
 The pre-real-call audit is implemented, but it does not activate Gemini or change runtime behavior.
+The execution gate design is implemented, but provider routing to Gemini is not implemented and Gemini remains disabled by default.
 The dependency decision is documented, and the backend/API requirements slice is applied. Exact version pinning remains a separate review item.
 The backend/API requirements slice is applied, but it does not activate Gemini or change runtime behavior.

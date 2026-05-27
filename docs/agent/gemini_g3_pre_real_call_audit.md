@@ -19,6 +19,7 @@ What is allowed next only after approval:
 
 - a dependency / requirements slice, if explicitly approved
 - a lazy-import real-provider skeleton, if explicitly approved
+- a disabled-by-default router activation test slice, if explicitly approved
 - a later local real-smoke plan, if explicitly approved
 
 What remains blocked:
@@ -27,6 +28,7 @@ What remains blocked:
 - any runtime activation by default
 - any uncontrolled dependency or SDK import
 - any provider routing change that makes Gemini active
+- any router change that bypasses the disabled-by-default gate
 
 ## Current Completed Foundation
 
@@ -42,6 +44,7 @@ The following items are complete and established in the repository:
 - G3 second coding slice lazy SDK loader boundary
 - G3 third coding slice health / readiness metadata
 - G3 provider skeleton with mocked / injected SDK object
+- G3 execution gate design / disabled-by-default router plan
 - G3 dependency decision artifact
 - G3 backend/API requirements slice (`google-genai`)
 - deterministic safety guard
@@ -59,13 +62,16 @@ All of the following gates must be true before any real Gemini API call can exis
 - requirements change approved
 - lazy import design approved
 - `AGENT_ENABLE_LLM=true` required for runtime activation
+- `AGENT_DEFAULT_PROVIDER` or provider order explicitly allows Gemini
 - `GEMINI_API_KEY` present only through environment or secret manager
+- `google-genai` installed in API / backend environment
 - SDK import only inside a guarded execution path
 - pre-generation safety guard passes
 - sanitized provider request only
 - context boundary is enforced
 - post-generation safety guard passes
 - fallback to mock on any error
+- health reports safe status only
 - no frontend behavior change by default
 - rollback path is defined
 - test suite is green before and after the slice

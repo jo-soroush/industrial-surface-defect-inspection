@@ -11,6 +11,8 @@ No provider routing activation is performed.
 Normal `/agent/explain` remains mock-first.
 This document does not approve real smoke execution.
 A future real smoke requires explicit user approval.
+Real Gemini, Grok, and OpenAI runtime remain not active.
+Production readiness, HTTPS/domain readiness, and real LLM readiness are not claimed.
 
 This plan defines the narrowest local-only evidence path for a future manual smoke while keeping the current mock-first runtime untouched.
 
@@ -27,6 +29,7 @@ What this plan controls:
 - the pass / fail criteria for a future smoke
 - the rollback / kill switch path after a future smoke
 - the evidence that must be recorded if a future smoke is ever approved and run
+- the approval gate wording that must be satisfied before any execution is allowed
 
 What remains blocked:
 
@@ -36,6 +39,7 @@ What remains blocked:
 - any Docker / Compose / EC2 based smoke
 - any CI or default-test smoke
 - any public or production-facing endpoint exposure
+- any smoke execution without explicit user approval
 
 ## Harness Skeleton Status
 
@@ -55,6 +59,70 @@ What this does not mean:
 - Gemini is connected
 - Gemini is active
 - `GEMINI_API_KEY` has been used
+
+## Approval Gate Wording
+
+The only approval that can unlock execution is:
+
+> Approve a single local-only manual Gemini real-smoke attempt, using a temporary local shell environment only, with no Docker, no EC2, no CI, and no default-test execution.
+
+If this wording is not explicitly approved, real smoke stays blocked.
+
+This document does not approve execution.
+This document does not activate Gemini.
+This document does not prove real LLM readiness.
+This document does not claim production/deployment/HTTPS readiness.
+
+## Prerequisites Before First Real Smoke
+
+All of the following are required before any future real smoke may be attempted:
+
+- explicit user approval using the approval wording above
+- clean git status
+- latest validation suite passing
+- `google-genai` available in the local API / backend environment
+- `GEMINI_API_KEY` available only as a temporary local environment variable
+- no key committed
+- no key printed
+- normal default provider remains `mock`
+- `AGENT_ENABLE_LLM=false` for normal runtime
+- first smoke must be manual and local-only
+- fallback / kill switch documented
+- no Docker / Compose / EC2 activation
+
+## Secret Handling Rules
+
+The key handling rules for a future smoke are:
+
+- `GEMINI_API_KEY` must be exported only in a local shell or session
+- the key may be set temporarily in a local terminal before the smoke and unset immediately after
+- the key must never be written to files
+- the key must never be stored in docs, logs, shells history, test fixtures, or artifacts
+- command output must be reviewed for secret leakage
+- no `.env` commit
+- no Compose file key
+
+Safe placeholder examples only:
+
+```bash
+export GEMINI_API_KEY="<set-locally-only>"
+unset GEMINI_API_KEY
+```
+
+## Pre-Smoke Validation Commands
+
+Run these checks immediately before any future real smoke, after explicit approval:
+
+```bash
+git status --short --untracked-files=all
+python -m compileall frontend tests api src/inspection_ai scripts
+pytest tests/agent/test_provider_router.py -q
+pytest tests/agent/test_gemini_provider_mocked_client.py -q
+pytest tests/agent/ -q
+pytest tests/api/test_agent_endpoint.py -q
+```
+
+If the working tree is not clean or the tests fail, do not run the smoke.
 
 ## Final Execution Checklist Status
 
@@ -101,11 +169,11 @@ What this does not mean:
 
 All of the following are required before any future real smoke may be attempted:
 
-- explicit user approval
+- explicit user approval using the approval wording above
 - clean git status
 - latest validation suite passing
 - `google-genai` available in the local API / backend environment
-- `GEMINI_API_KEY` available only as a local environment variable
+- `GEMINI_API_KEY` available only as a temporary local environment variable
 - no key committed
 - no key printed
 - normal default provider remains `mock`
@@ -119,8 +187,9 @@ All of the following are required before any future real smoke may be attempted:
 The key handling rules for a future smoke are:
 
 - `GEMINI_API_KEY` must be exported only in a local shell or session
+- the key may be set temporarily in a local terminal before the smoke and unset immediately after
 - the key must never be written to files
-- the key must never appear in docs, logs, or test output
+- the key must never appear in docs, logs, shell history, or test output
 - command output must be reviewed for secret leakage
 - the key must be unset after the smoke
 - no `.env` commit
@@ -147,6 +216,10 @@ The first future smoke, if explicitly approved, must be:
 - not exposed on a public endpoint
 - not a frontend workflow
 - not a production workflow
+- not a CI workflow
+- not a Docker / Compose workflow
+- not an EC2 workflow
+- not a retry loop
 
 ## What the First Real Smoke May Test
 
@@ -158,6 +231,8 @@ A future first smoke may test only:
 - post-generation safety guard runs
 - fallback behavior works after the smoke
 - the normal mock route remains unchanged after the smoke
+- provider_used is accurate for the explicit smoke path
+- the response remains reviewable and does not claim production readiness
 
 ## What the First Real Smoke Must Not Test
 
@@ -175,6 +250,8 @@ A future smoke must not:
 - run repeated calls
 - measure production performance
 - claim production readiness
+- claim HTTPS or domain readiness
+- claim real LLM readiness
 
 ## Smoke Input Boundary
 
@@ -188,6 +265,9 @@ The only allowed input for a future smoke is:
 - no local paths
 - no secrets
 - no hidden logs
+- no raw provider output capture outside the approved evidence block
+
+The future smoke must remain local-only and manual. If the input cannot be reduced to this boundary, the smoke is not allowed.
 
 ## Proposed Future Command Shape
 
@@ -217,6 +297,8 @@ A future first real smoke passes only if:
 - fallback still works after a failure test
 - normal `/agent/explain` remains mock-first
 - no docs, runtime, frontend, Docker, or EC2 behavior changes happen
+- the key is unset immediately after the smoke
+- the approved evidence is captured separately and contains no secret material
 
 ## FAIL Criteria
 
@@ -230,6 +312,9 @@ A future smoke fails if:
 - unsafe output reaches display
 - multiple unintended calls occur
 - Docker, EC2, or a public endpoint is involved
+- the key leaks to logs, shell history, docs, or artifacts
+- the smoke is run without explicit user approval
+- the smoke claims production, deployment, HTTPS, or real LLM readiness
 
 ## Rollback / Kill Switch
 
@@ -241,6 +326,9 @@ If a future smoke is ever run, rollback is:
 - stop any running local process
 - revert any smoke-specific commit if one exists
 - no frontend rollback is needed if frontend is unchanged
+- return `AGENT_ENABLE_LLM=false` and `AGENT_DEFAULT_PROVIDER=mock`
+- verify `/agent/explain` is mock-first again after cleanup
+- confirm no smoke-only artifacts remain in tracked files
 
 ## Evidence to Record After a Future Smoke
 
@@ -256,12 +344,16 @@ When a future smoke is eventually run, record:
 - proof that the normal route remains mock
 - proof that the test suite still passes
 - no raw provider response if unsafe
+- whether the smoke path stayed local-only and manual
+- whether `provider_used` reflects the approved explicit smoke path
+- whether Gemini was disabled again after the smoke unless separately approved
 
 ## Documentation Update Requirement After a Future Smoke
 
 If a real smoke is later run, create a separate evidence document.
 Do not modify this plan to pretend execution happened.
 Do not mark smoke complete until it actually happens.
+The evidence document must be separate from this plan and must not replace it.
 
 ## Final Decision
 
@@ -273,14 +365,20 @@ Decision:
 - FAIL for real-smoke execution readiness until explicit user approval
 
 Real Gemini API call remains blocked until the next approved slice.
+This document does not approve execution.
+This document does not activate Gemini.
+This document does not prove real LLM readiness.
+This document does not claim production/deployment/HTTPS readiness.
 
 ## Recommended Next Slice
 
-Recommended next slice: **A. local real-smoke harness / script skeleton, disabled by default, not executed**
+Recommended next slice: **B. explicit user approval for a single local-only manual real-smoke attempt**
 
 Why this is the safest next move:
 
-- it prepares the manual smoke path without running Gemini
-- it keeps the mock-first runtime intact
+- it keeps the current mock-first runtime intact
 - it does not require any real API call
 - it avoids accidental execution before approval
+- it preserves the requirement for a separate evidence document after any approved smoke
+
+If the user does not approve the exact approval gate wording above, the next step is to remain blocked.

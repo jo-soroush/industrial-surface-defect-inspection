@@ -77,6 +77,23 @@ What this does not mean:
 - A Gemini API call is implemented.
 - Real Gemini provider execution has started.
 
+## Pre-Real-Call Audit Status
+
+The pre-real-call audit is implemented and reviewed.
+
+What this means:
+
+- The final activation gates are documented before any real provider work begins.
+- The package / requirements decision remains explicit and controlled.
+- No runtime activation is added by this audit.
+
+What this does not mean:
+
+- Real Gemini provider implementation has started.
+- Gemini is connected.
+- Gemini is active.
+- A Gemini API call is implemented.
+
 ## First Slice Objective
 
 The first G3 coding slice should be:
@@ -198,3 +215,4 @@ No Gemini API call is implemented.
 No real LLM execution is active.
 Gemini runtime activation is not active.
 The health/readiness metadata slice is implemented, but it does not activate Gemini.
+The pre-real-call audit is implemented, but it does not activate Gemini or change runtime behavior.

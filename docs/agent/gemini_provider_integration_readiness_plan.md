@@ -25,6 +25,7 @@ The current repository baseline already provides:
 - A first G3 readiness-scaffolding slice that models SDK-missing and key-missing behavior without real Gemini execution.
 - A second G3 offline-only lazy SDK loader boundary that stays SDK-free at module import time.
 - A third G3 health/readiness integration slice that threads safe Gemini metadata into the existing health surface without activating Gemini.
+- A G3 pre-real-call audit that defines the final activation gates before any real Gemini implementation.
 
 ## Non-Negotiable Integration Rules
 
@@ -158,6 +159,7 @@ The G3 entry checklist and first-slice plan are documented in `docs/agent/gemini
 The first readiness-scaffolding slice is implemented and tested, but real Gemini provider integration has not started.
 The second offline-only lazy SDK loader boundary is implemented and tested, but real Gemini provider integration has not started.
 The third health/readiness integration slice is implemented and tested, but real Gemini provider integration has not started.
+The G3 pre-real-call audit is implemented and reviewed, but real Gemini provider integration has not started.
 
 What this means:
 
@@ -167,6 +169,7 @@ What this means:
 - Gemini runtime activation is not active.
 - The runtime remains mock-first.
 - Health/readiness metadata is safe and does not activate Gemini.
+- The pre-real-call activation gates are documented and remain blocking for any real provider work.
 
 What this does not mean:
 
@@ -252,6 +255,7 @@ Gemini implementation must not start until:
 - This plan exists in the repository and is reviewed.
 - The G3 preparation audit exists and is reviewed.
 - The G3 entry checklist exists and is reviewed.
+- The G3 pre-real-call audit exists and is reviewed.
 - Current tests pass.
 - The LLM-disabled Docker / Compose smoke evidence remains PASS.
 - Safety guard tests remain PASS.
@@ -261,12 +265,14 @@ Gemini implementation must not start until:
 ## Remaining Blockers After This Plan
 
 - User approval to start the Gemini implementation phase.
+- Approval of the next implementation slice (dependency / requirements slice or skeleton slice).
 - Optional: Gemini API key availability for later runtime testing, but not required for planning.
 
 ## Explicit Statement
 
 Phase G1 stub/config implementation is complete.
 Phase G2 mocked-client test layer is complete.
+The G3 pre-real-call audit exists and is reviewed.
 The G3 preparation audit exists and is reviewed.
 Real Gemini provider integration has not started.
 No Gemini API call is implemented.

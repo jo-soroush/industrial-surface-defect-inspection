@@ -16,6 +16,7 @@ Current conclusion:
 - The first G3 readiness-scaffolding slice is implemented and tested, while real Gemini provider execution remains inactive.
 - The second G3 lazy SDK loader boundary is implemented and tested, while real Gemini provider execution remains inactive.
 - The third G3 health/readiness integration slice is implemented and tested, while real Gemini provider execution remains inactive.
+- The G3 pre-real-call audit exists and defines the final activation gates before any real Gemini implementation.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -216,6 +217,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | Gemini readiness metadata is threaded into the existing health surface without activating Gemini | `tests/agent/test_provider_router.py::test_health_reports_mock_first_mvp_state`, `::test_missing_provider_keys_do_not_break_mock_health`, `::test_gemini_health_metadata_does_not_expose_raw_key_values`, `tests/api/test_agent_endpoint.py::test_agent_health_reports_mock_only_mvp_state` | PASS | Health and readiness now expose safe Gemini metadata in warnings and router helpers while keeping mock-only runtime behavior and no secret exposure. | Real Gemini provider code is still not started. | No |
 
+### 10.9 Gemini Provider G3 Pre-Real-Call Audit
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Final activation gates are documented before any real Gemini implementation | `docs/agent/gemini_g3_pre_real_call_audit.md` | PASS | The repository now contains a final activation-gate review that defines the package, environment, safety, rollback, testing, and rollout controls before any real Gemini call may exist. | Real Gemini provider code is still not started. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -265,6 +272,7 @@ The following are currently covered well enough to count as PASS in the current 
 - Gemini provider G3 first slice readiness scaffolding
 - Gemini provider G3 lazy SDK loader boundary
 - Gemini provider G3 health/readiness integration
+- Gemini provider G3 pre-real-call audit
 - frontend wording consistency
 - the Safety truncation/UI polish fix
 

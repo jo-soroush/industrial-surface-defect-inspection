@@ -186,6 +186,25 @@ What this does not mean:
 - Gemini is active
 - local real-smoke execution is complete
 
+## Local Real-Smoke Harness Status
+
+The local real-smoke harness skeleton is documented and reviewed.
+
+What this means:
+
+- the script exists at `scripts/agent/run_gemini_local_smoke.py`
+- the default behavior is dry-run only
+- the script does not read `GEMINI_API_KEY` on import
+- the script does not call Gemini
+- the script is disabled by default
+
+What this does not mean:
+
+- real smoke execution is complete
+- Gemini is connected
+- Gemini is active
+- `GEMINI_API_KEY` has been used
+
 ## First Slice Objective
 
 The first G3 coding slice should be:

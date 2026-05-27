@@ -14,6 +14,8 @@ A future real smoke requires explicit user approval.
 
 This plan defines the narrowest local-only evidence path for a future manual smoke while keeping the current mock-first runtime untouched.
 
+A disabled-by-default harness skeleton exists in `scripts/agent/run_gemini_local_smoke.py`; it is not executed by default and it does not call Gemini.
+
 What this plan controls:
 
 - the preconditions for a future local manual smoke
@@ -31,6 +33,25 @@ What remains blocked:
 - any Docker / Compose / EC2 based smoke
 - any CI or default-test smoke
 - any public or production-facing endpoint exposure
+
+## Harness Skeleton Status
+
+The local smoke harness skeleton is documented and reviewed.
+
+What this means:
+
+- the script exists
+- the default behavior is dry-run only
+- the script does not read `GEMINI_API_KEY` on import
+- the script does not call Gemini
+- the script is disabled by default
+
+What this does not mean:
+
+- real smoke execution is complete
+- Gemini is connected
+- Gemini is active
+- `GEMINI_API_KEY` has been used
 
 ## Preconditions Before First Real Smoke
 

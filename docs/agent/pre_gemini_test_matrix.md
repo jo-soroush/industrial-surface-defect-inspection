@@ -271,6 +271,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | Local real-smoke plan exists and remains planning only | `docs/agent/gemini_g3_local_real_smoke_plan.md` | PASS | The repository now contains a manual, local-only real-smoke plan that defines the future evidence path without approving execution. | Real smoke execution is still blocked until explicit user approval. | No |
 
+### 10.17 Gemini Provider G3 Local Real-Smoke Harness Skeleton
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Local real-smoke harness skeleton exists, stays disabled by default, and does not call Gemini | `scripts/agent/run_gemini_local_smoke.py`, `tests/agent/test_gemini_local_smoke_harness.py` | PASS | The repository now contains a disabled-by-default harness that only prints planned checks in dry-run mode and refuses to run a real smoke in this slice. | Real smoke execution is still blocked until explicit user approval. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |

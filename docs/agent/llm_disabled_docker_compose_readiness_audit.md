@@ -186,8 +186,14 @@ Decision:
 
 This audit does not claim actual Docker / Compose validation is complete.
 
+## Validation Evidence Update
+
+The actual Phase 12 LLM-disabled Docker / Compose validation evidence is now documented in `docs/agent/llm_disabled_docker_compose_validation_evidence.md`.
+
+That evidence records the local Docker / Compose run, the mock-first defaults, the safe `/agent/health` and `/agent/explain` results, the frontend reachability check, the logs summary, the clean shutdown, and the post-validation test suite.
+
 ## Recommended Next Slice
 
-The next safe step is the actual LLM-disabled Docker / Compose validation, but only after explicit user approval.
+The next safe step is to update and confirm the roadmap status for the Phase 12 PASS, then continue with EC2 readiness planning while keeping LLM disabled.
 
 Do not run Docker, Docker Compose, AWS / EC2, or any external provider call in this task.

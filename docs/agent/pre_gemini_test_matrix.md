@@ -26,6 +26,7 @@ Current conclusion:
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
 - The Phase 12 LLM-disabled Docker / Compose readiness audit exists and records the read-only compose validation plan before any actual Docker / Compose run.
+- The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the actual local Docker / Compose validation pass.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -297,6 +298,12 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | Read-only Docker / Compose readiness audit exists before actual runtime validation | `docs/agent/llm_disabled_docker_compose_readiness_audit.md` | PASS | The repository now contains a read-only Phase 12 readiness audit that records the current compose layout, mock-first defaults, evidence sources, and the future validation command plan without running Docker / Compose. | Actual Docker / Compose validation still requires explicit user approval and a separate step. | No |
+
+### 10.21 Phase 12 LLM-Disabled Docker / Compose Validation Evidence
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Actual local Docker / Compose validation evidence exists and records the Phase 12 pass | `docs/agent/llm_disabled_docker_compose_validation_evidence.md` | PASS | The repository now contains actual evidence for the local LLM-disabled Docker / Compose run, including compose config, build, health, mock `/agent/explain`, frontend reachability, logs, shutdown, and post-validation tests. | This is local-only evidence and does not claim production, EC2, or real LLM readiness. | No |
 
 ### 11. Frontend / Wording Consistency
 

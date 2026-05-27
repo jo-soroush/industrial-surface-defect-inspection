@@ -37,6 +37,7 @@ The current repository baseline already provides:
 - A G3 dependency decision artifact that keeps the requirements change as an explicit, pending decision.
 - A G3 dependency slice that adds `google-genai` to the backend/API requirements only.
 - A Phase 12 LLM-disabled Docker / Compose readiness audit that records the read-only validation plan before any actual Docker / Compose run.
+- A Phase 12 LLM-disabled Docker / Compose validation evidence document that records the actual local Docker / Compose pass.
 
 ## Non-Negotiable Integration Rules
 

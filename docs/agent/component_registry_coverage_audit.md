@@ -10,6 +10,7 @@ What is confirmed:
 
 - The registry covers every visible component group identified in the current static review.
 - Four high-priority explainable components are actively wired in the frontend.
+- The active explainability scope has been formally accepted for the pre-Gemini phase and is intentionally limited to those four priority components.
 - The remaining visible components are either registry-ready but not actively wired, or are documented safety / assistant boundary content that should remain fixed copy for now.
 - No missing registry entry was identified in this static review.
 
@@ -17,6 +18,7 @@ Why this is still PARTIAL:
 
 - Registry coverage is present, but the dashboard is not fully active-explainable across all visible groups.
 - The AI Assistant and Safety / Limitations pages are intentionally documented-only boundaries, not active explanation surfaces.
+- The inactive registry-ready components are not defects; they are intentionally held back by the accepted scope decision.
 - This audit is static and does not replace a future end-to-end coverage verification step.
 
 ## 2. Method
@@ -185,18 +187,18 @@ Why:
 Rationale:
 
 - Registry coverage is strong and no missing entry was identified.
-- The active explainability surface is intentionally limited to four priority components.
+- The active explainability surface is intentionally limited to four accepted priority components.
 - Safety and AI assistant surfaces remain documented-only.
+- The remaining registry-ready components are intentionally inactive and not considered missing work.
 - A full dashboard-wide active explainability proof has not yet been established.
 
 ## 10. Required Next Actions Before Gemini
 
-1. Confirm whether additional registry-backed components should receive active explanation wiring, or remain registry-ready only.
-2. Keep the AI Assistant and Safety / Limitations surfaces as fixed boundary copy unless a formal future assistant scope is approved.
-3. Produce a formal safety guard layer that sits ahead of any future LLM integration.
-4. Finalize the provider readiness / contract layer before any Gemini work.
-5. Produce a requirement-to-test matrix that maps every pre-Gemini blocker to tests and local validations.
-6. Run the final LLM-disabled Docker / Compose smoke validation after the remaining pre-Gemini work is complete.
+1. Run the final LLM-disabled Docker / Compose smoke validation.
+2. Create or review the Gemini provider integration readiness plan.
+3. Keep the active explainability scope acceptance document current if scope changes.
+4. Keep the requirement-to-test matrix current if scope changes.
+5. Re-audit component coverage if dashboard scope or visible components change.
 
 ## Coverage Summary for Gemini Planning
 

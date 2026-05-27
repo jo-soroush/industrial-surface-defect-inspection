@@ -13,9 +13,9 @@ What is confirmed:
 
 What is still missing before any Gemini work:
 
-- Active explainability coverage still needs explicit scope acceptance before Gemini.
-- A requirements-to-test matrix that explicitly maps every Gemini blocker to a test.
 - A final LLM-disabled Docker/Compose smoke validation after the remaining gaps are closed.
+- A Gemini provider integration readiness plan.
+- Keep the requirement-to-test matrix current if scope changes.
 
 ## Current Confirmed State
 
@@ -27,6 +27,7 @@ What is still missing before any Gemini work:
 - The Agent API schema supports optional `component_id`.
 - The Agent safety guard module exists and is exercised by the mock provider path.
 - The provider contract/readiness layer exists and is used by the provider router.
+- The active explainability scope has been formally accepted for the pre-Gemini phase and is intentionally limited to four priority components.
 - The formal requirement-to-test matrix now exists and maps the main pre-Gemini requirements to repository tests and validations.
 - Frontend component-aware explanation panels are active for:
   - Image Inspection AI panel
@@ -46,13 +47,13 @@ What is still missing before any Gemini work:
 | Phase | Status | Evidence | Remaining gap | Required next action | Blocks Gemini |
 |---|---|---|---|---|---|
 | Phase 0 - Clean Baseline Confirmation | PASS | Current validation set passes; `git status` was clean at the validated baseline; Agent health and explain endpoints are working in mock mode. | No baseline gap in the current evidence set. | Keep baseline validations green while the remaining gaps are closed. | No |
-| Phase 1 - Full Dashboard Component Evidence Audit | PARTIAL | Priority components were audited and wired; component-aware explanations exist for the active surfaces. | A formal, complete coverage audit across every visible dashboard component is still needed as a tracked artifact. | Complete the full component registry coverage audit. | Yes |
+| Phase 1 - Full Dashboard Component Evidence Audit | PARTIAL | Priority components were audited and wired; the active explainability scope is intentionally limited to four accepted components, while the remaining registry-ready components stay inactive. | A formal, complete coverage audit across every visible dashboard component remains a tracked artifact, but the limited active scope is now accepted. | Keep the component registry coverage audit current if the dashboard scope changes. | No |
 | Phase 2 - Universal Component ID Contract | PASS | `configs/agent/component_registry.yaml` defines stable component IDs; the registry validator enforces uniqueness, safety, and allowed values. | Additional components may still be added later, but the contract itself is in place. | Preserve the contract and extend coverage only through the registry. | No |
-| Phase 3 - Component Evidence Registry | PARTIAL | The registry exists and is validated by `src/inspection_ai/agent/component_registry.py` with tests. | Registry coverage for the whole dashboard still needs explicit audit confirmation. | Finish the coverage audit and record any remaining uncatalogued components. | Yes |
+| Phase 3 - Component Evidence Registry | PARTIAL | The registry exists and is validated by `src/inspection_ai/agent/component_registry.py` with tests. | Registry coverage for the whole dashboard is documented, and the remaining registry-ready components are intentionally inactive by scope decision. | Keep the registry coverage audit current if new components are added. | No |
 | Phase 4 - Evidence Loader Layer | PASS | `src/inspection_ai/agent/evidence_loader.py` loads compact, traceable evidence for governed files and runtime inspection data. | Raw evidence remains intentionally blocked by registry defaults. | Keep the loader offline-only and allowlisted. | No |
 | Phase 5 - Context Builder Upgrade | PASS | `build_grounding_context` accepts `component_id` and loads component evidence into grounding context. | Full dashboard use still depends on registry coverage completeness. | Keep component-aware context behavior stable. | No |
 | Phase 6 - Agent API Schema Upgrade | PASS | `AgentExplainRequest` and `AgentExplainResponse` support optional `component_id`; invalid component IDs return validation errors. | No schema gap in the current implementation. | Preserve backward compatibility for non-component requests. | No |
-| Phase 7 - Frontend Component Wiring | PARTIAL | Frontend wiring exists for the active priority components. | Only the priority components are wired; the full dashboard is not component-wired. | Wire additional components only after coverage audit and safety guard completion. | Yes |
+| Phase 7 - Frontend Component Wiring | PARTIAL | Frontend wiring exists for the active priority components, and that limited scope is accepted for the pre-Gemini phase. | Only the priority components are wired; the rest are intentionally inactive and not considered missing. | Add more component wiring only through a separate approved expansion. | No |
 | Phase 8 - Mock Answer Upgrade Based on Evidence | PASS | Mock answers are evidence-aware and component-specific for the active surfaces. | Future richer language output is still limited to mock behavior. | Keep mock answers offline and bounded by evidence. | No |
 | Phase 9 - Safety Guard Layer Before LLM | PASS | `src/inspection_ai/agent/safety_guard.py` provides deterministic pre- and post-generation checks, and the provider router exercises the guard on the mock Agent path. | Future provider-specific policy wiring will still need to reuse the same guard contract, but the formal safety layer now exists. | Preserve the guard contract and keep expanding its tests before any real provider work. | No |
 | Phase 10 - Provider Interface, Still No Gemini | PASS | `src/inspection_ai/agent/provider_contracts.py` defines typed provider request/response/status/readiness contracts, and `src/inspection_ai/agent/provider_router.py` uses the readiness snapshot for health and fallback semantics. | Future Gemini/Grok/OpenAI provider code will still need to reuse this contract, but the readiness layer itself now exists and is exercised. | Preserve the contract and keep future provider work behind the same mock-first guardrails. | No |
@@ -71,9 +72,9 @@ The repository is currently in a validated state. The mock Agent endpoints work,
 
 Status: PARTIAL
 
-The priority dashboard surfaces now have component-aware explanations and a registry-backed evidence model. However, the repository still needs a formal audit artifact that proves every visible dashboard component has been reviewed and mapped.
+The repository has a formal dashboard component coverage audit, and the active explainability scope is now explicitly accepted for the pre-Gemini phase. The remaining registry-ready components are intentionally inactive rather than missing.
 
-Required next action: complete a dashboard-wide component coverage audit and record the remaining gaps explicitly.
+Required next action: keep the coverage audit current if the dashboard scope changes.
 
 ### Phase 2 - Universal Component ID Contract
 
@@ -85,7 +86,7 @@ The component ID contract exists, is enforced, and is stable enough for current 
 
 Status: PARTIAL
 
-The registry is present and validated, but the repository still needs an audit proving that registry coverage matches the full dashboard surface. The contract exists; the coverage proof does not yet.
+The registry is present and validated, and the coverage audit documents the accepted active scope. The remaining registry-ready components are intentionally inactive by decision, not absent by accident.
 
 ### Phase 4 - Evidence Loader Layer
 
@@ -116,7 +117,7 @@ The active priority components are wired:
 - Classification threshold chart
 - Anomaly threshold behavior chart
 
-But the full dashboard is not yet component-wired. That is a deliberate partial implementation, not a failure.
+The remaining registry-ready components are intentionally not wired yet. That is a deliberate pre-Gemini scope decision, not a missing implementation.
 
 ### Phase 8 - Mock Answer Upgrade Based on Evidence
 
@@ -154,9 +155,9 @@ Required next action: run the final Docker/Compose validation with LLM disabled,
 
 ## Blocking Items Before Gemini
 
-- Active explainability scope is not yet formally accepted for Gemini use.
 - Final LLM-disabled Docker/Compose validation is not yet run after the remaining work.
 - Gemini provider integration readiness plan is not yet written/reviewed.
+- Keep the requirement-to-test matrix current if scope changes.
 
 ## Recommended Next Sequence
 
@@ -170,7 +171,7 @@ Required next action: run the final Docker/Compose validation with LLM disabled,
 
 ## Gemini Must Not Start Until...
 
-- The full component registry coverage audit is complete.
+- The full component registry coverage audit is complete for the current accepted active scope.
 - The safety guard layer has explicit tests.
 - Provider readiness and contract rules are documented and validated.
 - The pre-Gemini requirement-to-test matrix exists and is current.

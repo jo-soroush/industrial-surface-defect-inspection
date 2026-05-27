@@ -8,7 +8,7 @@ Current conclusion:
 
 - The core Agent foundation is implemented and well covered by targeted tests.
 - The formal test matrix now exists and ties the main pre-Gemini requirements to repository evidence.
-- The remaining gaps are not in the basic mock Agent or safety plumbing; they are in final local deployment validation and any remaining Gemini-readiness scope acceptance.
+- The remaining gaps are not in the basic mock Agent or safety plumbing; they are in final local deployment validation and the remaining Gemini provider planning.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
 
 ## Current Validated State
@@ -55,8 +55,8 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | Coverage audit exists | `docs/agent/component_registry_coverage_audit.md` | PASS | The registry coverage audit was written and reviewed. | None in the audit artifact itself. | No |
 | Missing registry entries are zero in the static review | `docs/agent/component_registry_coverage_audit.md` | PASS | The audit found no missing registry entries in the static review. | Future visible components may still require a new review if the UI changes. | No |
-| Active explainability coverage is still scope-limited | `docs/agent/component_registry_coverage_audit.md`, `tests/frontend/test_detection_page_polish.py`, `tests/frontend/test_classification_page_polish.py`, `tests/frontend/test_anomaly_page_wiring.py`, `tests/frontend/test_image_inspection_page.py` | PARTIAL | Four priority components are actively wired; the rest are registry-ready but not active. | Full active coverage has not been selected or implemented for every visible component. | Yes |
-| Explicit scope acceptance before Gemini remains required | `docs/agent/pre_gemini_gap_audit.md`, `docs/agent/component_registry_coverage_audit.md` | PARTIAL | The audits still require a scope decision before Gemini. | A final Gemini scope acceptance step is not complete. | Yes |
+| Active explainability coverage is intentionally scope-limited | `docs/agent/component_registry_coverage_audit.md`, `docs/agent/active_explainability_scope_acceptance.md`, `tests/frontend/test_detection_page_polish.py`, `tests/frontend/test_classification_page_polish.py`, `tests/frontend/test_anomaly_page_wiring.py`, `tests/frontend/test_image_inspection_page.py` | PASS | Four priority components are actively wired; the remaining registry-ready components are intentionally inactive by accepted scope decision. | None for the accepted pre-Gemini scope. | No |
+| Explicit scope acceptance is documented | `docs/agent/active_explainability_scope_acceptance.md`, `docs/agent/pre_gemini_gap_audit.md` | PASS | The accepted scope decision is now documented and traceable. | Future scope changes need a new approval cycle. | No |
 
 ### 4. Evidence Loader
 
@@ -171,9 +171,9 @@ Validated in the repository state referenced by this audit:
 
 | Blocker | Evidence / source | Status | Notes | Blocks Gemini |
 |---|---|---|---|---|
-| Active explainability scope acceptance | `docs/agent/component_registry_coverage_audit.md`, `docs/agent/pre_gemini_gap_audit.md` | PARTIAL | The repo has the active priority panels, but a formal acceptance of the active explainable scope is still required before Gemini. | Yes |
 | Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_gap_audit.md` | PENDING | The final local deployment smoke is still pending. | Yes |
 | Gemini Provider Integration Readiness Plan | `docs/agent/pre_gemini_gap_audit.md` | PENDING | Future provider planning exists, but a formal Gemini readiness plan is still required before any implementation. | Yes |
+| Keep the matrix current if scope changes | `docs/agent/pre_gemini_test_matrix.md`, `docs/agent/active_explainability_scope_acceptance.md` | MANUAL | If the accepted scope changes, this matrix must be updated. | Depends |
 | Any new requirement added after this matrix | Future repo state | MANUAL | A new requirement would need its own test mapping. | Depends |
 
 ## PASS Items
@@ -196,7 +196,6 @@ The following are currently covered well enough to count as PASS in the current 
 
 The following remain incomplete or not yet fully proven:
 
-- full dashboard active explainability scope acceptance
 - final Docker / Compose LLM-disabled smoke validation
 - final runtime asset validation if not already separately performed
 - future Gemini readiness planning
@@ -205,16 +204,15 @@ The following remain incomplete or not yet fully proven:
 
 Current blockers supported by the audit docs:
 
-1. Active explainability scope acceptance is still partial.
-2. Docker / Compose LLM-disabled smoke validation is still pending.
-3. The Gemini readiness plan still needs to be written before any integration work begins.
+1. Docker / Compose LLM-disabled smoke validation is still pending.
+2. The Gemini readiness plan still needs to be written before any integration work begins.
+3. The matrix must stay current if scope changes.
 
 ## Required Next Sequence
 
-1. Resolve active explainability scope acceptance.
-2. Run the final Docker / Compose LLM-disabled smoke validation.
-3. Draft the Gemini provider integration readiness plan.
-4. Re-run the requirement-to-test matrix if the scope changes.
+1. Run the final Docker / Compose LLM-disabled smoke validation.
+2. Draft the Gemini provider integration readiness plan.
+3. Re-run the requirement-to-test matrix if the scope changes.
 
 ## Gemini Must Not Start Until...
 
@@ -223,4 +221,3 @@ Current blockers supported by the audit docs:
 - The Gemini readiness plan exists and is reviewed.
 - The requirement-to-test matrix remains current after any scope change.
 - The mock Agent foundation continues to pass compile and pytest validation.
-

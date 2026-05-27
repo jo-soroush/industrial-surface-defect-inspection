@@ -40,6 +40,7 @@ The current repository baseline already provides:
 - A Phase 12 LLM-disabled Docker / Compose validation evidence document that records the actual local Docker / Compose pass.
 - The Phase 12 LLM-disabled Docker / Compose validation is PASS and remains local-only.
 - An EC2 LLM-disabled readiness audit documents the next planning step for later deployment.
+- An EC2 LLM-disabled validation evidence document records the actual EC2 PASS and confirms the instance was stopped after validation.
 
 ## Non-Negotiable Integration Rules
 
@@ -180,6 +181,7 @@ The G3 local real-smoke harness skeleton is implemented and tested, but real Gem
 The G3 final real-smoke execution checklist is implemented as documentation only, but real Gemini provider integration has not started.
 The G3 harness dry-run verification evidence is implemented as documentation only, but real Gemini provider integration has not started.
 The Phase 12 LLM-disabled Docker / Compose validation evidence is implemented as documentation only and records the local PASS.
+The EC2 LLM-disabled validation evidence now records the actual EC2 PASS and confirms the instance was stopped after validation.
 The G3 dependency decision artifact is implemented and reviewed, and the backend/API requirements slice is applied.
 The execution gate design is implemented and reviewed, and it keeps Gemini disabled by default.
 The router activation tests are implemented and reviewed, and they keep Gemini mock-first by default.

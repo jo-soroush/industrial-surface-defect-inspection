@@ -4,11 +4,12 @@
 
 This document is EC2 readiness planning only.
 
-It records the next deployment planning step after the Phase 12 local LLM-disabled Docker / Compose validation PASS. It does not run AWS / EC2 commands, does not create or modify AWS resources, and does not claim that EC2 deployment readiness is complete.
+It records the next deployment planning step after the Phase 12 local LLM-disabled Docker / Compose validation PASS, and it sits alongside the actual EC2 LLM-disabled validation evidence. It does not run AWS / EC2 commands, does not create or modify AWS resources, and does not claim that EC2 deployment readiness is complete.
 
 Current local validation state:
 
 - Phase 12 local LLM-disabled Docker / Compose validation is PASS.
+- EC2 LLM-disabled validation evidence now exists in `docs/deployment/ec2_llm_disabled_validation_evidence.md`.
 - API was locally reachable on port `8000`.
 - frontend was locally reachable on port `8501`.
 - `/agent/health` remained mock-first and LLM disabled.
@@ -18,17 +19,17 @@ Current local validation state:
 
 What remains blocked:
 
-- actual EC2 execution
-- SSH access validation on EC2
-- AWS resource creation or modification
-- real LLM activation
 - production readiness claims
+- HTTPS / domain readiness claims
+- real LLM activation
+- unreviewed future AWS changes
 
 ## Roadmap Alignment
 
 This audit aligns with the next roadmap step after the local Phase 12 PASS:
 
 - Phase 12 local validation: PASS
+- EC2 LLM-disabled validation: PASS
 - Next roadmap step: EC2 readiness planning with LLM disabled
 - Real Gemini / Grok / OpenAI activation remains out of scope
 
@@ -182,10 +183,10 @@ Decision:
 - PASS for EC2 readiness planning
 - FAIL / PENDING for actual EC2 validation
 
-This document does not claim production readiness, EC2 readiness completion, or real LLM readiness.
+This document does not claim production readiness, EC2 readiness completion, or real LLM readiness. The actual EC2 LLM-disabled validation evidence is documented separately in `docs/deployment/ec2_llm_disabled_validation_evidence.md`.
 
 ## Recommended Next Slice
 
-Review this EC2 readiness plan, then run the EC2 preflight only after explicit user approval.
+Keep EC2 stopped until the next work session, then review the EC2 readiness plan and the actual validation evidence together before any future deployment work.
 
 Do not run EC2 commands in this task.

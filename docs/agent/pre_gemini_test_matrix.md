@@ -29,6 +29,7 @@ Current conclusion:
 - The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the actual local Docker / Compose validation pass.
 - Phase 12 local LLM-disabled Docker / Compose validation is PASS.
 - The EC2 LLM-disabled readiness audit exists and records the planning-only next step for later deployment.
+- The EC2 LLM-disabled validation evidence exists and records the actual EC2 PASS.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -307,6 +308,12 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | Actual local Docker / Compose validation evidence exists and records the Phase 12 pass | `docs/agent/llm_disabled_docker_compose_validation_evidence.md` | PASS | The repository now contains actual evidence for the local LLM-disabled Docker / Compose run, including compose config, build, health, mock `/agent/explain`, frontend reachability, logs, shutdown, and post-validation tests. | This is local-only evidence and does not claim production, EC2, or real LLM readiness. | No |
+
+### 10.22 EC2 LLM-Disabled Validation Evidence
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Actual EC2 LLM-disabled validation evidence exists and records the EC2 PASS | `docs/deployment/ec2_llm_disabled_validation_evidence.md` | PASS | The repository now contains actual EC2 validation evidence showing SSH success, Docker / Compose installation, EC2 build and startup, mock-first health and explain responses, public frontend and API reachability, safe logs, clean shutdown, and a stopped EC2 instance. | This is EC2-local evidence and does not claim production, HTTPS/domain, or real LLM readiness. | No |
 
 ### 11. Frontend / Wording Consistency
 

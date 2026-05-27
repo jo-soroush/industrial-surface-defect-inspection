@@ -40,6 +40,7 @@ What is still missing before any Gemini work:
 - Gemini runtime activation is not active.
 - Phase 12 LLM-disabled Docker / Compose validation has passed locally and is documented in `docs/agent/llm_disabled_docker_compose_validation_evidence.md`.
 - EC2 readiness planning with LLM disabled is documented in `docs/deployment/ec2_llm_disabled_readiness_audit.md`.
+- EC2 LLM-disabled validation has passed and is documented in `docs/deployment/ec2_llm_disabled_validation_evidence.md`.
 - Frontend component-aware explanation panels are active for:
   - Image Inspection AI panel
   - Detection confidence chart
@@ -70,7 +71,7 @@ What is still missing before any Gemini work:
 | Phase 9 - Safety Guard Layer Before LLM | PASS | `src/inspection_ai/agent/safety_guard.py` provides deterministic pre- and post-generation checks, and the provider router exercises the guard on the mock Agent path. | Future provider-specific policy wiring will still need to reuse the same guard contract, but the formal safety layer now exists. | Preserve the guard contract and keep expanding its tests before any real provider work. | No |
 | Phase 10 - Provider Interface, Still No Gemini | PASS | `src/inspection_ai/agent/provider_contracts.py` defines typed provider request/response/status/readiness contracts, and `src/inspection_ai/agent/provider_router.py` uses the readiness snapshot for health and fallback semantics. | Future Gemini/Grok/OpenAI provider code will still need to reuse this contract, but the readiness layer itself now exists and is exercised. | Preserve the contract and keep future provider work behind the same mock-first guardrails. | No |
 | Phase 11 - Full Test Matrix Before Gemini | PASS | `docs/agent/pre_gemini_test_matrix.md` now provides a formal requirement-to-test matrix that maps the main pre-Gemini requirements to specific tests and validation commands. | Remaining updates may be needed if new scope is added later, but the matrix now exists. | Keep the matrix current when scope changes. | No |
-| Phase 12 - Local Validation Before Gemini | PASS | Python compilation, pytest validations, and the LLM-disabled Docker/Compose smoke validation all pass. | The final smoke path is validated; future changes should re-run it if the deployment surface changes. | Keep the smoke validation current if Docker, Compose, or runtime assets change. | No |
+| Phase 12 - Local Validation Before Gemini | PASS | Python compilation, pytest validations, the LLM-disabled Docker/Compose smoke validation, and the EC2 LLM-disabled validation all pass. | The final smoke path is validated; future changes should re-run it if the deployment surface changes. | Keep the smoke validation current if Docker, Compose, or runtime assets change. | No |
 
 ## Detailed Phase Notes
 
@@ -165,6 +166,8 @@ Python compilation, pytest validations, and the LLM-disabled Docker / Compose va
 
 Required next action: continue with EC2 readiness planning while keeping LLM disabled, and re-run the smoke if the deployment surface, Dockerfiles, Compose file, or runtime assets change.
 
+The separate EC2 LLM-disabled validation evidence now records the actual EC2 PASS in `docs/deployment/ec2_llm_disabled_validation_evidence.md`.
+
 ## Blocking Items Before Gemini
 
 - User approval to start the Gemini implementation phase.
@@ -188,6 +191,7 @@ Required next action: continue with EC2 readiness planning while keeping LLM dis
 - The LLM-disabled Docker / Compose smoke validation has passed.
 - The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the local PASS.
 - The EC2 readiness planning audit exists and records the next LLM-disabled deployment planning step.
+- The EC2 LLM-disabled validation evidence exists and records the actual EC2 PASS.
 - The repository still passes the focused compile and pytest checks.
 - The project has not introduced any production/deployment claims.
 

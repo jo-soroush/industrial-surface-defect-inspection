@@ -187,26 +187,24 @@ The separate EC2 LLM-disabled validation evidence now records the actual EC2 PAS
 
 ## Recommended Next Sequence
 
-1. Full Component Registry Coverage Audit
-2. Formal Safety Guard Layer
-3. Provider Interface Readiness
-4. Formal Pre-Gemini Test Matrix
-5. EC2 readiness planning with LLM disabled
-6. User approval to start the Gemini implementation phase
-7. Gemini implementation only after the user approves it and the remaining operational gates remain green
+1. User approval to start Gemini implementation planning.
+2. First implementation slice, kept local and mock-safe first unless explicitly approved otherwise.
+3. Continue keeping the pre-Gemini matrix, readiness docs, and EC2 LLM-disabled evidence current if the deployment surface changes.
 
 ## Gemini Must Not Start Until...
 
-- The full component registry coverage audit is complete for the current accepted active scope.
-- The safety guard layer has explicit tests.
-- Provider readiness and contract rules are documented and validated.
-- The pre-Gemini requirement-to-test matrix exists and is current.
-- The LLM-disabled Docker / Compose smoke validation has passed.
-- The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the local PASS.
-- The EC2 readiness planning audit exists and records the next LLM-disabled deployment planning step.
-- The EC2 LLM-disabled validation evidence exists and records the actual EC2 PASS.
-- The repository still passes the focused compile and pytest checks.
-- The project has not introduced any production/deployment claims.
+- Completed prerequisites already PASS for the accepted scope:
+  - The full component registry coverage audit is complete for the current accepted active scope.
+  - The safety guard layer has explicit tests.
+  - Provider readiness and contract rules are documented and validated.
+  - The pre-Gemini requirement-to-test matrix exists and is current.
+  - The LLM-disabled Docker / Compose smoke validation has passed.
+  - The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the local PASS.
+  - The EC2 readiness planning audit exists and records the next LLM-disabled deployment planning step.
+  - The EC2 LLM-disabled validation evidence exists and records the actual EC2 PASS.
+  - The repository still passes the focused compile and pytest checks.
+- Remaining blocker:
+  - User approval to start the Gemini implementation phase.
 
 ## Maintenance Notes
 

@@ -519,6 +519,52 @@ def test_gemini_real_provider_missing_key_skips_sdk_loader_and_falls_back(monkey
     assert result.provider_error is not None
 
 
+def test_gemini_real_provider_disabled_by_default_skips_sdk_loading_even_with_fake_key(monkeypatch) -> None:
+    sdk_module_loader_calls: list[str] = []
+
+    def fake_load_google_genai_module():
+        sdk_module_loader_calls.append("called")
+        raise AssertionError("lazy SDK import should not be called when AGENT_ENABLE_LLM is disabled")
+
+    monkeypatch.setattr(gemini_provider_module, "_load_google_genai_module", fake_load_google_genai_module)
+
+    loader = _RecordingSdkLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="available",
+        )
+    )
+    provider = GeminiRealProvider(
+        settings=_build_real_provider_settings(enable_llm=False, gemini_key_present=True),
+        config=GeminiRealProviderConfig(
+            real_provider_implemented=True,
+            sdk_import_allowed=True,
+            api_key_resolver=lambda: "fake-key",
+        ),
+        sdk_loader=loader.loader,
+        sdk_module_loader=lambda: sdk_module_loader_calls.append("called") or _FakeRealSdkModule("safe"),
+    )
+
+    result = provider.generate(_build_gemini_provider_request())
+
+    assert sdk_module_loader_calls == []
+    assert loader.calls == 0
+    assert result.status == "disabled"
+    assert result.provider_response.provider_used == "mock"
+    assert result.provider_response.fallback_used is True
+    assert result.provider_response.raw_provider_response_allowed is False
+    assert result.provider_error is not None
+    assert "disabled while ag" in result.provider_error.lower()
+    assert result.readiness is not None
+    assert result.readiness.status == "disabled"
+    assert result.sdk_load_result is not None
+    assert result.sdk_load_result.checked is False
+    assert result.sdk_load_result.sdk_available is False
+    assert result.sdk_load_result.status == "not_checked"
+
+
 def test_gemini_real_provider_sdk_missing_returns_fallback_without_lazy_import(monkeypatch) -> None:
     calls: list[str] = []
 

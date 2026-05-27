@@ -25,6 +25,7 @@ Current conclusion:
 - The G3 harness dry-run verification evidence exists and records the disabled-by-default harness behavior, but it is not real smoke evidence.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
+- The Phase 12 LLM-disabled Docker / Compose readiness audit exists and records the read-only compose validation plan before any actual Docker / Compose run.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -290,6 +291,12 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | Harness dry-run verification evidence exists and records the safe disabled-by-default harness behavior | `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md` | PASS | The repository now contains dry-run verification evidence showing the harness stays local-only, does not read the key, and remains mock-first without claiming a real smoke. | Real smoke execution is still blocked until explicit user approval. | No |
+
+### 10.20 Phase 12 LLM-Disabled Docker / Compose Readiness Audit
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Read-only Docker / Compose readiness audit exists before actual runtime validation | `docs/agent/llm_disabled_docker_compose_readiness_audit.md` | PASS | The repository now contains a read-only Phase 12 readiness audit that records the current compose layout, mock-first defaults, evidence sources, and the future validation command plan without running Docker / Compose. | Actual Docker / Compose validation still requires explicit user approval and a separate step. | No |
 
 ### 11. Frontend / Wording Consistency
 

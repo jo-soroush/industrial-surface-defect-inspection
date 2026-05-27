@@ -55,6 +55,7 @@ The following items are complete and established in the repository:
 - G3 local real-smoke harness skeleton
 - G3 final real-smoke execution checklist
 - G3 harness dry-run verification evidence
+- Phase 12 LLM-disabled Docker / Compose readiness audit
 - deterministic safety guard
 - provider contract and readiness layer
 - mock-first runtime

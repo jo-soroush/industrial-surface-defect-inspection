@@ -10,6 +10,7 @@ Current conclusion:
 - The formal test matrix now exists and ties the main pre-Gemini requirements to repository evidence.
 - Phase G1 stub/config implementation is complete.
 - Phase G2 mocked-client test layer is complete.
+- The G3 preparation audit exists and records the package, environment, API-key, activation, rollback, and test strategy.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -174,6 +175,12 @@ Validated in the repository state referenced by this audit:
 | The Gemini provider module stays offline-only | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_provider_module_does_not_import_provider_sdks_or_network_libraries` | PASS | Source inspection confirms the module avoids SDK and network imports. | None in the current evidence set. | No |
 | Normal Agent runtime remains mock-first | `tests/agent/test_gemini_provider_mocked_client.py::test_existing_agent_provider_router_normal_mock_path_remains_unchanged` | PASS | The normal `/agent/explain` path still uses the mock provider. | None in the current evidence set. | No |
 
+### 10.3 Gemini Provider G3 Preparation Audit
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| G3 preparation audit exists and documents the real-provider strategy | `docs/agent/gemini_phase_g3_preparation_audit.md` | PASS | The repository now contains a dedicated G3 preparation audit covering package, env, API-key, gating, fallback, Docker/Compose, EC2, observability, rollback, and entry checklist strategy. | Real Gemini provider code is still not started. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -217,6 +224,7 @@ The following are currently covered well enough to count as PASS in the current 
 - provider contract/readiness layer
 - Gemini provider G1 stub
 - Gemini provider G2 mocked client tests
+- Gemini provider G3 preparation audit
 - frontend wording consistency
 - the Safety truncation/UI polish fix
 

@@ -144,6 +144,24 @@ Future Gemini work should follow these phases:
 - Phase G6 - EC2 secret-managed deployment plan
 - Phase G7 - monitoring, limits, rollback
 
+## G3 Preparation Note
+
+The G3 preparation audit exists and records the package, environment, API-key, activation, rollback, and test strategy for the future real Gemini provider.
+
+What this means:
+
+- Real Gemini provider integration has not started.
+- No Gemini API call is implemented.
+- No real LLM execution is active.
+- Gemini runtime activation is not active.
+- The runtime remains mock-first.
+
+What this does not mean:
+
+- Gemini is connected.
+- Gemini is active.
+- G3 implementation has started.
+
 ## G1 Completion Note
 
 Phase G1 stub/config implementation is complete.
@@ -220,6 +238,7 @@ It must not log raw prompts or secrets by default.
 Gemini implementation must not start until:
 
 - This plan exists in the repository and is reviewed.
+- The G3 preparation audit exists and is reviewed.
 - Current tests pass.
 - The LLM-disabled Docker / Compose smoke evidence remains PASS.
 - Safety guard tests remain PASS.
@@ -235,6 +254,8 @@ Gemini implementation must not start until:
 ## Explicit Statement
 
 Phase G1 stub/config implementation is complete.
+Phase G2 mocked-client test layer is complete.
+The G3 preparation audit exists and is reviewed.
 Real Gemini provider integration has not started.
 No Gemini API call is implemented.
 No real LLM execution is active.

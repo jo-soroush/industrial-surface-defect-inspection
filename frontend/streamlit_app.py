@@ -3007,7 +3007,14 @@ def _render_limitations() -> None:
     with top_cols[1]:
         st.metric("Local image inspection", "Connected", help="The unified /inspect/image flow is available in the frontend.")
     with top_cols[2]:
-        st.metric("Multi-model outputs", "Classification + localization + anomaly + decision", help="Local inspection returns the unified inspection response.")
+        st.metric(
+            "Multi-model outputs",
+            "Multi-model signals",
+            help=(
+                "Local inspection returns classification, defect localization boxes, "
+                "anomaly signal, and a final rule-based decision."
+            ),
+        )
     with top_cols[3]:
         st.metric("Manual review boundary", "Required", help="The dashboard does not replace expert/manual review.")
 

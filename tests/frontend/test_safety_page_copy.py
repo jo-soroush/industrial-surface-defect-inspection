@@ -12,6 +12,8 @@ def test_safety_page_copy_is_current() -> None:
     assert "localization" in source or "boxes" in source
     assert "anomaly" in source
     assert "final rule-based decision" in source
+    assert "multi-model signals" in source
+    assert "classification + localization" not in source
     assert "not production-ready" in source
     assert "not deployment-safe" in source
     assert "manual review" in source or "expert/manual review" in source

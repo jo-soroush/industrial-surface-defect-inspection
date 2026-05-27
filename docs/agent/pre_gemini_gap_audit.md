@@ -38,6 +38,7 @@ What is still missing before any Gemini work:
 - No Gemini API call is implemented.
 - No real LLM execution is active.
 - Gemini runtime activation is not active.
+- Phase 12 LLM-disabled Docker / Compose validation has passed locally and is documented in `docs/agent/llm_disabled_docker_compose_validation_evidence.md`.
 - Frontend component-aware explanation panels are active for:
   - Image Inspection AI panel
   - Detection confidence chart
@@ -47,6 +48,7 @@ What is still missing before any Gemini work:
 - The safety and AI assistant wording now reflects the current mock Agent state and future LLM boundaries.
 - Recent validations passed:
   - `python -m compileall frontend tests api src/inspection_ai scripts`
+  - `pytest tests/docker/ -q`
   - `pytest tests/frontend/ -q`
   - `pytest tests/api/test_agent_endpoint.py -q`
   - `pytest tests/agent/ -q`
@@ -158,9 +160,9 @@ Required next action: keep the matrix current whenever scope changes.
 
 Status: PASS
 
-Python compilation, pytest validations, and the LLM-disabled Docker / Compose smoke validation have passed. The local deployment path is now validated in mock-first mode.
+Python compilation, pytest validations, and the LLM-disabled Docker / Compose validation evidence have passed. The local deployment path is now validated in mock-first mode.
 
-Required next action: re-run the smoke if the deployment surface, Dockerfiles, Compose file, or runtime assets change.
+Required next action: continue with EC2 readiness planning while keeping LLM disabled, and re-run the smoke if the deployment surface, Dockerfiles, Compose file, or runtime assets change.
 
 ## Blocking Items Before Gemini
 
@@ -172,8 +174,9 @@ Required next action: re-run the smoke if the deployment surface, Dockerfiles, C
 2. Formal Safety Guard Layer
 3. Provider Interface Readiness
 4. Formal Pre-Gemini Test Matrix
-5. User approval to start the Gemini implementation phase
-6. Gemini implementation only after the user approves it and the remaining operational gates remain green
+5. EC2 readiness planning with LLM disabled
+6. User approval to start the Gemini implementation phase
+7. Gemini implementation only after the user approves it and the remaining operational gates remain green
 
 ## Gemini Must Not Start Until...
 
@@ -182,6 +185,7 @@ Required next action: re-run the smoke if the deployment surface, Dockerfiles, C
 - Provider readiness and contract rules are documented and validated.
 - The pre-Gemini requirement-to-test matrix exists and is current.
 - The LLM-disabled Docker / Compose smoke validation has passed.
+- The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the local PASS.
 - The repository still passes the focused compile and pytest checks.
 - The project has not introduced any production/deployment claims.
 

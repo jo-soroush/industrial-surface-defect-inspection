@@ -27,6 +27,7 @@ Current conclusion:
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
 - The Phase 12 LLM-disabled Docker / Compose readiness audit exists and records the read-only compose validation plan before any actual Docker / Compose run.
 - The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the actual local Docker / Compose validation pass.
+- Phase 12 local LLM-disabled Docker / Compose validation is PASS.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -36,6 +37,7 @@ Current conclusion:
 Validated in the repository state referenced by this audit:
 
 - `python -m compileall frontend tests api src/inspection_ai scripts`
+- `pytest tests/docker/ -q`
 - `pytest tests/agent/ -q`
 - `pytest tests/api/test_agent_endpoint.py -q`
 - `pytest tests/frontend/ -q`
@@ -320,7 +322,7 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | Python compile and pytest validations pass | `python -m compileall ...`, `pytest tests/agent/ -q`, `pytest tests/api/test_agent_endpoint.py -q`, `pytest tests/frontend/ -q` | PASS | The current local Python and pytest validation set passes. | None in the current evidence set. | No |
-| Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_docker_compose_smoke_validation.md` | PASS | The mock-first Docker / Compose stack started successfully with LLM disabled, the API and Agent health endpoints returned expected results, the component-aware mock explain smoke succeeded, and the frontend served HTTP responses. | Re-run if Docker, Compose, or runtime assets change. | No |
+| Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_docker_compose_smoke_validation.md`, `docs/agent/llm_disabled_docker_compose_validation_evidence.md` | PASS | The mock-first Docker / Compose stack started successfully with LLM disabled, the API and Agent health endpoints returned expected results, the component-aware mock explain smoke succeeded, the frontend served HTTP responses, and the actual validation evidence records the same local PASS. | Re-run if Docker, Compose, or runtime assets change. | No |
 | Runtime asset validation / maintenance | `docs/agent/pre_gemini_docker_compose_smoke_validation.md` | MANUAL | The smoke validated the current mock-first API, Agent, and frontend path with LLM disabled; runtime assets should be rechecked if model/runtime assets, Dockerfiles, Compose, or serving surfaces change. | Re-run the smoke when the deployment surface changes. | No |
 | Final manual visual checks are either PASS or pending based on actual evidence | `tests/frontend/*`, prior manual UI validation notes | MANUAL | Visual checks have been performed for the active panels, but a new future UI change would require re-review. | Manual review remains relevant for UI polish and copy drift. | No |
 
@@ -328,7 +330,7 @@ Validated in the repository state referenced by this audit:
 
 | Blocker | Evidence / source | Status | Notes | Blocks Gemini |
 |---|---|---|---|---|
-| Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_docker_compose_smoke_validation.md` | PASS | The final local deployment smoke passed in mock-first, LLM-disabled mode. | Re-run if Docker, Compose, or runtime assets change. | No |
+| Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_docker_compose_smoke_validation.md`, `docs/agent/llm_disabled_docker_compose_validation_evidence.md` | PASS | The final local deployment smoke passed in mock-first, LLM-disabled mode, and the actual validation evidence records the local PASS. | Re-run if Docker, Compose, or runtime assets change. | No |
 | Gemini Provider Integration Readiness Plan | `docs/agent/gemini_provider_integration_readiness_plan.md` | PASS | The formal Gemini readiness plan now documents the non-negotiable integration rules, rollout phases, failure behavior, and acceptance criteria. | Future implementation still requires user approval. | No |
 | Keep the matrix current if scope changes | `docs/agent/pre_gemini_test_matrix.md`, `docs/agent/active_explainability_scope_acceptance.md` | MANUAL | If the accepted scope changes, this matrix must be updated. | Depends | No |
 | Any new requirement added after this matrix | Future repo state | MANUAL | A new requirement would need its own test mapping. | Depends |

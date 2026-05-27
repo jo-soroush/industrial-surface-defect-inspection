@@ -38,6 +38,7 @@ The current repository baseline already provides:
 - A G3 dependency slice that adds `google-genai` to the backend/API requirements only.
 - A Phase 12 LLM-disabled Docker / Compose readiness audit that records the read-only validation plan before any actual Docker / Compose run.
 - A Phase 12 LLM-disabled Docker / Compose validation evidence document that records the actual local Docker / Compose pass.
+- The Phase 12 LLM-disabled Docker / Compose validation is PASS and remains local-only.
 
 ## Non-Negotiable Integration Rules
 
@@ -177,6 +178,7 @@ The G3 local real-smoke plan is implemented as documentation only, but real Gemi
 The G3 local real-smoke harness skeleton is implemented and tested, but real Gemini provider integration has not started.
 The G3 final real-smoke execution checklist is implemented as documentation only, but real Gemini provider integration has not started.
 The G3 harness dry-run verification evidence is implemented as documentation only, but real Gemini provider integration has not started.
+The Phase 12 LLM-disabled Docker / Compose validation evidence is implemented as documentation only and records the local PASS.
 The G3 dependency decision artifact is implemented and reviewed, and the backend/API requirements slice is applied.
 The execution gate design is implemented and reviewed, and it keeps Gemini disabled by default.
 The router activation tests are implemented and reviewed, and they keep Gemini mock-first by default.

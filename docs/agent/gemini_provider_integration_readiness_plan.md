@@ -299,12 +299,13 @@ Gemini implementation must not start until:
 - The LLM-disabled Docker / Compose smoke evidence remains PASS.
 - Safety guard tests remain PASS.
 - Provider contract tests remain PASS.
-- The user explicitly approves the next implementation phase.
+- The user explicitly approves the next non-code Gemini planning step.
+- The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.
 
 ## Remaining Blockers After This Plan
 
-- User approval to start the Gemini implementation phase.
-- Approval of the next implementation slice (real provider skeleton or runtime activation slice).
+- User approval for the next non-code Gemini planning step.
+- Local real-smoke planning must remain explicit and blocked until that approval is granted.
 - Optional: Gemini API key availability for later runtime testing, but not required for planning.
 
 ## Explicit Statement
@@ -322,3 +323,4 @@ No real LLM execution is active.
 Gemini runtime activation is not active.
 Gemini, Grok, and OpenAI remain inactive.
 The system remains mock-first and offline by default.
+The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.

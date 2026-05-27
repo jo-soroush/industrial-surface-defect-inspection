@@ -33,7 +33,7 @@ Current conclusion:
 - The EC2 LLM-disabled readiness audit exists and records the planning-only next step for later deployment.
 - The EC2 LLM-disabled validation evidence exists and records the actual EC2 PASS.
 - Real Gemini provider integration has not started.
-- The remaining gap is user approval to start the Gemini implementation phase.
+- The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
 
 ## Current Validated State
@@ -379,7 +379,7 @@ The following are currently covered well enough to count as PASS in the current 
 
 The following remain incomplete or not yet fully proven:
 
-- user approval to start the Gemini implementation phase
+- user approval for the next non-code Gemini planning step
 
 ## Gemini Blockers Remaining
 
@@ -389,14 +389,15 @@ Current blockers supported by the audit docs:
 
 ## Required Next Sequence
 
-1. Request and obtain user approval before any Gemini implementation phase.
-2. Re-run the requirement-to-test matrix if the scope changes.
+1. Request and obtain user approval for the next non-code Gemini planning step.
+2. Continue with local real-smoke planning and keep the readiness docs current.
+3. Re-run the requirement-to-test matrix if the scope changes.
 
 ## Gemini Must Not Start Until...
 
 - The active explainability scope is explicitly accepted.
 - The final LLM-disabled Docker / Compose smoke validation has passed.
 - The Gemini readiness plan exists and is reviewed.
-- The user has approved the next implementation phase.
+- The user has approved the next non-code Gemini planning step.
 - The requirement-to-test matrix remains current after any scope change.
 - The mock Agent foundation continues to pass compile and pytest validation.

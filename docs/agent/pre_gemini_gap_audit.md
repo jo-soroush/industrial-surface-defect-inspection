@@ -23,10 +23,11 @@ What is confirmed:
 - HTTPS/domain readiness is not claimed.
 - Real LLM readiness is not claimed.
 - The EC2 instance was stopped after validation, not terminated.
+- The remaining-gap audit found no useful additional no-network Gemini code slice.
 
 What is still missing before any Gemini work:
 
-- A Gemini implementation phase approval from the user.
+- User approval for the next non-code Gemini planning step.
 
 ## Current Confirmed State
 
@@ -189,9 +190,9 @@ The separate EC2 LLM-disabled validation evidence now records the actual EC2 PAS
 
 ## Recommended Next Sequence
 
-1. User approval to start Gemini implementation planning.
-2. First implementation slice, kept local and mock-safe first unless explicitly approved otherwise.
-3. Continue keeping the pre-Gemini matrix, readiness docs, and EC2 LLM-disabled evidence current if the deployment surface changes.
+1. User approval for the next non-code Gemini planning step.
+2. Continue with local real-smoke planning and keep the readiness docs current.
+3. Keep the pre-Gemini matrix and deployment evidence current if the deployment surface changes.
 
 ## Gemini Must Not Start Until...
 
@@ -206,7 +207,7 @@ The separate EC2 LLM-disabled validation evidence now records the actual EC2 PAS
   - The EC2 LLM-disabled validation evidence exists and records the actual EC2 PASS.
   - The repository still passes the focused compile and pytest checks.
 - Remaining blocker:
-  - User approval to start the Gemini implementation phase.
+  - User approval for the next non-code Gemini planning step.
 
 ## Maintenance Notes
 

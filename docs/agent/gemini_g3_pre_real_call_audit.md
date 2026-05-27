@@ -253,19 +253,19 @@ Decision:
 
 The repository is not ready for uncontrolled real provider activation.
 
-Real provider implementation may start only after explicit user approval and the package / dependency slice decision.
+Real provider implementation may start only after explicit user approval for the next non-code Gemini planning step.
 
 Real API call remains blocked until the next approved slice.
+The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.
 
 ## Next Recommended Slice
 
-Recommended next slice: **A. Dependency installation decision / requirements slice only**
+Recommended next slice: **B. Non-code approval and local real-smoke planning**
 
 Why this is the safest next move:
 
-- it locks package, version, and requirements placement before any SDK import or runtime activation
-- it does not require changing the provider runtime path
-- it keeps the system mock-first while resolving the only remaining package decision
+- it keeps the system mock-first while the no-network Gemini code gap is already exhausted
+- it preserves the disabled-by-default boundary and keeps real smoke blocked pending explicit approval
 - it avoids jumping directly to a real API call
 
 ## Explicit Statement
@@ -278,3 +278,4 @@ No Gemini API call is implemented.
 No real LLM execution is active.
 Gemini runtime activation is not active.
 The system remains mock-first.
+The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.

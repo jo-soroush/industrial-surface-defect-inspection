@@ -11,7 +11,7 @@ import os
 from typing import Any
 
 from .context_builder import AgentGroundingContext, load_global_context
-from .gemini_provider import evaluate_gemini_provider_readiness
+from .gemini_provider import GeminiG3Readiness, evaluate_gemini_g3_readiness, evaluate_gemini_provider_readiness
 from .provider_contracts import (
     AgentProviderRequest,
     AgentProviderResponse,
@@ -101,10 +101,15 @@ class AgentProviderRouter:
         readiness = evaluate_provider_readiness(self._provider_runtime_settings())
         return [name for name, result in readiness.items() if result.availability.available and name == "mock"]
 
+    def gemini_readiness(self) -> GeminiG3Readiness:
+        """Return the safe Gemini readiness snapshot without activating Gemini."""
+        return evaluate_gemini_g3_readiness(self._provider_runtime_settings())
+
     def health(self) -> AgentHealthResponse:
         """Return a safe health snapshot for the agent layer."""
         provider_runtime_settings = self._provider_runtime_settings()
         readiness = evaluate_provider_readiness(provider_runtime_settings)
+        gemini_readiness = self.gemini_readiness()
         warnings = list(readiness["mock"].warnings)
         if not self.settings.enable_fallback:
             warnings.append(
@@ -117,6 +122,8 @@ class AgentProviderRouter:
         warnings.extend(readiness["gemini"].warnings)
         warnings.extend(readiness["grok"].warnings)
         warnings.extend(evaluate_gemini_provider_readiness(provider_runtime_settings).warnings)
+        warnings.extend(gemini_readiness.warnings)
+        warnings.append(_format_gemini_readiness_warning(gemini_readiness))
         if self.settings.default_provider != "mock":
             warnings.append("Mock remains the default safe provider for this MVP.")
         return AgentHealthResponse(
@@ -571,3 +578,18 @@ def _format_value(value: Any) -> str:
 
 def _normalize_text(value: str) -> str:
     return " ".join(value.lower().replace("-", " ").replace("_", " ").split())
+
+
+def _format_gemini_readiness_warning(readiness: GeminiG3Readiness) -> str:
+    return (
+        "Gemini readiness: "
+        f"status={readiness.status}, "
+        f"available={readiness.available}, "
+        f"configured={readiness.availability.configured}, "
+        f"llm_enabled={readiness.gates.llm_enabled}, "
+        f"api_key_present={readiness.gates.api_key_present}, "
+        f"sdk_checked={readiness.gates.sdk_checked}, "
+        f"sdk_status={readiness.gates.sdk_status}, "
+        f"activation_allowed={readiness.gates.activation_allowed}, "
+        f"real_provider_implemented={readiness.gates.real_provider_implemented}."
+    )

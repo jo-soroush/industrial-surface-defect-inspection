@@ -24,6 +24,7 @@ The current repository baseline already provides:
 - A Gemini G3 entry checklist and first-slice plan that keeps implementation small, reversible, and offline-only.
 - A first G3 readiness-scaffolding slice that models SDK-missing and key-missing behavior without real Gemini execution.
 - A second G3 offline-only lazy SDK loader boundary that stays SDK-free at module import time.
+- A third G3 health/readiness integration slice that threads safe Gemini metadata into the existing health surface without activating Gemini.
 
 ## Non-Negotiable Integration Rules
 
@@ -156,6 +157,7 @@ The package verification artifact is documented in `docs/agent/gemini_g3_package
 The G3 entry checklist and first-slice plan are documented in `docs/agent/gemini_phase_g3_entry_checklist.md`.
 The first readiness-scaffolding slice is implemented and tested, but real Gemini provider integration has not started.
 The second offline-only lazy SDK loader boundary is implemented and tested, but real Gemini provider integration has not started.
+The third health/readiness integration slice is implemented and tested, but real Gemini provider integration has not started.
 
 What this means:
 
@@ -164,6 +166,7 @@ What this means:
 - No real LLM execution is active.
 - Gemini runtime activation is not active.
 - The runtime remains mock-first.
+- Health/readiness metadata is safe and does not activate Gemini.
 
 What this does not mean:
 

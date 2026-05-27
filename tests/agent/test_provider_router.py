@@ -33,6 +33,16 @@ def test_health_reports_mock_first_mvp_state() -> None:
     assert health.fallback_available is True
     assert health.grounding_ready is True
     assert any("phase g1" in warning.lower() for warning in health.warnings)
+    assert any("gemini readiness:" in warning.lower() for warning in health.warnings)
+    gemini_readiness = router.gemini_readiness()
+    assert gemini_readiness.status == "disabled"
+    assert gemini_readiness.available is False
+    assert gemini_readiness.gates.llm_enabled is False
+    assert gemini_readiness.gates.api_key_present is False
+    assert gemini_readiness.gates.sdk_checked is False
+    assert gemini_readiness.gates.sdk_status == "not_checked"
+    assert gemini_readiness.gates.activation_allowed is False
+    assert gemini_readiness.gates.real_provider_implemented is False
 
 
 def test_missing_provider_keys_do_not_break_mock_health(monkeypatch) -> None:
@@ -61,6 +71,35 @@ def test_missing_provider_keys_do_not_break_mock_health(monkeypatch) -> None:
     assert any("gemini" in warning.lower() for warning in health.warnings)
     assert any("grok" in warning.lower() for warning in health.warnings)
     assert any("phase g1" in warning.lower() for warning in health.warnings)
+    assert any("gemini readiness:" in warning.lower() for warning in health.warnings)
+
+    gemini_readiness = router.gemini_readiness()
+    assert gemini_readiness.status == "unavailable"
+    assert gemini_readiness.available is False
+    assert gemini_readiness.gates.llm_enabled is True
+    assert gemini_readiness.gates.api_key_present is False
+    assert gemini_readiness.gates.sdk_checked is False
+    assert gemini_readiness.gates.sdk_status == "not_checked"
+    assert gemini_readiness.gates.activation_allowed is False
+    assert gemini_readiness.gates.real_provider_implemented is False
+
+
+def test_gemini_health_metadata_does_not_expose_raw_key_values(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("GEMINI_API_KEY", "super-secret-test-key")
+    monkeypatch.delenv("GROK_API_KEY", raising=False)
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "mock,gemini,grok")
+
+    router = AgentProviderRouter()
+    health = router.health()
+    gemini_readiness = router.gemini_readiness()
+
+    joined_warnings = " ".join(health.warnings).lower()
+    assert "super-secret-test-key" not in joined_warnings
+    assert "super-secret-test-key" not in repr(gemini_readiness).lower()
+    assert gemini_readiness.gates.api_key_present is True
+    assert any("api_key_present=true" in warning.lower() for warning in health.warnings)
+    assert any("gemini readiness:" in warning.lower() for warning in health.warnings)
 
 
 def test_mock_provider_grounded_answer_mentions_manual_review() -> None:

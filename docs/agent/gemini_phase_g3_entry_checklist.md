@@ -59,6 +59,24 @@ What this does not mean:
 - Gemini runtime activation is enabled.
 - A real Gemini client has been created.
 
+## Third Slice Status
+
+The health/readiness integration slice is implemented and tested.
+
+What this means:
+
+- Gemini readiness metadata is now threaded into the existing health/readiness surface.
+- The health response stays schema-compatible and mock-first.
+- SDK presence, key presence, activation gating, and real-provider-implemented state remain safe metadata only.
+- No runtime activation is added.
+
+What this does not mean:
+
+- Gemini is connected.
+- Gemini is active.
+- A Gemini API call is implemented.
+- Real Gemini provider execution has started.
+
 ## First Slice Objective
 
 The first G3 coding slice should be:
@@ -179,3 +197,4 @@ G3 real provider implementation has not started.
 No Gemini API call is implemented.
 No real LLM execution is active.
 Gemini runtime activation is not active.
+The health/readiness metadata slice is implemented, but it does not activate Gemini.

@@ -23,6 +23,7 @@ def test_agent_health_reports_mock_only_mvp_state() -> None:
     assert payload["available_providers"] == ["mock"]
     assert payload["fallback_available"] is True
     assert payload["grounding_ready"] is True
+    assert any("gemini readiness:" in warning.lower() for warning in payload["warnings"])
 
 
 def test_agent_explain_returns_grounded_mock_answer_for_image_inspection() -> None:

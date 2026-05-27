@@ -13,8 +13,7 @@ What is confirmed:
 
 What is still missing before any Gemini work:
 
-- A Gemini provider integration readiness plan.
-- Keep the requirement-to-test matrix current if scope changes.
+- A Gemini implementation phase approval from the user.
 
 ## Current Confirmed State
 
@@ -154,8 +153,7 @@ Required next action: re-run the smoke if the deployment surface, Dockerfiles, C
 
 ## Blocking Items Before Gemini
 
-- Gemini provider integration readiness plan is not yet written/reviewed.
-- Keep the requirement-to-test matrix current if scope changes.
+- User approval to start the Gemini implementation phase.
 
 ## Recommended Next Sequence
 
@@ -163,8 +161,8 @@ Required next action: re-run the smoke if the deployment surface, Dockerfiles, C
 2. Formal Safety Guard Layer
 3. Provider Interface Readiness
 4. Formal Pre-Gemini Test Matrix
-5. Gemini Provider Integration Readiness Plan
-6. Gemini implementation only after all previous items PASS
+5. User approval to start the Gemini implementation phase
+6. Gemini implementation only after the user approves it and the remaining operational gates remain green
 
 ## Gemini Must Not Start Until...
 
@@ -175,3 +173,8 @@ Required next action: re-run the smoke if the deployment surface, Dockerfiles, C
 - The LLM-disabled Docker / Compose smoke validation has passed.
 - The repository still passes the focused compile and pytest checks.
 - The project has not introduced any production/deployment claims.
+
+## Maintenance Notes
+
+- Keep the requirement-to-test matrix current if scope changes.
+- Re-audit the component coverage if visible dashboard components change.

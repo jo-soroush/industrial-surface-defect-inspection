@@ -172,8 +172,8 @@ Validated in the repository state referenced by this audit:
 | Blocker | Evidence / source | Status | Notes | Blocks Gemini |
 |---|---|---|---|---|
 | Docker / Compose LLM-disabled smoke validation | `docs/agent/pre_gemini_docker_compose_smoke_validation.md` | PASS | The final local deployment smoke passed in mock-first, LLM-disabled mode. | Re-run if Docker, Compose, or runtime assets change. | No |
-| Gemini Provider Integration Readiness Plan | `docs/agent/pre_gemini_gap_audit.md` | PENDING | Future provider planning exists, but a formal Gemini readiness plan is still required before any implementation. | Yes |
-| Keep the matrix current if scope changes | `docs/agent/pre_gemini_test_matrix.md`, `docs/agent/active_explainability_scope_acceptance.md` | MANUAL | If the accepted scope changes, this matrix must be updated. | Depends |
+| Gemini Provider Integration Readiness Plan | `docs/agent/gemini_provider_integration_readiness_plan.md` | PASS | The formal Gemini readiness plan now documents the non-negotiable integration rules, rollout phases, failure behavior, and acceptance criteria. | Future implementation still requires user approval. | No |
+| Keep the matrix current if scope changes | `docs/agent/pre_gemini_test_matrix.md`, `docs/agent/active_explainability_scope_acceptance.md` | MANUAL | If the accepted scope changes, this matrix must be updated. | Depends | No |
 | Any new requirement added after this matrix | Future repo state | MANUAL | A new requirement would need its own test mapping. | Depends |
 
 ## PASS Items
@@ -196,25 +196,24 @@ The following are currently covered well enough to count as PASS in the current 
 
 The following remain incomplete or not yet fully proven:
 
-- future Gemini readiness planning
+- user approval to start the Gemini implementation phase
 
 ## Gemini Blockers Remaining
 
 Current blockers supported by the audit docs:
 
-1. The Gemini readiness plan still needs to be written before any integration work begins.
-2. The matrix must stay current if scope changes.
+1. User approval is required before any Gemini implementation phase begins.
 
 ## Required Next Sequence
 
-1. Run the final Docker / Compose LLM-disabled smoke validation.
-2. Draft the Gemini provider integration readiness plan.
-3. Re-run the requirement-to-test matrix if the scope changes.
+1. Request and obtain user approval before any Gemini implementation phase.
+2. Re-run the requirement-to-test matrix if the scope changes.
 
 ## Gemini Must Not Start Until...
 
 - The active explainability scope is explicitly accepted.
 - The final LLM-disabled Docker / Compose smoke validation has passed.
 - The Gemini readiness plan exists and is reviewed.
+- The user has approved the next implementation phase.
 - The requirement-to-test matrix remains current after any scope change.
 - The mock Agent foundation continues to pass compile and pytest validation.

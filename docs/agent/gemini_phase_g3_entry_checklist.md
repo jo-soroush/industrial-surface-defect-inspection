@@ -94,6 +94,25 @@ What this does not mean:
 - Gemini is active.
 - A Gemini API call is implemented.
 
+## Dependency Decision Status
+
+The dependency decision artifact is implemented and reviewed.
+
+What this means:
+
+- The repository dependency structure has been inspected.
+- `google-genai` is identified as the future package candidate.
+- No requirements file is changed in this slice.
+- The dependency change remains a separate approved slice.
+
+What this does not mean:
+
+- `google-genai` has been installed.
+- `requirements-api.txt` has been modified.
+- Real Gemini provider implementation has started.
+- Gemini is connected.
+- Gemini is active.
+
 ## First Slice Objective
 
 The first G3 coding slice should be:
@@ -216,3 +235,4 @@ No real LLM execution is active.
 Gemini runtime activation is not active.
 The health/readiness metadata slice is implemented, but it does not activate Gemini.
 The pre-real-call audit is implemented, but it does not activate Gemini or change runtime behavior.
+The dependency decision is documented, but the requirements change remains pending until a separate approved slice.

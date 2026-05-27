@@ -17,6 +17,7 @@ Current conclusion:
 - The second G3 lazy SDK loader boundary is implemented and tested, while real Gemini provider execution remains inactive.
 - The third G3 health/readiness integration slice is implemented and tested, while real Gemini provider execution remains inactive.
 - The G3 pre-real-call audit exists and defines the final activation gates before any real Gemini implementation.
+- The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -223,6 +224,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | Final activation gates are documented before any real Gemini implementation | `docs/agent/gemini_g3_pre_real_call_audit.md` | PASS | The repository now contains a final activation-gate review that defines the package, environment, safety, rollback, testing, and rollout controls before any real Gemini call may exist. | Real Gemini provider code is still not started. | No |
 
+### 10.10 Gemini Provider G3 Dependency Decision
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Conservative dependency installation decision exists and keeps requirements changes pending | `docs/agent/gemini_g3_dependency_decision.md` | PASS | The repository now contains a dependency decision artifact that identifies `google-genai` as the future candidate and keeps the actual requirements change pending until a separate approved slice. | The requirements file itself is not changed in this slice. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -273,6 +280,7 @@ The following are currently covered well enough to count as PASS in the current 
 - Gemini provider G3 lazy SDK loader boundary
 - Gemini provider G3 health/readiness integration
 - Gemini provider G3 pre-real-call audit
+- Gemini provider G3 dependency decision
 - frontend wording consistency
 - the Safety truncation/UI polish fix
 

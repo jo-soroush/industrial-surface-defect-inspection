@@ -41,6 +41,7 @@ The following items are complete and established in the repository:
 - G3 first coding slice readiness scaffolding
 - G3 second coding slice lazy SDK loader boundary
 - G3 third coding slice health / readiness metadata
+- G3 dependency decision artifact
 - deterministic safety guard
 - provider contract and readiness layer
 - mock-first runtime

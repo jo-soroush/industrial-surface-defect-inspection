@@ -30,6 +30,7 @@ The current repository baseline already provides:
 - A G3 execution gate design that keeps Gemini disabled by default and blocks router activation until all gates pass.
 - Router activation tests that prove Gemini remains mock-first unless all gates pass.
 - A G3 pre-real-call audit that defines the final activation gates before any real Gemini implementation.
+- A G3 local real-smoke plan that defines the manual local-only smoke boundary and remains planning only.
 - A G3 dependency decision artifact that keeps the requirements change as an explicit, pending decision.
 - A G3 dependency slice that adds `google-genai` to the backend/API requirements only.
 
@@ -167,6 +168,7 @@ The second offline-only lazy SDK loader boundary is implemented and tested, but 
 The third health/readiness integration slice is implemented and tested, but real Gemini provider integration has not started.
 The provider skeleton with mocked / injected SDK object is implemented and tested, but real Gemini provider integration has not started.
 The G3 pre-real-call audit is implemented and reviewed, but real Gemini provider integration has not started.
+The G3 local real-smoke plan is implemented as documentation only, but real Gemini provider integration has not started.
 The G3 dependency decision artifact is implemented and reviewed, and the backend/API requirements slice is applied.
 The execution gate design is implemented and reviewed, and it keeps Gemini disabled by default.
 The router activation tests are implemented and reviewed, and they keep Gemini mock-first by default.
@@ -183,6 +185,7 @@ What this means:
 - The disabled-by-default router gate design is documented and remains blocking for any real provider work.
 - The router activation test coverage is documented and remains blocking for any real provider work.
 - The dependency decision is documented and the backend/API requirements slice has been applied without changing runtime behavior.
+- The local real-smoke plan is documented and remains planning only.
 
 What this does not mean:
 

@@ -41,6 +41,7 @@ The following foundation is already in place:
 - `requirements-api.txt` `google-genai` dependency entry
 - provider skeleton with injected / mock client
 - real provider execution boundary with lazy import and injected SDK/client only
+- local real-smoke plan documented separately and planning only
 - deterministic safety guard
 - provider contracts
 - fallback policy

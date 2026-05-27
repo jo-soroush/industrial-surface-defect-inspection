@@ -167,6 +167,25 @@ What this does not mean:
 - Gemini is connected.
 - Gemini is active.
 
+## Local Real-Smoke Plan Status
+
+The local real-smoke plan is documented and reviewed.
+
+What this means:
+
+- the future manual smoke path is defined
+- the plan is local-only and manual
+- no Gemini API call is run by this document
+- no runtime activation is added
+- the normal runtime remains mock-first
+
+What this does not mean:
+
+- a real Gemini API call was run
+- Gemini is connected
+- Gemini is active
+- local real-smoke execution is complete
+
 ## First Slice Objective
 
 The first G3 coding slice should be:

@@ -19,6 +19,7 @@ What is allowed next only after approval:
 
 - a future real-provider runtime activation slice, if explicitly approved
 - a later local real-smoke plan, if explicitly approved
+- the local real-smoke plan is documented separately and remains planning only
 
 What remains blocked:
 
@@ -47,6 +48,7 @@ The following items are complete and established in the repository:
 - G3 router activation tests for disabled-by-default routing
 - G3 dependency decision artifact
 - G3 backend/API requirements slice (`google-genai`)
+- G3 local real-smoke plan
 - deterministic safety guard
 - provider contract and readiness layer
 - mock-first runtime
@@ -163,6 +165,8 @@ Required tests before or with real implementation:
 - Docker / Compose LLM-disabled regression
 
 ## Local Real-Smoke Gate
+
+The local real-smoke plan is documented in `docs/agent/gemini_g3_local_real_smoke_plan.md`.
 
 If later approved, the first real Gemini smoke must be:
 

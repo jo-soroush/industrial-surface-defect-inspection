@@ -20,6 +20,7 @@ Current conclusion:
 - The G3 pre-real-call audit exists and defines the final activation gates before any real Gemini implementation.
 - The G3 execution gate design exists and defines the disabled-by-default router strategy before any runtime routing change.
 - Router activation tests exist and prove Gemini remains mock-first unless all gates pass.
+- The G3 local real-smoke plan exists and defines the manual local-only smoke boundary, but it has not been executed.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
 - Real Gemini provider integration has not started.
@@ -263,6 +264,12 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | Real provider execution exists behind lazy import and injected SDK/client only, while remaining disabled by default | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_real_provider_without_sdk_import_gate_returns_not_implemented_without_lazy_import`, `::test_gemini_real_provider_missing_key_skips_sdk_loader_and_falls_back`, `::test_gemini_real_provider_sdk_missing_returns_fallback_without_lazy_import`, `::test_gemini_real_provider_with_fake_safe_sdk_client_returns_safe_provider_result`, `::test_gemini_real_provider_blocks_unsafe_or_invalid_fake_sdk_outputs`, `::test_gemini_real_provider_handles_fake_sdk_errors_safely` | PASS | The provider now has a real-execution boundary that only runs with explicit gates and injected fake SDK seams; the default runtime remains mock-first and no real SDK import is exercised by the tests. | Real Gemini provider execution is still not started in normal runtime. | No |
+
+### 10.16 Gemini Provider G3 Local Real-Smoke Plan
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Local real-smoke plan exists and remains planning only | `docs/agent/gemini_g3_local_real_smoke_plan.md` | PASS | The repository now contains a manual, local-only real-smoke plan that defines the future evidence path without approving execution. | Real smoke execution is still blocked until explicit user approval. | No |
 
 ### 11. Frontend / Wording Consistency
 

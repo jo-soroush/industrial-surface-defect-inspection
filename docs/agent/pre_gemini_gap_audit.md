@@ -32,6 +32,7 @@ What is still missing before any Gemini work:
 - No Gemini API call is implemented.
 - No real LLM execution is active.
 - Gemini runtime activation is not active.
+- Phase G2 mocked-client test layer is complete.
 - Frontend component-aware explanation panels are active for:
   - Image Inspection AI panel
   - Detection confidence chart

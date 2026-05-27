@@ -8,7 +8,9 @@ Current conclusion:
 
 - The core Agent foundation is implemented and well covered by targeted tests.
 - The formal test matrix now exists and ties the main pre-Gemini requirements to repository evidence.
-- Phase G1 stub/config implementation is complete; real Gemini provider integration has not started.
+- Phase G1 stub/config implementation is complete.
+- Phase G2 mocked-client test layer is complete.
+- Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
 
@@ -158,6 +160,20 @@ Validated in the repository state referenced by this audit:
 | Gemini stub remains unavailable even with key and LLM enabled | `tests/agent/test_gemini_provider_stub.py::test_gemini_provider_stub_reports_disabled_state_even_with_key_and_llm_enabled`, `::test_gemini_provider_readiness_keeps_gemini_unavailable_for_runtime_settings` | PASS | G1 keeps Gemini unavailable and disabled for real execution. | None in the current evidence set. | No |
 | Gemini stub does not import provider SDKs or network libraries | `tests/agent/test_gemini_provider_stub.py::test_gemini_provider_stub_does_not_import_provider_sdks_or_network_libraries`, `::test_gemini_stub_module_text_does_not_reference_provider_sdk_imports` | PASS | Source inspection confirms the stub is offline-only and import-safe. | None in the current evidence set. | No |
 
+### 10.2 Gemini Provider G2 Mocked Client Tests
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Mocked Gemini client success path translates to a safe provider response | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_mocked_client_success_translates_to_gemini_response` | PASS | The offline mocked-client seam can produce a Gemini-shaped response without network access. | None in the current evidence set. | No |
+| Mocked timeout falls back safely | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_mocked_client_timeout_falls_back_to_mock` | PASS | Timeout maps to a safe mock fallback result. | None in the current evidence set. | No |
+| Mocked provider error falls back safely | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_mocked_client_provider_error_falls_back_to_mock` | PASS | Generic provider errors map to a safe mock fallback result. | None in the current evidence set. | No |
+| Mocked rate limit falls back safely | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_mocked_client_rate_limit_falls_back_to_mock` | PASS | Rate-limit handling remains offline and fallback-safe. | None in the current evidence set. | No |
+| Empty and malformed mocked responses are handled safely | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_mocked_client_empty_response_falls_back_to_mock`, `::test_gemini_mocked_client_malformed_response_falls_back_to_mock` | PASS | Empty or malformed payloads do not crash the harness. | None in the current evidence set. | No |
+| Unsafe and invented metric-like mocked outputs are blocked by the safety guard | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_mocked_client_unsafe_output_is_blocked_by_safety_guard`, `::test_gemini_mocked_client_invented_metric_like_output_is_blocked_by_safety_guard` | PASS | The post-generation guard blocks readiness claims and invented metrics. | None in the current evidence set. | No |
+| Secret-like questions are sanitized before mocked-client handling | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_mocked_client_sanitizes_secret_like_questions_before_handling` | PASS | The provider request is sanitized before the mocked client seam handles it. | None in the current evidence set. | No |
+| The Gemini provider module stays offline-only | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_provider_module_does_not_import_provider_sdks_or_network_libraries` | PASS | Source inspection confirms the module avoids SDK and network imports. | None in the current evidence set. | No |
+| Normal Agent runtime remains mock-first | `tests/agent/test_gemini_provider_mocked_client.py::test_existing_agent_provider_router_normal_mock_path_remains_unchanged` | PASS | The normal `/agent/explain` path still uses the mock provider. | None in the current evidence set. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -200,6 +216,7 @@ The following are currently covered well enough to count as PASS in the current 
 - deterministic safety guard
 - provider contract/readiness layer
 - Gemini provider G1 stub
+- Gemini provider G2 mocked client tests
 - frontend wording consistency
 - the Safety truncation/UI polish fix
 

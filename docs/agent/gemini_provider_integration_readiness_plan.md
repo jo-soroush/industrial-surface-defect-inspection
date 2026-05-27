@@ -137,7 +137,7 @@ Future Gemini work should follow these phases:
 
 - Phase G0 - readiness plan only: complete
 - Phase G1 - provider config / stub only, no network: complete
-- Phase G2 - mocked Gemini client tests: pending
+- Phase G2 - mocked Gemini client tests: complete
 - Phase G3 - real Gemini provider behind `AGENT_ENABLE_LLM` and key
 - Phase G4 - local manual Gemini smoke
 - Phase G5 - Docker / Compose Gemini-enabled optional smoke
@@ -152,6 +152,27 @@ What this means:
 
 - The Gemini stub exists.
 - The stub refuses real execution.
+- No Gemini SDK is imported.
+- No Gemini API call is implemented.
+- No real LLM execution is active.
+- Gemini runtime activation is not active.
+- No network call is made.
+- The runtime remains mock-first.
+
+What this does not mean:
+
+- Real Gemini provider integration has not started.
+- Gemini is not connected.
+- Gemini is not active.
+
+## G2 Completion Note
+
+Phase G2 mocked-client test layer is complete.
+
+What this means:
+
+- The mocked Gemini client seam exists.
+- The mocked client seam remains offline-only.
 - No Gemini SDK is imported.
 - No Gemini API call is implemented.
 - No real LLM execution is active.

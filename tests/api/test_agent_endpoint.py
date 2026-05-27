@@ -112,6 +112,29 @@ def test_agent_health_stays_mock_first_when_llm_is_requested(monkeypatch) -> Non
     assert any("grok" in warning.lower() for warning in payload["warnings"])
 
 
+def test_agent_health_stays_mock_first_with_fake_key_present(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("AGENT_DEFAULT_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "gemini,grok,mock")
+    monkeypatch.setenv("GEMINI_API_KEY", "present-but-disabled")
+    monkeypatch.setenv("GROK_API_KEY", "present-but-disabled")
+
+    response = client.get("/agent/health")
+
+    assert response.status_code == 200
+    payload = response.json()
+    joined_warnings = " ".join(payload["warnings"]).lower()
+    assert payload["llm_enabled"] is False
+    assert payload["default_provider"] == "mock"
+    assert payload["available_providers"] == ["mock"]
+    assert payload["fallback_available"] is True
+    assert payload["grounding_ready"] is True
+    assert "present-but-disabled" not in joined_warnings
+    assert any("intentionally disabled" in warning.lower() for warning in payload["warnings"])
+    assert any("gemini" in warning.lower() for warning in payload["warnings"])
+    assert any("grok" in warning.lower() for warning in payload["warnings"])
+
+
 def test_agent_explain_accepts_classification_component_id() -> None:
     response = client.post(
         "/agent/explain",

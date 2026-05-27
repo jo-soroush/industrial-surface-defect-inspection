@@ -103,6 +103,31 @@ def test_gemini_health_metadata_does_not_expose_raw_key_values(monkeypatch) -> N
     assert any("gemini readiness:" in warning.lower() for warning in health.warnings)
 
 
+def test_health_stays_mock_first_with_fake_key_present_and_llm_requested(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("GEMINI_API_KEY", "present-but-disabled")
+    monkeypatch.setenv("GROK_API_KEY", "present-but-disabled")
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "gemini,grok,mock")
+
+    router = AgentProviderRouter()
+    health = router.health()
+    gemini_readiness = router.gemini_readiness()
+
+    joined_warnings = " ".join(health.warnings).lower()
+    assert health.status == "ok"
+    assert health.llm_enabled is False
+    assert health.default_provider == "mock"
+    assert health.available_providers == ["mock"]
+    assert health.fallback_available is True
+    assert "present-but-disabled" not in joined_warnings
+    assert "present-but-disabled" not in repr(gemini_readiness).lower()
+    assert gemini_readiness.gates.api_key_present is True
+    assert gemini_readiness.gates.activation_allowed is False
+    assert any("gemini" in warning.lower() for warning in health.warnings)
+    assert any("grok" in warning.lower() for warning in health.warnings)
+    assert any("api_key_present=true" in warning.lower() for warning in health.warnings)
+
+
 def test_gemini_route_decision_stays_mock_when_llm_disabled_even_with_key() -> None:
     router = AgentProviderRouter(
         AgentProviderSettings(
@@ -203,6 +228,37 @@ def test_gemini_route_decision_stays_mock_when_sdk_is_available_but_activation_i
     assert decision.sdk_available is True
     assert decision.activation_allowed is False
     assert decision.fallback_used is True
+
+
+def test_router_explain_stays_mock_first_with_fake_key_present(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("GEMINI_API_KEY", "present-but-disabled")
+    monkeypatch.setenv("GROK_API_KEY", "present-but-disabled")
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "gemini,grok,mock")
+
+    router = AgentProviderRouter()
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Why is this image defective?",
+        visible_context={},
+        inspection_response={
+            "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert response.provider_used == "mock"
+    assert response.fallback_used is True
+    assert response.grounding_status == "grounded"
+    assert "manual review" in response.answer.lower()
+    assert "present-but-disabled" not in response.answer.lower()
 
 
 def test_mock_provider_grounded_answer_mentions_manual_review() -> None:

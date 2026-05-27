@@ -385,7 +385,7 @@ The following remain incomplete or not yet fully proven:
 
 Current blockers supported by the audit docs:
 
-1. User approval is required before any Gemini implementation phase begins.
+1. Local real-smoke planning remains blocked until explicit user approval.
 
 ## Required Next Sequence
 

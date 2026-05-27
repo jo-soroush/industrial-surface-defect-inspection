@@ -27,7 +27,7 @@ What is confirmed:
 
 What is still missing before any Gemini work:
 
-- User approval for the next non-code Gemini planning step.
+- Local real-smoke planning remains blocked until explicit approval.
 
 ## Current Confirmed State
 

@@ -17,6 +17,7 @@ This plan defines the narrowest local-only evidence path for a future manual smo
 A disabled-by-default harness skeleton exists in `scripts/agent/run_gemini_local_smoke.py`; it is not executed by default and it does not call Gemini.
 
 The final execution checklist is documented in `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md`.
+Dry-run verification evidence is documented in `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md`.
 
 What this plan controls:
 
@@ -70,6 +71,28 @@ What this means:
 What this does not mean:
 
 - real smoke execution is approved
+- Gemini is connected
+- Gemini is active
+- `GEMINI_API_KEY` has been used
+
+## Dry-Run Verification Evidence Status
+
+The harness dry-run verification evidence is documented and reviewed.
+
+What this means:
+
+- the default harness invocation was verified in dry-run mode
+- the explicit `--dry-run` path was verified
+- `--execute` without confirmation was blocked
+- `--execute` with confirmation returned `NOT_IMPLEMENTED` in this slice
+- no real Gemini API call was made
+- no key was read
+- the mock-first normal route remained unchanged
+- provider routing activation remained disabled
+
+What this does not mean:
+
+- real smoke execution is complete
 - Gemini is connected
 - Gemini is active
 - `GEMINI_API_KEY` has been used

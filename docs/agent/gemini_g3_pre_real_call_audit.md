@@ -22,6 +22,7 @@ What is allowed next only after approval:
 - the local real-smoke plan is documented separately and remains planning only
 - the local real-smoke harness skeleton exists and remains disabled by default
 - the final real-smoke execution checklist exists and remains documentation only
+- the harness dry-run verification evidence exists and remains dry-run evidence only
 
 What remains blocked:
 
@@ -53,6 +54,7 @@ The following items are complete and established in the repository:
 - G3 local real-smoke plan
 - G3 local real-smoke harness skeleton
 - G3 final real-smoke execution checklist
+- G3 harness dry-run verification evidence
 - deterministic safety guard
 - provider contract and readiness layer
 - mock-first runtime
@@ -173,6 +175,7 @@ Required tests before or with real implementation:
 The local real-smoke plan is documented in `docs/agent/gemini_g3_local_real_smoke_plan.md`.
 The local real-smoke harness skeleton is documented in `scripts/agent/run_gemini_local_smoke.py`.
 The final real-smoke execution checklist is documented in `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md`.
+The harness dry-run verification evidence is documented in `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md`.
 
 If later approved, the first real Gemini smoke must be:
 

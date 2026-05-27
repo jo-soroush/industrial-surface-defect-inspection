@@ -224,6 +224,28 @@ What this does not mean:
 - Gemini is active
 - `GEMINI_API_KEY` has been used
 
+## Dry-Run Verification Evidence Status
+
+The harness dry-run verification evidence is documented and reviewed.
+
+What this means:
+
+- the default harness invocation was verified in dry-run mode
+- the explicit `--dry-run` path was verified
+- `--execute` without confirmation was blocked
+- `--execute` with confirmation returned `NOT_IMPLEMENTED` in this slice
+- no real Gemini API call was made
+- no key was read
+- the mock-first normal route remained unchanged
+- provider routing activation remained disabled
+
+What this does not mean:
+
+- real smoke execution is complete
+- Gemini is connected
+- Gemini is active
+- `GEMINI_API_KEY` has been used
+
 ## First Slice Objective
 
 The first G3 coding slice should be:

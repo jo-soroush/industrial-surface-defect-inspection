@@ -14,6 +14,8 @@ A future real smoke still requires explicit user approval in a separate step.
 
 This checklist exists to define the mandatory review items that must be satisfied before the first real Gemini local smoke can ever be approved.
 
+Dry-run verification evidence for the harness is documented separately in `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md`; it is not real smoke evidence.
+
 What this checklist controls:
 
 - the pre-execution gate checks
@@ -199,6 +201,8 @@ It must include:
 - proof test suite passed
 - no raw unsafe provider response
 - no real key
+
+Do not use the dry-run verification evidence document as a substitute for real smoke evidence.
 
 ## Rollback / Kill Switch
 

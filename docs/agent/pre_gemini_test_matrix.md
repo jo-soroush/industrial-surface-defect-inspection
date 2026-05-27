@@ -22,6 +22,7 @@ Current conclusion:
 - Router activation tests exist and prove Gemini remains mock-first unless all gates pass.
 - The G3 local real-smoke plan exists and defines the manual local-only smoke boundary, but it has not been executed.
 - The G3 final real-smoke execution checklist exists and defines the mandatory pre-execution review items, but it has not approved execution.
+- The G3 harness dry-run verification evidence exists and records the disabled-by-default harness behavior, but it is not real smoke evidence.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
 - Real Gemini provider integration has not started.
@@ -283,6 +284,12 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | Final real-smoke execution checklist exists and remains documentation only | `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md` | PASS | The repository now contains the final checklist that must be reviewed before any first real smoke can be approved, while still blocking execution. | Real smoke execution is still blocked until explicit user approval. | No |
+
+### 10.19 Gemini Provider G3 Harness Dry-Run Verification Evidence
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Harness dry-run verification evidence exists and records the safe disabled-by-default harness behavior | `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md` | PASS | The repository now contains dry-run verification evidence showing the harness stays local-only, does not read the key, and remains mock-first without claiming a real smoke. | Real smoke execution is still blocked until explicit user approval. | No |
 
 ### 11. Frontend / Wording Consistency
 

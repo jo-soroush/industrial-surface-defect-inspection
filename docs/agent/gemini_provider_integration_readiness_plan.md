@@ -33,6 +33,7 @@ The current repository baseline already provides:
 - A G3 local real-smoke plan that defines the manual local-only smoke boundary and remains planning only.
 - A G3 local real-smoke harness skeleton that stays disabled by default and does not call Gemini.
 - A G3 final real-smoke execution checklist that defines the mandatory pre-execution review items only.
+- A G3 harness dry-run verification evidence document that records the harness verification but does not claim a real smoke.
 - A G3 dependency decision artifact that keeps the requirements change as an explicit, pending decision.
 - A G3 dependency slice that adds `google-genai` to the backend/API requirements only.
 
@@ -173,6 +174,7 @@ The G3 pre-real-call audit is implemented and reviewed, but real Gemini provider
 The G3 local real-smoke plan is implemented as documentation only, but real Gemini provider integration has not started.
 The G3 local real-smoke harness skeleton is implemented and tested, but real Gemini provider integration has not started.
 The G3 final real-smoke execution checklist is implemented as documentation only, but real Gemini provider integration has not started.
+The G3 harness dry-run verification evidence is implemented as documentation only, but real Gemini provider integration has not started.
 The G3 dependency decision artifact is implemented and reviewed, and the backend/API requirements slice is applied.
 The execution gate design is implemented and reviewed, and it keeps Gemini disabled by default.
 The router activation tests are implemented and reviewed, and they keep Gemini mock-first by default.
@@ -192,6 +194,7 @@ What this means:
 - The local real-smoke plan is documented and remains planning only.
 - The local real-smoke harness skeleton is documented and remains disabled by default.
 - The final real-smoke execution checklist is documented and remains a checklist only.
+- The harness dry-run verification evidence is documented and remains dry-run verification only.
 
 What this does not mean:
 

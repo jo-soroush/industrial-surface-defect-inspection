@@ -44,6 +44,7 @@ The following foundation is already in place:
 - local real-smoke plan documented separately and planning only
 - local real-smoke harness skeleton disabled by default and not executed
 - final real-smoke execution checklist documented and reviewed
+- harness dry-run verification evidence documented separately and not a real smoke
 - deterministic safety guard
 - provider contracts
 - fallback policy

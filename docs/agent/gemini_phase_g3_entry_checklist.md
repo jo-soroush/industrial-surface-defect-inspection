@@ -6,10 +6,10 @@ G3 entry is prepared, but real Gemini provider implementation has not started.
 
 This document defines the safest first coding slice for G3. The first slice must be small, reversible, and offline-only. It must not activate Gemini, it must not call the network, and it must keep the normal runtime mock-first.
 
-No SDK is installed in this step.
-No requirements file is changed in this step.
-No API call is made in this step.
-No runtime activation is added in this step.
+No SDK is installed in the first readiness-scaffolding slice.
+The first readiness-scaffolding slice does not change requirements.
+No API call is made in the first readiness-scaffolding slice.
+No runtime activation is added in the first readiness-scaffolding slice.
 
 ## Current Completed Prerequisites
 
@@ -102,13 +102,12 @@ What this means:
 
 - The repository dependency structure has been inspected.
 - `google-genai` is identified as the future package candidate.
-- No requirements file is changed in this slice.
-- The dependency change remains a separate approved slice.
+- The backend/API requirements slice has been applied in `requirements-api.txt`.
+- No other requirements file is changed in this slice.
 
 What this does not mean:
 
 - `google-genai` has been installed.
-- `requirements-api.txt` has been modified.
 - Real Gemini provider implementation has started.
 - Gemini is connected.
 - Gemini is active.
@@ -236,3 +235,4 @@ Gemini runtime activation is not active.
 The health/readiness metadata slice is implemented, but it does not activate Gemini.
 The pre-real-call audit is implemented, but it does not activate Gemini or change runtime behavior.
 The dependency decision is documented, but the requirements change remains pending until a separate approved slice.
+The backend/API requirements slice is applied, but it does not activate Gemini or change runtime behavior.

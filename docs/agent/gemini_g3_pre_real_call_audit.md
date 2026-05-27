@@ -42,6 +42,7 @@ The following items are complete and established in the repository:
 - G3 second coding slice lazy SDK loader boundary
 - G3 third coding slice health / readiness metadata
 - G3 dependency decision artifact
+- G3 backend/API requirements slice (`google-genai`)
 - deterministic safety guard
 - provider contract and readiness layer
 - mock-first runtime
@@ -72,10 +73,11 @@ All of the following gates must be true before any real Gemini API call can exis
 ## Package and Requirements Gate
 
 - The future package candidate remains `google-genai`.
+- The backend/API requirements slice has been applied in `requirements-api.txt`.
 - Exact version pinning is still pending.
-- Requirements must not be changed silently.
-- Dependency placement should be API/backend only, not frontend.
-- Package installation must be a separate approved slice.
+- Requirements must not be changed silently in any other file.
+- Dependency placement remains API/backend only, not frontend.
+- Package installation remains a separate approved action; it was not run in this step.
 - If the SDK is missing and LLM is disabled, the app must still work.
 - If the SDK is missing and LLM is enabled, a fallback-safe unavailable status must be returned.
 
@@ -242,8 +244,7 @@ Why this is the safest next move:
 
 This audit is documentation only.
 Real Gemini provider implementation has not started.
-No package is installed.
-No requirements file is changed.
+The backend/API `google-genai` requirements slice has been applied, but no package has been installed.
 No SDK import is added.
 No Gemini API call is implemented.
 No real LLM execution is active.

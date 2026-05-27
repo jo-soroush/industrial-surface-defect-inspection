@@ -18,6 +18,7 @@ Current conclusion:
 - The third G3 health/readiness integration slice is implemented and tested, while real Gemini provider execution remains inactive.
 - The G3 pre-real-call audit exists and defines the final activation gates before any real Gemini implementation.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
+- The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -228,7 +229,13 @@ Validated in the repository state referenced by this audit:
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
-| Conservative dependency installation decision exists and keeps requirements changes pending | `docs/agent/gemini_g3_dependency_decision.md` | PASS | The repository now contains a dependency decision artifact that identifies `google-genai` as the future candidate and keeps the actual requirements change pending until a separate approved slice. | The requirements file itself is not changed in this slice. | No |
+| Conservative dependency installation decision exists and records the applied backend/API requirements slice | `docs/agent/gemini_g3_dependency_decision.md` | PASS | The repository now contains a dependency decision artifact that identifies `google-genai` as the future candidate and records that `requirements-api.txt` has been updated while frontend/dev/top-level requirement files remain unchanged. | Exact version pinning remains pending. | No |
+
+### 10.11 Gemini Provider G3 Backend/API Requirements Slice
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| `google-genai` is added to the backend/API requirements file only | `requirements-api.txt`, `docs/agent/gemini_g3_dependency_decision.md` | PASS | The backend/API dependency file now includes `google-genai`; frontend, dev, and top-level requirement files remain unchanged. | Exact version pinning remains pending. | No |
 
 ### 11. Frontend / Wording Consistency
 
@@ -281,6 +288,7 @@ The following are currently covered well enough to count as PASS in the current 
 - Gemini provider G3 health/readiness integration
 - Gemini provider G3 pre-real-call audit
 - Gemini provider G3 dependency decision
+- Gemini provider G3 backend/API requirements slice
 - frontend wording consistency
 - the Safety truncation/UI polish fix
 

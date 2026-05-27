@@ -27,6 +27,7 @@ The current repository baseline already provides:
 - A third G3 health/readiness integration slice that threads safe Gemini metadata into the existing health surface without activating Gemini.
 - A G3 pre-real-call audit that defines the final activation gates before any real Gemini implementation.
 - A G3 dependency decision artifact that keeps the requirements change as an explicit, pending decision.
+- A G3 dependency slice that adds `google-genai` to the backend/API requirements only.
 
 ## Non-Negotiable Integration Rules
 
@@ -161,7 +162,7 @@ The first readiness-scaffolding slice is implemented and tested, but real Gemini
 The second offline-only lazy SDK loader boundary is implemented and tested, but real Gemini provider integration has not started.
 The third health/readiness integration slice is implemented and tested, but real Gemini provider integration has not started.
 The G3 pre-real-call audit is implemented and reviewed, but real Gemini provider integration has not started.
-The G3 dependency decision artifact is implemented and reviewed, but the requirements change remains pending.
+The G3 dependency decision artifact is implemented and reviewed, and the backend/API requirements slice is applied.
 
 What this means:
 
@@ -172,7 +173,7 @@ What this means:
 - The runtime remains mock-first.
 - Health/readiness metadata is safe and does not activate Gemini.
 - The pre-real-call activation gates are documented and remain blocking for any real provider work.
-- The dependency decision is documented and remains pending until a separate approved slice changes requirements.
+- The dependency decision is documented and the backend/API requirements slice has been applied without changing runtime behavior.
 
 What this does not mean:
 
@@ -260,6 +261,7 @@ Gemini implementation must not start until:
 - The G3 entry checklist exists and is reviewed.
 - The G3 pre-real-call audit exists and is reviewed.
 - The G3 dependency decision artifact exists and is reviewed.
+- The backend/API `google-genai` requirements slice exists and is reviewed.
 - Current tests pass.
 - The LLM-disabled Docker / Compose smoke evidence remains PASS.
 - Safety guard tests remain PASS.
@@ -269,7 +271,7 @@ Gemini implementation must not start until:
 ## Remaining Blockers After This Plan
 
 - User approval to start the Gemini implementation phase.
-- Approval of the next implementation slice (dependency / requirements slice or skeleton slice).
+- Approval of the next implementation slice (real provider skeleton or runtime activation slice).
 - Optional: Gemini API key availability for later runtime testing, but not required for planning.
 
 ## Explicit Statement

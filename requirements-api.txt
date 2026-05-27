@@ -8,3 +8,4 @@ Pillow==12.2.0
 numpy==2.4.4
 ultralytics>=8.0,<9.0
 python-multipart>=0.0.9
+google-genai

@@ -12,6 +12,13 @@ The runtime remains mock-first.
 
 This slice exists to decide how the future Gemini dependency should be handled without silently changing runtime behavior.
 
+Outcome:
+
+- `requirements-api.txt` now carries `google-genai` as the backend/API dependency entry.
+- No runtime import was added.
+- No package was installed in this step.
+- No Gemini API call was added.
+
 ## Repository Dependency Structure Found
 
 The repository contains the following dependency-related files:
@@ -47,35 +54,36 @@ Uncertainty:
 
 - Selected future package candidate: `google-genai`
 - Exact version pinning: still pending
-- Dependency placement recommendation: backend/API only
-- Frontend requirements should not receive `google-genai`
-- Dev/test requirements should not receive `google-genai` unless explicitly justified by a later implementation slice
+- Dependency placement: backend/API only
+- Frontend requirements did not receive `google-genai`
+- Dev/test requirements did not receive `google-genai`
 
 ## Decision
 
-Conservative decision: **dependency change pending**
+Conservative decision: **dependency change implemented in requirements-api.txt only**
 
 Reason:
 
 - The repository structure shows more than one runtime dependency entry point.
-- The backend/API path is clear for `Dockerfile.api`, but the project still also has a top-level `requirements.txt` and a separate frontend runtime path.
-- The safest outcome for this slice is to document the decision and defer the actual dependency edit to a separate approved dependency-change slice.
+- The backend/API path is clear for `Dockerfile.api`.
+- The dependency was added only to `requirements-api.txt`, leaving frontend and dev dependency files unchanged.
+- The top-level `requirements.txt` remains unchanged.
 
 Recommended next action:
 
-- Do not modify requirements in this slice.
-- Approve a separate requirements-only slice before adding `google-genai` to `requirements-api.txt`.
+- Review the added backend/API dependency entry.
+- Keep the package version decision pending until a separate implementation slice chooses a pin.
 
 ## Version Pinning Strategy
 
-- Exact version pinning should be decided before the dependency is added.
+- Exact version pinning is still pending.
 - If the project convention is pinned runtime dependencies, follow that convention.
 - If the project convention is unpinned runtime dependencies, document the trade-off explicitly before changing the file.
 - Do not silently introduce an unpinned production dependency without review.
 
 ## Runtime Safety Requirements After Dependency Addition
 
-If `google-genai` is added in a later approved slice, installation must not activate Gemini.
+The installed dependency must not activate Gemini.
 
 - `AGENT_ENABLE_LLM=false` remains the default.
 - `AGENT_DEFAULT_PROVIDER=mock` remains the default.
@@ -111,10 +119,13 @@ If a future dependency slice is approved, the following checks must remain green
 
 ## Allowed Next Slice
 
-Safest next slice: **B. requirements-api dependency addition only, no code, no import, no API call**
+Safest next slice: **C. real provider skeleton with mocked SDK object only**
 
-However, this slice is not approved by this document alone.
-It remains pending until the user explicitly approves the dependency-change slice.
+Reason:
+
+- the dependency entry now exists in the backend/API requirements file
+- the next highest-risk change is real provider code, not another dependency move
+- the runtime should remain mock-first until a separate approved provider slice begins
 
 ## Explicit Non-Implementation Statement
 

@@ -29,6 +29,7 @@ What is still missing before any Gemini work:
 - The formal requirement-to-test matrix now exists and maps the main pre-Gemini requirements to repository tests and validations.
 - The Gemini G3 package verification artifact exists and selects `google-genai` as the verified future dependency candidate.
 - The Gemini G3 entry checklist and first-slice plan exist and define the first implementation boundary.
+- The first G3 readiness-scaffolding slice is implemented and tested, while real Gemini provider execution remains inactive.
 - Phase G1 stub/config implementation is complete.
 - Phase G2 mocked-client test layer is complete.
 - The G3 preparation audit exists and records the package, environment, API-key, activation, rollback, and test strategy.

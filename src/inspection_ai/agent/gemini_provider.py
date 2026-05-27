@@ -1,9 +1,10 @@
-"""Gemini provider offline test seam for Phases G1 and G2.
+"""Gemini provider offline test seam for Phases G1 through G3.
 
 This module is offline-only and intentionally does not implement real Gemini
-execution. It contains the Phase G1 provider config/stub and the Phase G2
-mocked-client seam so the repository can define provider behavior before any
-network-enabled Gemini integration is considered.
+execution. It contains the Phase G1 provider config/stub, the Phase G2
+mocked-client seam, and the Phase G3 readiness scaffolding so the repository
+can define provider behavior before any network-enabled Gemini integration is
+considered.
 """
 
 from __future__ import annotations
@@ -29,6 +30,13 @@ GeminiClientErrorKind = Literal[
     "empty",
     "malformed",
 ]
+GeminiG3ReadinessStatus = Literal[
+    "disabled",
+    "unavailable",
+    "sdk_missing",
+    "not_implemented",
+    "gated",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +54,52 @@ class GeminiProviderConfig:
             enabled=settings.enable_llm,
             api_key_present=settings.gemini_key_present,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class GeminiSdkStatus:
+    """Offline SDK status metadata for the G3 readiness scaffolding."""
+
+    sdk_name: str = "google-genai"
+    sdk_available: bool = False
+    import_style: str = "from google import genai"
+    note: str = "SDK availability is modeled without importing the package."
+
+
+@dataclass(frozen=True, slots=True)
+class GeminiReadinessGates:
+    """Non-secret Gemini G3 readiness gates."""
+
+    llm_enabled: bool = False
+    api_key_present: bool = False
+    provider_allowed: bool = True
+    activation_allowed: bool = False
+    sdk_available: bool = False
+    real_provider_implemented: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class GeminiG3Readiness:
+    """Offline G3 readiness snapshot for future Gemini provider execution."""
+
+    provider_name: Literal["gemini"] = "gemini"
+    status: GeminiG3ReadinessStatus = "not_implemented"
+    available: bool = False
+    reason: str = ""
+    warnings: tuple[str, ...] = field(default_factory=tuple)
+    fallback_policy: ProviderFallbackPolicy = field(default_factory=ProviderFallbackPolicy)
+    sdk_status: GeminiSdkStatus = field(default_factory=GeminiSdkStatus)
+    gates: GeminiReadinessGates = field(default_factory=GeminiReadinessGates)
+    availability: AgentProviderStatus = field(
+        default_factory=lambda: AgentProviderStatus(
+            provider_name="gemini",
+            configured=False,
+            available=False,
+            status="disabled",
+            reason="Gemini G3 readiness has not been activated.",
+            warnings=(),
+        )
+    )
 
 
 class GeminiProviderDisabledError(RuntimeError):
@@ -253,6 +307,109 @@ def evaluate_gemini_provider_readiness(
 ) -> ProviderReadinessResult:
     """Return the G1 Gemini stub readiness snapshot without any network access."""
     return GeminiProviderStub.from_runtime_settings(settings).readiness()
+
+
+def evaluate_gemini_g3_readiness(
+    settings: ProviderRuntimeSettings,
+    *,
+    sdk_available: bool = False,
+    real_provider_implemented: bool = False,
+) -> GeminiG3Readiness:
+    """Return the Phase G3 readiness snapshot without importing or calling Gemini."""
+
+    provider_allowed = "gemini" in settings.provider_order or settings.default_provider == "gemini"
+    gates = GeminiReadinessGates(
+        llm_enabled=settings.enable_llm,
+        api_key_present=settings.gemini_key_present,
+        provider_allowed=provider_allowed,
+        activation_allowed=(
+            settings.enable_llm
+            and settings.gemini_key_present
+            and sdk_available
+            and provider_allowed
+            and real_provider_implemented
+        ),
+        sdk_available=sdk_available,
+        real_provider_implemented=real_provider_implemented,
+    )
+
+    if not settings.enable_llm:
+        status: GeminiG3ReadinessStatus = "disabled"
+        reason = "Gemini remains disabled while AGENT_ENABLE_LLM is false."
+        warnings = (
+            "Gemini remains disabled while AGENT_ENABLE_LLM is false.",
+            "Mock fallback remains the safe path.",
+        )
+    elif not settings.gemini_key_present:
+        status = "unavailable"
+        reason = "Gemini API key is missing or not configured."
+        warnings = (
+            "Gemini is unavailable because GEMINI_API_KEY is missing.",
+            "Mock fallback remains the safe path.",
+        )
+    elif not sdk_available:
+        status = "sdk_missing"
+        reason = "The google-genai SDK is not available in this slice."
+        warnings = (
+            "Gemini is unavailable because the google-genai SDK is missing.",
+            "Mock fallback remains the safe path.",
+        )
+    elif not provider_allowed:
+        status = "gated"
+        reason = "Gemini is gated by the current provider order."
+        warnings = (
+            "Gemini is gated by the current provider order.",
+            "Mock fallback remains the safe path.",
+        )
+    elif not real_provider_implemented:
+        status = "not_implemented"
+        reason = "Real Gemini provider execution is not implemented in this slice."
+        warnings = (
+            "Gemini remains not implemented in the current slice.",
+            "Mock fallback remains the safe path.",
+        )
+    else:
+        status = "gated"
+        reason = "Gemini remains gated until the real provider implementation slice is approved."
+        warnings = (
+            "Gemini is gated because the real provider implementation slice is not yet active.",
+            "Mock fallback remains the safe path.",
+        )
+
+    availability_status = "disabled" if status in {"disabled", "sdk_missing", "not_implemented", "gated"} else "unavailable"
+    availability_reason = reason
+    if status == "sdk_missing":
+        availability_status = "unavailable"
+    if status == "unavailable":
+        availability_status = "unavailable"
+
+    availability = AgentProviderStatus(
+        provider_name="gemini",
+        configured=settings.gemini_key_present,
+        available=False,
+        status=availability_status,
+        reason=availability_reason,
+        warnings=(),
+    )
+
+    return GeminiG3Readiness(
+        provider_name="gemini",
+        status=status,
+        available=False,
+        reason=reason,
+        warnings=warnings,
+        fallback_policy=ProviderFallbackPolicy(
+            allow_mock_fallback=True,
+            fallback_provider="mock",
+            fallback_reason="Gemini remains unavailable in the G3 readiness slice; mock fallback remains the safe path.",
+        ),
+        sdk_status=GeminiSdkStatus(
+            sdk_available=sdk_available,
+            note="SDK availability is modeled through an explicit readiness flag; the package is not imported here.",
+        ),
+        gates=gates,
+        availability=availability,
+    )
 
 
 def _collect_request_evidence_values(request: AgentProviderRequest) -> list[Any]:

@@ -13,6 +13,7 @@ Current conclusion:
 - The G3 preparation audit exists and records the package, environment, API-key, activation, rollback, and test strategy.
 - The G3 package verification artifact exists and records the verified future `google-genai` dependency decision.
 - The G3 entry checklist and first-slice plan exist and define the first implementation boundary.
+- The first G3 readiness-scaffolding slice is implemented and tested, while real Gemini provider execution remains inactive.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -195,6 +196,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | G3 entry checklist and first-slice plan exist and define the initial implementation boundary | `docs/agent/gemini_phase_g3_entry_checklist.md` | PASS | The repository now contains a dedicated G3 entry checklist that constrains the first coding slice to readiness scaffolding, SDK-missing behavior, and tests only. | Real Gemini provider code is still not started. | No |
 
+### 10.6 Gemini Provider G3 First Slice Readiness Scaffolding
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| First readiness-scaffolding slice models disabled, missing-key, missing-SDK, and not-implemented states | `tests/agent/test_gemini_g3_readiness.py` | PASS | The repository now models G3 readiness without importing the SDK, while keeping Gemini unavailable and mock fallback safe. | Real Gemini provider code is still not started. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -241,6 +248,7 @@ The following are currently covered well enough to count as PASS in the current 
 - Gemini provider G3 preparation audit
 - Gemini provider G3 package verification
 - Gemini provider G3 entry checklist
+- Gemini provider G3 first slice readiness scaffolding
 - frontend wording consistency
 - the Safety truncation/UI polish fix
 

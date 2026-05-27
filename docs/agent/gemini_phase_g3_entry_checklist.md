@@ -23,6 +23,25 @@ The following prerequisites are complete:
 - current tests are green
 - working tree was clean at the start of the validated baseline
 
+## First Slice Status
+
+The first readiness-scaffolding slice is implemented and tested.
+
+What this means:
+
+- SDK-missing and key-missing behavior is modeled safely.
+- Real Gemini provider execution remains inactive.
+- No SDK was added.
+- No requirements file was changed.
+- The normal runtime remains mock-first.
+
+What this does not mean:
+
+- Real Gemini provider integration has started.
+- Gemini is connected.
+- Gemini is active.
+- A Gemini API call is implemented.
+
 ## First Slice Objective
 
 The first G3 coding slice should be:

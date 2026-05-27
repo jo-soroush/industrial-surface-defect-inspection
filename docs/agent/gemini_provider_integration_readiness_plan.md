@@ -22,6 +22,7 @@ The current repository baseline already provides:
 - A formal pre-Gemini requirement-to-test matrix.
 - A verified Gemini G3 package decision that selects `google-genai` for the future real provider.
 - A Gemini G3 entry checklist and first-slice plan that keeps implementation small, reversible, and offline-only.
+- A first G3 readiness-scaffolding slice that models SDK-missing and key-missing behavior without real Gemini execution.
 
 ## Non-Negotiable Integration Rules
 
@@ -152,6 +153,7 @@ The G3 preparation audit exists and records the package, environment, API-key, a
 The package verification artifact has separately confirmed `google-genai` as the future dependency candidate and lazy import as the required import style.
 The package verification artifact is documented in `docs/agent/gemini_g3_package_verification.md`.
 The G3 entry checklist and first-slice plan are documented in `docs/agent/gemini_phase_g3_entry_checklist.md`.
+The first readiness-scaffolding slice is implemented and tested, but real Gemini provider integration has not started.
 
 What this means:
 
@@ -255,7 +257,6 @@ Gemini implementation must not start until:
 
 - User approval to start the Gemini implementation phase.
 - Optional: Gemini API key availability for later runtime testing, but not required for planning.
-- The G3 entry checklist is the gate for the first coding slice.
 
 ## Explicit Statement
 

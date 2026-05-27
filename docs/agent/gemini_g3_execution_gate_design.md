@@ -44,6 +44,7 @@ The following foundation is already in place:
 - provider contracts
 - fallback policy
 - current green tests
+- router activation gate tests for disabled-by-default routing
 
 ## Required Runtime Gates Before Gemini Can Answer Any `/agent/explain` Request
 
@@ -65,6 +66,8 @@ All of the following must be true before Gemini can answer a request:
 - fallback to mock remains enabled
 - health reports safe status only
 - no raw secret / path / evidence exposure
+
+The router activation tests now exist only as disabled-by-default proof; they do not enable Gemini routing.
 
 ## Disabled-by-Default Behavior
 

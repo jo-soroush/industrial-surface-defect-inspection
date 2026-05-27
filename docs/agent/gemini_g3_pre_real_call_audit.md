@@ -45,6 +45,7 @@ The following items are complete and established in the repository:
 - G3 third coding slice health / readiness metadata
 - G3 provider skeleton with mocked / injected SDK object
 - G3 execution gate design / disabled-by-default router plan
+- G3 router activation tests for disabled-by-default routing
 - G3 dependency decision artifact
 - G3 backend/API requirements slice (`google-genai`)
 - deterministic safety guard
@@ -71,6 +72,7 @@ All of the following gates must be true before any real Gemini API call can exis
 - context boundary is enforced
 - post-generation safety guard passes
 - fallback to mock on any error
+- provider routing tests exist for the disabled-by-default gate
 - health reports safe status only
 - no frontend behavior change by default
 - rollback path is defined

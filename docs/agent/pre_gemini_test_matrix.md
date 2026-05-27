@@ -19,6 +19,7 @@ Current conclusion:
 - The G3 provider skeleton with mocked / injected SDK object is implemented and tested, while real Gemini provider execution remains inactive.
 - The G3 pre-real-call audit exists and defines the final activation gates before any real Gemini implementation.
 - The G3 execution gate design exists and defines the disabled-by-default router strategy before any runtime routing change.
+- Router activation tests exist and prove Gemini remains mock-first unless all gates pass.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
 - Real Gemini provider integration has not started.
@@ -251,6 +252,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | Disabled-by-default router activation strategy exists and stays documentation-only | `docs/agent/gemini_g3_execution_gate_design.md` | PASS | The repository now contains a dedicated execution gate design that keeps `/agent/explain` mock-first by default and defines the conditions required before any future Gemini routing or runtime activation is even considered. | Real Gemini provider execution is still not started. | No |
 
+### 10.14 Gemini Provider G3 Router Activation Tests
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Router activation tests prove Gemini remains mock-first unless all gates pass | `tests/agent/test_provider_router.py::test_gemini_route_decision_stays_mock_when_llm_disabled_even_with_key`, `::test_gemini_route_decision_stays_mock_when_key_is_missing`, `::test_gemini_route_decision_stays_mock_when_real_provider_is_not_implemented`, `::test_gemini_route_decision_stays_mock_when_sdk_is_available_but_activation_is_disabled` | PASS | The router helper reports mock fallback and disabled-by-default routing when any required gate fails, while the normal `/agent/explain` path remains mock-only. | Real Gemini provider execution is still not started. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -302,6 +309,7 @@ The following are currently covered well enough to count as PASS in the current 
 - Gemini provider G3 health/readiness integration
 - Gemini provider G3 pre-real-call audit
 - Gemini provider G3 execution gate design
+- Gemini provider G3 router activation tests
 - Gemini provider G3 dependency decision
 - Gemini provider G3 backend/API requirements slice
 - frontend wording consistency

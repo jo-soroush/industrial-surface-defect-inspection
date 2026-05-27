@@ -88,6 +88,27 @@ class AgentProviderSettings:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class GeminiRouteDecision:
+    """Disabled-by-default Gemini routing decision for the MVP router."""
+
+    requested_provider: str
+    selected_provider: str
+    should_route_to_gemini: bool
+    fallback_used: bool
+    fallback_reason: str
+    reason: str
+    llm_enabled: bool
+    provider_allowed: bool
+    api_key_present: bool
+    sdk_checked: bool
+    sdk_status: str
+    sdk_available: bool
+    real_provider_implemented: bool
+    activation_allowed: bool
+    safety_ready: bool
+
+
 class AgentProviderRouter:
     """Resolve explanation responses from the safe MVP provider set."""
 
@@ -104,6 +125,21 @@ class AgentProviderRouter:
     def gemini_readiness(self) -> GeminiG3Readiness:
         """Return the safe Gemini readiness snapshot without activating Gemini."""
         return evaluate_gemini_g3_readiness(self._provider_runtime_settings())
+
+    def gemini_route_decision(
+        self,
+        requested_provider: str | None = None,
+        *,
+        readiness: GeminiG3Readiness | None = None,
+        safety_ready: bool = True,
+    ) -> GeminiRouteDecision:
+        """Return the disabled-by-default Gemini routing decision without executing Gemini."""
+        return evaluate_gemini_route_decision(
+            self._provider_runtime_settings(),
+            readiness or self.gemini_readiness(),
+            requested_provider=requested_provider,
+            safety_ready=safety_ready,
+        )
 
     def health(self) -> AgentHealthResponse:
         """Return a safe health snapshot for the agent layer."""
@@ -217,6 +253,65 @@ def _question_requests_forbidden_claim(question: str, global_context: dict[str, 
     normalized_question = _normalize_text(question)
     forbidden_claims = [_normalize_text(str(item)) for item in global_context.get("forbidden_claims", [])]
     return any(claim in normalized_question for claim in forbidden_claims)
+
+
+def evaluate_gemini_route_decision(
+    settings: ProviderRuntimeSettings,
+    readiness: GeminiG3Readiness,
+    *,
+    requested_provider: str | None = None,
+    safety_ready: bool = True,
+) -> GeminiRouteDecision:
+    """Evaluate a disabled-by-default Gemini route decision without activating Gemini."""
+    requested = (requested_provider or settings.default_provider or "mock").strip().lower() or "mock"
+    if requested not in SUPPORTED_PROVIDERS:
+        requested = "mock"
+
+    should_route_to_gemini = (
+        requested == "gemini"
+        and settings.enable_llm
+        and settings.gemini_key_present
+        and readiness.gates.sdk_available
+        and readiness.gates.provider_allowed
+        and readiness.gates.real_provider_implemented
+        and readiness.gates.activation_allowed
+        and safety_ready
+    )
+    selected_provider = "gemini" if should_route_to_gemini else "mock"
+
+    if requested == "gemini" and not should_route_to_gemini:
+        fallback_reason = (
+            "Gemini remains disabled by default; mock fallback remains the safe path."
+        )
+        reason = (
+            "Gemini routing is gated off until all runtime and safety gates pass; mock remains the selected provider."
+        )
+    elif requested == "gemini":
+        fallback_reason = None if selected_provider == "gemini" else (
+            "Gemini remains disabled by default; mock fallback remains the safe path."
+        )
+        reason = "Gemini routing is allowed by the disabled-by-default gate."
+    else:
+        fallback_reason = "Mock remains the default safe provider."
+        reason = "Mock remains the default safe provider."
+
+    return GeminiRouteDecision(
+        requested_provider=requested,
+        selected_provider=selected_provider,
+        should_route_to_gemini=should_route_to_gemini,
+        fallback_used=selected_provider != requested,
+        fallback_reason=fallback_reason or "Mock remains the default safe provider.",
+        reason=reason,
+        llm_enabled=settings.enable_llm,
+        provider_allowed=readiness.gates.provider_allowed,
+        api_key_present=settings.gemini_key_present,
+        sdk_checked=readiness.gates.sdk_checked,
+        sdk_status=readiness.gates.sdk_status,
+        sdk_available=readiness.gates.sdk_available,
+        real_provider_implemented=readiness.gates.real_provider_implemented,
+        activation_allowed=readiness.gates.activation_allowed,
+        safety_ready=safety_ready,
+    )
 
 
 def _build_mock_answer(grounding_context: AgentGroundingContext) -> tuple[str, str]:

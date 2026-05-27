@@ -5,6 +5,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from src.inspection_ai.agent.context_builder import build_grounding_context
+from src.inspection_ai.agent.gemini_provider import evaluate_gemini_g3_readiness
 import src.inspection_ai.agent.provider_router as provider_router_module
 from src.inspection_ai.agent.provider_router import AgentProviderRouter, AgentProviderSettings
 
@@ -100,6 +101,108 @@ def test_gemini_health_metadata_does_not_expose_raw_key_values(monkeypatch) -> N
     assert gemini_readiness.gates.api_key_present is True
     assert any("api_key_present=true" in warning.lower() for warning in health.warnings)
     assert any("gemini readiness:" in warning.lower() for warning in health.warnings)
+
+
+def test_gemini_route_decision_stays_mock_when_llm_disabled_even_with_key() -> None:
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=False,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present-but-disabled",
+            grok_api_key=None,
+        )
+    )
+
+    decision = router.gemini_route_decision(requested_provider="gemini")
+
+    assert decision.requested_provider == "gemini"
+    assert decision.selected_provider == "mock"
+    assert decision.should_route_to_gemini is False
+    assert decision.fallback_used is True
+    assert "mock fallback" in decision.fallback_reason.lower()
+    assert decision.llm_enabled is False
+    assert decision.api_key_present is True
+    assert decision.activation_allowed is False
+
+
+def test_gemini_route_decision_stays_mock_when_key_is_missing() -> None:
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key=None,
+            grok_api_key=None,
+        )
+    )
+
+    decision = router.gemini_route_decision(requested_provider="gemini")
+
+    assert decision.requested_provider == "gemini"
+    assert decision.selected_provider == "mock"
+    assert decision.should_route_to_gemini is False
+    assert decision.fallback_used is True
+    assert "mock fallback" in decision.fallback_reason.lower()
+    assert decision.llm_enabled is True
+    assert decision.api_key_present is False
+    assert decision.sdk_checked is False
+    assert decision.activation_allowed is False
+
+
+def test_gemini_route_decision_stays_mock_when_real_provider_is_not_implemented() -> None:
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+
+    decision = router.gemini_route_decision(requested_provider="gemini")
+
+    assert decision.requested_provider == "gemini"
+    assert decision.selected_provider == "mock"
+    assert decision.should_route_to_gemini is False
+    assert decision.real_provider_implemented is False
+    assert decision.activation_allowed is False
+    assert decision.fallback_used is True
+    assert "gated" in decision.reason.lower()
+
+
+def test_gemini_route_decision_stays_mock_when_sdk_is_available_but_activation_is_disabled() -> None:
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+    readiness = evaluate_gemini_g3_readiness(router._provider_runtime_settings(), sdk_available=True)
+    decision = router.gemini_route_decision(requested_provider="gemini", readiness=readiness)
+
+    assert decision.requested_provider == "gemini"
+    assert decision.selected_provider == "mock"
+    assert decision.should_route_to_gemini is False
+    assert decision.sdk_available is True
+    assert decision.activation_allowed is False
+    assert decision.fallback_used is True
 
 
 def test_mock_provider_grounded_answer_mentions_manual_review() -> None:

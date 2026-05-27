@@ -21,6 +21,7 @@ What is allowed next only after approval:
 - a later local real-smoke plan, if explicitly approved
 - the local real-smoke plan is documented separately and remains planning only
 - the local real-smoke harness skeleton exists and remains disabled by default
+- the final real-smoke execution checklist exists and remains documentation only
 
 What remains blocked:
 
@@ -51,6 +52,7 @@ The following items are complete and established in the repository:
 - G3 backend/API requirements slice (`google-genai`)
 - G3 local real-smoke plan
 - G3 local real-smoke harness skeleton
+- G3 final real-smoke execution checklist
 - deterministic safety guard
 - provider contract and readiness layer
 - mock-first runtime
@@ -170,6 +172,7 @@ Required tests before or with real implementation:
 
 The local real-smoke plan is documented in `docs/agent/gemini_g3_local_real_smoke_plan.md`.
 The local real-smoke harness skeleton is documented in `scripts/agent/run_gemini_local_smoke.py`.
+The final real-smoke execution checklist is documented in `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md`.
 
 If later approved, the first real Gemini smoke must be:
 

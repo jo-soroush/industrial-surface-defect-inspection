@@ -16,6 +16,8 @@ This plan defines the narrowest local-only evidence path for a future manual smo
 
 A disabled-by-default harness skeleton exists in `scripts/agent/run_gemini_local_smoke.py`; it is not executed by default and it does not call Gemini.
 
+The final execution checklist is documented in `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md`.
+
 What this plan controls:
 
 - the preconditions for a future local manual smoke
@@ -49,6 +51,25 @@ What this means:
 What this does not mean:
 
 - real smoke execution is complete
+- Gemini is connected
+- Gemini is active
+- `GEMINI_API_KEY` has been used
+
+## Final Execution Checklist Status
+
+The final real-smoke execution checklist is documented and reviewed.
+
+What this means:
+
+- the mandatory pre-execution checks are defined
+- the one-call rule is defined
+- the safe input and output boundaries are defined
+- the stop / fail conditions are defined
+- the required post-smoke checks and evidence document are defined
+
+What this does not mean:
+
+- real smoke execution is approved
 - Gemini is connected
 - Gemini is active
 - `GEMINI_API_KEY` has been used

@@ -205,6 +205,25 @@ What this does not mean:
 - Gemini is active
 - `GEMINI_API_KEY` has been used
 
+## Final Real-Smoke Execution Checklist Status
+
+The final real-smoke execution checklist is documented and reviewed.
+
+What this means:
+
+- the mandatory pre-execution checks are defined
+- the one-call rule is defined
+- the safe input and output boundaries are defined
+- the stop / fail conditions are defined
+- the required post-smoke checks and evidence document are defined
+
+What this does not mean:
+
+- real smoke execution is approved
+- Gemini is connected
+- Gemini is active
+- `GEMINI_API_KEY` has been used
+
 ## First Slice Objective
 
 The first G3 coding slice should be:

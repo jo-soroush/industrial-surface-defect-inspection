@@ -21,6 +21,7 @@ Current conclusion:
 - The G3 execution gate design exists and defines the disabled-by-default router strategy before any runtime routing change.
 - Router activation tests exist and prove Gemini remains mock-first unless all gates pass.
 - The G3 local real-smoke plan exists and defines the manual local-only smoke boundary, but it has not been executed.
+- The G3 final real-smoke execution checklist exists and defines the mandatory pre-execution review items, but it has not approved execution.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
 - Real Gemini provider integration has not started.
@@ -276,6 +277,12 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | Local real-smoke harness skeleton exists, stays disabled by default, and does not call Gemini | `scripts/agent/run_gemini_local_smoke.py`, `tests/agent/test_gemini_local_smoke_harness.py` | PASS | The repository now contains a disabled-by-default harness that only prints planned checks in dry-run mode and refuses to run a real smoke in this slice. | Real smoke execution is still blocked until explicit user approval. | No |
+
+### 10.18 Gemini Provider G3 Final Real-Smoke Execution Checklist
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Final real-smoke execution checklist exists and remains documentation only | `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md` | PASS | The repository now contains the final checklist that must be reviewed before any first real smoke can be approved, while still blocking execution. | Real smoke execution is still blocked until explicit user approval. | No |
 
 ### 11. Frontend / Wording Consistency
 

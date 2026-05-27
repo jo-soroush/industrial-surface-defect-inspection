@@ -43,6 +43,7 @@ The following foundation is already in place:
 - real provider execution boundary with lazy import and injected SDK/client only
 - local real-smoke plan documented separately and planning only
 - local real-smoke harness skeleton disabled by default and not executed
+- final real-smoke execution checklist documented and reviewed
 - deterministic safety guard
 - provider contracts
 - fallback policy

@@ -26,6 +26,7 @@ The current repository baseline already provides:
 - A second G3 offline-only lazy SDK loader boundary that stays SDK-free at module import time.
 - A third G3 health/readiness integration slice that threads safe Gemini metadata into the existing health surface without activating Gemini.
 - A G3 provider skeleton with mocked / injected SDK object that stays offline-only and does not activate Gemini.
+- A G3 real provider execution boundary with lazy import and injected SDK/client only, but still disabled by default.
 - A G3 execution gate design that keeps Gemini disabled by default and blocks router activation until all gates pass.
 - Router activation tests that prove Gemini remains mock-first unless all gates pass.
 - A G3 pre-real-call audit that defines the final activation gates before any real Gemini implementation.
@@ -287,6 +288,7 @@ Gemini implementation must not start until:
 
 Phase G1 stub/config implementation is complete.
 Phase G2 mocked-client test layer is complete.
+The G3 real provider execution boundary with lazy import and injected SDK/client only is implemented and tested.
 The G3 pre-real-call audit exists and is reviewed.
 The G3 preparation audit exists and is reviewed.
 The G3 execution gate design exists and is reviewed.

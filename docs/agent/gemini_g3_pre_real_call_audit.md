@@ -17,9 +17,7 @@ This audit exists to define the final activation gates and the required evidence
 
 What is allowed next only after approval:
 
-- a dependency / requirements slice, if explicitly approved
-- a lazy-import real-provider skeleton, if explicitly approved
-- a disabled-by-default router activation test slice, if explicitly approved
+- a future real-provider runtime activation slice, if explicitly approved
 - a later local real-smoke plan, if explicitly approved
 
 What remains blocked:
@@ -44,6 +42,7 @@ The following items are complete and established in the repository:
 - G3 second coding slice lazy SDK loader boundary
 - G3 third coding slice health / readiness metadata
 - G3 provider skeleton with mocked / injected SDK object
+- G3 real provider execution boundary with lazy import and injected SDK/client only
 - G3 execution gate design / disabled-by-default router plan
 - G3 router activation tests for disabled-by-default routing
 - G3 dependency decision artifact

@@ -86,6 +86,7 @@ The provider skeleton with mocked / injected SDK object is implemented and teste
 What this means:
 
 - The future provider boundary can be exercised through injected test clients only.
+- A real provider execution boundary exists behind lazy import and injected SDK/client only.
 - The module remains offline-only and does not create a real Gemini client.
 - Safe fallback behavior remains in place when no injected client is provided.
 
@@ -95,6 +96,7 @@ What this does not mean:
 - Real Gemini provider execution has started.
 - Gemini is connected.
 - Gemini is active.
+- The real provider execution boundary is active by default.
 
 ## Fifth Slice Status
 

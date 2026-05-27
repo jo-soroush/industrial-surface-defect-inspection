@@ -258,6 +258,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | Router activation tests prove Gemini remains mock-first unless all gates pass | `tests/agent/test_provider_router.py::test_gemini_route_decision_stays_mock_when_llm_disabled_even_with_key`, `::test_gemini_route_decision_stays_mock_when_key_is_missing`, `::test_gemini_route_decision_stays_mock_when_real_provider_is_not_implemented`, `::test_gemini_route_decision_stays_mock_when_sdk_is_available_but_activation_is_disabled` | PASS | The router helper reports mock fallback and disabled-by-default routing when any required gate fails, while the normal `/agent/explain` path remains mock-only. | Real Gemini provider execution is still not started. | No |
 
+### 10.15 Gemini Provider G3 Real Provider Execution Boundary
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Real provider execution exists behind lazy import and injected SDK/client only, while remaining disabled by default | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_real_provider_without_sdk_import_gate_returns_not_implemented_without_lazy_import`, `::test_gemini_real_provider_missing_key_skips_sdk_loader_and_falls_back`, `::test_gemini_real_provider_sdk_missing_returns_fallback_without_lazy_import`, `::test_gemini_real_provider_with_fake_safe_sdk_client_returns_safe_provider_result`, `::test_gemini_real_provider_blocks_unsafe_or_invalid_fake_sdk_outputs`, `::test_gemini_real_provider_handles_fake_sdk_errors_safely` | PASS | The provider now has a real-execution boundary that only runs with explicit gates and injected fake SDK seams; the default runtime remains mock-first and no real SDK import is exercised by the tests. | Real Gemini provider execution is still not started in normal runtime. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -307,6 +313,7 @@ The following are currently covered well enough to count as PASS in the current 
 - Gemini provider G3 first slice readiness scaffolding
 - Gemini provider G3 lazy SDK loader boundary
 - Gemini provider G3 health/readiness integration
+- Gemini provider G3 real provider execution boundary with lazy import and injected SDK/client only
 - Gemini provider G3 pre-real-call audit
 - Gemini provider G3 execution gate design
 - Gemini provider G3 router activation tests

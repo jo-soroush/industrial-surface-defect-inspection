@@ -1,18 +1,21 @@
-"""Gemini provider offline test seam for Phases G1 through G3.
+"""Gemini provider scaffolding for Phases G1 through G3.
 
-This module is offline-only and intentionally does not implement real Gemini
-execution. It contains the Phase G1 provider config/stub, the Phase G2
-mocked-client seam, the Phase G3 readiness scaffolding, and the G3 lazy SDK
-loader boundary so the repository can define provider behavior before any
-network-enabled Gemini integration is considered.
+This module contains the Phase G1 provider config/stub, the Phase G2
+mocked-client seam, the Phase G3 readiness scaffolding, the G3 lazy SDK loader
+boundary, and a disabled-by-default real-provider execution boundary. That
+real-provider boundary is not wired into normal ``/agent/explain`` routing,
+must use lazy SDK loading only, and keeps the normal runtime mock-first.
+Importing this module does not make any real Gemini API call.
 """
 
 from __future__ import annotations
 
+import importlib
+import os
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Literal, Protocol
 
-from .safety_guard import guard_post_generation_text
+from .safety_guard import guard_post_generation_text, guard_pre_generation_context
 from .provider_contracts import (
     AgentProviderRequest,
     AgentProviderResponse,
@@ -532,6 +535,422 @@ class GeminiProviderSkeleton:
         raise GeminiProviderError("Injected Gemini client does not support generate().")
 
 
+def _default_gemini_api_key_resolver() -> str | None:
+    """Resolve the Gemini API key from the environment only when explicitly requested."""
+    value = os.getenv("GEMINI_API_KEY")
+    return value if isinstance(value, str) and value.strip() else None
+
+
+@dataclass(frozen=True, slots=True)
+class GeminiRealProviderConfig:
+    """Disabled-by-default configuration for the future real Gemini execution path."""
+
+    model_name: str = "gemini-2.0-flash"
+    client_name: str = "google-genai"
+    real_provider_implemented: bool = False
+    sdk_import_allowed: bool = False
+    fallback_enabled: bool = True
+    api_key_resolver: Callable[[], str | None] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class GeminiRealGenerationResult:
+    """Safe result envelope for the real-provider execution boundary."""
+
+    provider_response: AgentProviderResponse
+    status: str
+    safe_to_send: bool
+    safe_to_display: bool
+    provider_error: str | None = None
+    fallback_reason: str | None = None
+    client_name: str = "google-genai"
+    readiness: GeminiG3Readiness | None = None
+    sdk_load_result: GeminiSdkLoadResult | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class GeminiRealProvider:
+    """Disabled-by-default real Gemini execution boundary.
+
+    The helper is explicit and offline-safe by default. It only attempts a
+    lazy SDK import when sdk_import_allowed=True, the future real-provider gate
+    is enabled, and callers inject the required seams.
+    """
+
+    settings: ProviderRuntimeSettings
+    config: GeminiRealProviderConfig = field(default_factory=GeminiRealProviderConfig)
+    sdk_loader: GeminiSdkLoader | Callable[[], GeminiSdkLoadResult] | None = None
+    sdk_module_loader: Callable[[], Any] | None = None
+    client_factory: Callable[[Any, str, str], Any] | None = None
+
+    def readiness(self) -> GeminiG3Readiness:
+        return evaluate_gemini_g3_readiness(
+            self.settings,
+            sdk_loader=self.sdk_loader,
+            real_provider_implemented=self.config.real_provider_implemented,
+        )
+
+    def generate(
+        self,
+        request: AgentProviderRequest | GeminiGenerationRequest,
+        *,
+        allowed_evidence_values: Iterable[Any] | None = None,
+    ) -> GeminiRealGenerationResult:
+        generation_request = _coerce_gemini_generation_request(
+            request,
+            allowed_evidence_values=allowed_evidence_values,
+            client_name=self.config.client_name,
+        )
+        synthetic_context = _build_synthetic_grounding_context(generation_request.provider_request)
+        pre_guard = guard_pre_generation_context(synthetic_context)
+
+        if pre_guard.blocked:
+            readiness = evaluate_gemini_g3_readiness(
+                self.settings,
+                real_provider_implemented=self.config.real_provider_implemented,
+            )
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=None,
+                status="blocked",
+                fallback_reason="Gemini real-provider prompt was blocked by the safety guard; mock fallback remains the safe path.",
+                provider_error="Gemini real-provider prompt was blocked by the safety guard.",
+                safe_to_display=False,
+                blocked=True,
+            )
+
+        if not self.config.real_provider_implemented:
+            readiness = evaluate_gemini_g3_readiness(
+                self.settings,
+                real_provider_implemented=False,
+            )
+            return _build_real_generation_not_implemented_result(
+                generation_request,
+                readiness=readiness,
+                provider_error="Gemini real provider execution is not implemented in this slice.",
+            )
+
+        if not self.config.sdk_import_allowed:
+            readiness = evaluate_gemini_g3_readiness(
+                self.settings,
+                real_provider_implemented=self.config.real_provider_implemented,
+            )
+            return _build_real_generation_not_implemented_result(
+                generation_request,
+                readiness=readiness,
+                provider_error="Gemini real provider execution is disabled until the lazy SDK import gate is explicitly opened.",
+            )
+
+        if self.sdk_module_loader is None and self.client_factory is None:
+            readiness = evaluate_gemini_g3_readiness(
+                self.settings,
+                real_provider_implemented=self.config.real_provider_implemented,
+            )
+            return _build_real_generation_not_implemented_result(
+                generation_request,
+                readiness=readiness,
+                provider_error="Gemini real provider execution in this slice requires an injected SDK/client seam and does not attempt a real SDK import.",
+            )
+
+        sdk_load_result = _resolve_gemini_sdk_load_result(
+            settings=self.settings,
+            sdk_available=None,
+            sdk_loader=self.sdk_loader,
+            sdk_load_result=None,
+        )
+        readiness = evaluate_gemini_g3_readiness(
+            self.settings,
+            sdk_load_result=sdk_load_result,
+            real_provider_implemented=self.config.real_provider_implemented,
+        )
+        if not readiness.gates.activation_allowed:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status=readiness.status,
+                fallback_reason=readiness.fallback_policy.fallback_reason
+                or "Gemini remains disabled by default; mock fallback remains the safe path.",
+                provider_error=readiness.reason,
+            )
+
+        if not sdk_load_result.sdk_available:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status=sdk_load_result.status,
+                fallback_reason=readiness.fallback_policy.fallback_reason
+                or "Gemini remains unavailable; mock fallback remains the safe path.",
+                provider_error=sdk_load_result.reason,
+            )
+
+        api_key = self._resolve_api_key()
+        if not api_key:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="unavailable",
+                fallback_reason="Gemini API key is missing; mock fallback remains the safe path.",
+                provider_error="Gemini API key is missing or not configured.",
+            )
+
+        try:
+            sdk_module = self._load_sdk_module()
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="load_error",
+                fallback_reason="Gemini SDK import failed; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini SDK import failed.",
+            )
+
+        try:
+            client = self._build_real_client(sdk_module, api_key)
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="provider_error",
+                fallback_reason="Gemini client creation failed; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini client creation failed.",
+            )
+
+        prompt = _build_real_gemini_prompt(
+            generation_request.provider_request,
+            sanitized_context=pre_guard.sanitized_context,
+        )
+
+        try:
+            raw_result = self._invoke_real_client(client, prompt, generation_request.provider_request)
+        except GeminiProviderTimeoutError as exc:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="timeout",
+                fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini real provider timeout.",
+            )
+        except GeminiProviderRateLimitError as exc:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="rate_limit",
+                fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini real provider was rate limited.",
+            )
+        except GeminiProviderEmptyResponseError as exc:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="empty",
+                fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini real provider returned an empty response.",
+            )
+        except GeminiProviderMalformedResponseError as exc:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="malformed",
+                fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini real provider returned a malformed response.",
+            )
+        except GeminiProviderError as exc:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="provider_error",
+                fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini real provider raised a provider error.",
+            )
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="provider_error",
+                fallback_reason="Gemini real provider raised an unexpected error; mock fallback remains the safe path.",
+                provider_error=str(exc) or "Gemini real provider raised an unexpected error.",
+            )
+
+        normalized_result = _coerce_gemini_client_result(raw_result)
+        if normalized_result is None:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="malformed",
+                fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
+                provider_error="Gemini real provider returned a malformed response.",
+            )
+
+        if normalized_result.error_kind == "timeout":
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="timeout",
+                fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
+                provider_error="Gemini real provider timeout.",
+            )
+        if normalized_result.error_kind == "provider_error":
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="provider_error",
+                fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
+                provider_error="Gemini real provider raised a provider error.",
+            )
+        if normalized_result.error_kind == "rate_limit":
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="rate_limit",
+                fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
+                provider_error="Gemini real provider was rate limited.",
+            )
+        if normalized_result.error_kind == "empty":
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="empty",
+                fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
+                provider_error="Gemini real provider returned an empty response.",
+            )
+        if normalized_result.error_kind == "malformed":
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="malformed",
+                fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
+                provider_error="Gemini real provider returned a malformed response.",
+            )
+
+        if normalized_result.text is None or not normalized_result.text.strip():
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status="empty",
+                fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
+                provider_error="Gemini real provider returned an empty response.",
+            )
+
+        post_guard = guard_post_generation_text(
+            normalized_result.text,
+            grounding_context=synthetic_context,
+            allowed_evidence_values=generation_request.allowed_evidence_values,
+        )
+        if post_guard.blocked:
+            return _build_real_generation_fallback_result(
+                generation_request,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
+                status=post_guard.status,
+                fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
+                provider_error="Gemini real provider output was blocked by the safety guard.",
+                safe_to_display=False,
+                blocked=True,
+            )
+
+        response = build_provider_response(
+            answer=post_guard.sanitized_text or normalized_result.text,
+            provider_used="gemini",
+            fallback_used=False,
+            fallback_reason=None,
+            grounding_status=_request_grounding_status(generation_request.provider_request),
+            safety_status=post_guard.status,
+            limitations=_request_limitations(
+                generation_request.provider_request,
+                post_guard.limitations,
+            ),
+            evidence_used=_request_evidence_items(generation_request.provider_request),
+            provider_error=None,
+        )
+        return GeminiRealGenerationResult(
+            provider_response=response,
+            status=post_guard.status,
+            safe_to_send=post_guard.safe_to_send,
+            safe_to_display=post_guard.safe_to_display,
+            provider_error=None,
+            fallback_reason=None,
+            client_name=self.config.client_name,
+            readiness=readiness,
+            sdk_load_result=sdk_load_result,
+        )
+
+    def _resolve_api_key(self) -> str | None:
+        if self.config.api_key_resolver is None:
+            return None
+        value = self.config.api_key_resolver()
+        if isinstance(value, str) and value.strip():
+            return value
+        return None
+
+    def _load_sdk_module(self) -> Any:
+        if self.sdk_module_loader is not None:
+            return self.sdk_module_loader()
+        return _load_google_genai_module()
+
+    def _build_real_client(self, sdk_module: Any, api_key: str) -> Any:
+        if self.client_factory is not None:
+            return self.client_factory(sdk_module, api_key, self.config.model_name)
+        client_cls = getattr(sdk_module, "Client", None)
+        if callable(client_cls):
+            try:
+                return client_cls(api_key=api_key)
+            except TypeError:
+                return client_cls(api_key)
+        raise GeminiProviderError("The loaded Gemini SDK does not expose a Client factory.")
+
+    def _invoke_real_client(self, client: Any, prompt: str, request: AgentProviderRequest) -> Any:
+        if hasattr(client, "models") and hasattr(client.models, "generate_content"):
+            return client.models.generate_content(model=self.config.model_name, contents=prompt)
+        if hasattr(client, "generate_content"):
+            return client.generate_content(model=self.config.model_name, contents=prompt)
+        if hasattr(client, "generate"):
+            return client.generate(request)
+        if callable(client):
+            return client(prompt)
+        raise GeminiProviderError("The loaded Gemini client does not expose a supported generation method.")
+
+
+def generate_with_real_gemini_provider(
+    request: AgentProviderRequest | GeminiGenerationRequest,
+    *,
+    settings: ProviderRuntimeSettings,
+    config: GeminiRealProviderConfig | None = None,
+    sdk_loader: GeminiSdkLoader | Callable[[], GeminiSdkLoadResult] | None = None,
+    sdk_module_loader: Callable[[], Any] | None = None,
+    client_factory: Callable[[Any, str, str], Any] | None = None,
+    allowed_evidence_values: Iterable[Any] | None = None,
+) -> GeminiRealGenerationResult:
+    """Execute the disabled-by-default real Gemini boundary with injected seams only."""
+
+    provider = GeminiRealProvider(
+        settings=settings,
+        config=config or GeminiRealProviderConfig(),
+        sdk_loader=sdk_loader,
+        sdk_module_loader=sdk_module_loader,
+        client_factory=client_factory,
+    )
+    return provider.generate(request, allowed_evidence_values=allowed_evidence_values)
+
+
 def evaluate_gemini_provider_readiness(
     settings: ProviderRuntimeSettings,
 ) -> ProviderReadinessResult:
@@ -904,4 +1323,158 @@ def _build_skeleton_fallback_generation_result(
         provider_error=provider_error,
         fallback_reason=fallback_reason,
         client_name=request.client_name,
+    )
+
+
+def _build_synthetic_grounding_context(request: AgentProviderRequest) -> Any:
+    """Build a minimal grounding context for safety checks in the real path."""
+    from .context_builder import AgentGroundingContext
+
+    grounding_context = request.grounding_context
+    evidence_used = grounding_context.get("evidence_used", [])
+    limitations = grounding_context.get("limitations", [])
+    safety_boundaries = grounding_context.get("safety_boundaries", [])
+    forbidden_claims = grounding_context.get("forbidden_claims", [])
+    visible_context = grounding_context.get("visible_context", {})
+    inspection_response = grounding_context.get("inspection_response", {})
+
+    if not isinstance(visible_context, dict):
+        visible_context = {}
+    if not isinstance(inspection_response, dict):
+        inspection_response = {}
+    if not isinstance(evidence_used, list):
+        evidence_used = []
+    if not isinstance(limitations, list):
+        limitations = []
+    if not isinstance(safety_boundaries, list):
+        safety_boundaries = []
+    if not isinstance(forbidden_claims, list):
+        forbidden_claims = []
+
+    return AgentGroundingContext(
+        page_id=request.page_id,
+        section_id=request.section_id,
+        component_id=request.component_id,
+        question=request.question,
+        visible_context=visible_context,
+        inspection_response=inspection_response,
+        global_context={},
+        page_definition={},
+        evidence_used=[item for item in evidence_used if isinstance(item, dict)],
+        limitations=[str(item) for item in limitations if str(item).strip()],
+        safety_boundaries=[str(item) for item in safety_boundaries if str(item).strip()],
+        forbidden_claims=[str(item) for item in forbidden_claims if str(item).strip()],
+        grounding_status=_request_grounding_status(request),
+        raw_evidence_included=bool(grounding_context.get("raw_evidence_included", False)),
+    )
+
+
+def _build_real_gemini_prompt(
+    request: AgentProviderRequest,
+    *,
+    sanitized_context: dict[str, Any],
+) -> str:
+    evidence_sources = ", ".join(
+        str(item.get("source", "unknown"))
+        for item in sanitized_context.get("evidence_used", [])
+        if isinstance(item, dict)
+    )
+    limitations = ", ".join(str(item) for item in sanitized_context.get("limitations", []) if str(item).strip())
+    page_id = sanitized_context.get("page_id", request.page_id)
+    section_id = sanitized_context.get("section_id", request.section_id)
+    component_id = sanitized_context.get("component_id", request.component_id or "none")
+    question = sanitized_context.get("question", request.question)
+    grounding_status = sanitized_context.get("grounding_status", _request_grounding_status(request))
+    prompt_parts = [
+        "You are the offline-safe Gemini provider execution boundary for the Agent/RAG MVP.",
+        f"page_id={page_id}",
+        f"section_id={section_id}",
+        f"component_id={component_id}",
+        f"question={question}",
+        f"grounding_status={grounding_status}",
+        f"limitations={limitations or 'none'}",
+        f"evidence_sources={evidence_sources or 'none'}",
+        "Answer only from the compact sanitized context and keep manual review visible.",
+    ]
+    return "\n".join(prompt_parts)
+
+
+def _load_google_genai_module() -> Any:
+    """Lazy SDK import boundary for the future Gemini execution path."""
+    return importlib.import_module("google" + ".genai")
+
+
+def _build_real_generation_not_implemented_result(
+    request: GeminiGenerationRequest,
+    *,
+    readiness: GeminiG3Readiness,
+    provider_error: str,
+) -> GeminiRealGenerationResult:
+    response = build_provider_response(
+        answer=(
+            "I can’t provide a Gemini answer in this slice. "
+            "Mock fallback remains the safe path. Manual review still applies."
+        ),
+        provider_used="mock",
+        fallback_used=True,
+        fallback_reason="Gemini real provider execution is not implemented in this slice; mock fallback remains the safe path.",
+        grounding_status=_request_grounding_status(request.provider_request),
+        safety_status="pass",
+        limitations=_request_limitations(
+            request.provider_request,
+            [
+                "Gemini real provider execution is not implemented in this slice; mock fallback remains the safe path.",
+            ],
+        ),
+        evidence_used=_request_evidence_items(request.provider_request),
+        provider_error=provider_error,
+    )
+    return GeminiRealGenerationResult(
+        provider_response=response,
+        status="not_implemented",
+        safe_to_send=False,
+        safe_to_display=True,
+        provider_error=provider_error,
+        fallback_reason=response.fallback_reason,
+        client_name=request.client_name,
+        readiness=readiness,
+        sdk_load_result=None,
+    )
+
+
+def _build_real_generation_fallback_result(
+    request: GeminiGenerationRequest,
+    *,
+    readiness: GeminiG3Readiness,
+    sdk_load_result: GeminiSdkLoadResult | None,
+    status: str,
+    fallback_reason: str,
+    provider_error: str,
+    safe_to_display: bool = True,
+    blocked: bool = False,
+) -> GeminiRealGenerationResult:
+    response = build_provider_response(
+        answer=(
+            "I can’t provide a Gemini answer in this slice. "
+            "Mock fallback remains the safe path. Manual review still applies."
+        ),
+        provider_used="mock",
+        fallback_used=True,
+        fallback_reason=fallback_reason,
+        grounding_status=_request_grounding_status(request.provider_request),
+        safety_status="blocked" if blocked else "pass",
+        limitations=_request_limitations(request.provider_request, [fallback_reason]),
+        evidence_used=_request_evidence_items(request.provider_request),
+        provider_error=provider_error,
+    )
+    return GeminiRealGenerationResult(
+        provider_response=response,
+        status=status,
+        safe_to_send=not blocked,
+        safe_to_display=safe_to_display,
+        provider_error=provider_error,
+        fallback_reason=fallback_reason,
+        client_name=request.client_name,
+        readiness=readiness,
+        sdk_load_result=sdk_load_result,
     )

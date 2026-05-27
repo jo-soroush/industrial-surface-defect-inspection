@@ -55,6 +55,7 @@ The following items are complete and established in the repository:
 - G3 local real-smoke harness skeleton
 - G3 final real-smoke execution checklist
 - G3 harness dry-run verification evidence
+- The first safe Gemini code slice is implemented as regression coverage only, and it keeps the disabled-by-default Gemini boundary mock-first.
 - Phase 12 LLM-disabled Docker / Compose readiness audit
 - Phase 12 LLM-disabled Docker / Compose validation evidence
 - Phase 12 LLM-disabled Docker / Compose validation is PASS and remains local-only

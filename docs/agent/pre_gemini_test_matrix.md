@@ -23,6 +23,7 @@ Current conclusion:
 - The G3 local real-smoke plan exists and defines the manual local-only smoke boundary, but it has not been executed.
 - The G3 final real-smoke execution checklist exists and defines the mandatory pre-execution review items, but it has not approved execution.
 - The G3 harness dry-run verification evidence exists and records the disabled-by-default harness behavior, but it is not real smoke evidence.
+- The first safe Gemini code slice exists as regression coverage for the disabled-by-default Gemini boundary and keeps the runtime mock-first.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
 - The backend/API `google-genai` requirements slice exists and is applied without changing runtime behavior.
 - The Phase 12 LLM-disabled Docker / Compose readiness audit exists and records the read-only compose validation plan before any actual Docker / Compose run.
@@ -271,7 +272,7 @@ Validated in the repository state referenced by this audit:
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
-| Real provider execution exists behind lazy import and injected SDK/client only, while remaining disabled by default | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_real_provider_without_sdk_import_gate_returns_not_implemented_without_lazy_import`, `::test_gemini_real_provider_missing_key_skips_sdk_loader_and_falls_back`, `::test_gemini_real_provider_sdk_missing_returns_fallback_without_lazy_import`, `::test_gemini_real_provider_with_fake_safe_sdk_client_returns_safe_provider_result`, `::test_gemini_real_provider_blocks_unsafe_or_invalid_fake_sdk_outputs`, `::test_gemini_real_provider_handles_fake_sdk_errors_safely` | PASS | The provider now has a real-execution boundary that only runs with explicit gates and injected fake SDK seams; the default runtime remains mock-first and no real SDK import is exercised by the tests. | Real Gemini provider execution is still not started in normal runtime. | No |
+| Real provider execution exists behind lazy import and injected SDK/client only, while remaining disabled by default | `tests/agent/test_gemini_provider_mocked_client.py::test_gemini_real_provider_without_sdk_import_gate_returns_not_implemented_without_lazy_import`, `::test_gemini_real_provider_missing_key_skips_sdk_loader_and_falls_back`, `::test_gemini_real_provider_sdk_missing_returns_fallback_without_lazy_import`, `::test_gemini_real_provider_with_fake_safe_sdk_client_returns_safe_provider_result`, `::test_gemini_real_provider_blocks_unsafe_or_invalid_fake_sdk_outputs`, `::test_gemini_real_provider_handles_fake_sdk_errors_safely`, `::test_gemini_real_provider_disabled_by_default_skips_sdk_loading_even_with_fake_key` | PASS | The provider now has a real-execution boundary that only runs with explicit gates and injected fake SDK seams; the default runtime remains mock-first, no real SDK import is exercised by the tests, and the disabled-by-default boundary now has regression coverage even when a fake key is present. | Real Gemini provider execution is still not started in normal runtime. | No |
 
 ### 10.16 Gemini Provider G3 Local Real-Smoke Plan
 

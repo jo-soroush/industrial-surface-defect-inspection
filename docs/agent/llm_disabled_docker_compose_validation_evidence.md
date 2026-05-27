@@ -252,7 +252,7 @@ Observed result:
 - `tests/docker`: 15 passed
 - `tests/api/test_agent_endpoint.py`: 10 passed
 - `tests/frontend`: 34 passed
-- `tests/agent`: 138 passed
+- `tests/agent`: 139 passed
 
 ## PASS Criteria Result
 
@@ -307,4 +307,3 @@ Decision:
 ## Recommended Next Slice
 
 The safest next step is to update the roadmap / validation status documents to mark Phase 12 local validation PASS, then continue with EC2 readiness planning while keeping LLM disabled.
-

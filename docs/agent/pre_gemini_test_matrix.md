@@ -11,6 +11,7 @@ Current conclusion:
 - Phase G1 stub/config implementation is complete.
 - Phase G2 mocked-client test layer is complete.
 - The G3 preparation audit exists and records the package, environment, API-key, activation, rollback, and test strategy.
+- The G3 package verification artifact exists and records the verified future `google-genai` dependency decision.
 - Real Gemini provider integration has not started.
 - The remaining gap is user approval to start the Gemini implementation phase.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
@@ -181,6 +182,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | G3 preparation audit exists and documents the real-provider strategy | `docs/agent/gemini_phase_g3_preparation_audit.md` | PASS | The repository now contains a dedicated G3 preparation audit covering package, env, API-key, gating, fallback, Docker/Compose, EC2, observability, rollback, and entry checklist strategy. | Real Gemini provider code is still not started. | No |
 
+### 10.4 Gemini Provider G3 Package Verification
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| G3 package verification exists and records the verified future dependency candidate | `docs/agent/gemini_g3_package_verification.md` | PASS | The repository now contains a dedicated package-verification artifact that selects `google-genai`, requires lazy import, and keeps the mock-first runtime SDK-free. | Exact version pinning remains a G3 implementation decision. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -225,6 +232,7 @@ The following are currently covered well enough to count as PASS in the current 
 - Gemini provider G1 stub
 - Gemini provider G2 mocked client tests
 - Gemini provider G3 preparation audit
+- Gemini provider G3 package verification
 - frontend wording consistency
 - the Safety truncation/UI polish fix
 

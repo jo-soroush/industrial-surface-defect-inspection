@@ -28,6 +28,7 @@ The current repository baseline already provides:
 - A mock provider that remains the active runtime path.
 - A Gemini G1 stub that remains offline-only.
 - A Gemini G2 mocked-client seam that remains offline-only.
+- A Gemini G3 package verification artifact that selects `google-genai` as the verified future dependency candidate and requires lazy import only.
 - A successful LLM-disabled Docker / Compose smoke validation.
 - A pre-Gemini active explainability scope limited to four accepted components.
 - A formal pre-Gemini requirement-to-test matrix.
@@ -38,8 +39,9 @@ The current repository baseline already provides:
 Recommended strategy for G3 implementation:
 
 - Keep the Gemini integration dependency out of normal import paths until G3 starts.
+- Use `google-genai` as the verified future dependency candidate.
 - Use a late-import / optional-import pattern so the mock-first runtime does not require the Gemini package.
-- Treat the official Google Gemini Python SDK as the likely candidate, but verify the exact package name and supported import path during the G3 implementation decision.
+- Use `from google import genai` only inside the real provider execution path when G3 implementation is approved.
 - Do not add or import the Gemini SDK at module import time in shared Agent code.
 - If the SDK is missing and Gemini is disabled, the app must still start and remain mock-first.
 - If the SDK is missing and Gemini is enabled, the provider must fail safely and fall back to mock or unavailable status.
@@ -215,6 +217,7 @@ Do not log raw prompts or secrets by default.
 Before G3 implementation starts, all of these must be true:
 
 - The user has approved the implementation phase.
+- The package verification artifact has been reviewed.
 - The package decision has been verified.
 - The environment variable names are agreed.
 - The dependency strategy is agreed.
@@ -236,9 +239,8 @@ When G3 eventually starts, the allowed changes are limited to:
 
 ## Remaining Decision Points
 
-- Which Gemini SDK/package exactly to use
 - Which Gemini model name to adopt
-- Whether to add the dependency now or keep a lazy optional import until G3
+- Exact version pinning for the verified future dependency
 - Whether real smoke testing should begin locally before any Docker-enabled smoke
 - Whether EC2 Gemini activation is in this project scope
 

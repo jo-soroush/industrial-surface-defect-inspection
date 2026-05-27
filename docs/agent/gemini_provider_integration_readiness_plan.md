@@ -20,6 +20,7 @@ The current repository baseline already provides:
 - A successful LLM-disabled Docker / Compose smoke validation.
 - A pre-Gemini active explainability scope that is intentionally limited to four accepted components.
 - A formal pre-Gemini requirement-to-test matrix.
+- A verified Gemini G3 package decision that selects `google-genai` for the future real provider.
 
 ## Non-Negotiable Integration Rules
 
@@ -147,6 +148,8 @@ Future Gemini work should follow these phases:
 ## G3 Preparation Note
 
 The G3 preparation audit exists and records the package, environment, API-key, activation, rollback, and test strategy for the future real Gemini provider.
+The package verification artifact has separately confirmed `google-genai` as the future dependency candidate and lazy import as the required import style.
+The package verification artifact is documented in `docs/agent/gemini_g3_package_verification.md`.
 
 What this means:
 
@@ -248,7 +251,6 @@ Gemini implementation must not start until:
 ## Remaining Blockers After This Plan
 
 - User approval to start the Gemini implementation phase.
-- Any implementation-specific package or dependency decision.
 - Optional: Gemini API key availability for later runtime testing, but not required for planning.
 
 ## Explicit Statement

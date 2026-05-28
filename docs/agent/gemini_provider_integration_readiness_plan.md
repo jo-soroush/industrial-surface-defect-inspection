@@ -7,6 +7,7 @@ This document describes how Gemini should later be integrated into the Agent/RAG
 This is a planning document only.
 Gemini is not currently connected.
 No real LLM call is currently made.
+The local manual Gemini smoke milestone is paused / closed for now at the harness level; no immediate further smoke should be run.
 
 The current foundation is ready for planning, not implementation.
 
@@ -44,6 +45,7 @@ The current repository baseline already provides:
 - The Phase 12 LLM-disabled Docker / Compose validation is PASS and remains local-only.
 - An EC2 LLM-disabled readiness audit documents the next planning step for later deployment.
 - An EC2 LLM-disabled validation evidence document records the actual EC2 PASS and confirms the instance was stopped after validation.
+- The local manual Gemini smoke milestone is paused / closed for now at the harness level; the remaining issue is external Gemini availability and future approved retry timing, not the local harness design.
 
 ## Non-Negotiable Integration Rules
 
@@ -216,6 +218,8 @@ What this does not mean:
 - Gemini is connected.
 - Gemini is active.
 - G3 implementation has started.
+- A future Gemini retry is approved.
+- The current external Gemini availability condition is guaranteed.
 
 ## G1 Completion Note
 

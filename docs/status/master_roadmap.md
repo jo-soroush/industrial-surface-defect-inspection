@@ -10,8 +10,10 @@
 - [ ] Agent layer: NOT STARTED
 - [ ] Production readiness: NOT CLAIMED
 - [ ] Deployment safety: NOT CLAIMED
+- [ ] Gemini local-smoke milestone: PAUSED / CLOSED FOR NOW at the local manual-harness level
 
 The repository currently has governed evidence for the classification, anomaly detection, and object detection tracks. This status does not make any production-readiness or deployment-safety claim.
+The Gemini local-smoke milestone is paused / closed for now at the local manual-harness level; the runtime remains mock-first and provider routing remains disabled by default.
 
 ## 2. Source-of-Truth Rules
 
@@ -123,6 +125,6 @@ These roadmap sections have not started as implementation work in this status up
 
 ## 10. Current Recommended Next Step
 
-Perform a project-wide post-YOLO status audit and choose the next roadmap section.
+Perform a project-wide status reconciliation, confirm the Gemini local-smoke milestone is paused / closed for now, and choose the next non-Gemini roadmap section.
 
-Do not run another YOLO structured-output readiness audit as the next step; the YOLO / Detection evidence layer is complete. Do not start frontend, API, notebook, or agent implementation inside this roadmap update.
+Do not run another YOLO structured-output readiness audit as the next step; the YOLO / Detection evidence layer is complete. Do not run another Gemini local smoke as the next step. Do not start frontend, API, notebook, or agent implementation inside this roadmap update.

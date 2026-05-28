@@ -10,8 +10,10 @@
 - [ ] Agent layer: NOT STARTED
 - [ ] Production readiness: NOT CLAIMED
 - [ ] Deployment safety: NOT CLAIMED
+- [ ] Gemini local-smoke milestone: PAUSED / CLOSED FOR NOW at the local manual-harness level
 
 This summary consolidates the current evidence-layer status after Track A, Track B, and YOLO / Detection evidence completion. It is intended to support final demo/readiness auditing, report packaging, and future roadmap decisions.
+It also records that the Gemini local-smoke milestone is paused / closed for now at the local manual-harness level, with runtime still mock-first and provider routing disabled by default.
 
 ## 2. Track A Decision
 
@@ -66,6 +68,7 @@ This is evidence/data-contract completion only.
 Evidence layers for Track A, Track B, and YOLO / Detection are complete enough for consolidated project status. The project is ready for a final demo/readiness audit next.
 
 The project is not declared production-ready. The project is not declared deployment-safe. Real productization work remains a later phase.
+The Gemini local-smoke milestone is paused / closed for now and should not be retried immediately; any future Gemini retry or runtime activation requires explicit approval.
 
 ## 6. Remaining Work
 
@@ -74,6 +77,7 @@ Required before final handoff:
 - [ ] Final demo/readiness audit
 - [ ] Final report/demo packaging
 - [ ] Final project-wide limitations and next-step summary
+- [ ] Reconcile roadmap language after the Gemini local-smoke closure so the next non-Gemini track is clear
 
 Optional before final handoff:
 
@@ -92,9 +96,9 @@ Not recommended now:
 
 ## 7. Recommended Next Step
 
-Next step: FINAL_DEMO_READINESS_AUDIT
+Next step: choose the next non-Gemini roadmap section after the Gemini local-smoke closure is reconciled
 
-Reason: the project now has complete evidence/status consolidation and should be audited before packaging or presentation.
+Reason: the project now has complete evidence/status consolidation, and the Gemini local-smoke milestone is paused / closed for now. A clean non-Gemini track choice should be made before starting new implementation work.
 
 ## 8. Safety Boundaries
 

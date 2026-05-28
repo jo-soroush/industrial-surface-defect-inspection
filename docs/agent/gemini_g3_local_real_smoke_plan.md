@@ -13,6 +13,7 @@ This document does not approve real smoke execution.
 A future real smoke requires explicit user approval.
 Real Gemini, Grok, and OpenAI runtime remain not active.
 Production readiness, HTTPS/domain readiness, and real LLM readiness are not claimed.
+The local manual Gemini smoke milestone is paused / closed for now at the harness level.
 
 This plan defines the narrowest local-only evidence path for a future manual smoke while keeping the current mock-first runtime untouched.
 
@@ -43,6 +44,7 @@ What remains blocked:
 - any CI or default-test smoke
 - any public or production-facing endpoint exposure
 - any smoke execution without explicit user approval
+- any immediate retry while external Gemini availability remains unresolved
 
 ## Harness Skeleton Status
 
@@ -61,7 +63,7 @@ What this does not mean:
 - real smoke execution is complete
 - Gemini is connected
 - Gemini is active
-- `GEMINI_API_KEY` has been used only temporarily in a local shell/session for an approved attempt
+- temporary local-shell `GEMINI_API_KEY` usage means Gemini is active by default
 
 ## Fourth Attempt Evidence Status
 
@@ -85,7 +87,7 @@ What this does not mean:
 - real smoke execution is complete
 - Gemini is connected
 - Gemini is active
-- `GEMINI_API_KEY` has been used only temporarily in a local shell/session for an approved attempt
+- temporary local-shell `GEMINI_API_KEY` usage means Gemini is active by default
 - the next smoke should be run immediately
 - the external Gemini availability situation is understood or enough time has passed
 - the smoke context is grounded; the remaining blocker is external Gemini availability

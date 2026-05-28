@@ -264,9 +264,10 @@ The repository is not ready for uncontrolled real provider activation.
 
 Real provider implementation may start only after explicit user approval for the next non-code Gemini planning step.
 
-Real API call remains blocked until the next approved slice, and further local smoke should wait until the rate-limit / quota situation is understood or enough time has passed and the smoke context is minimally grounded.
-The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is rate-limit / context review before any further local real-smoke planning.
+Real API call remains blocked until the next approved slice, and further local smoke should wait until the external Gemini availability situation is understood or enough time has passed.
+The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-Gemini track selection before any further local real-smoke planning.
 The approved-but-not-executed real-smoke attempt discovery is documented separately and does not change the blocked status of real smoke execution.
+The local manual Gemini smoke milestone is paused / closed for now at the harness level, and the next project step after this reconciliation should be non-Gemini track selection.
 
 ## Next Recommended Slice
 
@@ -288,4 +289,5 @@ No Gemini API call is implemented.
 No real LLM execution is active.
 Gemini runtime activation is not active.
 The system remains mock-first.
-The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.
+The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-Gemini track selection before any further local real-smoke planning.
+The local manual Gemini smoke milestone is paused / closed for now at the harness level.

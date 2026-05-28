@@ -60,6 +60,8 @@ def test_agent_explain_returns_grounded_mock_answer_for_image_inspection() -> No
     assert payload["fallback_used"] is True
     assert payload["fallback_reason"] is not None
     assert "mock" in payload["fallback_reason"].lower()
+    assert payload["provider_error_stage"] is None
+    assert payload["provider_error_reason"] is None
     assert payload["grounding_status"] == "grounded"
     assert payload["page_id"] == "image_inspection"
     assert payload["section_id"] == "final_decision"
@@ -190,6 +192,8 @@ def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_
                 provider_used="gemini",
                 fallback_used=False,
                 fallback_reason=None,
+                provider_error_stage=None,
+                provider_error_reason=None,
                 grounding_status="grounded",
                 safety_status="pass",
                 limitations=["Manual review still applies."],
@@ -248,6 +252,8 @@ def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_
     assert payload["provider_used"] == "gemini"
     assert payload["fallback_used"] is False
     assert payload["fallback_reason"] is None
+    assert payload["provider_error_stage"] is None
+    assert payload["provider_error_reason"] is None
     assert payload["grounding_status"] == "grounded"
     assert "gemini gated endpoint answer" in payload["answer"].lower()
     assert "manual review" in payload["answer"].lower()
@@ -289,6 +295,8 @@ def test_agent_explain_exposes_safe_fallback_reason_for_gated_fake_gemini_fallba
                 provider_used="mock",
                 fallback_used=True,
                 fallback_reason="Gemini real provider service unavailable; mock fallback remains the safe path.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="service_unavailable",
                 grounding_status="grounded",
                 safety_status="pass",
                 limitations=["Manual review still applies."],
@@ -331,6 +339,8 @@ def test_agent_explain_exposes_safe_fallback_reason_for_gated_fake_gemini_fallba
     assert payload["fallback_used"] is True
     assert payload["fallback_reason"] is not None
     assert "service unavailable" in payload["fallback_reason"].lower()
+    assert payload["provider_error_stage"] == "client_invocation"
+    assert payload["provider_error_reason"] == "service_unavailable"
     assert "present-but-test-only" not in payload["fallback_reason"].lower()
     assert "present-but-test-only" not in payload["answer"].lower()
 

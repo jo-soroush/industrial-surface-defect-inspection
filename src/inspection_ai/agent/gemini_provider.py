@@ -314,30 +314,40 @@ class GeminiProviderStub:
                 request=request,
                 fallback_reason="Gemini mocked client timed out; mock fallback remains the safe path.",
                 provider_error="Gemini mocked client timeout.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="timeout",
             )
         if client_result.error_kind == "provider_error":
             return _build_mock_fallback_evaluation(
                 request=request,
                 fallback_reason="Gemini mocked client errored; mock fallback remains the safe path.",
                 provider_error="Gemini mocked client raised a provider error.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="provider_error",
             )
         if client_result.error_kind == "rate_limit":
             return _build_mock_fallback_evaluation(
                 request=request,
                 fallback_reason="Gemini mocked client was rate limited; mock fallback remains the safe path.",
                 provider_error="Gemini mocked client was rate limited.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="rate_limit",
             )
         if client_result.error_kind == "empty":
             return _build_mock_fallback_evaluation(
                 request=request,
                 fallback_reason="Gemini mocked client returned no usable text; mock fallback remains the safe path.",
                 provider_error="Gemini mocked client returned an empty response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
         if client_result.error_kind == "malformed" or not isinstance(client_result.payload, (dict, type(None))):
             return _build_mock_fallback_evaluation(
                 request=request,
                 fallback_reason="Gemini mocked client returned a malformed payload; mock fallback remains the safe path.",
                 provider_error="Gemini mocked client returned a malformed response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
 
         text = (client_result.text or "").strip()
@@ -346,6 +356,8 @@ class GeminiProviderStub:
                 request=request,
                 fallback_reason="Gemini mocked client returned no usable text; mock fallback remains the safe path.",
                 provider_error="Gemini mocked client returned an empty response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
 
         safety_result = guard_post_generation_text(text, allowed_evidence_values=allowed_values)
@@ -356,6 +368,8 @@ class GeminiProviderStub:
                 provider_used="mock",
                 fallback_used=True,
                 fallback_reason="Gemini mocked client output was blocked by the safety guard; mock fallback remains the safe path.",
+                provider_error_stage="post_generation",
+                provider_error_reason="safety_blocked",
                 grounding_status=_request_grounding_status(request),
                 safety_status=safety_result.status,
                 limitations=_request_limitations(request, safety_result.limitations),
@@ -423,6 +437,8 @@ class GeminiProviderSkeleton:
                 status="timeout",
                 fallback_reason="Gemini injected client timed out; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini injected client timeout.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="timeout",
             )
         except GeminiProviderRateLimitError as exc:
             return _build_skeleton_fallback_generation_result(
@@ -430,6 +446,8 @@ class GeminiProviderSkeleton:
                 status="rate_limit",
                 fallback_reason="Gemini injected client was rate limited; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini injected client was rate limited.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="rate_limit",
             )
         except GeminiProviderEmptyResponseError as exc:
             return _build_skeleton_fallback_generation_result(
@@ -437,6 +455,8 @@ class GeminiProviderSkeleton:
                 status="empty",
                 fallback_reason="Gemini injected client returned no usable text; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini injected client returned an empty response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
         except GeminiProviderMalformedResponseError as exc:
             return _build_skeleton_fallback_generation_result(
@@ -444,6 +464,8 @@ class GeminiProviderSkeleton:
                 status="malformed",
                 fallback_reason="Gemini injected client returned a malformed payload; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini injected client returned a malformed response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
         except GeminiProviderError as exc:
             return _build_skeleton_fallback_generation_result(
@@ -451,6 +473,8 @@ class GeminiProviderSkeleton:
                 status="provider_error",
                 fallback_reason="Gemini injected client raised a provider error; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini injected client raised a provider error.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="provider_error",
             )
         except Exception as exc:  # pragma: no cover - defensive fallback
             return _build_skeleton_fallback_generation_result(
@@ -458,6 +482,8 @@ class GeminiProviderSkeleton:
                 status="provider_error",
                 fallback_reason="Gemini injected client raised an unexpected error; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini injected client raised an unexpected error.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="provider_error",
             )
 
         normalized_result = _coerce_gemini_client_result(raw_result)
@@ -467,6 +493,8 @@ class GeminiProviderSkeleton:
                 status="malformed",
                 fallback_reason="Gemini injected client returned a malformed payload; mock fallback remains the safe path.",
                 provider_error="Gemini injected client returned a malformed response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
 
         if normalized_result.error_kind == "timeout":
@@ -475,6 +503,8 @@ class GeminiProviderSkeleton:
                 status="timeout",
                 fallback_reason="Gemini injected client timed out; mock fallback remains the safe path.",
                 provider_error="Gemini injected client timeout.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="timeout",
             )
         if normalized_result.error_kind == "provider_error":
             return _build_skeleton_fallback_generation_result(
@@ -482,6 +512,8 @@ class GeminiProviderSkeleton:
                 status="provider_error",
                 fallback_reason="Gemini injected client raised a provider error; mock fallback remains the safe path.",
                 provider_error="Gemini injected client raised a provider error.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="provider_error",
             )
         if normalized_result.error_kind == "rate_limit":
             return _build_skeleton_fallback_generation_result(
@@ -489,6 +521,8 @@ class GeminiProviderSkeleton:
                 status="rate_limit",
                 fallback_reason="Gemini injected client was rate limited; mock fallback remains the safe path.",
                 provider_error="Gemini injected client was rate limited.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="rate_limit",
             )
         if normalized_result.error_kind == "empty":
             return _build_skeleton_fallback_generation_result(
@@ -496,6 +530,8 @@ class GeminiProviderSkeleton:
                 status="empty",
                 fallback_reason="Gemini injected client returned no usable text; mock fallback remains the safe path.",
                 provider_error="Gemini injected client returned an empty response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
         if normalized_result.error_kind == "malformed":
             return _build_skeleton_fallback_generation_result(
@@ -503,6 +539,8 @@ class GeminiProviderSkeleton:
                 status="malformed",
                 fallback_reason="Gemini injected client returned a malformed payload; mock fallback remains the safe path.",
                 provider_error="Gemini injected client returned a malformed response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
 
         if normalized_result.text is None or not normalized_result.text.strip():
@@ -511,6 +549,8 @@ class GeminiProviderSkeleton:
                 status="empty",
                 fallback_reason="Gemini injected client returned no usable text; mock fallback remains the safe path.",
                 provider_error="Gemini injected client returned an empty response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
 
         mocked_evaluation = GeminiProviderStub().evaluate_mocked_client_result(
@@ -621,6 +661,8 @@ class GeminiRealProvider:
                 status="blocked",
                 fallback_reason="Gemini real-provider prompt was blocked by the safety guard; mock fallback remains the safe path.",
                 provider_error="Gemini real-provider prompt was blocked by the safety guard.",
+                provider_error_stage="pre_generation",
+                provider_error_reason="safety_blocked",
                 safety_block_reason=_classify_safety_block_reason(pre_guard.reasons),
                 safe_to_display=False,
                 blocked=True,
@@ -635,6 +677,8 @@ class GeminiRealProvider:
                 generation_request,
                 readiness=readiness,
                 provider_error="Gemini real provider execution is not implemented in this slice.",
+                provider_error_stage="readiness",
+                provider_error_reason="readiness",
             )
 
         if not self.config.sdk_import_allowed:
@@ -646,6 +690,8 @@ class GeminiRealProvider:
                 generation_request,
                 readiness=readiness,
                 provider_error="Gemini real provider execution is disabled until the lazy SDK import gate is explicitly opened.",
+                provider_error_stage="readiness",
+                provider_error_reason="readiness",
             )
 
         if self.sdk_module_loader is None and self.client_factory is None:
@@ -657,6 +703,8 @@ class GeminiRealProvider:
                 generation_request,
                 readiness=readiness,
                 provider_error="Gemini real provider execution in this slice requires an injected SDK/client seam and does not attempt a real SDK import.",
+                provider_error_stage="readiness",
+                provider_error_reason="readiness",
             )
 
         sdk_load_result = _resolve_gemini_sdk_load_result(
@@ -679,6 +727,8 @@ class GeminiRealProvider:
                 fallback_reason=readiness.fallback_policy.fallback_reason
                 or "Gemini remains disabled by default; mock fallback remains the safe path.",
                 provider_error=readiness.reason,
+                provider_error_stage="readiness",
+                provider_error_reason="readiness",
             )
 
         if not sdk_load_result.sdk_available:
@@ -690,6 +740,8 @@ class GeminiRealProvider:
                 fallback_reason=readiness.fallback_policy.fallback_reason
                 or "Gemini remains unavailable; mock fallback remains the safe path.",
                 provider_error=sdk_load_result.reason,
+                provider_error_stage="readiness",
+                provider_error_reason="sdk_missing",
             )
 
         api_key = self._resolve_api_key()
@@ -701,6 +753,8 @@ class GeminiRealProvider:
                 status="unavailable",
                 fallback_reason="Gemini API key is missing; mock fallback remains the safe path.",
                 provider_error="Gemini API key is missing or not configured.",
+                provider_error_stage="readiness",
+                provider_error_reason="sdk_missing",
             )
 
         try:
@@ -713,6 +767,8 @@ class GeminiRealProvider:
                 status="load_error",
                 fallback_reason="Gemini SDK import failed; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini SDK import failed.",
+                provider_error_stage="sdk_import",
+                provider_error_reason="sdk_missing",
             )
 
         try:
@@ -726,6 +782,8 @@ class GeminiRealProvider:
                 status=exception_classification.status,
                 fallback_reason=exception_classification.fallback_reason,
                 provider_error=exception_classification.provider_error,
+                provider_error_stage=exception_classification.provider_error_stage,
+                provider_error_reason=exception_classification.provider_error_reason,
             )
 
         prompt = _build_real_gemini_prompt(
@@ -743,6 +801,8 @@ class GeminiRealProvider:
                 status="timeout",
                 fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini real provider timeout.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="timeout",
             )
         except GeminiProviderRateLimitError as exc:
             return _build_real_generation_fallback_result(
@@ -752,6 +812,8 @@ class GeminiRealProvider:
                 status="rate_limit",
                 fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini real provider was rate limited.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="rate_limit",
             )
         except GeminiProviderEmptyResponseError as exc:
             return _build_real_generation_fallback_result(
@@ -761,6 +823,8 @@ class GeminiRealProvider:
                 status="empty",
                 fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini real provider returned an empty response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
         except GeminiProviderMalformedResponseError as exc:
             return _build_real_generation_fallback_result(
@@ -770,6 +834,8 @@ class GeminiRealProvider:
                 status="malformed",
                 fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
                 provider_error=str(exc) or "Gemini real provider returned a malformed response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
         except GeminiProviderError as exc:
             exception_classification = _classify_real_provider_exception(exc)
@@ -780,6 +846,8 @@ class GeminiRealProvider:
                 status=exception_classification.status,
                 fallback_reason=exception_classification.fallback_reason,
                 provider_error=exception_classification.provider_error,
+                provider_error_stage=exception_classification.provider_error_stage,
+                provider_error_reason=exception_classification.provider_error_reason,
             )
         except Exception as exc:  # pragma: no cover - defensive fallback
             exception_classification = _classify_real_provider_exception(exc)
@@ -790,6 +858,8 @@ class GeminiRealProvider:
                 status=exception_classification.status,
                 fallback_reason=exception_classification.fallback_reason,
                 provider_error=exception_classification.provider_error,
+                provider_error_stage=exception_classification.provider_error_stage,
+                provider_error_reason=exception_classification.provider_error_reason,
             )
 
         normalized_result = _coerce_gemini_client_result(raw_result)
@@ -801,6 +871,8 @@ class GeminiRealProvider:
                 status="malformed",
                 fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
                 provider_error="Gemini real provider returned a malformed response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
 
         if normalized_result.error_kind == "timeout":
@@ -811,6 +883,8 @@ class GeminiRealProvider:
                 status="timeout",
                 fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
                 provider_error="Gemini real provider timeout.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="timeout",
             )
         if normalized_result.error_kind == "provider_error":
             return _build_real_generation_fallback_result(
@@ -820,6 +894,8 @@ class GeminiRealProvider:
                 status="provider_error",
                 fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
                 provider_error="Gemini real provider raised a provider error.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="provider_error",
             )
         if normalized_result.error_kind == "rate_limit":
             return _build_real_generation_fallback_result(
@@ -829,6 +905,8 @@ class GeminiRealProvider:
                 status="rate_limit",
                 fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
                 provider_error="Gemini real provider was rate limited.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="rate_limit",
             )
         if normalized_result.error_kind == "empty":
             return _build_real_generation_fallback_result(
@@ -838,6 +916,8 @@ class GeminiRealProvider:
                 status="empty",
                 fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
                 provider_error="Gemini real provider returned an empty response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
         if normalized_result.error_kind == "malformed":
             return _build_real_generation_fallback_result(
@@ -847,6 +927,8 @@ class GeminiRealProvider:
                 status="malformed",
                 fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
                 provider_error="Gemini real provider returned a malformed response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
 
         if normalized_result.text is None or not normalized_result.text.strip():
@@ -857,6 +939,8 @@ class GeminiRealProvider:
                 status="empty",
                 fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
                 provider_error="Gemini real provider returned an empty response.",
+                provider_error_stage="client_invocation",
+                provider_error_reason="malformed_response",
             )
 
         post_guard = guard_post_generation_text(
@@ -872,6 +956,8 @@ class GeminiRealProvider:
                 status=post_guard.status,
                 fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
                 provider_error="Gemini real provider output was blocked by the safety guard.",
+                provider_error_stage="post_generation",
+                provider_error_reason="safety_blocked",
                 safety_block_reason=_classify_safety_block_reason(post_guard.reasons),
                 safe_to_display=False,
                 blocked=True,
@@ -890,6 +976,8 @@ class GeminiRealProvider:
             ),
             evidence_used=_request_evidence_items(generation_request.provider_request),
             provider_error=None,
+            provider_error_stage=None,
+            provider_error_reason=None,
         )
         return GeminiRealGenerationResult(
             provider_response=response,
@@ -1196,6 +1284,8 @@ def _build_mock_fallback_evaluation(
     request: AgentProviderRequest,
     fallback_reason: str,
     provider_error: str,
+    provider_error_stage: str | None = None,
+    provider_error_reason: str | None = None,
 ) -> GeminiMockedClientEvaluation:
     response = build_provider_response(
         answer=(
@@ -1210,6 +1300,8 @@ def _build_mock_fallback_evaluation(
         limitations=_request_limitations(request, [fallback_reason]),
         evidence_used=_request_evidence_items(request),
         provider_error=provider_error,
+        provider_error_stage=provider_error_stage,
+        provider_error_reason=provider_error_reason,
     )
     return GeminiMockedClientEvaluation(
         provider_response=response,
@@ -1301,6 +1393,8 @@ def _build_skeleton_not_implemented_generation_result(
         ),
         evidence_used=_request_evidence_items(request.provider_request),
         provider_error="Gemini provider skeleton is not implemented in this slice.",
+        provider_error_stage="readiness",
+        provider_error_reason="readiness",
     )
     return GeminiGenerationResult(
         provider_response=response,
@@ -1319,11 +1413,15 @@ def _build_skeleton_fallback_generation_result(
     status: str,
     fallback_reason: str,
     provider_error: str,
+    provider_error_stage: str | None = None,
+    provider_error_reason: str | None = None,
 ) -> GeminiGenerationResult:
     evaluation = _build_mock_fallback_evaluation(
         request=request.provider_request,
         fallback_reason=fallback_reason,
         provider_error=provider_error,
+        provider_error_stage=provider_error_stage,
+        provider_error_reason=provider_error_reason,
     )
     return GeminiGenerationResult(
         provider_response=evaluation.provider_response,
@@ -1419,6 +1517,8 @@ def _build_real_generation_not_implemented_result(
     *,
     readiness: GeminiG3Readiness,
     provider_error: str,
+    provider_error_stage: str = "readiness",
+    provider_error_reason: str = "readiness",
 ) -> GeminiRealGenerationResult:
     response = build_provider_response(
         answer=(
@@ -1438,6 +1538,8 @@ def _build_real_generation_not_implemented_result(
         ),
         evidence_used=_request_evidence_items(request.provider_request),
         provider_error=provider_error,
+        provider_error_stage=provider_error_stage,
+        provider_error_reason=provider_error_reason,
     )
     return GeminiRealGenerationResult(
         provider_response=response,
@@ -1460,6 +1562,8 @@ def _build_real_generation_fallback_result(
     status: str,
     fallback_reason: str,
     provider_error: str,
+    provider_error_stage: str = "client_invocation",
+    provider_error_reason: str = "provider_error",
     safety_block_reason: str | None = None,
     safe_to_display: bool = True,
     blocked: bool = False,
@@ -1477,6 +1581,8 @@ def _build_real_generation_fallback_result(
         limitations=_request_limitations(request.provider_request, [fallback_reason]),
         evidence_used=_request_evidence_items(request.provider_request),
         provider_error=provider_error,
+        provider_error_stage=provider_error_stage,
+        provider_error_reason=provider_error_reason,
     )
     return GeminiRealGenerationResult(
         provider_response=response,
@@ -1497,6 +1603,8 @@ class _RealProviderExceptionClassification:
     status: str
     fallback_reason: str
     provider_error: str
+    provider_error_stage: str
+    provider_error_reason: str
 
 
 def _classify_safety_block_reason(reasons: Iterable[str] | None) -> str:
@@ -1535,6 +1643,8 @@ def _classify_real_provider_exception(exc: Exception) -> _RealProviderExceptionC
             status="provider_error",
             fallback_reason="Gemini real provider service unavailable; mock fallback remains the safe path.",
             provider_error="Gemini real provider service unavailable.",
+            provider_error_stage="client_invocation",
+            provider_error_reason="service_unavailable",
         )
     if any(
         token in normalized
@@ -1544,15 +1654,21 @@ def _classify_real_provider_exception(exc: Exception) -> _RealProviderExceptionC
             status="rate_limit",
             fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
             provider_error="Gemini real provider was rate limited.",
+            provider_error_stage="client_invocation",
+            provider_error_reason="rate_limit",
         )
     if any(token in normalized for token in ("deadlineexceeded", "timeout", "timed out")):
         return _RealProviderExceptionClassification(
             status="timeout",
             fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
             provider_error="Gemini real provider timeout.",
+            provider_error_stage="client_invocation",
+            provider_error_reason="timeout",
         )
     return _RealProviderExceptionClassification(
         status="provider_error",
         fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
         provider_error="Gemini real provider raised a provider error.",
+        provider_error_stage="client_invocation",
+        provider_error_reason="provider_error",
     )

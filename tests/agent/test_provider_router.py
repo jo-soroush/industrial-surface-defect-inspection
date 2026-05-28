@@ -468,6 +468,8 @@ def test_router_explain_routes_to_gemini_with_explicit_runtime_gate_and_fake_pro
                 provider_used="gemini",
                 fallback_used=False,
                 fallback_reason=None,
+                provider_error_stage=None,
+                provider_error_reason=None,
                 grounding_status="grounded",
                 safety_status="pass",
                 limitations=["Manual review still applies."],
@@ -530,6 +532,8 @@ def test_router_explain_routes_to_gemini_with_explicit_runtime_gate_and_fake_pro
     assert response.provider_used == "gemini"
     assert response.fallback_used is False
     assert response.fallback_reason is None
+    assert response.provider_error_stage is None
+    assert response.provider_error_reason is None
     assert response.grounding_status == "grounded"
     assert "gemini gated answer" in response.answer.lower()
     assert "manual review" in response.answer.lower()
@@ -589,6 +593,8 @@ def test_router_explain_stays_mock_when_runtime_enabled_but_sdk_is_missing(monke
 
     assert response.provider_used == "mock"
     assert response.fallback_used is True
+    assert response.provider_error_stage == "readiness"
+    assert response.provider_error_reason == "sdk_missing"
     assert "manual review" in response.answer.lower()
 
 
@@ -682,6 +688,8 @@ def test_router_explain_falls_back_safely_when_real_provider_boundary_returns_mo
                 provider_used="mock",
                 fallback_used=True,
                 fallback_reason=fallback_reason,
+                provider_error_stage="client_invocation",
+                provider_error_reason=boundary_status,
                 grounding_status="grounded",
                 safety_status="pass",
                 limitations=["Manual review still applies."],
@@ -734,6 +742,8 @@ def test_router_explain_falls_back_safely_when_real_provider_boundary_returns_mo
     assert response.provider_used == "mock"
     assert response.fallback_used is True
     assert response.fallback_reason == fallback_reason
+    assert response.provider_error_stage == "client_invocation"
+    assert response.provider_error_reason == boundary_status
     assert "mock fallback" in response.answer.lower()
     assert "manual review" in response.answer.lower()
 
@@ -787,6 +797,8 @@ def test_router_explain_keeps_safety_guard_before_gemini_route(monkeypatch) -> N
     assert response.fallback_used is True
     assert response.fallback_reason is not None
     assert "mock fallback" in response.fallback_reason.lower()
+    assert response.provider_error_stage == "pre_generation"
+    assert response.provider_error_reason == "safety_blocked"
     assert "deployment" in response.answer.lower()
     assert "manual review" in response.answer.lower()
 
@@ -847,6 +859,8 @@ def test_component_mock_answers_do_not_claim_readiness_or_provider_integration()
         normalized_answer = response.answer.lower()
         assert response.provider_used == "mock"
         assert response.fallback_used is True
+        assert response.provider_error_stage is None
+        assert response.provider_error_reason is None
         assert "production-ready" not in normalized_answer
         assert "deployment-safe" not in normalized_answer
         assert "gemini" not in normalized_answer
@@ -875,6 +889,8 @@ def test_non_component_image_inspection_mock_answer_still_works() -> None:
 
     assert response.component_id is None
     assert response.provider_used == "mock"
+    assert response.provider_error_stage is None
+    assert response.provider_error_reason is None
     assert response.grounding_status == "grounded"
     assert "inspection result is defective" in response.answer.lower()
     assert "manual review" in response.answer.lower()

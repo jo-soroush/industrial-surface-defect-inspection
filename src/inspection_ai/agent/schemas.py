@@ -59,6 +59,8 @@ class AgentExplainResponse(BaseModel):
     provider_used: AgentProviderName
     fallback_used: bool
     fallback_reason: str | None = None
+    provider_error_stage: str | None = None
+    provider_error_reason: str | None = None
     grounding_status: GroundingStatus
     page_id: AgentPageId
     section_id: str

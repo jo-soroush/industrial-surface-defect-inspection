@@ -198,6 +198,9 @@ class AgentProviderRouter:
         gemini_readiness = self.gemini_readiness()
         decision = self.gemini_route_decision(readiness=gemini_readiness, safety_ready=not pre_guard.blocked)
         fallback_reason: str | None = decision.fallback_reason
+        provider_error_stage: str | None = None
+        provider_error_reason: str | None = None
+        safety_status = pre_guard.status
         if pre_guard.blocked:
             provider_request = build_provider_request(
                 provider_name="mock",
@@ -212,6 +215,8 @@ class AgentProviderRouter:
             )
             grounding_status = "unsupported"
             fallback_reason = "Request blocked by the Agent safety guard; mock fallback remains the safe path."
+            provider_error_stage = "pre_generation"
+            provider_error_reason = "safety_blocked"
         elif _question_requests_forbidden_claim(grounding_context.question, self._global_context):
             provider_request = build_provider_request(
                 provider_name="mock",
@@ -227,6 +232,8 @@ class AgentProviderRouter:
             )
             grounding_status = "unsupported"
             fallback_reason = "Request blocked by the Agent safety guard; mock fallback remains the safe path."
+            provider_error_stage = "pre_generation"
+            provider_error_reason = "safety_blocked"
         else:
             gemini_response = self._maybe_route_to_gemini(grounding_context, pre_guard)
             if gemini_response is not None:
@@ -247,6 +254,15 @@ class AgentProviderRouter:
                     "Manual review still applies."
                 )
                 grounding_status = "unsupported"
+                safety_status = post_guard.status
+                provider_error_stage = "post_generation"
+                provider_error_reason = "safety_blocked"
+            elif decision.requested_provider == "gemini" and decision.selected_provider == "mock":
+                provider_error_stage, provider_error_reason = _gemini_route_fallback_diagnostics(
+                    decision,
+                    safety_blocked=False,
+                    fallback_enabled=self.settings.enable_fallback,
+                )
 
         limitations = list(dict.fromkeys(grounding_context.limitations + [
             "Mock backend Agent is active in the current MVP path.",
@@ -260,8 +276,10 @@ class AgentProviderRouter:
             provider_used="mock",
             fallback_used=True,
             fallback_reason=fallback_reason or "Mock provider is the MVP fallback.",
+            provider_error_stage=provider_error_stage,
+            provider_error_reason=provider_error_reason,
             grounding_status=grounding_status,
-            safety_status=pre_guard.status,
+            safety_status=safety_status,
             limitations=limitations,
             evidence_used=provider_request.grounding_context.get("evidence_used", []),
         )
@@ -311,7 +329,44 @@ class AgentProviderRouter:
                 allowed_evidence_values=_allowed_evidence_values_from_provider_request(provider_request),
             )
         except Exception:
-            return None
+            answer, grounding_status = _build_mock_answer(grounding_context)
+            safety_status = pre_guard.status
+            post_guard = guard_post_generation_text(answer, grounding_context=grounding_context)
+            if post_guard.blocked:
+                answer = post_guard.sanitized_text or (
+                    "I can’t provide that answer because the generated text is unsafe under the Agent safety guard. "
+                    "Manual review still applies."
+                )
+                grounding_status = "unsupported"
+                safety_status = post_guard.status
+                provider_error_stage = "post_generation"
+                provider_error_reason = "safety_blocked"
+            else:
+                provider_error_stage = "client_invocation"
+                provider_error_reason = "provider_error"
+            provider_response = build_provider_response(
+                answer=answer,
+                provider_used="mock",
+                fallback_used=True,
+                fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
+                provider_error_stage=provider_error_stage,
+                provider_error_reason=provider_error_reason,
+                grounding_status=grounding_status,
+                safety_status=safety_status,
+                limitations=list(
+                    dict.fromkeys(
+                        grounding_context.limitations
+                        + [
+                            "Mock backend Agent is active in the current MVP path.",
+                            "External LLM provider integration is not active in this MVP slice.",
+                            "No real LLM provider call is made in the MVP mock path.",
+                            "Manual review still applies.",
+                        ]
+                    )
+                ),
+                evidence_used=provider_request.grounding_context.get("evidence_used", []),
+            )
+            return _build_agent_explain_response(grounding_context, provider_response)
 
         return _build_agent_explain_response(grounding_context, gemini_result.provider_response)
 
@@ -333,6 +388,8 @@ def _build_agent_explain_response(
         provider_used=provider_response.provider_used,
         fallback_used=provider_response.fallback_used,
         fallback_reason=provider_response.fallback_reason,
+        provider_error_stage=provider_response.provider_error_stage,
+        provider_error_reason=provider_response.provider_error_reason,
         grounding_status=provider_response.grounding_status,
         page_id=grounding_context.page_id,  # type: ignore[arg-type]
         section_id=grounding_context.section_id,
@@ -349,6 +406,29 @@ def _allowed_evidence_values_from_provider_request(request: AgentProviderRequest
         if isinstance(item, dict):
             allowed_values.append(item.get("value"))
     return allowed_values
+
+
+def _gemini_route_fallback_diagnostics(
+    decision: GeminiRouteDecision,
+    *,
+    safety_blocked: bool,
+    fallback_enabled: bool,
+) -> tuple[str | None, str | None]:
+    if decision.selected_provider == "gemini" or decision.requested_provider != "gemini":
+        return None, None
+    if safety_blocked or not decision.safety_ready:
+        return "pre_generation", "safety_blocked"
+    if not fallback_enabled:
+        return "readiness", "readiness"
+    if not decision.llm_enabled or not decision.activation_allowed:
+        if not decision.api_key_present or not decision.sdk_available:
+            return "readiness", "sdk_missing"
+        if not decision.real_provider_implemented:
+            return "readiness", "readiness"
+        if not decision.provider_allowed:
+            return "readiness", "provider_error"
+        return "readiness", "unknown"
+    return "readiness", "unknown"
 
 
 def _load_runtime_gemini_sdk_status() -> GeminiSdkLoadResult:

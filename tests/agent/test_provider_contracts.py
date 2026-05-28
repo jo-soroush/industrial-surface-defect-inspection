@@ -38,6 +38,8 @@ def test_provider_contract_objects_can_be_constructed() -> None:
         provider_used="mock",
         fallback_used=True,
         fallback_reason="Mock fallback is the MVP fallback.",
+        provider_error_stage="readiness",
+        provider_error_reason="provider_error",
         grounding_status="grounded",
         safety_status="pass",
         limitations=["Manual review still applies."],
@@ -53,6 +55,8 @@ def test_provider_contract_objects_can_be_constructed() -> None:
     assert isinstance(response, AgentProviderResponse)
     assert response.raw_provider_response_allowed is False
     assert response.fallback_reason == "Mock fallback is the MVP fallback."
+    assert response.provider_error_stage == "readiness"
+    assert response.provider_error_reason == "provider_error"
     assert response.provider_used == "mock"
 
 

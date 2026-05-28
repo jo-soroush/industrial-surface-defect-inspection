@@ -49,6 +49,8 @@ def test_gemini_mocked_client_success_translates_to_gemini_response() -> None:
 
     assert evaluation.provider_response.provider_used == "gemini"
     assert evaluation.provider_response.fallback_used is False
+    assert evaluation.provider_response.provider_error_stage is None
+    assert evaluation.provider_response.provider_error_reason is None
     assert evaluation.provider_response.raw_provider_response_allowed is False
     assert evaluation.provider_response.safety_status in {"pass", "limited"}
     assert evaluation.safe_to_send is True
@@ -65,6 +67,8 @@ def test_gemini_mocked_client_timeout_falls_back_to_mock() -> None:
 
     assert evaluation.provider_response.provider_used == "mock"
     assert evaluation.provider_response.fallback_used is True
+    assert evaluation.provider_response.provider_error_stage == "client_invocation"
+    assert evaluation.provider_response.provider_error_reason == "timeout"
     assert evaluation.provider_response.raw_provider_response_allowed is False
     assert evaluation.provider_error is not None
     assert "timeout" in evaluation.provider_error.lower()
@@ -81,6 +85,8 @@ def test_gemini_mocked_client_provider_error_falls_back_to_mock() -> None:
 
     assert evaluation.provider_response.provider_used == "mock"
     assert evaluation.provider_response.fallback_used is True
+    assert evaluation.provider_response.provider_error_stage == "client_invocation"
+    assert evaluation.provider_response.provider_error_reason == "provider_error"
     assert "provider error" in (evaluation.provider_error or "").lower()
     assert evaluation.safe_to_display is True
 
@@ -93,6 +99,8 @@ def test_gemini_mocked_client_rate_limit_falls_back_to_mock() -> None:
 
     assert evaluation.provider_response.provider_used == "mock"
     assert evaluation.provider_response.fallback_used is True
+    assert evaluation.provider_response.provider_error_stage == "client_invocation"
+    assert evaluation.provider_response.provider_error_reason == "rate_limit"
     assert "rate limited" in (evaluation.provider_error or "").lower()
     assert evaluation.safe_to_display is True
 
@@ -105,6 +113,8 @@ def test_gemini_mocked_client_empty_response_falls_back_to_mock() -> None:
 
     assert evaluation.provider_response.provider_used == "mock"
     assert evaluation.provider_response.fallback_used is True
+    assert evaluation.provider_response.provider_error_stage == "client_invocation"
+    assert evaluation.provider_response.provider_error_reason == "malformed_response"
     assert "empty response" in (evaluation.provider_error or "").lower()
     assert evaluation.safe_to_display is True
 
@@ -117,6 +127,8 @@ def test_gemini_mocked_client_malformed_response_falls_back_to_mock() -> None:
 
     assert evaluation.provider_response.provider_used == "mock"
     assert evaluation.provider_response.fallback_used is True
+    assert evaluation.provider_response.provider_error_stage == "client_invocation"
+    assert evaluation.provider_response.provider_error_reason == "malformed_response"
     assert "malformed" in (evaluation.provider_error or "").lower()
     assert evaluation.safe_to_display is True
 
@@ -263,6 +275,8 @@ def test_gemini_provider_skeleton_blocks_fake_unsafe_output_by_safety_guard() ->
     assert result.provider_response.provider_used == "mock"
     assert result.provider_response.fallback_used is True
     assert result.provider_response.safety_status == "blocked"
+    assert result.provider_response.provider_error_stage == "post_generation"
+    assert result.provider_response.provider_error_reason == "safety_blocked"
     assert result.safe_to_display is False
     assert result.provider_error is not None
     assert "safety guard" in result.provider_error.lower()
@@ -277,6 +291,8 @@ def test_gemini_provider_skeleton_blocks_fake_invented_metric_output() -> None:
     assert result.provider_response.provider_used == "mock"
     assert result.provider_response.fallback_used is True
     assert result.provider_response.safety_status == "blocked"
+    assert result.provider_response.provider_error_stage == "post_generation"
+    assert result.provider_response.provider_error_reason == "safety_blocked"
     assert result.safe_to_display is False
     assert result.provider_error is not None
 
@@ -290,6 +306,8 @@ def test_gemini_provider_skeleton_blocks_fake_path_and_secret_like_output() -> N
     assert result.provider_response.provider_used == "mock"
     assert result.provider_response.fallback_used is True
     assert result.provider_response.safety_status == "blocked"
+    assert result.provider_response.provider_error_stage == "post_generation"
+    assert result.provider_response.provider_error_reason == "safety_blocked"
     assert result.safe_to_display is False
     assert "/Users/jo.soroush/secret.key" not in result.provider_response.answer
     assert result.provider_error is not None
@@ -644,6 +662,8 @@ def test_gemini_real_provider_with_fake_safe_sdk_client_returns_safe_provider_re
     assert result.status in {"pass", "limited"}
     assert result.provider_response.provider_used == "gemini"
     assert result.provider_response.fallback_used is False
+    assert result.provider_response.provider_error_stage is None
+    assert result.provider_response.provider_error_reason is None
     assert result.provider_response.raw_provider_response_allowed is False
     assert result.safe_to_display is True
     assert "manual review" in result.provider_response.answer.lower()
@@ -751,6 +771,8 @@ def test_gemini_real_provider_surfaces_sanitized_post_generation_block_reason(
     assert result.provider_response.provider_used == "mock"
     assert result.provider_response.fallback_used is True
     assert result.provider_response.safety_status == "blocked"
+    assert result.provider_response.provider_error_stage == "post_generation"
+    assert result.provider_response.provider_error_reason == "safety_blocked"
     assert result.safe_to_display is False
     assert unexpected_phrase not in result.provider_response.answer
     assert "manual review" in result.provider_response.answer.lower()
@@ -784,6 +806,8 @@ def test_gemini_mocked_client_surfaces_sanitized_post_generation_block_reason(
     assert evaluation.provider_response.provider_used == "mock"
     assert evaluation.provider_response.fallback_used is True
     assert evaluation.provider_response.safety_status == "blocked"
+    assert evaluation.provider_response.provider_error_stage == "post_generation"
+    assert evaluation.provider_response.provider_error_reason == "safety_blocked"
     assert evaluation.safety_block_reason == expected_reason
     assert unexpected_phrase not in evaluation.provider_response.answer
     assert "manual review" in evaluation.provider_response.answer.lower()
@@ -841,6 +865,9 @@ def test_gemini_real_provider_handles_fake_sdk_errors_safely(
     assert result.provider_response.provider_used == "mock"
     assert result.provider_response.fallback_used is True
     assert result.provider_error is not None
+    assert result.provider_response.provider_error_stage == "client_invocation"
+    expected_reason = "provider_error" if expected_status == "provider_error" else expected_status
+    assert result.provider_response.provider_error_reason == expected_reason
     assert result.safe_to_display is True
 
 
@@ -894,6 +921,14 @@ def test_gemini_real_provider_classifies_provider_sdk_exceptions_safely(
     assert result.provider_response.provider_used == "mock"
     assert result.provider_response.fallback_used is True
     assert result.provider_error is not None
+    assert result.provider_response.provider_error_stage == "client_invocation"
+    expected_reason = {
+        "service_unavailable": "service_unavailable",
+        "too_many_requests": "rate_limit",
+        "deadline_exceeded": "timeout",
+        "unknown_exception": "provider_error",
+    }[mode]
+    assert result.provider_response.provider_error_reason == expected_reason
     assert expected_phrase in result.provider_error.lower()
     assert "503" not in result.provider_error
     assert "429" not in result.provider_error

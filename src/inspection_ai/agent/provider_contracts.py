@@ -88,6 +88,8 @@ class AgentProviderResponse:
     provider_used: ProviderName
     fallback_used: bool
     fallback_reason: str | None = None
+    provider_error_stage: str | None = None
+    provider_error_reason: str | None = None
     grounding_status: str = "insufficient_evidence"
     safety_status: str = "pass"
     limitations: tuple[str, ...] = field(default_factory=tuple)
@@ -135,6 +137,8 @@ def build_provider_response(
     provider_used: ProviderName,
     fallback_used: bool,
     fallback_reason: str | None,
+    provider_error_stage: str | None = None,
+    provider_error_reason: str | None = None,
     grounding_status: str,
     safety_status: str,
     limitations: list[str],
@@ -156,6 +160,8 @@ def build_provider_response(
         provider_used=provider_used,
         fallback_used=fallback_used,
         fallback_reason=fallback_reason,
+        provider_error_stage=provider_error_stage,
+        provider_error_reason=provider_error_reason,
         grounding_status=grounding_status,
         safety_status=safety_status,
         limitations=tuple(dict.fromkeys(limitations)),

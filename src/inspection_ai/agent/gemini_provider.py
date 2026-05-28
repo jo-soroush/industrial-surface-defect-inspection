@@ -549,7 +549,7 @@ def _default_gemini_api_key_resolver() -> str | None:
 class GeminiRealProviderConfig:
     """Disabled-by-default configuration for the future real Gemini execution path."""
 
-    model_name: str = "gemini-2.0-flash"
+    model_name: str = "gemini-2.5-flash"
     client_name: str = "google-genai"
     real_provider_implemented: bool = False
     sdk_import_allowed: bool = False

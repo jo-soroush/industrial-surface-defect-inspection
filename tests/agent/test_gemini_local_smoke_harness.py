@@ -850,7 +850,7 @@ def test_default_smoke_model_name_is_smoke_only_and_can_be_overridden(monkeypatc
             "--execute",
             "--i-understand-this-calls-gemini",
             "--model-name",
-            "gemini-2.0-flash",
+            "gemini-3-flash-preview",
             "--question",
             "Explain the current image inspection result in a safe way.",
             "--page-id",
@@ -864,7 +864,7 @@ def test_default_smoke_model_name_is_smoke_only_and_can_be_overridden(monkeypatc
 
     assert default_exit_code == 0
     assert override_exit_code == 0
-    assert captured_model_names == ["gemini-2.5-flash", "gemini-2.0-flash"]
+    assert captured_model_names == ["gemini-2.5-flash", "gemini-3-flash-preview"]
 
 
 def test_invalid_smoke_model_name_is_blocked_safely(capsys) -> None:

@@ -173,6 +173,7 @@ def build_failure_lines(
         f"fallback_used={str(result.provider_response.fallback_used).lower()}",
         f"grounding_status={result.provider_response.grounding_status}",
         f"safety_status={result.provider_response.safety_status}",
+        *_safe_safety_diagnostic_lines(result),
         "normal_agent_route=mock_first",
         "provider_routing_activation=disabled",
         _request_summary_line(request),
@@ -500,6 +501,53 @@ def _safe_error_category(result: GeminiRealGenerationResult) -> str:
     if response.fallback_used and response.provider_used == "mock":
         return "unavailable"
     return "unknown"
+
+
+def _safe_safety_diagnostic_lines(result: GeminiRealGenerationResult) -> tuple[str, ...]:
+    if _safe_error_category(result) != "safety_blocked" and (result.status or "").strip().lower() != "blocked":
+        return ()
+    return (
+        f"safety_stage={_safe_safety_stage(result)}",
+        f"safety_block_reason={_safe_safety_block_reason(result)}",
+    )
+
+
+def _safe_safety_stage(result: GeminiRealGenerationResult) -> str:
+    text = _combined_safety_text(result)
+    if "prompt was blocked" in text:
+        return "pre_generation"
+    if "output was blocked" in text:
+        return "post_generation"
+    return "unknown"
+
+
+def _safe_safety_block_reason(result: GeminiRealGenerationResult) -> str:
+    text = _combined_safety_text(result)
+    if "prompt was blocked" in text:
+        return "evidence_boundary_violation"
+    if "output was blocked" in text:
+        return "safety_guard_blocked"
+    if "metric" in text or "threshold" in text or "probability" in text:
+        return "invented_metric_like_output"
+    if "readiness" in text or "production" in text or "deployment" in text:
+        return "unsupported_readiness_claim"
+    if "secret" in text or "path" in text:
+        return "secret_or_path_leak"
+    return "unknown"
+
+
+def _combined_safety_text(result: GeminiRealGenerationResult) -> str:
+    return " ".join(
+        str(value).lower()
+        for value in (
+            result.provider_error,
+            result.fallback_reason,
+            result.provider_response.provider_error,
+            result.provider_response.fallback_reason,
+            result.provider_response.answer,
+        )
+        if value
+    )
 
 
 def _is_successful_smoke_result(result: GeminiRealGenerationResult) -> bool:

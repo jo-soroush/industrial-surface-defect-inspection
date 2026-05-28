@@ -69,6 +69,7 @@ def _build_failure_result(
     grounding_status: str = "grounded",
     safety_status: str = "blocked",
     fallback_reason: str = "Gemini real provider raised a provider error; mock fallback remains the safe path.",
+    provider_error: str = "Gemini real provider raised a provider error.",
 ) -> GeminiRealGenerationResult:
     response = build_provider_response(
         answer="This should never be printed verbatim.",
@@ -79,14 +80,14 @@ def _build_failure_result(
         safety_status=safety_status,
         limitations=["manual review still applies"],
         evidence_used=[{"source": "test.fake", "value": "safe"}],
-        provider_error="Gemini real provider raised a provider error.",
+        provider_error=provider_error,
     )
     return GeminiRealGenerationResult(
         provider_response=response,
         status=status,
         safe_to_send=False,
         safe_to_display=False,
-        provider_error="Gemini real provider raised a provider error.",
+        provider_error=provider_error,
         fallback_reason=response.fallback_reason,
         client_name="fake-sdk",
     )
@@ -431,6 +432,50 @@ def test_confirmation_flag_fake_failure_output_is_sanitized(monkeypatch, capsys)
     assert "response_summary=manual_review_visible=true;sanitized=true;raw_response_hidden=true" in captured.out
     assert "cleanup_reminder=unset_temporary_key_and_restore_mock_defaults;export AGENT_ENABLE_LLM=false;export AGENT_DEFAULT_PROVIDER=mock" in captured.out
     assert "sdk_missing" not in captured.out
+    assert "safety_stage=" not in captured.out
+    assert "safety_block_reason=" not in captured.out
+
+
+def test_confirmation_flag_fake_safety_block_output_includes_stage_and_reason(monkeypatch, capsys) -> None:
+    module = load_harness_module()
+    monkeypatch.setattr(module, "_resolve_gemini_api_key", lambda: "present-but-disabled")
+    monkeypatch.setattr(
+        module,
+        "generate_with_real_gemini_provider",
+        lambda *a, **k: _build_failure_result(
+            status="blocked",
+            safety_status="blocked",
+            fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
+            provider_error="Gemini real provider output was blocked by the safety guard.",
+        ),
+    )
+
+    exit_code = module.main(
+        [
+            "--execute",
+            "--i-understand-this-calls-gemini",
+            "--question",
+            "Explain the current image inspection result in a safe way.",
+            "--page-id",
+            "image_inspection",
+            "--section-id",
+            "final_decision",
+            "--component-id",
+            "image_inspection_ai_explanation_panel",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "gemini_local_smoke_status=FAILED" in captured.out
+    assert "result_status=blocked" in captured.out
+    assert "error_category=safety_blocked" in captured.out
+    assert "safety_status=blocked" in captured.out
+    assert "safety_stage=post_generation" in captured.out
+    assert "safety_block_reason=safety_guard_blocked" in captured.out
+    assert "Gemini real provider output was blocked by the safety guard." not in captured.out
+    assert "This should never be printed verbatim." not in captured.out
+    assert "GEMINI_API_KEY" not in captured.out
 
 
 def test_failure_lines_map_known_error_statuses_to_sanitized_categories() -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import ast
 import os
 import pathlib
 import subprocess
@@ -10,6 +11,7 @@ import sys
 from pathlib import Path
 
 from src.inspection_ai.agent.gemini_provider import GeminiRealGenerationResult
+from src.inspection_ai.agent.gemini_provider import GeminiSdkLoadResult
 from src.inspection_ai.agent.provider_contracts import build_provider_response
 from src.inspection_ai.agent.provider_router import AgentProviderRouter
 
@@ -81,6 +83,29 @@ def _build_failure_result() -> GeminiRealGenerationResult:
     )
 
 
+def _build_real_result_with_status(status: str) -> GeminiRealGenerationResult:
+    response = build_provider_response(
+        answer="This is a safe mocked Gemini answer. Manual review still applies.",
+        provider_used="gemini",
+        fallback_used=False,
+        fallback_reason=None,
+        grounding_status="grounded",
+        safety_status="pass" if status == "pass" else "blocked",
+        limitations=["manual review still applies"],
+        evidence_used=[{"source": "test.fake", "value": "safe"}],
+        provider_error=None,
+    )
+    return GeminiRealGenerationResult(
+        provider_response=response,
+        status=status,
+        safe_to_send=True,
+        safe_to_display=True,
+        provider_error=None,
+        fallback_reason=None,
+        client_name="fake-sdk",
+    )
+
+
 def test_harness_import_does_not_read_gemini_api_key(monkeypatch) -> None:
     def _fail_getenv(*args, **kwargs):  # pragma: no cover - defensive
         raise AssertionError("GEMINI_API_KEY should not be read during import")
@@ -108,14 +133,16 @@ def test_harness_import_does_not_add_banned_sdk_or_network_modules() -> None:
     assert module.main is not None
 
     source = HARNESS_PATH.read_text(encoding="utf-8")
-    assert "provider_router" not in source
-    assert "from google import genai" not in source
-    assert "google.genai" not in source
-    assert "google.generativeai" not in source
-    assert "import google" not in source
-    assert "requests" not in source
-    assert "httpx" not in source
-    assert "urllib" not in source
+    tree = ast.parse(source)
+    imported_roots: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imported_roots.add(alias.name.split(".", 1)[0])
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imported_roots.add(node.module.split(".", 1)[0])
+
+    assert imported_roots.isdisjoint({"google", "openai", "requests", "httpx", "urllib"})
 
 
 def test_default_dry_run_exits_successfully_without_key_access(monkeypatch, capsys) -> None:
@@ -205,6 +232,81 @@ def test_confirmation_flag_reaches_explicit_execution_helper_with_fake_seam(monk
     assert "GEMINI_API_KEY" not in captured.out
     assert "Explain the current image inspection result in a safe way." not in captured.out
     assert "raw_provider_response" not in captured.out
+    assert "sdk_missing" not in captured.out
+
+
+def test_confirmation_flag_passes_sdk_readiness_loader_and_module_loader(monkeypatch) -> None:
+    module = load_harness_module()
+    captured_kwargs: dict[str, object] = {}
+
+    def _capture_generate(*args, **kwargs):
+        captured_kwargs.update(kwargs)
+        return _build_real_result_with_status("pass")
+
+    monkeypatch.setattr(module, "_resolve_gemini_api_key", lambda: "present-but-disabled")
+    monkeypatch.setattr(module, "generate_with_real_gemini_provider", _capture_generate)
+
+    exit_code = module.main(
+        [
+            "--execute",
+            "--i-understand-this-calls-gemini",
+            "--question",
+            "Explain the current image inspection result in a safe way.",
+            "--page-id",
+            "image_inspection",
+            "--section-id",
+            "final_decision",
+            "--component-id",
+            "image_inspection_ai_explanation_panel",
+        ]
+    )
+
+    assert exit_code == 0
+    assert callable(captured_kwargs["sdk_loader"])
+    assert callable(captured_kwargs["sdk_module_loader"])
+    assert captured_kwargs["sdk_module_loader"] is module._load_google_genai_module
+    readiness = captured_kwargs["sdk_loader"]()
+    assert isinstance(readiness, GeminiSdkLoadResult)
+    assert readiness.checked is True
+    assert readiness.sdk_available is True
+    assert readiness.status == "available"
+    assert readiness.sdk_name == "google-genai"
+    assert readiness.import_style == "from google import genai"
+
+
+def test_sdk_readiness_helper_reports_available_when_google_genai_import_succeeds(monkeypatch) -> None:
+    module = load_harness_module()
+
+    class _FakeSdkModule:
+        Client = object
+
+    monkeypatch.setattr(module, "_load_google_genai_module", lambda: _FakeSdkModule())
+
+    result = module._load_gemini_sdk_readiness_result()
+
+    assert result.checked is True
+    assert result.sdk_available is True
+    assert result.status == "available"
+    assert result.sdk_name == "google-genai"
+    assert result.import_style == "from google import genai"
+
+
+def test_sdk_readiness_helper_reports_load_error_when_google_genai_import_fails(monkeypatch) -> None:
+    module = load_harness_module()
+
+    def _raise_import_error():
+        raise ModuleNotFoundError("google.genai missing in test seam")
+
+    monkeypatch.setattr(module, "_load_google_genai_module", _raise_import_error)
+
+    result = module._load_gemini_sdk_readiness_result()
+
+    assert result.checked is True
+    assert result.sdk_available is False
+    assert result.status == "load_error"
+    assert result.sdk_name == "google-genai"
+    assert result.import_style == "from google import genai"
+    assert "google.genai import failed" in result.reason
 
 
 def test_confirmation_flag_fake_failure_output_is_sanitized(monkeypatch, capsys) -> None:
@@ -241,6 +343,7 @@ def test_confirmation_flag_fake_failure_output_is_sanitized(monkeypatch, capsys)
     assert "This should never be printed verbatim." not in captured.out
     assert "response_summary=manual_review_visible=true;sanitized=true;raw_response_hidden=true" in captured.out
     assert "cleanup_reminder=unset_temporary_key_and_restore_mock_defaults;export AGENT_ENABLE_LLM=false;export AGENT_DEFAULT_PROVIDER=mock" in captured.out
+    assert "sdk_missing" not in captured.out
 
 
 def test_confirmation_flag_path_does_not_write_files(monkeypatch) -> None:

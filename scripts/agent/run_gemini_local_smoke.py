@@ -35,6 +35,7 @@ from src.inspection_ai.agent.context_builder import (
 from src.inspection_ai.agent.gemini_provider import (
     GeminiRealGenerationResult,
     GeminiRealProviderConfig,
+    GeminiSdkLoadResult,
     _load_google_genai_module,
     generate_with_real_gemini_provider,
 )
@@ -250,6 +251,7 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tupl
             provider_request,
             settings=settings,
             config=config,
+            sdk_loader=_load_gemini_sdk_readiness_result,
             sdk_module_loader=_load_google_genai_module,
             allowed_evidence_values=_allowed_evidence_values(grounding_context),
         )
@@ -309,6 +311,42 @@ def _resolve_gemini_api_key() -> str | None:
 
 def _gemini_api_key_present() -> bool:
     return _resolve_gemini_api_key() is not None
+
+
+def _load_gemini_sdk_readiness_result() -> GeminiSdkLoadResult:
+    try:
+        sdk_module = _load_google_genai_module()
+    except Exception as exc:  # pragma: no cover - defensive CLI guard
+        return GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=False,
+            status="load_error",
+            reason="google.genai import failed during local smoke readiness.",
+            error_category=type(exc).__name__,
+            sdk_name="google-genai",
+            import_style="from google import genai",
+        )
+
+    has_client = hasattr(sdk_module, "Client")
+    if has_client:
+        return GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google.genai import succeeded locally.",
+            sdk_name="google-genai",
+            import_style="from google import genai",
+        )
+
+    return GeminiSdkLoadResult(
+        checked=True,
+        sdk_available=False,
+        status="missing",
+        reason="google.genai imported but did not expose the expected Client factory.",
+        error_category="missing_client",
+        sdk_name="google-genai",
+        import_style="from google import genai",
+    )
 
 
 def _allowed_evidence_values(grounding_context: AgentGroundingContext) -> tuple[object, ...]:

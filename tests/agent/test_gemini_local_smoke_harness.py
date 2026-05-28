@@ -12,6 +12,7 @@ from pathlib import Path
 
 from src.inspection_ai.agent.gemini_provider import GeminiRealGenerationResult
 from src.inspection_ai.agent.gemini_provider import GeminiSdkLoadResult
+from src.inspection_ai.agent.context_builder import build_grounding_context as build_real_grounding_context
 from src.inspection_ai.agent.provider_contracts import build_provider_response
 from src.inspection_ai.agent.provider_router import AgentProviderRouter
 
@@ -243,6 +244,76 @@ def test_confirmation_flag_reaches_explicit_execution_helper_with_fake_seam(monk
     assert "Explain the current image inspection result in a safe way." not in captured.out
     assert "raw_provider_response" not in captured.out
     assert "sdk_missing" not in captured.out
+
+
+def test_explicit_execute_path_uses_minimal_grounded_smoke_context(monkeypatch) -> None:
+    module = load_harness_module()
+    captured_kwargs: dict[str, object] = {}
+    real_build_grounding_context = build_real_grounding_context
+
+    def _capture_grounding_context(*args, **kwargs):
+        captured_kwargs.clear()
+        captured_kwargs.update(kwargs)
+        return real_build_grounding_context(*args, **kwargs)
+
+    monkeypatch.setattr(module, "_resolve_gemini_api_key", lambda: "present-but-disabled")
+    monkeypatch.setattr(module, "generate_with_real_gemini_provider", lambda *a, **k: _build_success_result())
+    monkeypatch.setattr(module, "build_grounding_context", _capture_grounding_context)
+
+    exit_code = module.main(
+        [
+            "--execute",
+            "--i-understand-this-calls-gemini",
+            "--question",
+            "Explain the current image inspection result in a safe way.",
+            "--page-id",
+            "image_inspection",
+            "--section-id",
+            "final_decision",
+            "--component-id",
+            "image_inspection_ai_explanation_panel",
+        ]
+    )
+
+    assert exit_code == 0
+    assert captured_kwargs["visible_context"] == module._minimal_smoke_visible_context()
+    assert captured_kwargs["inspection_response"] == module._minimal_smoke_inspection_response()
+    assert captured_kwargs["include_raw_evidence"] is False
+    assert captured_kwargs["visible_context"]
+    assert captured_kwargs["inspection_response"]
+
+
+def test_minimal_smoke_context_builds_grounded_context_without_secrets() -> None:
+    module = load_harness_module()
+    visible_context = module._minimal_smoke_visible_context()
+    inspection_response = module._minimal_smoke_inspection_response()
+
+    context = build_real_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        component_id="image_inspection_ai_explanation_panel",
+        question="Explain the current image inspection result in a safe way.",
+        visible_context=visible_context,
+        inspection_response=inspection_response,
+        include_raw_evidence=False,
+    )
+
+    joined = "\n".join(
+        [
+            repr(visible_context),
+            repr(inspection_response),
+            repr(context.evidence_used),
+            repr(context.limitations),
+        ]
+    )
+
+    assert context.grounding_status == "grounded"
+    assert visible_context["page_title"] == "Image Inspection"
+    assert inspection_response["decision"]["final_decision"] == "manual_review_required"
+    assert inspection_response["traceability"]["source_endpoint"] == "local_smoke_synthetic_context"
+    assert "GEMINI_API_KEY" not in joined
+    assert "/Users/" not in joined
+    assert "raw_image" not in joined
 
 
 def test_confirmation_flag_passes_sdk_readiness_loader_and_module_loader(monkeypatch) -> None:

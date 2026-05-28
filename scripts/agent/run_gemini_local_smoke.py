@@ -192,13 +192,15 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tupl
         return 2, build_missing_fields_lines(missing_fields)
 
     try:
+        visible_context = _minimal_smoke_visible_context()
+        inspection_response = _minimal_smoke_inspection_response()
         grounding_context = build_grounding_context(
             page_id=args.page_id,
             section_id=args.section_id,
             component_id=args.component_id,
             question=args.question,
-            visible_context={},
-            inspection_response={},
+            visible_context=visible_context,
+            inspection_response=inspection_response,
             include_raw_evidence=False,
         )
     except Exception:  # pragma: no cover - defensive CLI guard
@@ -301,6 +303,49 @@ def _missing_execute_fields(args: argparse.Namespace) -> tuple[str, ...]:
         if not isinstance(value, str) or not value.strip():
             missing.append(field_name)
     return tuple(missing)
+
+
+def _minimal_smoke_visible_context() -> dict[str, object]:
+    return {
+        "page_title": "Image Inspection",
+        "page_summary": "Local smoke context for the image inspection explanation panel.",
+        "section_summary": "Manual review is required before taking action.",
+        "visible_summary": "This synthetic context keeps the smoke local-only and minimal.",
+    }
+
+
+def _minimal_smoke_inspection_response() -> dict[str, object]:
+    return {
+        "decision": {
+            "final_decision": "manual_review_required",
+            "decision_level": "review",
+            "rule_id": "local_smoke_manual_review_rule",
+            "recommended_action": "Review the inspection evidence before taking action.",
+        },
+        "classification": {
+            "predicted_label": "surface_defect_candidate",
+            "probability_defect": 0.72,
+            "threshold": 0.50,
+        },
+        "detection": {
+            "predicted_box_count": 1,
+            "defect_count": 1,
+        },
+        "anomaly": {
+            "anomaly_score": 0.21,
+            "threshold": 0.20,
+        },
+        "traceability": {
+            "source_endpoint": "local_smoke_synthetic_context",
+            "contract_version": "local_smoke_synthetic_context_v1",
+        },
+        "warnings": ["local smoke only"],
+        "limitations": ["manual review still applies"],
+        "request_id": "local-smoke-request",
+        "explanation_context": {
+            "context_version": "local_smoke_synthetic_context_v1",
+        },
+    }
 
 
 def _resolve_gemini_api_key() -> str | None:

@@ -182,6 +182,7 @@ The G3 local real-smoke plan is implemented as documentation only, but real Gemi
 The G3 local real-smoke harness skeleton is implemented and tested, but real Gemini provider integration has not started.
 The G3 final real-smoke execution checklist is implemented as documentation only, but real Gemini provider integration has not started.
 The G3 harness dry-run verification evidence is implemented as documentation only, but real Gemini provider integration has not started.
+The approved-but-not-executed real-smoke attempt discovery is documented separately, but real Gemini provider integration has not started.
 The first safe Gemini code slice is implemented as regression coverage only, but real Gemini provider integration has not started.
 The second safe Gemini code slice is implemented as regression coverage only, but real Gemini provider integration has not started.
 The Phase 12 LLM-disabled Docker / Compose validation evidence is implemented as documentation only and records the local PASS.
@@ -206,6 +207,7 @@ What this means:
 - The local real-smoke harness skeleton is documented and remains disabled by default.
 - The final real-smoke execution checklist is documented and remains a checklist only.
 - The harness dry-run verification evidence is documented and remains dry-run verification only.
+- The approved-but-not-executed real-smoke attempt discovery is documented and remains discovery evidence only.
 
 What this does not mean:
 

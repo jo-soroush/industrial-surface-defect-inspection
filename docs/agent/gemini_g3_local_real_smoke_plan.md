@@ -20,6 +20,7 @@ A disabled-by-default harness skeleton exists in `scripts/agent/run_gemini_local
 
 The final execution checklist is documented in `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md`.
 Dry-run verification evidence is documented in `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md`.
+Approved-but-not-executed discovery is documented in `docs/agent/gemini_g3_approved_real_smoke_attempt_discovery.md`.
 
 What this plan controls:
 

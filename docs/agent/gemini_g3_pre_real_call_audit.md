@@ -183,6 +183,7 @@ The local real-smoke plan is documented in `docs/agent/gemini_g3_local_real_smok
 The local real-smoke harness skeleton is documented in `scripts/agent/run_gemini_local_smoke.py`.
 The final real-smoke execution checklist is documented in `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md`.
 The harness dry-run verification evidence is documented in `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md`.
+The approved-but-not-executed real-smoke attempt discovery is documented in `docs/agent/gemini_g3_approved_real_smoke_attempt_discovery.md`.
 
 If later approved, the first real Gemini smoke must be:
 
@@ -257,6 +258,7 @@ Real provider implementation may start only after explicit user approval for the
 
 Real API call remains blocked until the next approved slice.
 The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.
+The approved-but-not-executed real-smoke attempt discovery is documented separately and does not change the blocked status of real smoke execution.
 
 ## Next Recommended Slice
 

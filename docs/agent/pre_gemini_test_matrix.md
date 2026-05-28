@@ -23,6 +23,7 @@ Current conclusion:
 - The G3 local real-smoke plan exists and defines the manual local-only smoke boundary, but it has not been executed.
 - The G3 final real-smoke execution checklist exists and defines the mandatory pre-execution review items, but it has not approved execution.
 - The G3 harness dry-run verification evidence exists and records the disabled-by-default harness behavior, but it is not real smoke evidence.
+- The approved-but-not-executed real-smoke attempt discovery exists and records the approved local-only attempt without running it.
 - The first safe Gemini code slice exists as regression coverage for the disabled-by-default Gemini boundary and keeps the runtime mock-first.
 - The second safe Gemini slice exists as regression coverage proving provider router health, `/agent/explain`, and API health remain mock-first and secret-safe even when fake Gemini/Grok key-like values are present.
 - The G3 dependency decision artifact exists and records the conservative dependency-change decision.
@@ -298,6 +299,7 @@ Validated in the repository state referenced by this audit:
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
 |---|---|---|---|---|---|
 | Harness dry-run verification evidence exists and records the safe disabled-by-default harness behavior | `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md` | PASS | The repository now contains dry-run verification evidence showing the harness stays local-only, does not read the key, and remains mock-first without claiming a real smoke. | Real smoke execution is still blocked until explicit user approval. | No |
+| Approved-but-not-executed real-smoke attempt discovery exists and records the approved local-only attempt without running it | `docs/agent/gemini_g3_approved_real_smoke_attempt_discovery.md` | PASS | The repository now contains discovery evidence showing the user approved one local-only attempt, the harness command was found, the execute path still returns `NOT_IMPLEMENTED`, and the smoke itself was not run. | Real smoke execution is still blocked until a separate implementation slice is approved and completed. | No |
 
 ### 10.20 Phase 12 LLM-Disabled Docker / Compose Readiness Audit
 

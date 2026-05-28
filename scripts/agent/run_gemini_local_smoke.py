@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Sequence
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
+DEFAULT_SMOKE_MODEL_NAME = "gemini-2.5-flash"
 
 
 def _ensure_repo_root_importable() -> None:
@@ -86,12 +88,18 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Future component identifier placeholder. Not used in this slice.",
     )
+    parser.add_argument(
+        "--model-name",
+        default=DEFAULT_SMOKE_MODEL_NAME,
+        help="Smoke-only Gemini model name. This does not change normal runtime defaults.",
+    )
     return parser
 
 
-def build_dry_run_lines() -> tuple[str, ...]:
+def build_dry_run_lines(*, smoke_model_name: str) -> tuple[str, ...]:
     return (
         "gemini_local_smoke_status=DRY_RUN",
+        f"smoke_model={smoke_model_name}",
         "no_real_gemini_api_call_was_made=true",
         "gemini_api_key_read=false",
         "normal_agent_route=mock_first",
@@ -101,10 +109,11 @@ def build_dry_run_lines() -> tuple[str, ...]:
     )
 
 
-def build_blocked_lines() -> tuple[str, ...]:
+def build_blocked_lines(*, smoke_model_name: str) -> tuple[str, ...]:
     return (
         "gemini_local_smoke_status=BLOCKED",
         "reason=missing_confirmation_flag",
+        f"smoke_model={smoke_model_name}",
         "no_real_gemini_api_call_was_made=true",
         "gemini_api_key_read=false",
         "normal_agent_route=mock_first",
@@ -113,11 +122,12 @@ def build_blocked_lines() -> tuple[str, ...]:
     )
 
 
-def build_missing_fields_lines(missing_fields: tuple[str, ...]) -> tuple[str, ...]:
+def build_missing_fields_lines(missing_fields: tuple[str, ...], *, smoke_model_name: str) -> tuple[str, ...]:
     return (
         "gemini_local_smoke_status=BLOCKED",
         "reason=missing_required_smoke_fields",
         f"missing_fields={','.join(missing_fields)}",
+        f"smoke_model={smoke_model_name}",
         "no_real_gemini_api_call_was_made=true",
         "gemini_api_key_read=false",
         "normal_agent_route=mock_first",
@@ -130,9 +140,11 @@ def build_success_lines(
     *,
     request: AgentProviderRequest,
     result: GeminiRealGenerationResult,
+    smoke_model_name: str,
 ) -> tuple[str, ...]:
     return (
         "gemini_local_smoke_status=SUCCESS",
+        f"smoke_model={smoke_model_name}",
         f"result_status={result.status}",
         f"provider_used={result.provider_response.provider_used}",
         f"fallback_used={str(result.provider_response.fallback_used).lower()}",
@@ -150,9 +162,11 @@ def build_failure_lines(
     *,
     request: AgentProviderRequest,
     result: GeminiRealGenerationResult,
+    smoke_model_name: str,
 ) -> tuple[str, ...]:
     return (
         "gemini_local_smoke_status=FAILED",
+        f"smoke_model={smoke_model_name}",
         f"result_status={result.status}",
         f"error_category={_safe_error_category(result)}",
         f"provider_used={result.provider_response.provider_used}",
@@ -169,27 +183,33 @@ def build_failure_lines(
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    smoke_model_name = _resolve_smoke_model_name(args.model_name)
+
+    if smoke_model_name is None:
+        for line in build_invalid_model_lines():
+            print(line)
+        return 2
 
     if not args.execute or args.dry_run:
-        for line in build_dry_run_lines():
+        for line in build_dry_run_lines(smoke_model_name=smoke_model_name):
             print(line)
         return 0
 
     if not args.i_understand_this_calls_gemini:
-        for line in build_blocked_lines():
+        for line in build_blocked_lines(smoke_model_name=smoke_model_name):
             print(line)
         return 2
 
-    exit_code, lines = run_explicit_real_smoke_attempt(args)
+    exit_code, lines = run_explicit_real_smoke_attempt(args, smoke_model_name=smoke_model_name)
     for line in lines:
         print(line)
     return exit_code
 
 
-def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tuple[str, ...]]:
+def run_explicit_real_smoke_attempt(args: argparse.Namespace, *, smoke_model_name: str) -> tuple[int, tuple[str, ...]]:
     missing_fields = _missing_execute_fields(args)
     if missing_fields:
-        return 2, build_missing_fields_lines(missing_fields)
+        return 2, build_missing_fields_lines(missing_fields, smoke_model_name=smoke_model_name)
 
     try:
         visible_context = _minimal_smoke_visible_context()
@@ -207,6 +227,7 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tupl
         return 2, (
             "gemini_local_smoke_status=BLOCKED",
             "reason=grounding_context_validation_failed",
+            f"smoke_model={smoke_model_name}",
             "no_real_gemini_api_call_was_made=true",
             "gemini_api_key_read=false",
             "normal_agent_route=mock_first",
@@ -219,6 +240,7 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tupl
         return 2, (
             "gemini_local_smoke_status=BLOCKED",
             "reason=pre_generation_safety_guard_blocked",
+            f"smoke_model={smoke_model_name}",
             "no_real_gemini_api_call_was_made=true",
             "gemini_api_key_read=false",
             "normal_agent_route=mock_first",
@@ -244,6 +266,7 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tupl
         openai_key_present=False,
     )
     config = GeminiRealProviderConfig(
+        model_name=smoke_model_name,
         real_provider_implemented=True,
         sdk_import_allowed=True,
         api_key_resolver=_resolve_gemini_api_key,
@@ -262,6 +285,7 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tupl
         return 1, (
             "gemini_local_smoke_status=FAILED",
             "result_status=exception",
+            f"smoke_model={smoke_model_name}",
             "provider_used=unknown",
             "fallback_used=unknown",
             "grounding_status=unknown",
@@ -278,6 +302,7 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tupl
         return 1, (
             "gemini_local_smoke_status=FAILED",
             "result_status=malformed_result",
+            f"smoke_model={smoke_model_name}",
             "provider_used=unknown",
             "fallback_used=unknown",
             "grounding_status=unknown",
@@ -291,9 +316,17 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tupl
         )
 
     if _is_successful_smoke_result(result):
-        return 0, build_success_lines(request=provider_request, result=result)
+        return 0, build_success_lines(
+            request=provider_request,
+            result=result,
+            smoke_model_name=smoke_model_name,
+        )
 
-    return 1, build_failure_lines(request=provider_request, result=result)
+    return 1, build_failure_lines(
+        request=provider_request,
+        result=result,
+        smoke_model_name=smoke_model_name,
+    )
 
 
 def _missing_execute_fields(args: argparse.Namespace) -> tuple[str, ...]:
@@ -303,6 +336,28 @@ def _missing_execute_fields(args: argparse.Namespace) -> tuple[str, ...]:
         if not isinstance(value, str) or not value.strip():
             missing.append(field_name)
     return tuple(missing)
+
+
+def _resolve_smoke_model_name(model_name: str) -> str | None:
+    candidate = model_name.strip()
+    if not candidate:
+        return None
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", candidate):
+        return None
+    return candidate
+
+
+def build_invalid_model_lines() -> tuple[str, ...]:
+    return (
+        "gemini_local_smoke_status=BLOCKED",
+        "reason=invalid_smoke_model_name",
+        "smoke_model_valid=false",
+        "no_real_gemini_api_call_was_made=true",
+        "gemini_api_key_read=false",
+        "normal_agent_route=mock_first",
+        "provider_routing_activation=disabled",
+        "future_real_smoke_requires_explicit_user_approval=true",
+    )
 
 
 def _minimal_smoke_visible_context() -> dict[str, object]:

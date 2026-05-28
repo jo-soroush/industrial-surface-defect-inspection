@@ -166,6 +166,7 @@ def test_default_dry_run_exits_successfully_without_key_access(monkeypatch, caps
 
     assert exit_code == 0
     assert "gemini_local_smoke_status=DRY_RUN" in captured.out
+    assert "smoke_model=gemini-2.5-flash" in captured.out
     assert "no_real_gemini_api_call_was_made=true" in captured.out
     assert "gemini_api_key_read=false" in captured.out
     assert "normal_agent_route=mock_first" in captured.out
@@ -179,6 +180,7 @@ def test_dry_run_output_says_no_real_api_call_was_made(capsys) -> None:
 
     assert exit_code == 0
     assert "gemini_local_smoke_status=DRY_RUN" in captured.out
+    assert "smoke_model=gemini-2.5-flash" in captured.out
     assert "no_real_gemini_api_call_was_made=true" in captured.out
     assert "provider_routing_activation=disabled" in captured.out
     assert "future_real_smoke_requires_explicit_user_approval=true" in captured.out
@@ -198,6 +200,7 @@ def test_missing_confirmation_flag_blocks_non_dry_run_before_key_access(monkeypa
     assert exit_code == 2
     assert "gemini_local_smoke_status=BLOCKED" in captured.out
     assert "reason=missing_confirmation_flag" in captured.out
+    assert "smoke_model=gemini-2.5-flash" in captured.out
     assert "no_real_gemini_api_call_was_made=true" in captured.out
     assert "error_category=" not in captured.out
 
@@ -236,6 +239,7 @@ def test_confirmation_flag_reaches_explicit_execution_helper_with_fake_seam(monk
     assert "fallback_used=false" in captured.out
     assert "grounding_status=grounded" in captured.out
     assert "safety_status=pass" in captured.out
+    assert "smoke_model=gemini-2.5-flash" in captured.out
     assert "request_summary=page_id=image_inspection;section_id=final_decision;component_id=image_inspection_ai_explanation_panel;question_sanitized=true" in captured.out
     assert "response_summary=manual_review_visible=true;sanitized=true;raw_response_hidden=true" in captured.out
     assert "cleanup_reminder=unset_temporary_key_and_restore_mock_defaults;export AGENT_ENABLE_LLM=false;export AGENT_DEFAULT_PROVIDER=mock" in captured.out
@@ -346,6 +350,7 @@ def test_confirmation_flag_passes_sdk_readiness_loader_and_module_loader(monkeyp
     assert callable(captured_kwargs["sdk_loader"])
     assert callable(captured_kwargs["sdk_module_loader"])
     assert captured_kwargs["sdk_module_loader"] is module._load_google_genai_module
+    assert captured_kwargs["config"].model_name == "gemini-2.5-flash"
     readiness = captured_kwargs["sdk_loader"]()
     assert isinstance(readiness, GeminiSdkLoadResult)
     assert readiness.checked is True
@@ -444,7 +449,11 @@ def test_failure_lines_map_known_error_statuses_to_sanitized_categories() -> Non
 
     for status, expected_category in expected_categories.items():
         result = _build_failure_result(status=status)
-        lines = module.build_failure_lines(request=request, result=result)
+        lines = module.build_failure_lines(
+            request=request,
+            result=result,
+            smoke_model_name="gemini-2.5-flash",
+        )
         joined = "\n".join(lines)
         assert f"error_category={expected_category}" in joined
         assert "Gemini real provider raised a provider error." not in joined
@@ -455,7 +464,11 @@ def test_failure_lines_map_blocked_safety_status_to_sanitized_category() -> None
     module = load_harness_module()
     request = _build_real_provider_request(module)
     result = _build_failure_result(status="blocked")
-    lines = module.build_failure_lines(request=request, result=result)
+    lines = module.build_failure_lines(
+        request=request,
+        result=result,
+        smoke_model_name="gemini-2.5-flash",
+    )
 
     assert "error_category=safety_blocked" in "\n".join(lines)
 
@@ -471,9 +484,88 @@ def test_failure_lines_map_unavailable_fallback_to_sanitized_category() -> None:
         safety_status="pass",
         fallback_reason="missing key",
     )
-    lines = module.build_failure_lines(request=request, result=result)
+    lines = module.build_failure_lines(
+        request=request,
+        result=result,
+        smoke_model_name="gemini-2.5-flash",
+    )
 
     assert "error_category=unavailable" in "\n".join(lines)
+
+
+def test_default_smoke_model_name_is_smoke_only_and_can_be_overridden(monkeypatch) -> None:
+    module = load_harness_module()
+    captured_model_names: list[str] = []
+
+    def _capture_generate(*args, **kwargs):
+        captured_model_names.append(kwargs["config"].model_name)
+        return _build_success_result()
+
+    monkeypatch.setattr(module, "_resolve_gemini_api_key", lambda: "present-but-disabled")
+    monkeypatch.setattr(module, "generate_with_real_gemini_provider", _capture_generate)
+
+    default_exit_code = module.main(
+        [
+            "--execute",
+            "--i-understand-this-calls-gemini",
+            "--question",
+            "Explain the current image inspection result in a safe way.",
+            "--page-id",
+            "image_inspection",
+            "--section-id",
+            "final_decision",
+            "--component-id",
+            "image_inspection_ai_explanation_panel",
+        ]
+    )
+    override_exit_code = module.main(
+        [
+            "--execute",
+            "--i-understand-this-calls-gemini",
+            "--model-name",
+            "gemini-2.0-flash",
+            "--question",
+            "Explain the current image inspection result in a safe way.",
+            "--page-id",
+            "image_inspection",
+            "--section-id",
+            "final_decision",
+            "--component-id",
+            "image_inspection_ai_explanation_panel",
+        ]
+    )
+
+    assert default_exit_code == 0
+    assert override_exit_code == 0
+    assert captured_model_names == ["gemini-2.5-flash", "gemini-2.0-flash"]
+
+
+def test_invalid_smoke_model_name_is_blocked_safely(capsys) -> None:
+    module = load_harness_module()
+
+    exit_code = module.main(
+        [
+            "--execute",
+            "--model-name",
+            "bad model name",
+            "--question",
+            "Explain the current image inspection result in a safe way.",
+            "--page-id",
+            "image_inspection",
+            "--section-id",
+            "final_decision",
+            "--component-id",
+            "image_inspection_ai_explanation_panel",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "gemini_local_smoke_status=BLOCKED" in captured.out
+    assert "reason=invalid_smoke_model_name" in captured.out
+    assert "smoke_model_valid=false" in captured.out
+    assert "bad model name" not in captured.out
+    assert "GEMINI_API_KEY" not in captured.out
 
 
 def _build_real_provider_request(module):

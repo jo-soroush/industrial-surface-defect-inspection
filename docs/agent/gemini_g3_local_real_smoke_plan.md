@@ -14,6 +14,8 @@ A future real smoke requires explicit user approval.
 Real Gemini, Grok, and OpenAI runtime remain not active.
 Production readiness, HTTPS/domain readiness, and real LLM readiness are not claimed.
 The local manual Gemini smoke milestone is paused / closed for now at the harness level.
+The latest approved Gemini 2.5 Flash smoke reached `SUCCESS_LIMITED`, used `provider_used=gemini`, used no fallback, and kept `grounding_status=grounded` with `safety_status=limited`.
+The validated smoke model is now `gemini-2.5-flash`, and the provider default is aligned to that same model.
 
 This plan defines the narrowest local-only evidence path for a future manual smoke while keeping the current mock-first runtime untouched.
 
@@ -24,6 +26,7 @@ Dry-run verification evidence is documented in `docs/agent/gemini_g3_harness_dry
 Approved-but-not-executed discovery is documented in `docs/agent/gemini_g3_approved_real_smoke_attempt_discovery.md`.
 The fourth approved local-only manual attempt result is documented in `docs/agent/gemini_g3_local_real_smoke_attempt_4_evidence.md`.
 The ninth approved local-only manual attempt result is documented in `docs/agent/gemini_g3_local_real_smoke_attempt_9_evidence.md`.
+The latest limited-success evidence is documented in `docs/agent/gemini_g3_local_real_smoke_success_limited_evidence.md`.
 
 What this plan controls:
 
@@ -64,6 +67,7 @@ What this does not mean:
 - Gemini is connected
 - Gemini is active
 - temporary local-shell `GEMINI_API_KEY` usage means Gemini is active by default
+- limited smoke success means the runtime is active by default
 
 ## Fourth Attempt Evidence Status
 

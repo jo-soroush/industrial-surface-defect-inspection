@@ -14,6 +14,8 @@
 
 This summary consolidates the current evidence-layer status after Track A, Track B, and YOLO / Detection evidence completion. It is intended to support final demo/readiness auditing, report packaging, and future roadmap decisions.
 It also records that the Gemini local-smoke milestone is paused / closed for now at the local manual-harness level, with runtime still mock-first and provider routing disabled by default.
+The latest approved Gemini 2.5 Flash smoke reached `SUCCESS_LIMITED`, used `provider_used=gemini`, used `fallback_used=false`, and kept `grounding_status=grounded` with `safety_status=limited`.
+The canonical Gemini provider default is aligned to `gemini-2.5-flash`, matching the validated smoke model.
 
 ## 2. Track A Decision
 
@@ -99,7 +101,7 @@ Not recommended now:
 
 ## 7. Recommended Next Step
 
-Next step: treat the reconciled roadmap/status docs as the source of truth; if implementation work resumes later, the next technical track should be a gated real-provider runtime activation design.
+Next step: treat the reconciled roadmap/status docs as the source of truth; if implementation work resumes later, the next technical track should be a gated real-provider runtime activation validation slice with explicit opt-in only.
 
 Reason: the project now has complete evidence/status consolidation, the Gemini local-smoke milestone is paused / closed for now, and the repo already contains the implemented mock-first frontend/API/agent foundations. A live-provider path should only be designed later under explicit approval and gating.
 

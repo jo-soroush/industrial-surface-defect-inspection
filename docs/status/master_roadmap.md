@@ -14,6 +14,8 @@
 
 The repository currently has governed evidence for the classification, anomaly detection, and object detection tracks, plus implemented mock-first frontend, API, and agent foundations. This status does not make any production-readiness or deployment-safety claim.
 The Gemini local-smoke milestone is paused / closed for now at the local manual-harness level; the runtime remains mock-first and provider routing remains disabled by default.
+The latest approved Gemini 2.5 Flash smoke reached `SUCCESS_LIMITED`, used `provider_used=gemini`, used `fallback_used=false`, and kept `grounding_status=grounded` with `safety_status=limited`.
+The canonical Gemini provider default is aligned to `gemini-2.5-flash`, matching the validated smoke model.
 
 ## 2. Source-of-Truth Rules
 
@@ -103,7 +105,7 @@ Notebook work must not train models, create governed artifacts, update registrie
 ## 8. Remaining Roadmap Sections
 
 - [x] Roadmap/status canonicalization: current status should be read from the implemented evidence/demo/mock-first layers above.
-- [ ] Design a gated real-provider runtime activation path.
+- [ ] Design a gated real-provider runtime activation path and validate it with explicit opt-in only.
 - [ ] Decide whether any later public frontend/dashboard hardening is needed.
 - [ ] Decide whether any later public API hardening is needed.
 - [ ] Prepare final report/demo packaging.
@@ -124,6 +126,6 @@ These roadmap sections are future planning items and are not a claim that live-p
 
 ## 10. Current Recommended Next Step
 
-Treat the roadmap/status docs as the source of truth for the current implemented evidence/demo/mock-first layers. If implementation work resumes later, the next technical track should be a gated real-provider runtime activation design.
+Treat the roadmap/status docs as the source of truth for the current implemented evidence/demo/mock-first layers. If implementation work resumes later, the next technical track should be a gated real-provider runtime activation validation slice with explicit opt-in only.
 
 Do not run another YOLO structured-output readiness audit as the next step; the YOLO / Detection evidence layer is complete. Do not run another Gemini local smoke as the next step. Do not restart UI, API, notebook, agent, Docker, EC2, or real-LLM implementation from this roadmap update.

@@ -9,7 +9,24 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
+from pathlib import Path
 from typing import Sequence
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent.parent
+
+
+def _ensure_repo_root_importable() -> None:
+    repo_root_str = str(REPO_ROOT)
+    src_root_str = str(REPO_ROOT / "src")
+    if repo_root_str not in sys.path:
+        sys.path.insert(0, repo_root_str)
+    if src_root_str not in sys.path:
+        sys.path.insert(0, src_root_str)
+
+
+_ensure_repo_root_importable()
 
 from src.inspection_ai.agent.context_builder import (
     AgentGroundingContext,

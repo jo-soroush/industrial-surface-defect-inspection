@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import os
 import pathlib
+import subprocess
 import sys
 from pathlib import Path
 
@@ -26,6 +27,12 @@ def load_harness_module():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _subprocess_env_without_pythonpath() -> dict[str, str]:
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+    return env
 
 
 def _build_success_result() -> GeminiRealGenerationResult:
@@ -263,3 +270,41 @@ def test_confirmation_flag_path_does_not_write_files(monkeypatch) -> None:
     )
 
     assert exit_code == 0
+
+
+def test_cli_runs_from_repo_root_without_pythonpath_in_dry_run_mode() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(HARNESS_PATH)],
+        cwd=REPO_ROOT,
+        env=_subprocess_env_without_pythonpath(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0
+    assert "gemini_local_smoke_status=DRY_RUN" in completed.stdout
+    assert "no_real_gemini_api_call_was_made=true" in completed.stdout
+    assert "GEMINI_API_KEY" not in completed.stdout
+
+
+def test_cli_runs_from_repo_root_without_pythonpath_in_blocked_mode() -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(HARNESS_PATH),
+            "--execute",
+            "--question",
+            "sanitized",
+        ],
+        cwd=REPO_ROOT,
+        env=_subprocess_env_without_pythonpath(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 2
+    assert "gemini_local_smoke_status=BLOCKED" in completed.stdout
+    assert "reason=missing_confirmation_flag" in completed.stdout
+    assert "GEMINI_API_KEY" not in completed.stdout

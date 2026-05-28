@@ -154,6 +154,7 @@ def build_failure_lines(
     return (
         "gemini_local_smoke_status=FAILED",
         f"result_status={result.status}",
+        f"error_category={_safe_error_category(result)}",
         f"provider_used={result.provider_response.provider_used}",
         f"fallback_used={str(result.provider_response.fallback_used).lower()}",
         f"grounding_status={result.provider_response.grounding_status}",
@@ -375,6 +376,30 @@ def _response_summary_line(result: GeminiRealGenerationResult) -> str:
         f"sanitized=true;"
         "raw_response_hidden=true"
     )
+
+
+def _safe_error_category(result: GeminiRealGenerationResult) -> str:
+    status = (result.status or "").strip().lower()
+    response = result.provider_response
+    if status == "sdk_missing":
+        return "sdk_missing"
+    if status == "load_error":
+        return "sdk_load_error"
+    if status == "provider_error":
+        return "provider_error"
+    if status == "timeout":
+        return "timeout"
+    if status == "rate_limit":
+        return "rate_limited"
+    if status == "empty":
+        return "empty_response"
+    if status == "malformed":
+        return "malformed_response"
+    if response.safety_status == "blocked":
+        return "safety_blocked"
+    if response.fallback_used and response.provider_used == "mock":
+        return "unavailable"
+    return "unknown"
 
 
 def _is_successful_smoke_result(result: GeminiRealGenerationResult) -> bool:

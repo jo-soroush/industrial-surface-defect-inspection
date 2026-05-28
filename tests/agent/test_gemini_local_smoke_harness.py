@@ -60,21 +60,29 @@ def _build_success_result() -> GeminiRealGenerationResult:
     )
 
 
-def _build_failure_result() -> GeminiRealGenerationResult:
+def _build_failure_result(
+    status: str = "provider_error",
+    *,
+    provider_used: str = "mock",
+    fallback_used: bool = True,
+    grounding_status: str = "grounded",
+    safety_status: str = "blocked",
+    fallback_reason: str = "Gemini real provider raised a provider error; mock fallback remains the safe path.",
+) -> GeminiRealGenerationResult:
     response = build_provider_response(
         answer="This should never be printed verbatim.",
-        provider_used="mock",
-        fallback_used=True,
-        fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
-        grounding_status="grounded",
-        safety_status="blocked",
+        provider_used=provider_used,
+        fallback_used=fallback_used,
+        fallback_reason=fallback_reason,
+        grounding_status=grounding_status,
+        safety_status=safety_status,
         limitations=["manual review still applies"],
         evidence_used=[{"source": "test.fake", "value": "safe"}],
         provider_error="Gemini real provider raised a provider error.",
     )
     return GeminiRealGenerationResult(
         provider_response=response,
-        status="provider_error",
+        status=status,
         safe_to_send=False,
         safe_to_display=False,
         provider_error="Gemini real provider raised a provider error.",
@@ -173,6 +181,7 @@ def test_dry_run_output_says_no_real_api_call_was_made(capsys) -> None:
     assert "no_real_gemini_api_call_was_made=true" in captured.out
     assert "provider_routing_activation=disabled" in captured.out
     assert "future_real_smoke_requires_explicit_user_approval=true" in captured.out
+    assert "error_category=" not in captured.out
 
 
 def test_missing_confirmation_flag_blocks_non_dry_run_before_key_access(monkeypatch, capsys) -> None:
@@ -189,6 +198,7 @@ def test_missing_confirmation_flag_blocks_non_dry_run_before_key_access(monkeypa
     assert "gemini_local_smoke_status=BLOCKED" in captured.out
     assert "reason=missing_confirmation_flag" in captured.out
     assert "no_real_gemini_api_call_was_made=true" in captured.out
+    assert "error_category=" not in captured.out
 
 
 def test_confirmation_flag_reaches_explicit_execution_helper_with_fake_seam(monkeypatch, capsys) -> None:
@@ -333,6 +343,7 @@ def test_confirmation_flag_fake_failure_output_is_sanitized(monkeypatch, capsys)
     assert exit_code == 1
     assert "gemini_local_smoke_status=FAILED" in captured.out
     assert "result_status=provider_error" in captured.out
+    assert "error_category=provider_error" in captured.out
     assert "provider_used=mock" in captured.out
     assert "fallback_used=true" in captured.out
     assert "grounding_status=grounded" in captured.out
@@ -344,6 +355,77 @@ def test_confirmation_flag_fake_failure_output_is_sanitized(monkeypatch, capsys)
     assert "response_summary=manual_review_visible=true;sanitized=true;raw_response_hidden=true" in captured.out
     assert "cleanup_reminder=unset_temporary_key_and_restore_mock_defaults;export AGENT_ENABLE_LLM=false;export AGENT_DEFAULT_PROVIDER=mock" in captured.out
     assert "sdk_missing" not in captured.out
+
+
+def test_failure_lines_map_known_error_statuses_to_sanitized_categories() -> None:
+    module = load_harness_module()
+    request = _build_real_provider_request(module)
+
+    expected_categories = {
+        "provider_error": "provider_error",
+        "timeout": "timeout",
+        "rate_limit": "rate_limited",
+        "empty": "empty_response",
+        "malformed": "malformed_response",
+        "load_error": "sdk_load_error",
+        "sdk_missing": "sdk_missing",
+    }
+
+    for status, expected_category in expected_categories.items():
+        result = _build_failure_result(status=status)
+        lines = module.build_failure_lines(request=request, result=result)
+        joined = "\n".join(lines)
+        assert f"error_category={expected_category}" in joined
+        assert "Gemini real provider raised a provider error." not in joined
+        assert "present-but-disabled" not in joined
+
+
+def test_failure_lines_map_blocked_safety_status_to_sanitized_category() -> None:
+    module = load_harness_module()
+    request = _build_real_provider_request(module)
+    result = _build_failure_result(status="blocked")
+    lines = module.build_failure_lines(request=request, result=result)
+
+    assert "error_category=safety_blocked" in "\n".join(lines)
+
+
+def test_failure_lines_map_unavailable_fallback_to_sanitized_category() -> None:
+    module = load_harness_module()
+    request = _build_real_provider_request(module)
+    result = _build_failure_result(
+        status="failed",
+        provider_used="mock",
+        fallback_used=True,
+        grounding_status="insufficient_evidence",
+        safety_status="pass",
+        fallback_reason="missing key",
+    )
+    lines = module.build_failure_lines(request=request, result=result)
+
+    assert "error_category=unavailable" in "\n".join(lines)
+
+
+def _build_real_provider_request(module):
+    grounding_context = module.build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        component_id="image_inspection_ai_explanation_panel",
+        question="Explain the current image inspection result in a safe way.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {"final_decision": "good", "rule_id": "manual_check_rule"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+    pre_guard = module.guard_pre_generation_context(grounding_context)
+    return module.build_provider_request(
+        provider_name="gemini",
+        grounding_context=grounding_context,
+        sanitized_context=pre_guard.sanitized_context,
+        safety_status=pre_guard.status,
+        llm_enabled=True,
+    )
 
 
 def test_confirmation_flag_path_does_not_write_files(monkeypatch) -> None:

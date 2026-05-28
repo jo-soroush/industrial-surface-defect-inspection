@@ -6,6 +6,7 @@
 - Track A Classification: PASS
 - Track B / Autoencoder: PASS
 - YOLO / Detection evidence layer: COMPLETE
+- Gemini local-smoke milestone: PAUSED / CLOSED FOR NOW at the local manual-harness level
 - Final demo readiness: PASS_WITH_WARNINGS
 - Production readiness: NOT CLAIMED
 - Deployment safety: NOT CLAIMED
@@ -18,6 +19,7 @@
 This project demonstrates governed model evidence across classification, anomaly detection, and object detection. The current repository state includes structured artifacts, inventories, registry references, and frontend-ready data contracts for review and demo preparation.
 
 The project also demonstrates honest model-status boundaries. Evidence is documented, reviewable, and traceable, but no unsupported production-readiness or deployment-safety claim is made.
+The Gemini local-smoke milestone is paused / closed for now at the local manual-harness level; runtime remains mock-first and provider routing remains disabled by default.
 
 ## 3. Where To Start Reviewing
 
@@ -26,6 +28,9 @@ Recommended first files and folders:
 - `docs/status/master_roadmap.md`
 - `docs/status/project_wide_decision_summary.md`
 - `docs/status/phase3_detection_pause_status.md`
+- `docs/agent/gemini_provider_integration_readiness_plan.md`
+- `docs/agent/gemini_g3_local_real_smoke_plan.md`
+- `docs/agent/gemini_g3_local_real_smoke_attempt_9_evidence.md`
 - `notebooks/track_a_supervised_classification_mvtec.ipynb`
 - `notebooks/track_b_anomaly_detection_mvtec_evidence.ipynb`
 - `notebooks/detection_yolo_gc10det_evidence.ipynb`
@@ -73,13 +78,15 @@ The `artifacts/frontend/` folders are frontend-ready data contracts and evidence
   - It remains an evidence/presentation layer only and does not train, recompute metrics, create artifacts, update registries, or claim production/deployment readiness.
   - Final packaging docs are being assembled.
   - README cleanup may be useful later.
+  - Gemini local-smoke work is paused / closed for now and does not change the current mock-first runtime or the final demo evidence package.
 - No evidence-layer blockers remain.
 
 ## 6. What Is Not Included
 
 - No real frontend/dashboard application
-- No API service
+- No production-ready or public API service claim
 - No agent layer
+- No active Gemini runtime
 - No deployment hardening
 - No production-readiness approval
 - No deployment-safety approval

@@ -23,8 +23,10 @@ This file does not change any model or artifact status. It does not claim produc
 ## 3. Main Limitations
 
 - No real frontend/dashboard application is implemented or validated.
-- No API service or prediction endpoint is implemented.
+- No production-ready, public, or deployment-safe API service is claimed.
 - No agent layer is implemented.
+- Gemini local-smoke work is paused / closed for now at the local manual-harness level.
+- Runtime remains mock-first and provider routing remains disabled by default.
 - No production deployment has been performed.
 - No deployment-safety approval exists.
 - Production readiness is not claimed.
@@ -70,6 +72,7 @@ Required before final handoff:
 
 - Review final packaging documents together.
 - Optionally update README as the final entrypoint if the teacher will start from README.
+- Keep the Gemini local-smoke milestone paused / closed unless a future explicit approval restarts it.
 
 Useful but optional:
 

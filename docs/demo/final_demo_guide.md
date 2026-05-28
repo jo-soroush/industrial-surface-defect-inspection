@@ -93,8 +93,9 @@ Safe wording:
 
 - Do not say the system is production-ready.
 - Do not say it is deployment-safe.
+- Do not say the Gemini local-smoke milestone is active; it is paused / closed for now.
 - Do not say a real frontend/dashboard app exists.
-- Do not say API endpoints exist.
+- Do not say API endpoints are production-ready, public, or deployment-safe.
 - Do not say an agent layer exists.
 - Do not say YOLO notebook is production-ready or deployment-safe.
 - Do not say additional training is needed now unless a future audit finds a specific gap.

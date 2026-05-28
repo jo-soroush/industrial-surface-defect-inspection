@@ -17,6 +17,17 @@ This file does not introduce new evidence. It does not claim production readines
 - `docs/status/phase3_detection_pause_status.md`
   - Current Detection / YOLO evidence-layer completion status and safety boundaries.
 
+## 2.1 Gemini Closure Evidence
+
+- `docs/agent/gemini_provider_integration_readiness_plan.md`
+  - Planning and boundary document for future Gemini integration; local smoke milestone is paused / closed for now.
+- `docs/agent/gemini_g3_local_real_smoke_plan.md`
+  - Local manual smoke planning boundary; runtime remains mock-first and provider routing remains disabled by default.
+- `docs/agent/gemini_g3_local_real_smoke_attempt_9_evidence.md`
+  - Ninth approved local-only smoke evidence showing a safe `provider_error` at the client invocation boundary with `provider_error_reason=service_unavailable`.
+- `docs/agent/gemini_g3_pre_real_call_audit.md`
+  - Final activation gate review; future Gemini retry remains explicitly approved-only.
+
 ## 3. Track A Evidence
 
 - Status: PASS
@@ -133,8 +144,10 @@ These folders contain JSON evidence/data-contract bundles for dashboard, report,
 ## 9. What Is Not Included
 
 - No real frontend/dashboard app
-- No API service
+- No production-ready or public API service claim
 - No agent layer
+- No active Gemini runtime
+- No immediate Gemini smoke retry
 - No production deployment
 - No deployment-safety approval
 - No additional training recommended now

@@ -749,6 +749,63 @@ def test_gemini_real_provider_handles_fake_sdk_errors_safely(
     assert result.safe_to_display is True
 
 
+@pytest.mark.parametrize(
+    "mode,expected_status,expected_phrase",
+    [
+        ("service_unavailable", "provider_error", "service unavailable"),
+        ("too_many_requests", "rate_limit", "rate limited"),
+        ("deadline_exceeded", "timeout", "timeout"),
+        ("unknown_exception", "provider_error", "provider error"),
+    ],
+)
+def test_gemini_real_provider_classifies_provider_sdk_exceptions_safely(
+    monkeypatch,
+    mode: str,
+    expected_status: str,
+    expected_phrase: str,
+) -> None:
+    calls: list[str] = []
+
+    def fake_load_google_genai_module():
+        calls.append("called")
+        raise AssertionError("lazy SDK import should not be called when a fake SDK module is injected")
+
+    monkeypatch.setattr(gemini_provider_module, "_load_google_genai_module", fake_load_google_genai_module)
+
+    loader = _RecordingSdkLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai is available in the injected test seam.",
+        )
+    )
+    provider = GeminiRealProvider(
+        settings=_build_real_provider_settings(enable_llm=True, gemini_key_present=True),
+        config=GeminiRealProviderConfig(
+            real_provider_implemented=True,
+            sdk_import_allowed=True,
+            api_key_resolver=lambda: "fake-key",
+        ),
+        sdk_loader=loader.loader,
+        sdk_module_loader=lambda: _FakeRealSdkModule(mode),
+    )
+
+    result = provider.generate(_build_gemini_provider_request())
+
+    assert calls == []
+    assert loader.calls == 1
+    assert result.status == expected_status
+    assert result.provider_response.provider_used == "mock"
+    assert result.provider_response.fallback_used is True
+    assert result.provider_error is not None
+    assert expected_phrase in result.provider_error.lower()
+    assert "503" not in result.provider_error
+    assert "429" not in result.provider_error
+    assert "deadline exceeded" not in result.provider_error.lower()
+    assert result.safe_to_display is True
+
+
 def _build_real_provider_settings(*, enable_llm: bool, gemini_key_present: bool):
     from src.inspection_ai.agent.provider_contracts import ProviderRuntimeSettings
 
@@ -815,6 +872,26 @@ class _FakeRealGeminiModels:
             raise GeminiProviderTimeoutError("timeout")
         if self.mode == "rate_limit":
             raise GeminiProviderRateLimitError("rate")
+        if self.mode == "service_unavailable":
+            raise ServiceUnavailable("503 ServiceUnavailable")
+        if self.mode == "too_many_requests":
+            raise TooManyRequests("429 TooManyRequests")
+        if self.mode == "deadline_exceeded":
+            raise DeadlineExceeded("deadline exceeded")
+        if self.mode == "unknown_exception":
+            raise RuntimeError("unexpected external SDK failure")
         if self.mode == "provider_error":
             raise GeminiProviderError("provider error")
         return GeminiClientResult(text="This is a safe mocked Gemini answer. Manual review still applies.")
+
+
+class ServiceUnavailable(Exception):
+    pass
+
+
+class TooManyRequests(Exception):
+    pass
+
+
+class DeadlineExceeded(Exception):
+    pass

@@ -563,6 +563,8 @@ def _safe_safety_block_reason(result: GeminiRealGenerationResult) -> str:
 
 def _safe_provider_error_stage(result: GeminiRealGenerationResult) -> str:
     text = _combined_provider_error_text(result)
+    if "service unavailable" in text or "503" in text or "unavailable" in text:
+        return "client_invocation"
     if "client creation" in text:
         return "client_creation"
     if "normalized" in text or "malformed payload" in text:
@@ -574,6 +576,8 @@ def _safe_provider_error_stage(result: GeminiRealGenerationResult) -> str:
 
 def _safe_provider_error_reason(result: GeminiRealGenerationResult) -> str:
     text = _combined_provider_error_text(result)
+    if "service unavailable" in text or "503" in text or "unavailable" in text:
+        return "service_unavailable"
     if "client creation" in text:
         return "client_creation_failed"
     if "normalized" in text or "malformed payload" in text:

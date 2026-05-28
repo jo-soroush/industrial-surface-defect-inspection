@@ -640,6 +640,28 @@ def test_failure_lines_map_client_creation_provider_error_to_sanitized_category(
     assert "provider_error_reason=client_creation_failed" in joined
 
 
+def test_failure_lines_map_service_unavailable_provider_error_to_sanitized_category() -> None:
+    module = load_harness_module()
+    request = _build_real_provider_request(module)
+    result = _build_failure_result(
+        status="provider_error",
+        provider_error="Gemini real provider service unavailable.",
+        fallback_reason="Gemini real provider service unavailable; mock fallback remains the safe path.",
+    )
+
+    lines = module.build_failure_lines(
+        request=request,
+        result=result,
+        smoke_model_name="gemini-2.5-flash",
+    )
+
+    joined = "\n".join(lines)
+    assert "error_category=provider_error" in joined
+    assert "provider_error_stage=client_invocation" in joined
+    assert "provider_error_reason=service_unavailable" in joined
+    assert "503" not in joined
+
+
 def test_default_smoke_model_name_is_smoke_only_and_can_be_overridden(monkeypatch) -> None:
     module = load_harness_module()
     captured_model_names: list[str] = []

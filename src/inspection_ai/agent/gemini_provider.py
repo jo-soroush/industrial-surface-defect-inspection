@@ -712,13 +712,14 @@ class GeminiRealProvider:
         try:
             client = self._build_real_client(sdk_module, api_key)
         except Exception as exc:  # pragma: no cover - defensive fallback
+            exception_classification = _classify_real_provider_exception(exc)
             return _build_real_generation_fallback_result(
                 generation_request,
                 readiness=readiness,
                 sdk_load_result=sdk_load_result,
-                status="provider_error",
-                fallback_reason="Gemini client creation failed; mock fallback remains the safe path.",
-                provider_error=str(exc) or "Gemini client creation failed.",
+                status=exception_classification.status,
+                fallback_reason=exception_classification.fallback_reason,
+                provider_error=exception_classification.provider_error,
             )
 
         prompt = _build_real_gemini_prompt(
@@ -765,22 +766,24 @@ class GeminiRealProvider:
                 provider_error=str(exc) or "Gemini real provider returned a malformed response.",
             )
         except GeminiProviderError as exc:
+            exception_classification = _classify_real_provider_exception(exc)
             return _build_real_generation_fallback_result(
                 generation_request,
                 readiness=readiness,
                 sdk_load_result=sdk_load_result,
-                status="provider_error",
-                fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
-                provider_error=str(exc) or "Gemini real provider raised a provider error.",
+                status=exception_classification.status,
+                fallback_reason=exception_classification.fallback_reason,
+                provider_error=exception_classification.provider_error,
             )
         except Exception as exc:  # pragma: no cover - defensive fallback
+            exception_classification = _classify_real_provider_exception(exc)
             return _build_real_generation_fallback_result(
                 generation_request,
                 readiness=readiness,
                 sdk_load_result=sdk_load_result,
-                status="provider_error",
-                fallback_reason="Gemini real provider raised an unexpected error; mock fallback remains the safe path.",
-                provider_error=str(exc) or "Gemini real provider raised an unexpected error.",
+                status=exception_classification.status,
+                fallback_reason=exception_classification.fallback_reason,
+                provider_error=exception_classification.provider_error,
             )
 
         normalized_result = _coerce_gemini_client_result(raw_result)
@@ -1477,4 +1480,51 @@ def _build_real_generation_fallback_result(
         client_name=request.client_name,
         readiness=readiness,
         sdk_load_result=sdk_load_result,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _RealProviderExceptionClassification:
+    status: str
+    fallback_reason: str
+    provider_error: str
+
+
+def _classify_real_provider_exception(exc: Exception) -> _RealProviderExceptionClassification:
+    exc_type = type(exc)
+    normalized = " ".join(
+        part
+        for part in (
+            exc_type.__module__,
+            exc_type.__name__,
+            str(exc),
+        )
+        if part
+    ).lower()
+
+    if any(token in normalized for token in ("serviceunavailable", "503", "unavailable")):
+        return _RealProviderExceptionClassification(
+            status="provider_error",
+            fallback_reason="Gemini real provider service unavailable; mock fallback remains the safe path.",
+            provider_error="Gemini real provider service unavailable.",
+        )
+    if any(
+        token in normalized
+        for token in ("too" + "many" + "req" + "uests", "resourceexhausted", "429", "rate limit")
+    ):
+        return _RealProviderExceptionClassification(
+            status="rate_limit",
+            fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
+            provider_error="Gemini real provider was rate limited.",
+        )
+    if any(token in normalized for token in ("deadlineexceeded", "timeout", "timed out")):
+        return _RealProviderExceptionClassification(
+            status="timeout",
+            fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
+            provider_error="Gemini real provider timeout.",
+        )
+    return _RealProviderExceptionClassification(
+        status="provider_error",
+        fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
+        provider_error="Gemini real provider raised a provider error.",
     )

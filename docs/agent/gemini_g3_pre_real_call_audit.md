@@ -187,6 +187,7 @@ The final real-smoke execution checklist is documented in `docs/agent/gemini_g3_
 The harness dry-run verification evidence is documented in `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md`.
 The approved-but-not-executed real-smoke attempt discovery is documented in `docs/agent/gemini_g3_approved_real_smoke_attempt_discovery.md`.
 The fourth approved local-only real-smoke attempt evidence is documented in `docs/agent/gemini_g3_local_real_smoke_attempt_4_evidence.md`.
+The ninth approved local-only real-smoke attempt evidence is documented in `docs/agent/gemini_g3_local_real_smoke_attempt_9_evidence.md`.
 
 If later approved, the first real Gemini smoke must be:
 
@@ -199,7 +200,9 @@ If later approved, the first real Gemini smoke must be:
 - with clear pass / fail evidence
 - with immediate rollback by `AGENT_ENABLE_LLM=false`
 
-The fourth approved local-only real-smoke attempt failed safely with `provider_error`, recorded `error_category=provider_error`, did not hit `sdk_missing`, and observed `429 TooManyRequests` in Google AI Studio. The next real-smoke attempt must wait until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is improved to a minimally grounded context.
+The fourth approved local-only real-smoke attempt failed safely with `provider_error`, recorded `error_category=provider_error`, did not hit `sdk_missing`, and observed `429 TooManyRequests` in Google AI Studio.
+The ninth approved local-only real-smoke attempt reached the client invocation stage, failed safely with `provider_error`, recorded `provider_error_stage=client_invocation` and `provider_error_reason=service_unavailable`, kept `safety_status=pass`, kept `grounding_status=grounded`, and used the safe mock fallback.
+The next real-smoke attempt must wait until the external Gemini availability situation is understood or enough time has passed, and the smoke context remains grounded.
 
 ## Docker / Compose Gate
 

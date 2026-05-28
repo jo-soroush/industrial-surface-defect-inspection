@@ -326,6 +326,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | Fourth approved local-only real-smoke attempt evidence exists and records the safe `provider_error` failure | `docs/agent/gemini_g3_local_real_smoke_attempt_4_evidence.md`, `docs/agent/gemini_g3_local_real_smoke_plan.md` | PASS | The repository now contains evidence for the fourth approved local-only real-smoke attempt, including `result_status=provider_error`, `error_category=provider_error`, `sdk_missing` absent, `grounding_status=insufficient_evidence`, cleanup completed, and the user-observed `429 TooManyRequests` state in Google AI Studio. | The next smoke must wait until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is minimally grounded. | No |
 
+### 10.24 Gemini Provider G3 Ninth Local Real-Smoke Attempt Evidence
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Ninth approved local-only real-smoke attempt evidence exists and records a safe `provider_error` failure at the client invocation stage | `docs/agent/gemini_g3_local_real_smoke_attempt_9_evidence.md`, `docs/agent/gemini_g3_local_real_smoke_plan.md` | PASS | The repository now contains evidence for the ninth approved local-only real-smoke attempt, including `result_status=provider_error`, `error_category=provider_error`, `provider_error_stage=client_invocation`, `provider_error_reason=service_unavailable`, `grounding_status=grounded`, `safety_status=pass`, cleanup completed, and the safe mock fallback path. | The next smoke must wait until the external Gemini availability situation is understood or enough time has passed, and the smoke context remains grounded. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -395,13 +401,13 @@ The following remain incomplete or not yet fully proven:
 Current blockers supported by the audit docs:
 
 1. Local real-smoke planning remains blocked until explicit user approval.
-2. Another real-smoke attempt remains blocked until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is minimally grounded.
+2. Another real-smoke attempt remains blocked until the external Gemini availability situation is understood or enough time has passed, and the smoke context remains grounded.
 
 ## Required Next Sequence
 
 1. Request and obtain user approval for the next non-code Gemini planning step.
-2. Keep real-smoke execution blocked until the rate-limit / quota situation is understood or enough time has passed.
-3. Improve the local real-smoke context from `insufficient_evidence` to a minimally grounded context before any further attempt.
+2. Keep real-smoke execution blocked until the external Gemini availability situation is understood or enough time has passed.
+3. Keep the grounded smoke context intact before any further attempt.
 4. Re-run the requirement-to-test matrix if the scope changes.
 
 ## Gemini Must Not Start Until...

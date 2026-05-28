@@ -22,6 +22,7 @@ The final execution checklist is documented in `docs/agent/gemini_g3_final_real_
 Dry-run verification evidence is documented in `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md`.
 Approved-but-not-executed discovery is documented in `docs/agent/gemini_g3_approved_real_smoke_attempt_discovery.md`.
 The fourth approved local-only manual attempt result is documented in `docs/agent/gemini_g3_local_real_smoke_attempt_4_evidence.md`.
+The ninth approved local-only manual attempt result is documented in `docs/agent/gemini_g3_local_real_smoke_attempt_9_evidence.md`.
 
 What this plan controls:
 
@@ -60,7 +61,7 @@ What this does not mean:
 - real smoke execution is complete
 - Gemini is connected
 - Gemini is active
-- `GEMINI_API_KEY` has been used
+- `GEMINI_API_KEY` has been used only temporarily in a local shell/session for an approved attempt
 
 ## Fourth Attempt Evidence Status
 
@@ -84,12 +85,43 @@ What this does not mean:
 - real smoke execution is complete
 - Gemini is connected
 - Gemini is active
-- `GEMINI_API_KEY` has been used
+- `GEMINI_API_KEY` has been used only temporarily in a local shell/session for an approved attempt
 - the next smoke should be run immediately
-- the rate limit / quota situation is understood or enough time has passed
-- the smoke context is improved from `insufficient_evidence` to a minimally grounded context
+- the external Gemini availability situation is understood or enough time has passed
+- the smoke context is grounded; the remaining blocker is external Gemini availability
 
 Do not run another smoke until both conditions above are true.
+
+## Ninth Attempt Evidence Status
+
+The ninth approved local-only manual real-smoke attempt is documented and reviewed.
+
+What this means:
+
+- the smoke executed once locally and failed safely
+- `result_status=provider_error`
+- `error_category=provider_error`
+- `provider_error_stage=client_invocation`
+- `provider_error_reason=service_unavailable`
+- `grounding_status=grounded`
+- `safety_status=pass`
+- `provider_used=mock`
+- `fallback_used=true`
+- cleanup was completed
+- the normal route remained mock-first
+- provider routing activation remained disabled
+
+What this does not mean:
+
+- real smoke execution is complete
+- Gemini is connected
+- Gemini is active
+- `GEMINI_API_KEY` has been used
+- the next smoke should be run immediately
+- the external Gemini availability situation is understood or enough time has passed
+- the smoke context is already grounded, but the next attempt still requires explicit approval and a fresh external-availability check
+
+Do not run another smoke until the external Gemini availability situation is understood or enough time has passed, and any future attempt remains explicitly approved.
 
 ## Approval Gate Wording
 
@@ -403,14 +435,14 @@ This document does not claim production/deployment/HTTPS readiness.
 
 ## Recommended Next Slice
 
-Recommended next slice: **pause further attempts until the rate-limit / quota situation is understood or enough time has passed, then improve the smoke context to a minimally grounded context before any future approval**
+Recommended next slice: **pause further attempts until the external Gemini availability situation is understood or enough time has passed, then keep the grounded smoke context and only retry with explicit approval**
 
 Why this is the safest next move:
 
 - it keeps the current mock-first runtime intact
 - it does not require any real API call
-- it avoids another attempt while the current rate-limit / quota signal is unresolved
-- it reduces the risk of another `insufficient_evidence` smoke context
+- it avoids another attempt while the current external availability signal is unresolved
+- it keeps the smoke context grounded for future retries
 - it preserves the requirement for a separate evidence document after any approved smoke
 
 If the user does not approve the exact approval gate wording above, the next step is to remain blocked.

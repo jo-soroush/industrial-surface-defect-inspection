@@ -184,6 +184,7 @@ Required next action: continue with EC2 readiness planning while keeping LLM dis
 
 The separate EC2 LLM-disabled validation evidence now records the actual EC2 PASS in `docs/deployment/ec2_llm_disabled_validation_evidence.md`.
 The fourth approved local-only Gemini real-smoke attempt evidence now records a safe `provider_error` failure, a sanitized `error_category=provider_error`, no `sdk_missing`, and `429 TooManyRequests` observed in Google AI Studio.
+The ninth approved local-only Gemini real-smoke attempt evidence now records a safe `provider_error` failure at the client invocation stage, with `provider_error_reason=service_unavailable`, `grounding_status=grounded`, and `safety_status=pass`.
 
 ## Blocking Items Before Gemini
 
@@ -192,7 +193,7 @@ The fourth approved local-only Gemini real-smoke attempt evidence now records a 
 ## Recommended Next Sequence
 
 1. User approval for the next non-code Gemini planning step.
-2. Keep real-smoke execution blocked until the rate-limit / quota situation is understood or enough time has passed.
+2. Keep real-smoke execution blocked until the external Gemini availability situation is understood or enough time has passed.
 3. Improve the local real-smoke context from `insufficient_evidence` to a minimally grounded context before any further attempt.
 4. Keep the pre-Gemini matrix and deployment evidence current if the deployment surface changes.
 
@@ -208,10 +209,11 @@ The fourth approved local-only Gemini real-smoke attempt evidence now records a 
   - The EC2 readiness planning audit exists and records the next LLM-disabled deployment planning step.
   - The EC2 LLM-disabled validation evidence exists and records the actual EC2 PASS.
   - The fourth approved local-only Gemini real-smoke attempt evidence exists and records a safe `provider_error` failure, a sanitized `error_category=provider_error`, no `sdk_missing`, and `429 TooManyRequests` observed in Google AI Studio.
+  - The ninth approved local-only Gemini real-smoke attempt evidence exists and records a safe `provider_error` failure at the client invocation stage, with `provider_error_reason=service_unavailable`, `grounding_status=grounded`, and `safety_status=pass`.
   - The repository still passes the focused compile and pytest checks.
 - Remaining blocker:
   - User approval for the next non-code Gemini planning step.
-  - Real smoke remains blocked until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is minimally grounded.
+  - Real smoke remains blocked until the external Gemini availability situation is understood or enough time has passed, and the smoke context remains grounded.
 
 ## Maintenance Notes
 

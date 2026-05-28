@@ -10,6 +10,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from src.inspection_ai.agent.gemini_provider import GeminiRealGenerationResult
 from src.inspection_ai.agent.gemini_provider import GeminiSdkLoadResult
 from src.inspection_ai.agent.context_builder import build_grounding_context as build_real_grounding_context
@@ -93,14 +95,22 @@ def _build_failure_result(
     )
 
 
-def _build_real_result_with_status(status: str) -> GeminiRealGenerationResult:
+def _build_real_result_with_status(
+    status: str,
+    *,
+    provider_used: str = "gemini",
+    fallback_used: bool = False,
+    safe_to_send: bool = True,
+    safe_to_display: bool = True,
+    safety_status: str | None = None,
+) -> GeminiRealGenerationResult:
     response = build_provider_response(
         answer="This is a safe mocked Gemini answer. Manual review still applies.",
-        provider_used="gemini",
-        fallback_used=False,
+        provider_used=provider_used,
+        fallback_used=fallback_used,
         fallback_reason=None,
         grounding_status="grounded",
-        safety_status="pass" if status == "pass" else "blocked",
+        safety_status=safety_status if safety_status is not None else ("pass" if status == "pass" else "blocked"),
         limitations=["manual review still applies"],
         evidence_used=[{"source": "test.fake", "value": "safe"}],
         provider_error=None,
@@ -108,8 +118,8 @@ def _build_real_result_with_status(status: str) -> GeminiRealGenerationResult:
     return GeminiRealGenerationResult(
         provider_response=response,
         status=status,
-        safe_to_send=True,
-        safe_to_display=True,
+        safe_to_send=safe_to_send,
+        safe_to_display=safe_to_display,
         provider_error=None,
         fallback_reason=None,
         client_name="fake-sdk",
@@ -257,6 +267,7 @@ def test_confirmation_flag_reaches_explicit_execution_helper_with_fake_seam(monk
     assert "fallback_used=false" in captured.out
     assert "grounding_status=grounded" in captured.out
     assert "safety_status=pass" in captured.out
+    assert "smoke_success_level=full" in captured.out
     assert "smoke_model=gemini-2.5-flash" in captured.out
     assert "request_summary=page_id=image_inspection;section_id=final_decision;component_id=image_inspection_ai_explanation_panel;question_sanitized=true" in captured.out
     assert "response_summary=manual_review_visible=true;sanitized=true;raw_response_hidden=true" in captured.out
@@ -266,6 +277,87 @@ def test_confirmation_flag_reaches_explicit_execution_helper_with_fake_seam(monk
     assert "Explain the current image inspection result in a safe way." not in captured.out
     assert "raw_provider_response" not in captured.out
     assert "sdk_missing" not in captured.out
+
+
+def test_confirmation_flag_limited_safe_result_is_reported_as_success(monkeypatch, capsys) -> None:
+    module = load_harness_module()
+
+    monkeypatch.setattr(module, "_resolve_gemini_api_key", lambda: "present-but-disabled")
+    monkeypatch.setattr(
+        module,
+        "generate_with_real_gemini_provider",
+        lambda *a, **k: _build_real_result_with_status(
+            "limited",
+            safety_status="limited",
+            safe_to_send=True,
+            safe_to_display=True,
+        ),
+    )
+
+    exit_code = module.main(
+        [
+            "--execute",
+            "--i-understand-this-calls-gemini",
+            "--question",
+            "Explain the current image inspection result in a safe way.",
+            "--page-id",
+            "image_inspection",
+            "--section-id",
+            "final_decision",
+            "--component-id",
+            "image_inspection_ai_explanation_panel",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "gemini_local_smoke_status=SUCCESS_LIMITED" in captured.out
+    assert "smoke_success_level=limited" in captured.out
+    assert "result_status=limited" in captured.out
+    assert "provider_used=gemini" in captured.out
+    assert "fallback_used=false" in captured.out
+    assert "grounding_status=grounded" in captured.out
+    assert "safety_status=limited" in captured.out
+    assert "This is a safe mocked Gemini answer." not in captured.out
+
+
+@pytest.mark.parametrize(
+    "result_factory",
+    [
+        lambda: _build_real_result_with_status(
+            "limited",
+            provider_used="gemini",
+            fallback_used=True,
+            safety_status="limited",
+        ),
+        lambda: _build_real_result_with_status(
+            "limited",
+            provider_used="mock",
+            fallback_used=False,
+            safety_status="limited",
+        ),
+        lambda: _build_real_result_with_status(
+            "limited",
+            provider_used="gemini",
+            fallback_used=False,
+            safe_to_send=False,
+            safety_status="limited",
+        ),
+        lambda: _build_real_result_with_status(
+            "limited",
+            provider_used="gemini",
+            fallback_used=False,
+            safe_to_display=False,
+            safety_status="limited",
+        ),
+    ],
+)
+def test_limited_result_must_meet_all_success_conditions(result_factory) -> None:
+    module = load_harness_module()
+    result = result_factory()
+
+    assert module._is_successful_smoke_result(result) is False
+    assert module._is_limited_success_smoke_result(result) is False
 
 
 def test_explicit_execute_path_uses_minimal_grounded_smoke_context(monkeypatch) -> None:

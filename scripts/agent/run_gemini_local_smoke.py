@@ -141,10 +141,13 @@ def build_success_lines(
     request: AgentProviderRequest,
     result: GeminiRealGenerationResult,
     smoke_model_name: str,
+    success_level: str = "full",
 ) -> tuple[str, ...]:
+    smoke_status = "SUCCESS_LIMITED" if success_level == "limited" else "SUCCESS"
     return (
-        "gemini_local_smoke_status=SUCCESS",
+        f"gemini_local_smoke_status={smoke_status}",
         f"smoke_model={smoke_model_name}",
+        f"smoke_success_level={success_level}",
         f"result_status={result.status}",
         f"provider_used={result.provider_response.provider_used}",
         f"fallback_used={str(result.provider_response.fallback_used).lower()}",
@@ -323,6 +326,15 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace, *, smoke_model_nam
             request=provider_request,
             result=result,
             smoke_model_name=smoke_model_name,
+            success_level="full",
+        )
+
+    if _is_limited_success_smoke_result(result):
+        return 0, build_success_lines(
+            request=provider_request,
+            result=result,
+            smoke_model_name=smoke_model_name,
+            success_level="limited",
         )
 
     return 1, build_failure_lines(
@@ -624,6 +636,17 @@ def _is_successful_smoke_result(result: GeminiRealGenerationResult) -> bool:
         and result.safe_to_send
         and result.safe_to_display
         and result.status in {"pass", "success"}
+    )
+
+
+def _is_limited_success_smoke_result(result: GeminiRealGenerationResult) -> bool:
+    response = result.provider_response
+    return (
+        response.provider_used == "gemini"
+        and not response.fallback_used
+        and result.safe_to_send
+        and result.safe_to_display
+        and result.status == "limited"
     )
 
 

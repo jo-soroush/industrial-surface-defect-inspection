@@ -206,6 +206,23 @@ def test_missing_confirmation_flag_blocks_non_dry_run_before_key_access(monkeypa
     assert "error_category=" not in captured.out
 
 
+def test_smoke_question_helper_adds_evidence_only_instructions() -> None:
+    module = load_harness_module()
+
+    wrapped = module._smoke_question_with_evidence_only_instructions(
+        "Explain the current image inspection result in a safe way."
+    )
+
+    assert "Use only the provided evidence." in wrapped
+    assert "Do not invent metrics." in wrapped
+    assert "Do not convert numeric values to other formats." in wrapped
+    assert "Do not add percentages unless the exact percentage exists in the evidence." in wrapped
+    assert "Do not claim production readiness, deployment readiness, HTTPS/domain readiness, or real LLM readiness." in wrapped
+    assert "Keep the answer short." in wrapped
+    assert "If evidence is insufficient, say manual review is required." in wrapped
+    assert "User question: Explain the current image inspection result in a safe way." in wrapped
+
+
 def test_confirmation_flag_reaches_explicit_execution_helper_with_fake_seam(monkeypatch, capsys) -> None:
     module = load_harness_module()
 
@@ -286,6 +303,16 @@ def test_explicit_execute_path_uses_minimal_grounded_smoke_context(monkeypatch) 
     assert captured_kwargs["include_raw_evidence"] is False
     assert captured_kwargs["visible_context"]
     assert captured_kwargs["inspection_response"]
+    wrapped_question = captured_kwargs["question"]
+    assert isinstance(wrapped_question, str)
+    assert "Use only the provided evidence." in wrapped_question
+    assert "Do not invent metrics." in wrapped_question
+    assert "Do not convert numeric values to other formats." in wrapped_question
+    assert "Do not add percentages unless the exact percentage exists in the evidence." in wrapped_question
+    assert "Do not claim production readiness, deployment readiness, HTTPS/domain readiness, or real LLM readiness." in wrapped_question
+    assert "Keep the answer short." in wrapped_question
+    assert "If evidence is insufficient, say manual review is required." in wrapped_question
+    assert "Explain the current image inspection result in a safe way." in wrapped_question
 
 
 def test_minimal_smoke_context_builds_grounded_context_without_secrets() -> None:

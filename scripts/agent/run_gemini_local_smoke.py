@@ -215,11 +215,12 @@ def run_explicit_real_smoke_attempt(args: argparse.Namespace, *, smoke_model_nam
     try:
         visible_context = _minimal_smoke_visible_context()
         inspection_response = _minimal_smoke_inspection_response()
+        smoke_question = _smoke_question_with_evidence_only_instructions(args.question)
         grounding_context = build_grounding_context(
             page_id=args.page_id,
             section_id=args.section_id,
             component_id=args.component_id,
-            question=args.question,
+            question=smoke_question,
             visible_context=visible_context,
             inspection_response=inspection_response,
             include_raw_evidence=False,
@@ -402,6 +403,20 @@ def _minimal_smoke_inspection_response() -> dict[str, object]:
             "context_version": "local_smoke_synthetic_context_v1",
         },
     }
+
+
+def _smoke_question_with_evidence_only_instructions(question: str) -> str:
+    clean_question = question.strip()
+    return (
+        "Use only the provided evidence. "
+        "Do not invent metrics. "
+        "Do not convert numeric values to other formats. "
+        "Do not add percentages unless the exact percentage exists in the evidence. "
+        "Do not claim production readiness, deployment readiness, HTTPS/domain readiness, or real LLM readiness. "
+        "Keep the answer short. "
+        "If evidence is insufficient, say manual review is required. "
+        f"User question: {clean_question}"
+    )
 
 
 def _resolve_gemini_api_key() -> str | None:

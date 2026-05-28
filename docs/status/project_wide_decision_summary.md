@@ -5,9 +5,9 @@
 - [x] Track A Classification: PASS
 - [x] Track B / Autoencoder: PASS
 - [x] YOLO / Detection evidence layer: COMPLETE
-- [ ] Full frontend/dashboard app: NOT STARTED / NOT VALIDATED
-- [ ] API endpoints: NOT STARTED
-- [ ] Agent layer: NOT STARTED
+- [x] Frontend/dashboard evidence surfaces: IMPLEMENTED AS EVIDENCE/DEMO/MOCK-FIRST LAYER
+- [x] API routes for inspection, prediction, and agent explainability: IMPLEMENTED AS EVIDENCE/DEMO/MOCK-FIRST LAYER
+- [x] Agent/RAG foundation: IMPLEMENTED AS EVIDENCE/DEMO/MOCK-FIRST LAYER
 - [ ] Production readiness: NOT CLAIMED
 - [ ] Deployment safety: NOT CLAIMED
 - [ ] Gemini local-smoke milestone: PAUSED / CLOSED FOR NOW at the local manual-harness level
@@ -77,7 +77,10 @@ Required before final handoff:
 - [ ] Final demo/readiness audit
 - [ ] Final report/demo packaging
 - [ ] Final project-wide limitations and next-step summary
-- [ ] Reconcile roadmap language after the Gemini local-smoke closure so the next non-Gemini track is clear
+- [x] Reconcile roadmap language after the Gemini local-smoke closure so the next technical track is clear
+- [ ] Define the gated real-provider runtime activation design if future real-LLM activation is explicitly approved
+- [ ] Decide whether later public frontend/dashboard hardening is needed
+- [ ] Decide whether later public API hardening is needed
 
 Optional before final handoff:
 
@@ -96,9 +99,9 @@ Not recommended now:
 
 ## 7. Recommended Next Step
 
-Next step: choose the next non-Gemini roadmap section after the Gemini local-smoke closure is reconciled
+Next step: treat the reconciled roadmap/status docs as the source of truth; if implementation work resumes later, the next technical track should be a gated real-provider runtime activation design.
 
-Reason: the project now has complete evidence/status consolidation, and the Gemini local-smoke milestone is paused / closed for now. A clean non-Gemini track choice should be made before starting new implementation work.
+Reason: the project now has complete evidence/status consolidation, the Gemini local-smoke milestone is paused / closed for now, and the repo already contains the implemented mock-first frontend/API/agent foundations. A live-provider path should only be designed later under explicit approval and gating.
 
 ## 8. Safety Boundaries
 

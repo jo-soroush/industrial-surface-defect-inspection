@@ -5,14 +5,14 @@
 - [x] Track A Classification: PASS
 - [x] Track B / Autoencoder: PASS
 - [x] YOLO / Detection evidence layer: COMPLETE
-- [ ] Full frontend/dashboard app: NOT STARTED / NOT VALIDATED
-- [ ] API: NOT STARTED
-- [ ] Agent layer: NOT STARTED
+- [x] Frontend/dashboard evidence surfaces: IMPLEMENTED AS EVIDENCE/DEMO/MOCK-FIRST LAYER
+- [x] API routes for inspection, prediction, and agent explainability: IMPLEMENTED AS EVIDENCE/DEMO/MOCK-FIRST LAYER
+- [x] Agent/RAG foundation: IMPLEMENTED AS EVIDENCE/DEMO/MOCK-FIRST LAYER
 - [ ] Production readiness: NOT CLAIMED
 - [ ] Deployment safety: NOT CLAIMED
 - [ ] Gemini local-smoke milestone: PAUSED / CLOSED FOR NOW at the local manual-harness level
 
-The repository currently has governed evidence for the classification, anomaly detection, and object detection tracks. This status does not make any production-readiness or deployment-safety claim.
+The repository currently has governed evidence for the classification, anomaly detection, and object detection tracks, plus implemented mock-first frontend, API, and agent foundations. This status does not make any production-readiness or deployment-safety claim.
 The Gemini local-smoke milestone is paused / closed for now at the local manual-harness level; the runtime remains mock-first and provider routing remains disabled by default.
 
 ## 2. Source-of-Truth Rules
@@ -87,7 +87,7 @@ This is evidence/data-contract completion only.
 - Track B frontend bundle: complete
 - Detection frontend data-contract generator: complete
 - Detection generated frontend bundle: local ignored data-contract evidence when generated
-- Real frontend/dashboard application: not started / not validated
+- Real frontend/dashboard application: not production/public/deployment-ready; only the evidence/demo surfaces are implemented
 
 Frontend bundle JSON files exist to support future dashboard development. They do not constitute a user-facing frontend application.
 
@@ -102,14 +102,13 @@ Notebook work must not train models, create governed artifacts, update registrie
 
 ## 8. Remaining Roadmap Sections
 
-- [ ] Perform a final project-wide status/demo readiness audit.
-- [ ] Review the refreshed YOLO notebook presentation if needed.
-- [ ] Decide whether to start the full frontend/dashboard application.
-- [ ] Decide whether to create API endpoints.
-- [ ] Decide whether to create an agent layer.
+- [x] Roadmap/status canonicalization: current status should be read from the implemented evidence/demo/mock-first layers above.
+- [ ] Design a gated real-provider runtime activation path.
+- [ ] Decide whether any later public frontend/dashboard hardening is needed.
+- [ ] Decide whether any later public API hardening is needed.
 - [ ] Prepare final report/demo packaging.
 
-These roadmap sections have not started as implementation work in this status update.
+These roadmap sections are future planning items and are not a claim that live-provider runtime activation, public deployment, or production hardening has already occurred.
 
 ## 9. Completed Milestones
 
@@ -125,6 +124,6 @@ These roadmap sections have not started as implementation work in this status up
 
 ## 10. Current Recommended Next Step
 
-Perform a project-wide status reconciliation, confirm the Gemini local-smoke milestone is paused / closed for now, and choose the next non-Gemini roadmap section.
+Treat the roadmap/status docs as the source of truth for the current implemented evidence/demo/mock-first layers. If implementation work resumes later, the next technical track should be a gated real-provider runtime activation design.
 
-Do not run another YOLO structured-output readiness audit as the next step; the YOLO / Detection evidence layer is complete. Do not run another Gemini local smoke as the next step. Do not start frontend, API, notebook, or agent implementation inside this roadmap update.
+Do not run another YOLO structured-output readiness audit as the next step; the YOLO / Detection evidence layer is complete. Do not run another Gemini local smoke as the next step. Do not restart UI, API, notebook, agent, Docker, EC2, or real-LLM implementation from this roadmap update.

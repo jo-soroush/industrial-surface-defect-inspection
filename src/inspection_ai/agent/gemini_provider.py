@@ -591,6 +591,7 @@ class GeminiRealProviderConfig:
 
     model_name: str = "gemini-2.5-flash"
     client_name: str = "google-genai"
+    max_retries: int = 1
     real_provider_implemented: bool = False
     sdk_import_allowed: bool = False
     fallback_enabled: bool = True
@@ -791,204 +792,229 @@ class GeminiRealProvider:
             sanitized_context=pre_guard.sanitized_context,
         )
 
-        try:
-            raw_result = self._invoke_real_client(client, prompt, generation_request.provider_request)
-        except GeminiProviderTimeoutError as exc:
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="timeout",
-                fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
-                provider_error=str(exc) or "Gemini real provider timeout.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="timeout",
-            )
-        except GeminiProviderRateLimitError as exc:
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="rate_limit",
-                fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
-                provider_error=str(exc) or "Gemini real provider was rate limited.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="rate_limit",
-            )
-        except GeminiProviderEmptyResponseError as exc:
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="empty",
-                fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
-                provider_error=str(exc) or "Gemini real provider returned an empty response.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="malformed_response",
-            )
-        except GeminiProviderMalformedResponseError as exc:
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="malformed",
-                fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
-                provider_error=str(exc) or "Gemini real provider returned a malformed response.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="malformed_response",
-            )
-        except GeminiProviderError as exc:
-            exception_classification = _classify_real_provider_exception(exc)
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status=exception_classification.status,
-                fallback_reason=exception_classification.fallback_reason,
-                provider_error=exception_classification.provider_error,
-                provider_error_stage=exception_classification.provider_error_stage,
-                provider_error_reason=exception_classification.provider_error_reason,
-            )
-        except Exception as exc:  # pragma: no cover - defensive fallback
-            exception_classification = _classify_real_provider_exception(exc)
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status=exception_classification.status,
-                fallback_reason=exception_classification.fallback_reason,
-                provider_error=exception_classification.provider_error,
-                provider_error_stage=exception_classification.provider_error_stage,
-                provider_error_reason=exception_classification.provider_error_reason,
-            )
+        max_retries = max(0, self.config.max_retries)
+        for attempt in range(max_retries + 1):
+            try:
+                raw_result = self._invoke_real_client(client, prompt, generation_request.provider_request)
+            except GeminiProviderTimeoutError as exc:
+                if attempt < max_retries:
+                    continue
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="timeout",
+                    fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
+                    provider_error=str(exc) or "Gemini real provider timeout.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="timeout",
+                )
+            except GeminiProviderRateLimitError as exc:
+                if attempt < max_retries:
+                    continue
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="rate_limit",
+                    fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
+                    provider_error=str(exc) or "Gemini real provider was rate limited.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="rate_limit",
+                )
+            except GeminiProviderEmptyResponseError as exc:
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="empty",
+                    fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
+                    provider_error=str(exc) or "Gemini real provider returned an empty response.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="malformed_response",
+                )
+            except GeminiProviderMalformedResponseError as exc:
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="malformed",
+                    fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
+                    provider_error=str(exc) or "Gemini real provider returned a malformed response.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="malformed_response",
+                )
+            except GeminiProviderError as exc:
+                exception_classification = _classify_real_provider_exception(exc)
+                if _is_retryable_real_provider_error_reason(exception_classification.provider_error_reason) and attempt < max_retries:
+                    continue
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status=exception_classification.status,
+                    fallback_reason=exception_classification.fallback_reason,
+                    provider_error=exception_classification.provider_error,
+                    provider_error_stage=exception_classification.provider_error_stage,
+                    provider_error_reason=exception_classification.provider_error_reason,
+                )
+            except Exception as exc:  # pragma: no cover - defensive fallback
+                exception_classification = _classify_real_provider_exception(exc)
+                if _is_retryable_real_provider_error_reason(exception_classification.provider_error_reason) and attempt < max_retries:
+                    continue
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status=exception_classification.status,
+                    fallback_reason=exception_classification.fallback_reason,
+                    provider_error=exception_classification.provider_error,
+                    provider_error_stage=exception_classification.provider_error_stage,
+                    provider_error_reason=exception_classification.provider_error_reason,
+                )
 
-        normalized_result = _coerce_gemini_client_result(raw_result)
-        if normalized_result is None:
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="malformed",
-                fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
-                provider_error="Gemini real provider returned a malformed response.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="malformed_response",
-            )
+            normalized_result = _coerce_gemini_client_result(raw_result)
+            if normalized_result is None:
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="malformed",
+                    fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
+                    provider_error="Gemini real provider returned a malformed response.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="malformed_response",
+                )
 
-        if normalized_result.error_kind == "timeout":
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="timeout",
-                fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
-                provider_error="Gemini real provider timeout.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="timeout",
-            )
-        if normalized_result.error_kind == "provider_error":
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="provider_error",
-                fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
-                provider_error="Gemini real provider raised a provider error.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="provider_error",
-            )
-        if normalized_result.error_kind == "rate_limit":
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="rate_limit",
-                fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
-                provider_error="Gemini real provider was rate limited.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="rate_limit",
-            )
-        if normalized_result.error_kind == "empty":
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="empty",
-                fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
-                provider_error="Gemini real provider returned an empty response.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="malformed_response",
-            )
-        if normalized_result.error_kind == "malformed":
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="malformed",
-                fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
-                provider_error="Gemini real provider returned a malformed response.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="malformed_response",
-            )
+            if normalized_result.error_kind == "timeout":
+                if attempt < max_retries:
+                    continue
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="timeout",
+                    fallback_reason="Gemini real provider timed out; mock fallback remains the safe path.",
+                    provider_error="Gemini real provider timeout.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="timeout",
+                )
+            if normalized_result.error_kind == "provider_error":
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="provider_error",
+                    fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
+                    provider_error="Gemini real provider raised a provider error.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="provider_error",
+                )
+            if normalized_result.error_kind == "rate_limit":
+                if attempt < max_retries:
+                    continue
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="rate_limit",
+                    fallback_reason="Gemini real provider was rate limited; mock fallback remains the safe path.",
+                    provider_error="Gemini real provider was rate limited.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="rate_limit",
+                )
+            if normalized_result.error_kind == "empty":
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="empty",
+                    fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
+                    provider_error="Gemini real provider returned an empty response.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="malformed_response",
+                )
+            if normalized_result.error_kind == "malformed":
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="malformed",
+                    fallback_reason="Gemini real provider returned a malformed payload; mock fallback remains the safe path.",
+                    provider_error="Gemini real provider returned a malformed response.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="malformed_response",
+                )
 
-        if normalized_result.text is None or not normalized_result.text.strip():
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
-                status="empty",
-                fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
-                provider_error="Gemini real provider returned an empty response.",
-                provider_error_stage="client_invocation",
-                provider_error_reason="malformed_response",
-            )
+            if normalized_result.text is None or not normalized_result.text.strip():
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status="empty",
+                    fallback_reason="Gemini real provider returned no usable text; mock fallback remains the safe path.",
+                    provider_error="Gemini real provider returned an empty response.",
+                    provider_error_stage="client_invocation",
+                    provider_error_reason="malformed_response",
+                )
 
-        post_guard = guard_post_generation_text(
-            normalized_result.text,
-            grounding_context=synthetic_context,
-            allowed_evidence_values=generation_request.allowed_evidence_values,
-        )
-        if post_guard.blocked:
-            return _build_real_generation_fallback_result(
-                generation_request,
-                readiness=readiness,
-                sdk_load_result=sdk_load_result,
+            post_guard = guard_post_generation_text(
+                normalized_result.text,
+                grounding_context=synthetic_context,
+                allowed_evidence_values=generation_request.allowed_evidence_values,
+            )
+            if post_guard.blocked:
+                return _build_real_generation_fallback_result(
+                    generation_request,
+                    readiness=readiness,
+                    sdk_load_result=sdk_load_result,
+                    status=post_guard.status,
+                    fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
+                    provider_error="Gemini real provider output was blocked by the safety guard.",
+                    provider_error_stage="post_generation",
+                    provider_error_reason="safety_blocked",
+                    safety_block_reason=_classify_safety_block_reason(post_guard.reasons),
+                    safe_to_display=False,
+                    blocked=True,
+                )
+
+            response = build_provider_response(
+                answer=post_guard.sanitized_text or normalized_result.text,
+                provider_used="gemini",
+                fallback_used=False,
+                fallback_reason=None,
+                grounding_status=_request_grounding_status(generation_request.provider_request),
+                safety_status=post_guard.status,
+                limitations=_request_limitations(
+                    generation_request.provider_request,
+                    post_guard.limitations,
+                ),
+                evidence_used=_request_evidence_items(generation_request.provider_request),
+                provider_error=None,
+                provider_error_stage=None,
+                provider_error_reason=None,
+            )
+            return GeminiRealGenerationResult(
+                provider_response=response,
                 status=post_guard.status,
-                fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
-                provider_error="Gemini real provider output was blocked by the safety guard.",
-                provider_error_stage="post_generation",
-                provider_error_reason="safety_blocked",
-                safety_block_reason=_classify_safety_block_reason(post_guard.reasons),
-                safe_to_display=False,
-                blocked=True,
+                safe_to_send=post_guard.safe_to_send,
+                safe_to_display=post_guard.safe_to_display,
+                provider_error=None,
+                fallback_reason=None,
+                client_name=self.config.client_name,
+                readiness=readiness,
+                sdk_load_result=sdk_load_result,
             )
 
-        response = build_provider_response(
-            answer=post_guard.sanitized_text or normalized_result.text,
-            provider_used="gemini",
-            fallback_used=False,
-            fallback_reason=None,
-            grounding_status=_request_grounding_status(generation_request.provider_request),
-            safety_status=post_guard.status,
-            limitations=_request_limitations(
-                generation_request.provider_request,
-                post_guard.limitations,
-            ),
-            evidence_used=_request_evidence_items(generation_request.provider_request),
-            provider_error=None,
-            provider_error_stage=None,
-            provider_error_reason=None,
-        )
-        return GeminiRealGenerationResult(
-            provider_response=response,
-            status=post_guard.status,
-            safe_to_send=post_guard.safe_to_send,
-            safe_to_display=post_guard.safe_to_display,
-            provider_error=None,
-            fallback_reason=None,
-            client_name=self.config.client_name,
+        return _build_real_generation_fallback_result(
+            generation_request,
             readiness=readiness,
             sdk_load_result=sdk_load_result,
+            status="provider_error",
+            fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
+            provider_error="Gemini real provider raised a provider error.",
+            provider_error_stage="client_invocation",
+            provider_error_reason="provider_error",
         )
 
     def _resolve_api_key(self) -> str | None:
@@ -1672,3 +1698,7 @@ def _classify_real_provider_exception(exc: Exception) -> _RealProviderExceptionC
         provider_error_stage="client_invocation",
         provider_error_reason="provider_error",
     )
+
+
+def _is_retryable_real_provider_error_reason(reason: str | None) -> bool:
+    return reason in {"service_unavailable", "rate_limit", "timeout"}

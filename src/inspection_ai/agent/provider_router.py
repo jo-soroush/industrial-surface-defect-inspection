@@ -322,6 +322,7 @@ class AgentProviderRouter:
                     real_provider_implemented=self.settings.enable_real_provider_runtime,
                     sdk_import_allowed=self.settings.enable_real_provider_runtime,
                     fallback_enabled=self.settings.enable_fallback,
+                    max_retries=self.settings.max_retries,
                     api_key_resolver=_default_gemini_api_key_resolver,
                 ),
                 sdk_loader=_load_runtime_gemini_sdk_status,

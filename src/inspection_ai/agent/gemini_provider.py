@@ -221,6 +221,7 @@ class GeminiGenerationResult:
     safe_to_display: bool
     provider_error: str | None = None
     fallback_reason: str | None = None
+    safety_block_reason: str | None = None
     client_name: str = "injected-sdk-seam"
 
 
@@ -241,6 +242,7 @@ class GeminiMockedClientEvaluation:
     safe_to_display: bool
     provider_error: str | None = None
     fallback_reason: str | None = None
+    safety_block_reason: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -367,6 +369,7 @@ class GeminiProviderStub:
                 safe_to_display=False,
                 provider_error="Gemini mocked client output was blocked by the safety guard.",
                 fallback_reason=blocked_response.fallback_reason,
+                safety_block_reason=_classify_safety_block_reason(safety_result.reasons),
             )
 
         response = build_provider_response(
@@ -522,6 +525,7 @@ class GeminiProviderSkeleton:
             safe_to_display=mocked_evaluation.safe_to_display,
             provider_error=mocked_evaluation.provider_error,
             fallback_reason=mocked_evaluation.fallback_reason,
+            safety_block_reason=mocked_evaluation.safety_block_reason,
             client_name=generation_request.client_name,
         )
 
@@ -563,6 +567,7 @@ class GeminiRealGenerationResult:
     safe_to_display: bool
     provider_error: str | None = None
     fallback_reason: str | None = None
+    safety_block_reason: str | None = None
     client_name: str = "google-genai"
     readiness: GeminiG3Readiness | None = None
     sdk_load_result: GeminiSdkLoadResult | None = None
@@ -616,6 +621,7 @@ class GeminiRealProvider:
                 status="blocked",
                 fallback_reason="Gemini real-provider prompt was blocked by the safety guard; mock fallback remains the safe path.",
                 provider_error="Gemini real-provider prompt was blocked by the safety guard.",
+                safety_block_reason=_classify_safety_block_reason(pre_guard.reasons),
                 safe_to_display=False,
                 blocked=True,
             )
@@ -866,6 +872,7 @@ class GeminiRealProvider:
                 status=post_guard.status,
                 fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
                 provider_error="Gemini real provider output was blocked by the safety guard.",
+                safety_block_reason=_classify_safety_block_reason(post_guard.reasons),
                 safe_to_display=False,
                 blocked=True,
             )
@@ -1453,6 +1460,7 @@ def _build_real_generation_fallback_result(
     status: str,
     fallback_reason: str,
     provider_error: str,
+    safety_block_reason: str | None = None,
     safe_to_display: bool = True,
     blocked: bool = False,
 ) -> GeminiRealGenerationResult:
@@ -1477,6 +1485,7 @@ def _build_real_generation_fallback_result(
         safe_to_display=safe_to_display,
         provider_error=provider_error,
         fallback_reason=fallback_reason,
+        safety_block_reason=safety_block_reason,
         client_name=request.client_name,
         readiness=readiness,
         sdk_load_result=sdk_load_result,
@@ -1488,6 +1497,25 @@ class _RealProviderExceptionClassification:
     status: str
     fallback_reason: str
     provider_error: str
+
+
+def _classify_safety_block_reason(reasons: Iterable[str] | None) -> str:
+    normalized = " ".join(str(reason).lower() for reason in reasons or () if str(reason).strip())
+    if not normalized:
+        return "unknown"
+    if "secret-like value" in normalized or "local absolute path" in normalized:
+        return "secret_or_path_leak"
+    if "metric-like values" in normalized:
+        return "invented_metric_like_output"
+    if "claims production readiness" in normalized or "deployment safety" in normalized or "autonomous decision-making" in normalized:
+        return "unsupported_readiness_claim"
+    if "claims gemini, grok, openai, or a real llm is connected or active" in normalized:
+        return "provider_connected_claim"
+    if "raw evidence is not allowed" in normalized:
+        return "evidence_boundary_violation"
+    if "production/deployment/autonomous certification" in normalized:
+        return "evidence_boundary_violation"
+    return "unknown"
 
 
 def _classify_real_provider_exception(exc: Exception) -> _RealProviderExceptionClassification:

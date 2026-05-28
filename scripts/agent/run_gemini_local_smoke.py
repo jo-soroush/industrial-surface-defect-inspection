@@ -559,6 +559,19 @@ def _safe_safety_stage(result: GeminiRealGenerationResult) -> str:
 
 
 def _safe_safety_block_reason(result: GeminiRealGenerationResult) -> str:
+    direct_reason = getattr(result, "safety_block_reason", None)
+    if isinstance(direct_reason, str):
+        normalized_reason = direct_reason.strip().lower()
+        if normalized_reason in {
+            "invented_metric_like_output",
+            "unsupported_readiness_claim",
+            "provider_connected_claim",
+            "secret_or_path_leak",
+            "evidence_boundary_violation",
+            "safety_guard_blocked",
+            "unknown",
+        }:
+            return normalized_reason
     text = _combined_safety_text(result)
     if "prompt was blocked" in text:
         return "evidence_boundary_violation"

@@ -70,6 +70,7 @@ def _build_failure_result(
     fallback_used: bool = True,
     grounding_status: str = "grounded",
     safety_status: str = "blocked",
+    safety_block_reason: str | None = None,
     fallback_reason: str = "Gemini real provider raised a provider error; mock fallback remains the safe path.",
     provider_error: str = "Gemini real provider raised a provider error.",
 ) -> GeminiRealGenerationResult:
@@ -91,6 +92,7 @@ def _build_failure_result(
         safe_to_display=False,
         provider_error=provider_error,
         fallback_reason=response.fallback_reason,
+        safety_block_reason=safety_block_reason,
         client_name="fake-sdk",
     )
 
@@ -640,6 +642,64 @@ def test_confirmation_flag_fake_safety_block_output_includes_stage_and_reason(mo
     assert "safety_block_reason=safety_guard_blocked" in captured.out
     assert "provider_error_stage=" not in captured.out
     assert "provider_error_reason=" not in captured.out
+    assert "Gemini real provider output was blocked by the safety guard." not in captured.out
+    assert "This should never be printed verbatim." not in captured.out
+    assert "GEMINI_API_KEY" not in captured.out
+
+
+@pytest.mark.parametrize(
+    ("safety_block_reason", "expected_reason"),
+    [
+        ("invented_metric_like_output", "invented_metric_like_output"),
+        ("unsupported_readiness_claim", "unsupported_readiness_claim"),
+        ("provider_connected_claim", "provider_connected_claim"),
+        ("secret_or_path_leak", "secret_or_path_leak"),
+        ("unknown", "unknown"),
+    ],
+)
+def test_confirmation_flag_fake_safety_block_output_exposes_specific_sanitized_reason(
+    monkeypatch,
+    capsys,
+    safety_block_reason: str,
+    expected_reason: str,
+) -> None:
+    module = load_harness_module()
+    monkeypatch.setattr(module, "_resolve_gemini_api_key", lambda: "present-but-disabled")
+    monkeypatch.setattr(
+        module,
+        "generate_with_real_gemini_provider",
+        lambda *a, **k: _build_failure_result(
+            status="blocked",
+            safety_status="blocked",
+            safety_block_reason=safety_block_reason,
+            fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
+            provider_error="Gemini real provider output was blocked by the safety guard.",
+        ),
+    )
+
+    exit_code = module.main(
+        [
+            "--execute",
+            "--i-understand-this-calls-gemini",
+            "--question",
+            "Explain the current image inspection result in a safe way.",
+            "--page-id",
+            "image_inspection",
+            "--section-id",
+            "final_decision",
+            "--component-id",
+            "image_inspection_ai_explanation_panel",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "gemini_local_smoke_status=FAILED" in captured.out
+    assert "result_status=blocked" in captured.out
+    assert "error_category=safety_blocked" in captured.out
+    assert "safety_status=blocked" in captured.out
+    assert "safety_stage=post_generation" in captured.out
+    assert f"safety_block_reason={expected_reason}" in captured.out
     assert "Gemini real provider output was blocked by the safety guard." not in captured.out
     assert "This should never be printed verbatim." not in captured.out
     assert "GEMINI_API_KEY" not in captured.out

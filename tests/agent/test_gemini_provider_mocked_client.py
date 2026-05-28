@@ -405,6 +405,10 @@ class _FakeGeminiClient:
                 "This model is production-ready, deployment-safe, and Gemini is active. "
                 "Manual review is not required."
             )
+        if self.mode == "readiness":
+            return "This dashboard is production-ready and deployment-safe."
+        if self.mode == "provider_connected":
+            return "Gemini is connected and active."
         if self.mode == "metric":
             return "The threshold is 0.99 and the F1 score is 0.87. Manual review still applies."
         if self.mode == "path":
@@ -696,6 +700,97 @@ def test_gemini_real_provider_blocks_unsafe_or_invalid_fake_sdk_outputs(
     assert result.provider_response.fallback_used is True
     assert result.provider_response.provider_error is not None
     assert result.safe_to_display is (expected_status not in {"blocked"})
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected_reason", "unexpected_phrase"),
+    [
+        ("metric", "invented_metric_like_output", "0.99"),
+        ("path", "secret_or_path_leak", "/Users/jo.soroush/secret.key"),
+    ],
+)
+def test_gemini_real_provider_surfaces_sanitized_post_generation_block_reason(
+    monkeypatch,
+    mode: str,
+    expected_reason: str,
+    unexpected_phrase: str,
+) -> None:
+    calls: list[str] = []
+
+    def fake_load_google_genai_module():
+        calls.append("called")
+        raise AssertionError("lazy SDK import should not be called when a fake SDK module is injected")
+
+    monkeypatch.setattr(gemini_provider_module, "_load_google_genai_module", fake_load_google_genai_module)
+
+    loader = _RecordingSdkLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai is available in the injected test seam.",
+        )
+    )
+    provider = GeminiRealProvider(
+        settings=_build_real_provider_settings(enable_llm=True, gemini_key_present=True),
+        config=GeminiRealProviderConfig(
+            real_provider_implemented=True,
+            sdk_import_allowed=True,
+            api_key_resolver=lambda: "fake-key",
+        ),
+        sdk_loader=loader.loader,
+        sdk_module_loader=lambda: _FakeRealSdkModule(mode),
+    )
+
+    result = provider.generate(_build_gemini_provider_request())
+
+    assert calls == []
+    assert loader.calls == 1
+    assert result.status == "blocked"
+    assert result.safety_block_reason == expected_reason
+    assert result.provider_response.provider_used == "mock"
+    assert result.provider_response.fallback_used is True
+    assert result.provider_response.safety_status == "blocked"
+    assert result.safe_to_display is False
+    assert unexpected_phrase not in result.provider_response.answer
+    assert "manual review" in result.provider_response.answer.lower()
+
+
+@pytest.mark.parametrize(
+    ("text", "expected_reason", "unexpected_phrase"),
+    [
+        (
+            "This dashboard is production-ready and deployment-safe.",
+            "unsupported_readiness_claim",
+            "production-ready",
+        ),
+        (
+            "Gemini is connected and active.",
+            "provider_connected_claim",
+            "Gemini is connected and active",
+        ),
+    ],
+)
+def test_gemini_mocked_client_surfaces_sanitized_post_generation_block_reason(
+    text: str,
+    expected_reason: str,
+    unexpected_phrase: str,
+) -> None:
+    evaluation = GeminiProviderStub().evaluate_mocked_client_result(
+        _build_gemini_provider_request(),
+        GeminiClientResult(text=text),
+    )
+
+    assert evaluation.provider_response.provider_used == "mock"
+    assert evaluation.provider_response.fallback_used is True
+    assert evaluation.provider_response.safety_status == "blocked"
+    assert evaluation.safety_block_reason == expected_reason
+    assert unexpected_phrase not in evaluation.provider_response.answer
+    assert "manual review" in evaluation.provider_response.answer.lower()
+
+
+def test_gemini_safety_block_reason_classifier_defaults_to_unknown_for_unmatched_reasons() -> None:
+    assert gemini_provider_module._classify_safety_block_reason(("Some unrelated reason",)) == "unknown"
 
 
 @pytest.mark.parametrize(

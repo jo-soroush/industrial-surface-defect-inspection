@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from fastapi.testclient import TestClient
 
 from api.app.main import app
+import src.inspection_ai.agent.provider_router as provider_router_module
+from src.inspection_ai.agent.gemini_provider import GeminiSdkLoadResult
+from src.inspection_ai.agent.provider_contracts import build_provider_response
 
 
 client = TestClient(app)
@@ -133,6 +138,117 @@ def test_agent_health_stays_mock_first_with_fake_key_present(monkeypatch) -> Non
     assert any("intentionally disabled" in warning.lower() for warning in payload["warnings"])
     assert any("gemini" in warning.lower() for warning in payload["warnings"])
     assert any("grok" in warning.lower() for warning in payload["warnings"])
+
+
+def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_pass(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("AGENT_ENABLE_REAL_PROVIDER_RUNTIME", "true")
+    monkeypatch.setenv("AGENT_DEFAULT_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "gemini,mock")
+    monkeypatch.setenv("GEMINI_API_KEY", "present-but-test-only")
+    monkeypatch.delenv("GROK_API_KEY", raising=False)
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    calls: list[dict[str, object]] = []
+
+    def fake_generate_with_real_gemini_provider(
+        request,
+        *,
+        settings,
+        config,
+        sdk_loader=None,
+        sdk_module_loader=None,
+        client_factory=None,
+        allowed_evidence_values=None,
+    ):
+        calls.append(
+            {
+                "provider_name": request.provider_name,
+                "enable_llm": settings.enable_llm,
+                "runtime_gate": settings.enable_real_provider_runtime,
+                "default_provider": settings.default_provider,
+                "sdk_loader_present": sdk_loader is not None,
+                "sdk_module_loader_present": sdk_module_loader is not None,
+                "allowed_evidence_values": list(allowed_evidence_values or []),
+            }
+        )
+        return SimpleNamespace(
+            provider_response=build_provider_response(
+                answer="Gemini gated endpoint answer. Manual review still applies.",
+                provider_used="gemini",
+                fallback_used=False,
+                fallback_reason=None,
+                grounding_status="grounded",
+                safety_status="pass",
+                limitations=["Manual review still applies."],
+                evidence_used=[{"source": "inspection_response.decision.final_decision", "value": "defective"}],
+            ),
+            status="pass",
+            safe_to_send=True,
+            safe_to_display=True,
+            provider_error=None,
+            fallback_reason=None,
+        )
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "generate_with_real_gemini_provider",
+        fake_generate_with_real_gemini_provider,
+    )
+
+    response = client.post(
+        "/agent/explain",
+        json={
+            "page_id": "image_inspection",
+            "section_id": "final_decision",
+            "question": "Explain this image inspection result safely.",
+            "visible_context": {"page_title": "Image Inspection"},
+            "inspection_response": {
+                "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+                "classification": {"predicted_label": "defect"},
+                "detection": {"predicted_box_count": 1},
+                "anomaly": {"predicted_label": "anomaly"},
+                "traceability": {"source_endpoint": "/inspect/image"},
+            },
+            "include_raw_evidence": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(calls) == 1
+    assert calls[0]["provider_name"] == "gemini"
+    assert calls[0]["enable_llm"] is True
+    assert calls[0]["runtime_gate"] is True
+    assert calls[0]["default_provider"] == "gemini"
+    assert calls[0]["sdk_loader_present"] is True
+    assert calls[0]["sdk_module_loader_present"] is True
+    allowed_evidence_values = calls[0]["allowed_evidence_values"]
+    assert "defective" in allowed_evidence_values
+    assert "manual_check_rule" in allowed_evidence_values
+    assert "defect" in allowed_evidence_values
+    assert 1 in allowed_evidence_values
+    assert "anomaly" in allowed_evidence_values
+    assert "/inspect/image" in allowed_evidence_values
+    assert "Image Inspection" in allowed_evidence_values
+    assert "image_inspection" in allowed_evidence_values
+    assert "final_decision" in allowed_evidence_values
+    assert payload["provider_used"] == "gemini"
+    assert payload["fallback_used"] is False
+    assert payload["grounding_status"] == "grounded"
+    assert "gemini gated endpoint answer" in payload["answer"].lower()
+    assert "manual review" in payload["answer"].lower()
+    assert "present-but-test-only" not in payload["answer"].lower()
 
 
 def test_agent_explain_accepts_classification_component_id() -> None:

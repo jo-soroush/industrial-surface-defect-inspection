@@ -1,7 +1,8 @@
 """Provider routing for the Agent/RAG MVP.
 
-The MVP is mock-first by design. Real provider execution is intentionally not
-enabled in this slice.
+The MVP is mock-first by design. A disabled-by-default real-provider gate is
+present for future explicit activation, but the normal runtime remains mock-
+first unless that gate is turned on deliberately.
 """
 
 from __future__ import annotations
@@ -11,7 +12,16 @@ import os
 from typing import Any
 
 from .context_builder import AgentGroundingContext, load_global_context
-from .gemini_provider import GeminiG3Readiness, evaluate_gemini_g3_readiness, evaluate_gemini_provider_readiness
+from .gemini_provider import (
+    GeminiG3Readiness,
+    GeminiRealProviderConfig,
+    GeminiSdkLoadResult,
+    _default_gemini_api_key_resolver,
+    evaluate_gemini_g3_readiness,
+    evaluate_gemini_provider_readiness,
+    generate_with_real_gemini_provider,
+    _load_google_genai_module,
+)
 from .provider_contracts import (
     AgentProviderRequest,
     AgentProviderResponse,
@@ -57,6 +67,7 @@ class AgentProviderSettings:
     """Environment-driven provider settings for the MVP."""
 
     enable_llm: bool = False
+    enable_real_provider_runtime: bool = False
     default_provider: str = "mock"
     provider_order: tuple[str, ...] = ("mock", "gemini", "grok")
     enable_fallback: bool = True
@@ -78,6 +89,7 @@ class AgentProviderSettings:
             provider_order = ("mock", "gemini", "grok")
         return cls(
             enable_llm=_env_bool("AGENT_ENABLE_LLM", False),
+            enable_real_provider_runtime=_env_bool("AGENT_ENABLE_REAL_PROVIDER_RUNTIME", False),
             default_provider=default_provider,
             provider_order=provider_order,
             enable_fallback=_env_bool("LLM_ENABLE_FALLBACK", True),
@@ -124,7 +136,12 @@ class AgentProviderRouter:
 
     def gemini_readiness(self) -> GeminiG3Readiness:
         """Return the safe Gemini readiness snapshot without activating Gemini."""
-        return evaluate_gemini_g3_readiness(self._provider_runtime_settings())
+        sdk_loader = _load_runtime_gemini_sdk_status if self.settings.enable_real_provider_runtime else None
+        return evaluate_gemini_g3_readiness(
+            self._provider_runtime_settings(),
+            sdk_loader=sdk_loader,
+            real_provider_implemented=self.settings.enable_real_provider_runtime,
+        )
 
     def gemini_route_decision(
         self,
@@ -178,20 +195,27 @@ class AgentProviderRouter:
     def explain(self, grounding_context: AgentGroundingContext) -> AgentExplainResponse:
         """Return a grounded mock explanation response."""
         pre_guard = guard_pre_generation_context(grounding_context)
-        provider_request = build_provider_request(
-            provider_name="mock",
-            grounding_context=grounding_context,
-            sanitized_context=pre_guard.sanitized_context,
-            safety_status=pre_guard.status,
-            llm_enabled=self.settings.enable_llm,
-        )
         if pre_guard.blocked:
+            provider_request = build_provider_request(
+                provider_name="mock",
+                grounding_context=grounding_context,
+                sanitized_context=pre_guard.sanitized_context,
+                safety_status=pre_guard.status,
+                llm_enabled=self.settings.enable_llm,
+            )
             answer = pre_guard.sanitized_text or (
                 "I can’t provide that answer because the requested prompt is unsafe under the Agent safety guard. "
                 "Manual review still applies."
             )
             grounding_status = "unsupported"
         elif _question_requests_forbidden_claim(grounding_context.question, self._global_context):
+            provider_request = build_provider_request(
+                provider_name="mock",
+                grounding_context=grounding_context,
+                sanitized_context=pre_guard.sanitized_context,
+                safety_status=pre_guard.status,
+                llm_enabled=self.settings.enable_llm,
+            )
             answer = (
                 "I can’t provide a claim about production readiness, deployment safety, autonomous decisions, "
                 "replacing human review, or invented evidence. This assistant is limited to grounded explanations "
@@ -199,6 +223,17 @@ class AgentProviderRouter:
             )
             grounding_status = "unsupported"
         else:
+            gemini_response = self._maybe_route_to_gemini(grounding_context, pre_guard)
+            if gemini_response is not None:
+                return gemini_response
+
+            provider_request = build_provider_request(
+                provider_name="mock",
+                grounding_context=grounding_context,
+                sanitized_context=pre_guard.sanitized_context,
+                safety_status=pre_guard.status,
+                llm_enabled=self.settings.enable_llm,
+            )
             answer, grounding_status = _build_mock_answer(grounding_context)
             post_guard = guard_post_generation_text(answer, grounding_context=grounding_context)
             if post_guard.blocked:
@@ -226,21 +261,12 @@ class AgentProviderRouter:
             evidence_used=provider_request.grounding_context.get("evidence_used", []),
         )
 
-        return AgentExplainResponse(
-            answer=provider_response.answer,
-            evidence_used=[AgentEvidenceItem(**item) for item in provider_response.evidence_used],
-            limitations=list(provider_response.limitations),
-            provider_used=provider_response.provider_used,
-            fallback_used=provider_response.fallback_used,
-            grounding_status=provider_response.grounding_status,
-            page_id=grounding_context.page_id,  # type: ignore[arg-type]
-            section_id=grounding_context.section_id,
-            component_id=grounding_context.component_id,
-        )
+        return _build_agent_explain_response(grounding_context, provider_response)
 
     def _provider_runtime_settings(self) -> ProviderRuntimeSettings:
         return ProviderRuntimeSettings(
             enable_llm=self.settings.enable_llm,
+            enable_real_provider_runtime=self.settings.enable_real_provider_runtime,
             default_provider=self.settings.default_provider,
             provider_order=self.settings.provider_order,
             enable_fallback=self.settings.enable_fallback,
@@ -248,11 +274,105 @@ class AgentProviderRouter:
             grok_key_present=bool(self.settings.grok_api_key),
         )
 
+    def _maybe_route_to_gemini(
+        self,
+        grounding_context: AgentGroundingContext,
+        pre_guard,
+    ) -> AgentExplainResponse | None:
+        gemini_readiness = self.gemini_readiness()
+        decision = self.gemini_route_decision(readiness=gemini_readiness, safety_ready=not pre_guard.blocked)
+        if not decision.should_route_to_gemini:
+            return None
+
+        provider_request = build_provider_request(
+            provider_name="gemini",
+            grounding_context=grounding_context,
+            sanitized_context=pre_guard.sanitized_context,
+            safety_status=pre_guard.status,
+            llm_enabled=self.settings.enable_llm,
+        )
+        try:
+            gemini_result = generate_with_real_gemini_provider(
+                provider_request,
+                settings=self._provider_runtime_settings(),
+                config=GeminiRealProviderConfig(
+                    real_provider_implemented=self.settings.enable_real_provider_runtime,
+                    sdk_import_allowed=self.settings.enable_real_provider_runtime,
+                    fallback_enabled=self.settings.enable_fallback,
+                    api_key_resolver=_default_gemini_api_key_resolver,
+                ),
+                sdk_loader=_load_runtime_gemini_sdk_status,
+                sdk_module_loader=_load_google_genai_module,
+                allowed_evidence_values=_allowed_evidence_values_from_provider_request(provider_request),
+            )
+        except Exception:
+            return None
+
+        return _build_agent_explain_response(grounding_context, gemini_result.provider_response)
+
 
 def _question_requests_forbidden_claim(question: str, global_context: dict[str, Any]) -> bool:
     normalized_question = _normalize_text(question)
     forbidden_claims = [_normalize_text(str(item)) for item in global_context.get("forbidden_claims", [])]
     return any(claim in normalized_question for claim in forbidden_claims)
+
+
+def _build_agent_explain_response(
+    grounding_context: AgentGroundingContext,
+    provider_response: AgentProviderResponse,
+) -> AgentExplainResponse:
+    return AgentExplainResponse(
+        answer=provider_response.answer,
+        evidence_used=[AgentEvidenceItem(**item) for item in provider_response.evidence_used],
+        limitations=list(provider_response.limitations),
+        provider_used=provider_response.provider_used,
+        fallback_used=provider_response.fallback_used,
+        grounding_status=provider_response.grounding_status,
+        page_id=grounding_context.page_id,  # type: ignore[arg-type]
+        section_id=grounding_context.section_id,
+        component_id=grounding_context.component_id,
+    )
+
+
+def _allowed_evidence_values_from_provider_request(request: AgentProviderRequest) -> list[Any]:
+    allowed_values: list[Any] = []
+    evidence_items = request.grounding_context.get("evidence_used", [])
+    if not isinstance(evidence_items, list):
+        return allowed_values
+    for item in evidence_items:
+        if isinstance(item, dict):
+            allowed_values.append(item.get("value"))
+    return allowed_values
+
+
+def _load_runtime_gemini_sdk_status() -> GeminiSdkLoadResult:
+    """Check Gemini SDK availability only when the runtime gate is explicitly enabled."""
+
+    try:
+        _load_google_genai_module()
+    except ModuleNotFoundError:
+        return GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=False,
+            status="missing",
+            reason="The google-genai SDK is not available in this slice.",
+            error_category="missing",
+        )
+    except Exception:
+        return GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=False,
+            status="load_error",
+            reason="Gemini SDK import failed in this slice.",
+            error_category="import_error",
+        )
+
+    return GeminiSdkLoadResult(
+        checked=True,
+        sdk_available=True,
+        status="available",
+        reason="google-genai SDK import succeeded.",
+    )
 
 
 def evaluate_gemini_route_decision(
@@ -270,6 +390,7 @@ def evaluate_gemini_route_decision(
     should_route_to_gemini = (
         requested == "gemini"
         and settings.enable_llm
+        and settings.enable_fallback
         and settings.gemini_key_present
         and readiness.gates.sdk_available
         and readiness.gates.provider_allowed

@@ -22,6 +22,7 @@ class ProviderRuntimeSettings:
     """Provider-related runtime flags stripped of secret material."""
 
     enable_llm: bool = False
+    enable_real_provider_runtime: bool = False
     default_provider: str = "mock"
     provider_order: tuple[str, ...] = ("mock", "gemini", "grok")
     enable_fallback: bool = True

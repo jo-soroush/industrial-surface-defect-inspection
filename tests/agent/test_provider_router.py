@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from src.inspection_ai.agent.context_builder import build_grounding_context
-from src.inspection_ai.agent.gemini_provider import evaluate_gemini_g3_readiness
+from src.inspection_ai.agent.gemini_provider import GeminiSdkLoadResult, evaluate_gemini_g3_readiness
 import src.inspection_ai.agent.provider_router as provider_router_module
 from src.inspection_ai.agent.provider_router import AgentProviderRouter, AgentProviderSettings
+from src.inspection_ai.agent.provider_contracts import build_provider_response
 
 
 def test_health_reports_mock_first_mvp_state() -> None:
@@ -83,6 +86,23 @@ def test_missing_provider_keys_do_not_break_mock_health(monkeypatch) -> None:
     assert gemini_readiness.gates.sdk_status == "not_checked"
     assert gemini_readiness.gates.activation_allowed is False
     assert gemini_readiness.gates.real_provider_implemented is False
+
+
+def test_settings_from_env_reads_explicit_real_provider_runtime_flag(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("AGENT_ENABLE_REAL_PROVIDER_RUNTIME", "true")
+    monkeypatch.setenv("AGENT_DEFAULT_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "gemini,mock")
+    monkeypatch.setenv("GEMINI_API_KEY", "present")
+    monkeypatch.delenv("GROK_API_KEY", raising=False)
+
+    settings = AgentProviderSettings.from_env()
+
+    assert settings.enable_llm is True
+    assert settings.enable_real_provider_runtime is True
+    assert settings.default_provider == "gemini"
+    assert settings.provider_order == ("gemini", "mock")
+    assert settings.gemini_api_key == "present"
 
 
 def test_gemini_health_metadata_does_not_expose_raw_key_values(monkeypatch) -> None:
@@ -230,6 +250,45 @@ def test_gemini_route_decision_stays_mock_when_sdk_is_available_but_activation_i
     assert decision.fallback_used is True
 
 
+def test_gemini_route_decision_can_route_when_runtime_is_explicitly_enabled_and_sdk_is_available(monkeypatch) -> None:
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            enable_real_provider_runtime=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+
+    readiness = router.gemini_readiness()
+    decision = router.gemini_route_decision(requested_provider="gemini", readiness=readiness)
+
+    assert readiness.gates.sdk_available is True
+    assert readiness.gates.real_provider_implemented is True
+    assert readiness.gates.activation_allowed is True
+    assert decision.requested_provider == "gemini"
+    assert decision.selected_provider == "gemini"
+    assert decision.should_route_to_gemini is True
+    assert decision.fallback_used is False
+    assert "allowed" in decision.reason.lower()
+
+
 def test_router_explain_stays_mock_first_with_fake_key_present(monkeypatch) -> None:
     monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
     monkeypatch.setenv("GEMINI_API_KEY", "present-but-disabled")
@@ -364,6 +423,368 @@ def test_component_image_inspection_mock_answer_mentions_decision_and_manual_rev
     assert "good" in response.answer.lower()
     assert "manual review" in response.answer.lower()
     assert "mock/offline" in response.answer.lower()
+
+
+def test_router_explain_routes_to_gemini_with_explicit_runtime_gate_and_fake_provider(monkeypatch) -> None:
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    calls: list[dict[str, object]] = []
+
+    def fake_generate_with_real_gemini_provider(
+        request,
+        *,
+        settings,
+        config,
+        sdk_loader=None,
+        sdk_module_loader=None,
+        client_factory=None,
+        allowed_evidence_values=None,
+    ):
+        calls.append(
+            {
+                "provider_name": request.provider_name,
+                "enable_llm": settings.enable_llm,
+                "runtime_gate": settings.enable_real_provider_runtime,
+                "config_runtime_gate": config.real_provider_implemented,
+                "sdk_import_allowed": config.sdk_import_allowed,
+                "sdk_loader_present": sdk_loader is not None,
+                "sdk_module_loader_present": sdk_module_loader is not None,
+                "client_factory_present": client_factory is not None,
+                "allowed_evidence_values": list(allowed_evidence_values or []),
+            }
+        )
+        return SimpleNamespace(
+            provider_response=build_provider_response(
+                answer="Gemini gated answer. Manual review still applies.",
+                provider_used="gemini",
+                fallback_used=False,
+                fallback_reason=None,
+                grounding_status="grounded",
+                safety_status="pass",
+                limitations=["Manual review still applies."],
+                evidence_used=[{"source": "inspection_response.decision.final_decision", "value": "defective"}],
+            ),
+            status="pass",
+            safe_to_send=True,
+            safe_to_display=True,
+            provider_error=None,
+            fallback_reason=None,
+        )
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "generate_with_real_gemini_provider",
+        fake_generate_with_real_gemini_provider,
+    )
+
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            enable_real_provider_runtime=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Explain this inspection result.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {
+                "final_decision": "defective",
+                "rule_id": "manual_check_rule",
+            },
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert len(calls) == 1
+    assert calls[0]["provider_name"] == "gemini"
+    assert calls[0]["enable_llm"] is True
+    assert calls[0]["runtime_gate"] is True
+    assert calls[0]["config_runtime_gate"] is True
+    assert calls[0]["sdk_loader_present"] is True
+    assert calls[0]["sdk_module_loader_present"] is True
+    assert calls[0]["client_factory_present"] is False
+    assert response.provider_used == "gemini"
+    assert response.fallback_used is False
+    assert response.grounding_status == "grounded"
+    assert "gemini gated answer" in response.answer.lower()
+    assert "manual review" in response.answer.lower()
+
+
+def test_router_explain_stays_mock_when_runtime_enabled_but_sdk_is_missing(monkeypatch) -> None:
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=False,
+            status="missing",
+            reason="google-genai SDK is missing.",
+            error_category="missing",
+        ),
+    )
+
+    def fake_generate_with_real_gemini_provider(*args, **kwargs):
+        raise AssertionError("Gemini should not be called when the SDK is missing.")
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "generate_with_real_gemini_provider",
+        fake_generate_with_real_gemini_provider,
+    )
+
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            enable_real_provider_runtime=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Explain this inspection result.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert response.provider_used == "mock"
+    assert response.fallback_used is True
+    assert "manual review" in response.answer.lower()
+
+
+def test_router_explain_stays_mock_when_runtime_enabled_but_fallback_is_disabled(monkeypatch) -> None:
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    def fake_generate_with_real_gemini_provider(*args, **kwargs):
+        raise AssertionError("Gemini should not be called when fallback is disabled.")
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "generate_with_real_gemini_provider",
+        fake_generate_with_real_gemini_provider,
+    )
+
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            enable_real_provider_runtime=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=False,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Explain this inspection result.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert response.provider_used == "mock"
+    assert response.fallback_used is True
+    assert "manual review" in response.answer.lower()
+
+
+@pytest.mark.parametrize(
+    ("boundary_status", "fallback_reason"),
+    [
+        ("provider_error", "Gemini real provider service unavailable; mock fallback remains the safe path."),
+        ("rate_limit", "Gemini real provider rate limited; mock fallback remains the safe path."),
+        ("timeout", "Gemini real provider timed out; mock fallback remains the safe path."),
+    ],
+)
+def test_router_explain_falls_back_safely_when_real_provider_boundary_returns_mock_result(
+    monkeypatch,
+    boundary_status: str,
+    fallback_reason: str,
+) -> None:
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    calls: list[str] = []
+
+    def fake_generate_with_real_gemini_provider(*args, **kwargs):
+        calls.append("called")
+        return SimpleNamespace(
+            provider_response=build_provider_response(
+                answer="Mock fallback remains the safe path. Manual review still applies.",
+                provider_used="mock",
+                fallback_used=True,
+                fallback_reason=fallback_reason,
+                grounding_status="grounded",
+                safety_status="pass",
+                limitations=["Manual review still applies."],
+                evidence_used=[],
+            ),
+            status=boundary_status,
+            safe_to_send=True,
+            safe_to_display=True,
+            provider_error=f"Gemini real provider {boundary_status.replace('_', ' ')}.",
+            fallback_reason=fallback_reason,
+        )
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "generate_with_real_gemini_provider",
+        fake_generate_with_real_gemini_provider,
+    )
+
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            enable_real_provider_runtime=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Explain this inspection result.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert calls == ["called"]
+    assert response.provider_used == "mock"
+    assert response.fallback_used is True
+    assert "mock fallback" in response.answer.lower()
+    assert "manual review" in response.answer.lower()
+
+
+def test_router_explain_keeps_safety_guard_before_gemini_route(monkeypatch) -> None:
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    def fake_generate_with_real_gemini_provider(*args, **kwargs):
+        raise AssertionError("Gemini should not be called when the safety guard blocks the request.")
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "generate_with_real_gemini_provider",
+        fake_generate_with_real_gemini_provider,
+    )
+
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            enable_real_provider_runtime=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+    grounding_context = build_grounding_context(
+        page_id="safety",
+        section_id="boundaries",
+        question="Can I deploy this safely?",
+        visible_context={"summary": "Safety boundaries"},
+        inspection_response={},
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert response.provider_used == "mock"
+    assert response.fallback_used is True
+    assert "deployment" in response.answer.lower()
+    assert "manual review" in response.answer.lower()
 
 
 def test_component_detection_confidence_mock_answer_mentions_confidence_and_review() -> None:

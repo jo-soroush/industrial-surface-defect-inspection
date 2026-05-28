@@ -529,6 +529,7 @@ def test_router_explain_routes_to_gemini_with_explicit_runtime_gate_and_fake_pro
     assert calls[0]["client_factory_present"] is False
     assert response.provider_used == "gemini"
     assert response.fallback_used is False
+    assert response.fallback_reason is None
     assert response.grounding_status == "grounded"
     assert "gemini gated answer" in response.answer.lower()
     assert "manual review" in response.answer.lower()
@@ -732,6 +733,7 @@ def test_router_explain_falls_back_safely_when_real_provider_boundary_returns_mo
     assert calls == ["called"]
     assert response.provider_used == "mock"
     assert response.fallback_used is True
+    assert response.fallback_reason == fallback_reason
     assert "mock fallback" in response.answer.lower()
     assert "manual review" in response.answer.lower()
 
@@ -783,6 +785,8 @@ def test_router_explain_keeps_safety_guard_before_gemini_route(monkeypatch) -> N
 
     assert response.provider_used == "mock"
     assert response.fallback_used is True
+    assert response.fallback_reason is not None
+    assert "mock fallback" in response.fallback_reason.lower()
     assert "deployment" in response.answer.lower()
     assert "manual review" in response.answer.lower()
 

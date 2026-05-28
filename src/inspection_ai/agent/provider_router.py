@@ -195,6 +195,9 @@ class AgentProviderRouter:
     def explain(self, grounding_context: AgentGroundingContext) -> AgentExplainResponse:
         """Return a grounded mock explanation response."""
         pre_guard = guard_pre_generation_context(grounding_context)
+        gemini_readiness = self.gemini_readiness()
+        decision = self.gemini_route_decision(readiness=gemini_readiness, safety_ready=not pre_guard.blocked)
+        fallback_reason: str | None = decision.fallback_reason
         if pre_guard.blocked:
             provider_request = build_provider_request(
                 provider_name="mock",
@@ -208,6 +211,7 @@ class AgentProviderRouter:
                 "Manual review still applies."
             )
             grounding_status = "unsupported"
+            fallback_reason = "Request blocked by the Agent safety guard; mock fallback remains the safe path."
         elif _question_requests_forbidden_claim(grounding_context.question, self._global_context):
             provider_request = build_provider_request(
                 provider_name="mock",
@@ -222,6 +226,7 @@ class AgentProviderRouter:
                 "from governed evidence, and manual review still applies."
             )
             grounding_status = "unsupported"
+            fallback_reason = "Request blocked by the Agent safety guard; mock fallback remains the safe path."
         else:
             gemini_response = self._maybe_route_to_gemini(grounding_context, pre_guard)
             if gemini_response is not None:
@@ -254,7 +259,7 @@ class AgentProviderRouter:
             answer=answer,
             provider_used="mock",
             fallback_used=True,
-            fallback_reason="Mock provider is the MVP fallback.",
+            fallback_reason=fallback_reason or "Mock provider is the MVP fallback.",
             grounding_status=grounding_status,
             safety_status=pre_guard.status,
             limitations=limitations,
@@ -327,6 +332,7 @@ def _build_agent_explain_response(
         limitations=list(provider_response.limitations),
         provider_used=provider_response.provider_used,
         fallback_used=provider_response.fallback_used,
+        fallback_reason=provider_response.fallback_reason,
         grounding_status=provider_response.grounding_status,
         page_id=grounding_context.page_id,  # type: ignore[arg-type]
         section_id=grounding_context.section_id,

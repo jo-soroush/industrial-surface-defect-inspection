@@ -58,6 +58,7 @@ class AgentExplainResponse(BaseModel):
     limitations: list[str] = Field(default_factory=list)
     provider_used: AgentProviderName
     fallback_used: bool
+    fallback_reason: str | None = None
     grounding_status: GroundingStatus
     page_id: AgentPageId
     section_id: str

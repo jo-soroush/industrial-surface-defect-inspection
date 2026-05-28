@@ -1,15 +1,32 @@
-"""Disabled-by-default local Gemini smoke harness skeleton.
+"""Disabled-by-default local Gemini smoke harness.
 
-This module contains a planning-only harness for a future manual local smoke.
-It does not run a real Gemini call on import, and normal runtime remains
-mock-first. The explicit future execution path is intentionally not implemented
-in this slice.
+This module exposes the explicit local-only manual real-smoke path behind a
+strict approval gate. Default behavior remains dry-run, and normal runtime
+remains mock-first. Importing the module does not run a real Gemini call.
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 from typing import Sequence
+
+from src.inspection_ai.agent.context_builder import (
+    AgentGroundingContext,
+    build_grounding_context,
+)
+from src.inspection_ai.agent.gemini_provider import (
+    GeminiRealGenerationResult,
+    GeminiRealProviderConfig,
+    _load_google_genai_module,
+    generate_with_real_gemini_provider,
+)
+from src.inspection_ai.agent.provider_contracts import (
+    AgentProviderRequest,
+    ProviderRuntimeSettings,
+    build_provider_request,
+)
+from src.inspection_ai.agent.safety_guard import guard_pre_generation_context
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -24,7 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--execute",
         action="store_true",
-        help="Request the future execution path. Disabled in this slice.",
+        help="Run the approved local-only real-smoke path.",
     )
     parser.add_argument(
         "--i-understand-this-calls-gemini",
@@ -78,15 +95,56 @@ def build_blocked_lines() -> tuple[str, ...]:
     )
 
 
-def build_not_implemented_lines() -> tuple[str, ...]:
+def build_missing_fields_lines(missing_fields: tuple[str, ...]) -> tuple[str, ...]:
     return (
-        "gemini_local_smoke_status=NOT_IMPLEMENTED",
-        "reason=real_smoke_execution_intentionally_not_implemented_in_this_slice",
+        "gemini_local_smoke_status=BLOCKED",
+        "reason=missing_required_smoke_fields",
+        f"missing_fields={','.join(missing_fields)}",
         "no_real_gemini_api_call_was_made=true",
         "gemini_api_key_read=false",
         "normal_agent_route=mock_first",
         "provider_routing_activation=disabled",
         "future_real_smoke_requires_explicit_user_approval=true",
+    )
+
+
+def build_success_lines(
+    *,
+    request: AgentProviderRequest,
+    result: GeminiRealGenerationResult,
+) -> tuple[str, ...]:
+    return (
+        "gemini_local_smoke_status=SUCCESS",
+        f"result_status={result.status}",
+        f"provider_used={result.provider_response.provider_used}",
+        f"fallback_used={str(result.provider_response.fallback_used).lower()}",
+        f"grounding_status={result.provider_response.grounding_status}",
+        f"safety_status={result.provider_response.safety_status}",
+        "normal_agent_route=mock_first",
+        "provider_routing_activation=disabled",
+        _request_summary_line(request),
+        _response_summary_line(result),
+        "cleanup_reminder=unset_temporary_key_and_restore_mock_defaults;export AGENT_ENABLE_LLM=false;export AGENT_DEFAULT_PROVIDER=mock",
+    )
+
+
+def build_failure_lines(
+    *,
+    request: AgentProviderRequest,
+    result: GeminiRealGenerationResult,
+) -> tuple[str, ...]:
+    return (
+        "gemini_local_smoke_status=FAILED",
+        f"result_status={result.status}",
+        f"provider_used={result.provider_response.provider_used}",
+        f"fallback_used={str(result.provider_response.fallback_used).lower()}",
+        f"grounding_status={result.provider_response.grounding_status}",
+        f"safety_status={result.provider_response.safety_status}",
+        "normal_agent_route=mock_first",
+        "provider_routing_activation=disabled",
+        _request_summary_line(request),
+        _response_summary_line(result),
+        "cleanup_reminder=unset_temporary_key_and_restore_mock_defaults;export AGENT_ENABLE_LLM=false;export AGENT_DEFAULT_PROVIDER=mock",
     )
 
 
@@ -103,9 +161,176 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(line)
         return 2
 
-    for line in build_not_implemented_lines():
+    exit_code, lines = run_explicit_real_smoke_attempt(args)
+    for line in lines:
         print(line)
-    return 3
+    return exit_code
+
+
+def run_explicit_real_smoke_attempt(args: argparse.Namespace) -> tuple[int, tuple[str, ...]]:
+    missing_fields = _missing_execute_fields(args)
+    if missing_fields:
+        return 2, build_missing_fields_lines(missing_fields)
+
+    try:
+        grounding_context = build_grounding_context(
+            page_id=args.page_id,
+            section_id=args.section_id,
+            component_id=args.component_id,
+            question=args.question,
+            visible_context={},
+            inspection_response={},
+            include_raw_evidence=False,
+        )
+    except Exception:  # pragma: no cover - defensive CLI guard
+        return 2, (
+            "gemini_local_smoke_status=BLOCKED",
+            "reason=grounding_context_validation_failed",
+            "no_real_gemini_api_call_was_made=true",
+            "gemini_api_key_read=false",
+            "normal_agent_route=mock_first",
+            "provider_routing_activation=disabled",
+            "future_real_smoke_requires_explicit_user_approval=true",
+        )
+
+    pre_guard = guard_pre_generation_context(grounding_context)
+    if pre_guard.blocked:
+        return 2, (
+            "gemini_local_smoke_status=BLOCKED",
+            "reason=pre_generation_safety_guard_blocked",
+            "no_real_gemini_api_call_was_made=true",
+            "gemini_api_key_read=false",
+            "normal_agent_route=mock_first",
+            "provider_routing_activation=disabled",
+            "future_real_smoke_requires_explicit_user_approval=true",
+        )
+
+    provider_request = build_provider_request(
+        provider_name="gemini",
+        grounding_context=grounding_context,
+        sanitized_context=pre_guard.sanitized_context,
+        safety_status=pre_guard.status,
+        llm_enabled=True,
+    )
+
+    settings = ProviderRuntimeSettings(
+        enable_llm=True,
+        default_provider="gemini",
+        provider_order=("gemini", "mock"),
+        enable_fallback=True,
+        gemini_key_present=_gemini_api_key_present(),
+        grok_key_present=False,
+        openai_key_present=False,
+    )
+    config = GeminiRealProviderConfig(
+        real_provider_implemented=True,
+        sdk_import_allowed=True,
+        api_key_resolver=_resolve_gemini_api_key,
+    )
+
+    try:
+        result = generate_with_real_gemini_provider(
+            provider_request,
+            settings=settings,
+            config=config,
+            sdk_module_loader=_load_google_genai_module,
+            allowed_evidence_values=_allowed_evidence_values(grounding_context),
+        )
+    except Exception as exc:  # pragma: no cover - defensive CLI guard
+        return 1, (
+            "gemini_local_smoke_status=FAILED",
+            "result_status=exception",
+            "provider_used=unknown",
+            "fallback_used=unknown",
+            "grounding_status=unknown",
+            "safety_status=unknown",
+            "normal_agent_route=mock_first",
+            "provider_routing_activation=disabled",
+            _request_summary_line(provider_request),
+            "response_summary=manual_review_visible=true;sanitized=true;raw_response_hidden=true",
+            "cleanup_reminder=unset_temporary_key_and_restore_mock_defaults;export AGENT_ENABLE_LLM=false;export AGENT_DEFAULT_PROVIDER=mock",
+            f"failure_reason={type(exc).__name__};sanitized=true",
+        )
+
+    if not isinstance(result, GeminiRealGenerationResult):
+        return 1, (
+            "gemini_local_smoke_status=FAILED",
+            "result_status=malformed_result",
+            "provider_used=unknown",
+            "fallback_used=unknown",
+            "grounding_status=unknown",
+            "safety_status=unknown",
+            "normal_agent_route=mock_first",
+            "provider_routing_activation=disabled",
+            _request_summary_line(provider_request),
+            "response_summary=manual_review_visible=true;sanitized=true;raw_response_hidden=true",
+            "cleanup_reminder=unset_temporary_key_and_restore_mock_defaults;export AGENT_ENABLE_LLM=false;export AGENT_DEFAULT_PROVIDER=mock",
+            "failure_reason=unexpected_result_type;sanitized=true",
+        )
+
+    if _is_successful_smoke_result(result):
+        return 0, build_success_lines(request=provider_request, result=result)
+
+    return 1, build_failure_lines(request=provider_request, result=result)
+
+
+def _missing_execute_fields(args: argparse.Namespace) -> tuple[str, ...]:
+    missing = []
+    for field_name in ("question", "page_id", "section_id", "component_id"):
+        value = getattr(args, field_name, "")
+        if not isinstance(value, str) or not value.strip():
+            missing.append(field_name)
+    return tuple(missing)
+
+
+def _resolve_gemini_api_key() -> str | None:
+    value = os.getenv("GEMINI_API_KEY")
+    if isinstance(value, str) and value.strip():
+        return value
+    return None
+
+
+def _gemini_api_key_present() -> bool:
+    return _resolve_gemini_api_key() is not None
+
+
+def _allowed_evidence_values(grounding_context: AgentGroundingContext) -> tuple[object, ...]:
+    values: list[object] = []
+    for item in grounding_context.evidence_used:
+        if isinstance(item, dict) and "value" in item:
+            values.append(item["value"])
+    return tuple(values)
+
+
+def _request_summary_line(request: AgentProviderRequest) -> str:
+    component_id = request.component_id or "none"
+    return (
+        "request_summary="
+        f"page_id={request.page_id};"
+        f"section_id={request.section_id};"
+        f"component_id={component_id};"
+        "question_sanitized=true"
+    )
+
+
+def _response_summary_line(result: GeminiRealGenerationResult) -> str:
+    return (
+        "response_summary="
+        f"manual_review_visible=true;"
+        f"sanitized=true;"
+        "raw_response_hidden=true"
+    )
+
+
+def _is_successful_smoke_result(result: GeminiRealGenerationResult) -> bool:
+    response = result.provider_response
+    return (
+        response.provider_used == "gemini"
+        and not response.fallback_used
+        and result.safe_to_send
+        and result.safe_to_display
+        and result.status in {"pass", "success"}
+    )
 
 
 if __name__ == "__main__":

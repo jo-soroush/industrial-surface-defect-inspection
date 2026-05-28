@@ -233,7 +233,7 @@ What this means:
 - the default harness invocation was verified in dry-run mode
 - the explicit `--dry-run` path was verified
 - `--execute` without confirmation was blocked
-- `--execute` with confirmation returned `NOT_IMPLEMENTED` in this slice
+- the explicit `--execute` + confirmation path is now implemented in code, but the smoke itself has not been run
 - no real Gemini API call was made
 - no key was read
 - the mock-first normal route remained unchanged

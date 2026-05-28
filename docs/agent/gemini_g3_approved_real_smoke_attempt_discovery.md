@@ -13,7 +13,7 @@ Observed facts:
 - pre-smoke safety checks passed
 - the actual smoke was not run
 - the approved smoke command was discovered in `scripts/agent/run_gemini_local_smoke.py`
-- the current harness execute path is `NOT_IMPLEMENTED`
+- at the time of discovery, the harness execute path was `NOT_IMPLEMENTED`; a later harness slice implemented the explicit execute path, but no real smoke has been run
 - no real Gemini, Grok, or OpenAI API call was made
 - `GEMINI_API_KEY` was unset after discovery
 - `AGENT_ENABLE_LLM=false` was restored
@@ -43,7 +43,7 @@ python scripts/agent/run_gemini_local_smoke.py \
 
 The command is local-only and manual.
 It avoids Docker, EC2, CI, frontend workflows, and public endpoints.
-It requires the local shell environment only, but the current harness execute path remains `NOT_IMPLEMENTED`.
+It requires the local shell environment only.
 
 ## Current Harness Outcome
 
@@ -52,7 +52,7 @@ The harness currently behaves as follows:
 - default invocation: dry-run
 - `--dry-run`: dry-run
 - `--execute` without confirmation: blocked
-- `--execute` with confirmation: `NOT_IMPLEMENTED`
+- `--execute` with confirmation: explicit execute helper is implemented, but the smoke was not run in this discovery step
 
 Because of that, the approved attempt was discovered but not executed.
 
@@ -75,4 +75,3 @@ Until that happens:
 - default `/agent/explain` remains mock-first
 - `/agent/health` remains mock-first and secret-safe
 - real smoke execution remains blocked
-

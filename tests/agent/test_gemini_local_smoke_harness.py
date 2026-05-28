@@ -461,6 +461,52 @@ def test_confirmation_flag_fake_failure_output_is_sanitized(monkeypatch, capsys)
     assert "sdk_missing" not in captured.out
     assert "safety_stage=" not in captured.out
     assert "safety_block_reason=" not in captured.out
+    assert "provider_error_stage=" in captured.out
+    assert "provider_error_reason=" in captured.out
+
+
+def test_confirmation_flag_fake_provider_error_output_includes_stage_and_reason(monkeypatch, capsys) -> None:
+    module = load_harness_module()
+    monkeypatch.setattr(module, "_resolve_gemini_api_key", lambda: "present-but-disabled")
+    monkeypatch.setattr(
+        module,
+        "generate_with_real_gemini_provider",
+        lambda *a, **k: _build_failure_result(
+            status="provider_error",
+            safety_status="pass",
+            fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
+            provider_error="Gemini real provider raised a provider error.",
+        ),
+    )
+
+    exit_code = module.main(
+        [
+            "--execute",
+            "--i-understand-this-calls-gemini",
+            "--question",
+            "Explain the current image inspection result in a safe way.",
+            "--page-id",
+            "image_inspection",
+            "--section-id",
+            "final_decision",
+            "--component-id",
+            "image_inspection_ai_explanation_panel",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "gemini_local_smoke_status=FAILED" in captured.out
+    assert "result_status=provider_error" in captured.out
+    assert "error_category=provider_error" in captured.out
+    assert "provider_error_stage=client_invocation" in captured.out
+    assert "provider_error_reason=invoke_raised_provider_error" in captured.out
+    assert "Gemini real provider raised a provider error." not in captured.out
+    assert "GEMINI_API_KEY" not in captured.out
+    assert "provider_used=mock" in captured.out
+    assert "fallback_used=true" in captured.out
+    assert "grounding_status=grounded" in captured.out
+    assert "safety_status=pass" in captured.out
 
 
 def test_confirmation_flag_fake_safety_block_output_includes_stage_and_reason(monkeypatch, capsys) -> None:
@@ -500,6 +546,8 @@ def test_confirmation_flag_fake_safety_block_output_includes_stage_and_reason(mo
     assert "safety_status=blocked" in captured.out
     assert "safety_stage=post_generation" in captured.out
     assert "safety_block_reason=safety_guard_blocked" in captured.out
+    assert "provider_error_stage=" not in captured.out
+    assert "provider_error_reason=" not in captured.out
     assert "Gemini real provider output was blocked by the safety guard." not in captured.out
     assert "This should never be printed verbatim." not in captured.out
     assert "GEMINI_API_KEY" not in captured.out
@@ -530,6 +578,12 @@ def test_failure_lines_map_known_error_statuses_to_sanitized_categories() -> Non
         assert f"error_category={expected_category}" in joined
         assert "Gemini real provider raised a provider error." not in joined
         assert "present-but-disabled" not in joined
+        if status == "provider_error":
+            assert "provider_error_stage=client_invocation" in joined
+            assert "provider_error_reason=invoke_raised_provider_error" in joined
+        else:
+            assert "provider_error_stage=" not in joined
+            assert "provider_error_reason=" not in joined
 
 
 def test_failure_lines_map_blocked_safety_status_to_sanitized_category() -> None:
@@ -563,6 +617,27 @@ def test_failure_lines_map_unavailable_fallback_to_sanitized_category() -> None:
     )
 
     assert "error_category=unavailable" in "\n".join(lines)
+
+
+def test_failure_lines_map_client_creation_provider_error_to_sanitized_category() -> None:
+    module = load_harness_module()
+    request = _build_real_provider_request(module)
+    result = _build_failure_result(
+        status="provider_error",
+        provider_error="Gemini client creation failed.",
+        fallback_reason="Gemini client creation failed; mock fallback remains the safe path.",
+    )
+
+    lines = module.build_failure_lines(
+        request=request,
+        result=result,
+        smoke_model_name="gemini-2.5-flash",
+    )
+
+    joined = "\n".join(lines)
+    assert "error_category=provider_error" in joined
+    assert "provider_error_stage=client_creation" in joined
+    assert "provider_error_reason=client_creation_failed" in joined
 
 
 def test_default_smoke_model_name_is_smoke_only_and_can_be_overridden(monkeypatch) -> None:

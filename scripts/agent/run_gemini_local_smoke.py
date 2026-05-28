@@ -173,6 +173,7 @@ def build_failure_lines(
         f"fallback_used={str(result.provider_response.fallback_used).lower()}",
         f"grounding_status={result.provider_response.grounding_status}",
         f"safety_status={result.provider_response.safety_status}",
+        *_safe_provider_error_diagnostic_lines(result),
         *_safe_safety_diagnostic_lines(result),
         "normal_agent_route=mock_first",
         "provider_routing_activation=disabled",
@@ -527,6 +528,15 @@ def _safe_safety_diagnostic_lines(result: GeminiRealGenerationResult) -> tuple[s
     )
 
 
+def _safe_provider_error_diagnostic_lines(result: GeminiRealGenerationResult) -> tuple[str, ...]:
+    if _safe_error_category(result) != "provider_error" and (result.status or "").strip().lower() != "provider_error":
+        return ()
+    return (
+        f"provider_error_stage={_safe_provider_error_stage(result)}",
+        f"provider_error_reason={_safe_provider_error_reason(result)}",
+    )
+
+
 def _safe_safety_stage(result: GeminiRealGenerationResult) -> str:
     text = _combined_safety_text(result)
     if "prompt was blocked" in text:
@@ -551,6 +561,30 @@ def _safe_safety_block_reason(result: GeminiRealGenerationResult) -> str:
     return "unknown"
 
 
+def _safe_provider_error_stage(result: GeminiRealGenerationResult) -> str:
+    text = _combined_provider_error_text(result)
+    if "client creation" in text:
+        return "client_creation"
+    if "normalized" in text or "malformed payload" in text:
+        return "response_normalization"
+    if "unexpected error" in text or "provider error" in text or "invoked" in text:
+        return "client_invocation"
+    return "unknown"
+
+
+def _safe_provider_error_reason(result: GeminiRealGenerationResult) -> str:
+    text = _combined_provider_error_text(result)
+    if "client creation" in text:
+        return "client_creation_failed"
+    if "normalized" in text or "malformed payload" in text:
+        return "normalized_provider_error"
+    if "unexpected error" in text:
+        return "invoke_raised_unexpected_error"
+    if "provider error" in text or "invoked" in text:
+        return "invoke_raised_provider_error"
+    return "unknown"
+
+
 def _combined_safety_text(result: GeminiRealGenerationResult) -> str:
     return " ".join(
         str(value).lower()
@@ -560,6 +594,19 @@ def _combined_safety_text(result: GeminiRealGenerationResult) -> str:
             result.provider_response.provider_error,
             result.provider_response.fallback_reason,
             result.provider_response.answer,
+        )
+        if value
+    )
+
+
+def _combined_provider_error_text(result: GeminiRealGenerationResult) -> str:
+    return " ".join(
+        str(value).lower()
+        for value in (
+            result.provider_error,
+            result.fallback_reason,
+            result.provider_response.provider_error,
+            result.provider_response.fallback_reason,
         )
         if value
     )

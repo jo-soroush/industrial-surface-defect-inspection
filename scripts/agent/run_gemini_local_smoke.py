@@ -392,19 +392,6 @@ def _minimal_smoke_inspection_response() -> dict[str, object]:
             "rule_id": "local_smoke_manual_review_rule",
             "recommended_action": "Review the inspection evidence before taking action.",
         },
-        "classification": {
-            "predicted_label": "surface_defect_candidate",
-            "probability_defect": 0.72,
-            "threshold": 0.50,
-        },
-        "detection": {
-            "predicted_box_count": 1,
-            "defect_count": 1,
-        },
-        "anomaly": {
-            "anomaly_score": 0.21,
-            "threshold": 0.20,
-        },
         "traceability": {
             "source_endpoint": "local_smoke_synthetic_context",
             "contract_version": "local_smoke_synthetic_context_v1",
@@ -422,11 +409,11 @@ def _smoke_question_with_evidence_only_instructions(question: str) -> str:
     clean_question = question.strip()
     return (
         "Use only the provided evidence. "
-        "Do not invent metrics. "
-        "Do not convert numeric values to other formats. "
-        "Do not add percentages unless the exact percentage exists in the evidence. "
+        "Use no numbers. "
+        "Do not mention any numeric value, metric, score, threshold, probability, percentage, count, model name, model version, run ID, or confidence value unless it is explicitly requested and present exactly in the allowed evidence. "
+        "Do not invent metrics or convert numeric values to other formats. "
         "Do not claim production readiness, deployment readiness, HTTPS/domain readiness, or real LLM readiness. "
-        "Keep the answer short. "
+        "Explain only the qualitative decision and manual-review boundary. "
         "If evidence is insufficient, say manual review is required. "
         f"User question: {clean_question}"
     )

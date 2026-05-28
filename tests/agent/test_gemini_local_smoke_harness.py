@@ -226,11 +226,11 @@ def test_smoke_question_helper_adds_evidence_only_instructions() -> None:
     )
 
     assert "Use only the provided evidence." in wrapped
-    assert "Do not invent metrics." in wrapped
-    assert "Do not convert numeric values to other formats." in wrapped
-    assert "Do not add percentages unless the exact percentage exists in the evidence." in wrapped
+    assert "Use no numbers." in wrapped
+    assert "Do not mention any numeric value, metric, score, threshold, probability, percentage, count, model name, model version, run ID, or confidence value unless it is explicitly requested and present exactly in the allowed evidence." in wrapped
+    assert "Do not invent metrics or convert numeric values to other formats." in wrapped
     assert "Do not claim production readiness, deployment readiness, HTTPS/domain readiness, or real LLM readiness." in wrapped
-    assert "Keep the answer short." in wrapped
+    assert "Explain only the qualitative decision and manual-review boundary." in wrapped
     assert "If evidence is insufficient, say manual review is required." in wrapped
     assert "User question: Explain the current image inspection result in a safe way." in wrapped
 
@@ -400,11 +400,11 @@ def test_explicit_execute_path_uses_minimal_grounded_smoke_context(monkeypatch) 
     wrapped_question = captured_kwargs["question"]
     assert isinstance(wrapped_question, str)
     assert "Use only the provided evidence." in wrapped_question
-    assert "Do not invent metrics." in wrapped_question
-    assert "Do not convert numeric values to other formats." in wrapped_question
-    assert "Do not add percentages unless the exact percentage exists in the evidence." in wrapped_question
+    assert "Use no numbers." in wrapped_question
+    assert "Do not mention any numeric value, metric, score, threshold, probability, percentage, count, model name, model version, run ID, or confidence value unless it is explicitly requested and present exactly in the allowed evidence." in wrapped_question
+    assert "Do not invent metrics or convert numeric values to other formats." in wrapped_question
     assert "Do not claim production readiness, deployment readiness, HTTPS/domain readiness, or real LLM readiness." in wrapped_question
-    assert "Keep the answer short." in wrapped_question
+    assert "Explain only the qualitative decision and manual-review boundary." in wrapped_question
     assert "If evidence is insufficient, say manual review is required." in wrapped_question
     assert "Explain the current image inspection result in a safe way." in wrapped_question
 
@@ -437,9 +437,15 @@ def test_minimal_smoke_context_builds_grounded_context_without_secrets() -> None
     assert visible_context["page_title"] == "Image Inspection"
     assert inspection_response["decision"]["final_decision"] == "manual_review_required"
     assert inspection_response["traceability"]["source_endpoint"] == "local_smoke_synthetic_context"
+    assert "classification" not in inspection_response
+    assert "detection" not in inspection_response
+    assert "anomaly" not in inspection_response
     assert "GEMINI_API_KEY" not in joined
     assert "/Users/" not in joined
     assert "raw_image" not in joined
+    assert "0.72" not in joined
+    assert "0.50" not in joined
+    assert "0.21" not in joined
 
 
 def test_confirmation_flag_passes_sdk_readiness_loader_and_module_loader(monkeypatch) -> None:

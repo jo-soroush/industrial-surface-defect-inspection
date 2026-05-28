@@ -36,6 +36,7 @@ The current repository baseline already provides:
 - A G3 harness dry-run verification evidence document that records the harness verification but does not claim a real smoke.
 - A first safe Gemini code slice that adds regression coverage for the disabled-by-default Gemini boundary without changing runtime behavior.
 - A second safe Gemini code slice that adds regression coverage proving provider router health, `/agent/explain`, and API health remain mock-first and secret-safe even when fake key-like values are present.
+- A fourth approved local-only real-smoke attempt evidence document that records a safe `provider_error` failure, a sanitized `error_category=provider_error`, and a `429 TooManyRequests` observation in Google AI Studio.
 - A G3 dependency decision artifact that keeps the requirements change as an explicit, pending decision.
 - A G3 dependency slice that adds `google-genai` to the backend/API requirements only.
 - A Phase 12 LLM-disabled Docker / Compose readiness audit that records the read-only validation plan before any actual Docker / Compose run.
@@ -208,6 +209,7 @@ What this means:
 - The final real-smoke execution checklist is documented and remains a checklist only.
 - The harness dry-run verification evidence is documented and remains dry-run verification only.
 - The approved-but-not-executed real-smoke attempt discovery is documented and remains discovery evidence only.
+- The fourth approved local-only real-smoke attempt evidence is documented and remains safe failure evidence only.
 
 What this does not mean:
 
@@ -302,12 +304,13 @@ Gemini implementation must not start until:
 - Safety guard tests remain PASS.
 - Provider contract tests remain PASS.
 - The user explicitly approves the next non-code Gemini planning step.
-- The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.
+- The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is rate-limit / quota review and minimally grounded smoke-context preparation before any further local real-smoke approval.
+- The fourth approved local-only real-smoke attempt failed safely with `provider_error`; the next real-smoke attempt must wait until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is improved to a minimally grounded context.
 
 ## Remaining Blockers After This Plan
 
-- User approval for the next non-code Gemini planning step.
-- Local real-smoke planning must remain explicit and blocked until that approval is granted.
+- User approval for any further local real-smoke attempt, after rate-limit / quota review and smoke-context grounding.
+- Local real-smoke planning must remain explicit and blocked until the rate-limit / quota situation is understood and the smoke context is minimally grounded.
 - Optional: Gemini API key availability for later runtime testing, but not required for planning.
 
 ## Explicit Statement
@@ -325,4 +328,5 @@ No real LLM execution is active.
 Gemini runtime activation is not active.
 Gemini, Grok, and OpenAI remain inactive.
 The system remains mock-first and offline by default.
-The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.
+The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is rate-limit / quota review and minimally grounded smoke-context preparation before any further local real-smoke approval.
+The fourth approved local-only real-smoke attempt failed safely with `provider_error`; the next real-smoke attempt must wait until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is improved to a minimally grounded context.

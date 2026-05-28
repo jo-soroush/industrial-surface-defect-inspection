@@ -183,6 +183,7 @@ Python compilation, pytest validations, and the LLM-disabled Docker / Compose va
 Required next action: continue with EC2 readiness planning while keeping LLM disabled, and re-run the smoke if the deployment surface, Dockerfiles, Compose file, or runtime assets change.
 
 The separate EC2 LLM-disabled validation evidence now records the actual EC2 PASS in `docs/deployment/ec2_llm_disabled_validation_evidence.md`.
+The fourth approved local-only Gemini real-smoke attempt evidence now records a safe `provider_error` failure, a sanitized `error_category=provider_error`, no `sdk_missing`, and `429 TooManyRequests` observed in Google AI Studio.
 
 ## Blocking Items Before Gemini
 
@@ -191,8 +192,9 @@ The separate EC2 LLM-disabled validation evidence now records the actual EC2 PAS
 ## Recommended Next Sequence
 
 1. User approval for the next non-code Gemini planning step.
-2. Continue with local real-smoke planning and keep the readiness docs current.
-3. Keep the pre-Gemini matrix and deployment evidence current if the deployment surface changes.
+2. Keep real-smoke execution blocked until the rate-limit / quota situation is understood or enough time has passed.
+3. Improve the local real-smoke context from `insufficient_evidence` to a minimally grounded context before any further attempt.
+4. Keep the pre-Gemini matrix and deployment evidence current if the deployment surface changes.
 
 ## Gemini Must Not Start Until...
 
@@ -205,9 +207,11 @@ The separate EC2 LLM-disabled validation evidence now records the actual EC2 PAS
   - The Phase 12 LLM-disabled Docker / Compose validation evidence exists and records the local PASS.
   - The EC2 readiness planning audit exists and records the next LLM-disabled deployment planning step.
   - The EC2 LLM-disabled validation evidence exists and records the actual EC2 PASS.
+  - The fourth approved local-only Gemini real-smoke attempt evidence exists and records a safe `provider_error` failure, a sanitized `error_category=provider_error`, no `sdk_missing`, and `429 TooManyRequests` observed in Google AI Studio.
   - The repository still passes the focused compile and pytest checks.
 - Remaining blocker:
   - User approval for the next non-code Gemini planning step.
+  - Real smoke remains blocked until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is minimally grounded.
 
 ## Maintenance Notes
 

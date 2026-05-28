@@ -33,8 +33,9 @@ Current conclusion:
 - Phase 12 local LLM-disabled Docker / Compose validation is PASS.
 - The EC2 LLM-disabled readiness audit exists and records the planning-only next step for later deployment.
 - The EC2 LLM-disabled validation evidence exists and records the actual EC2 PASS.
+- The fourth approved local-only Gemini real-smoke attempt evidence exists and records a safe `provider_error` failure, a sanitized `error_category=provider_error`, no `sdk_missing`, and `429 TooManyRequests` observed in Google AI Studio.
 - Real Gemini provider integration has not started.
-- The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.
+- The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning, but another real-smoke attempt remains blocked until the quota / rate-limit situation is understood or enough time has passed and the smoke context is minimally grounded.
 - This matrix does not justify Gemini integration by itself. It is a control document, not an implementation approval.
 
 ## Current Validated State
@@ -319,6 +320,12 @@ Validated in the repository state referenced by this audit:
 |---|---|---|---|---|---|
 | Actual EC2 LLM-disabled validation evidence exists and records the EC2 PASS | `docs/deployment/ec2_llm_disabled_validation_evidence.md` | PASS | The repository now contains actual EC2 validation evidence showing SSH success, Docker / Compose installation, EC2 build and startup, mock-first health and explain responses, public frontend and API reachability, safe logs, clean shutdown, and a stopped EC2 instance. | This is EC2-local evidence and does not claim production, HTTPS/domain, or real LLM readiness. | No |
 
+### 10.23 Gemini Provider G3 Fourth Local Real-Smoke Attempt Evidence
+
+| Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
+|---|---|---|---|---|---|
+| Fourth approved local-only real-smoke attempt evidence exists and records the safe `provider_error` failure | `docs/agent/gemini_g3_local_real_smoke_attempt_4_evidence.md`, `docs/agent/gemini_g3_local_real_smoke_plan.md` | PASS | The repository now contains evidence for the fourth approved local-only real-smoke attempt, including `result_status=provider_error`, `error_category=provider_error`, `sdk_missing` absent, `grounding_status=insufficient_evidence`, cleanup completed, and the user-observed `429 TooManyRequests` state in Google AI Studio. | The next smoke must wait until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is minimally grounded. | No |
+
 ### 11. Frontend / Wording Consistency
 
 | Requirement | Test file / validation | Status | Evidence summary | Remaining gap | Blocks Gemini |
@@ -388,12 +395,14 @@ The following remain incomplete or not yet fully proven:
 Current blockers supported by the audit docs:
 
 1. Local real-smoke planning remains blocked until explicit user approval.
+2. Another real-smoke attempt remains blocked until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is minimally grounded.
 
 ## Required Next Sequence
 
 1. Request and obtain user approval for the next non-code Gemini planning step.
-2. Continue with local real-smoke planning and keep the readiness docs current.
-3. Re-run the requirement-to-test matrix if the scope changes.
+2. Keep real-smoke execution blocked until the rate-limit / quota situation is understood or enough time has passed.
+3. Improve the local real-smoke context from `insufficient_evidence` to a minimally grounded context before any further attempt.
+4. Re-run the requirement-to-test matrix if the scope changes.
 
 ## Gemini Must Not Start Until...
 
@@ -403,3 +412,4 @@ Current blockers supported by the audit docs:
 - The user has approved the next non-code Gemini planning step.
 - The requirement-to-test matrix remains current after any scope change.
 - The mock Agent foundation continues to pass compile and pytest validation.
+- The smoke context is minimally grounded before any further real-smoke attempt.

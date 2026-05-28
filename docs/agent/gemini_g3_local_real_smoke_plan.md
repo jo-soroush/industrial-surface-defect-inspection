@@ -21,6 +21,7 @@ A disabled-by-default harness skeleton exists in `scripts/agent/run_gemini_local
 The final execution checklist is documented in `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md`.
 Dry-run verification evidence is documented in `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md`.
 Approved-but-not-executed discovery is documented in `docs/agent/gemini_g3_approved_real_smoke_attempt_discovery.md`.
+The fourth approved local-only manual attempt result is documented in `docs/agent/gemini_g3_local_real_smoke_attempt_4_evidence.md`.
 
 What this plan controls:
 
@@ -60,6 +61,35 @@ What this does not mean:
 - Gemini is connected
 - Gemini is active
 - `GEMINI_API_KEY` has been used
+
+## Fourth Attempt Evidence Status
+
+The fourth approved local-only manual real-smoke attempt is documented and reviewed.
+
+What this means:
+
+- the smoke executed once locally and failed safely
+- `result_status=provider_error`
+- `error_category=provider_error`
+- `sdk_missing` did not occur
+- `grounding_status=insufficient_evidence`
+- cleanup was completed
+- the normal route remained mock-first
+- provider routing activation remained disabled
+- the Google AI Studio Usage page showed 2 API requests and 2 API errors
+- the error type shown by the user was `429 TooManyRequests`
+
+What this does not mean:
+
+- real smoke execution is complete
+- Gemini is connected
+- Gemini is active
+- `GEMINI_API_KEY` has been used
+- the next smoke should be run immediately
+- the rate limit / quota situation is understood or enough time has passed
+- the smoke context is improved from `insufficient_evidence` to a minimally grounded context
+
+Do not run another smoke until both conditions above are true.
 
 ## Approval Gate Wording
 
@@ -373,13 +403,14 @@ This document does not claim production/deployment/HTTPS readiness.
 
 ## Recommended Next Slice
 
-Recommended next slice: **B. explicit user approval for a single local-only manual real-smoke attempt**
+Recommended next slice: **pause further attempts until the rate-limit / quota situation is understood or enough time has passed, then improve the smoke context to a minimally grounded context before any future approval**
 
 Why this is the safest next move:
 
 - it keeps the current mock-first runtime intact
 - it does not require any real API call
-- it avoids accidental execution before approval
+- it avoids another attempt while the current rate-limit / quota signal is unresolved
+- it reduces the risk of another `insufficient_evidence` smoke context
 - it preserves the requirement for a separate evidence document after any approved smoke
 
 If the user does not approve the exact approval gate wording above, the next step is to remain blocked.

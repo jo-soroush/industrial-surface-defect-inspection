@@ -55,6 +55,8 @@ The following items are complete and established in the repository:
 - G3 local real-smoke harness skeleton
 - G3 final real-smoke execution checklist
 - G3 harness dry-run verification evidence
+- G3 approved local-only real-smoke attempt discovery
+- G3 fourth local-only real-smoke attempt evidence
 - The first safe Gemini code slice is implemented as regression coverage only, and it keeps the disabled-by-default Gemini boundary mock-first.
 - The second safe Gemini code slice is implemented as regression coverage only, and it keeps provider routing, `/agent/explain`, and `/agent/health` mock-first and secret-safe even when fake key-like values are present.
 - Phase 12 LLM-disabled Docker / Compose readiness audit
@@ -184,6 +186,7 @@ The local real-smoke harness skeleton is documented in `scripts/agent/run_gemini
 The final real-smoke execution checklist is documented in `docs/agent/gemini_g3_final_real_smoke_execution_checklist.md`.
 The harness dry-run verification evidence is documented in `docs/agent/gemini_g3_harness_dry_run_verification_evidence.md`.
 The approved-but-not-executed real-smoke attempt discovery is documented in `docs/agent/gemini_g3_approved_real_smoke_attempt_discovery.md`.
+The fourth approved local-only real-smoke attempt evidence is documented in `docs/agent/gemini_g3_local_real_smoke_attempt_4_evidence.md`.
 
 If later approved, the first real Gemini smoke must be:
 
@@ -195,6 +198,8 @@ If later approved, the first real Gemini smoke must be:
 - with a sanitized prompt only
 - with clear pass / fail evidence
 - with immediate rollback by `AGENT_ENABLE_LLM=false`
+
+The fourth approved local-only real-smoke attempt failed safely with `provider_error`, recorded `error_category=provider_error`, did not hit `sdk_missing`, and observed `429 TooManyRequests` in Google AI Studio. The next real-smoke attempt must wait until the rate-limit / quota situation is understood or enough time has passed, and the smoke context is improved to a minimally grounded context.
 
 ## Docker / Compose Gate
 
@@ -256,19 +261,19 @@ The repository is not ready for uncontrolled real provider activation.
 
 Real provider implementation may start only after explicit user approval for the next non-code Gemini planning step.
 
-Real API call remains blocked until the next approved slice.
-The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is non-code approval and local real-smoke planning.
+Real API call remains blocked until the next approved slice, and further local smoke should wait until the rate-limit / quota situation is understood or enough time has passed and the smoke context is minimally grounded.
+The remaining-gap audit found no useful additional no-network Gemini code slice, so the next step is rate-limit / context review before any further local real-smoke planning.
 The approved-but-not-executed real-smoke attempt discovery is documented separately and does not change the blocked status of real smoke execution.
 
 ## Next Recommended Slice
 
-Recommended next slice: **B. Non-code approval and local real-smoke planning**
+Recommended next slice: **rate-limit / quota review and minimally grounded smoke-context preparation before any further local smoke approval**
 
 Why this is the safest next move:
 
 - it keeps the system mock-first while the no-network Gemini code gap is already exhausted
-- it preserves the disabled-by-default boundary and keeps real smoke blocked pending explicit approval
-- it avoids jumping directly to a real API call
+- it preserves the disabled-by-default boundary and keeps real smoke blocked until the rate-limit / quota situation is understood
+- it avoids jumping directly to a real API call before the smoke context is minimally grounded
 
 ## Explicit Statement
 

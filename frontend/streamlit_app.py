@@ -396,6 +396,7 @@ def _render_image_inspection_agent_panel(
         st.session_state.pop(response_key, None)
         st.session_state.pop(error_key, None)
         st.session_state[source_request_key] = payload_request_id
+        st.session_state[question_key] = "Explain this image inspection result safely for manual review."
 
     default_question = "Explain this image inspection result safely for manual review."
     current_question = st.session_state.get(question_key)

@@ -20,6 +20,8 @@ from frontend.streamlit_app import (
     _friendly_metric_display,
     _get_api_base_url,
 )
+from src.inspection_ai.agent.context_builder import build_grounding_context
+from src.inspection_ai.agent.safety_guard import guard_pre_generation_context
 
 
 class _FakeResponse:
@@ -328,6 +330,39 @@ def test_image_inspection_agent_request_sanitizes_readiness_boundary_text() -> N
     assert "manual_review_required" in str(request)
 
 
+def test_image_inspection_question_field_is_the_readiness_trigger_when_it_contains_forbidden_phrase() -> None:
+    request = _build_image_inspection_agent_request(
+        question="Is this production-ready?",
+        inspection_response={
+            "request_id": "inspection-0001",
+            "decision": {"final_decision": "manual_review_required", "rule_id": "local_gated_runtime_validation_rule"},
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "local_gated_agent_endpoint_validation"},
+        },
+        visible_context={"final_decision": "manual_review_required"},
+        include_raw_evidence=False,
+    )
+    grounding_context = build_grounding_context(
+        page_id=request["page_id"],
+        section_id=request["section_id"],
+        component_id=request["component_id"],
+        question=request["question"],
+        visible_context=request["visible_context"],
+        inspection_response=request["inspection_response"],
+        include_raw_evidence=False,
+    )
+    guard_result = guard_pre_generation_context(grounding_context)
+
+    assert guard_result.blocked is True
+    assert guard_result.reasons == (
+        "The request asks for production/deployment/autonomous certification, which is not allowed.",
+    )
+    assert grounding_context.question == "Is this production-ready?"
+    assert "production-ready" in grounding_context.question
+
+
 def test_image_inspection_agent_panel_renders_safe_fallback_diagnostics(monkeypatch) -> None:
     fake_st = _FakeStreamlit(submitted=False)
     monkeypatch.setattr("frontend.streamlit_app.st", fake_st)
@@ -430,6 +465,56 @@ def test_image_inspection_agent_panel_sends_sanitized_payload_to_agent_explain(m
     assert "explanation_context" not in sent_payload["inspection_response"]
     assert response["provider_used"] == "gemini"
     assert response["fallback_used"] is False
+
+
+def test_image_inspection_agent_panel_resets_stale_question_on_new_request_id(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_post(endpoint, json, timeout):
+        captured["endpoint"] = endpoint
+        captured["json"] = json
+        return _FakeResponse(
+            200,
+            {
+                "answer": "Gemini gated endpoint answer. Manual review still applies.",
+                "evidence_used": [{"source": "inspection_response.decision.final_decision", "value": "manual_review_required"}],
+                "limitations": ["Manual review still applies."],
+                "provider_used": "gemini",
+                "fallback_used": False,
+                "grounding_status": "grounded",
+                "page_id": "image_inspection",
+                "section_id": "final_decision",
+            },
+        )
+
+    monkeypatch.setattr("frontend.streamlit_app.requests.post", fake_post)
+
+    fake_st = _FakeStreamlit(submitted=True)
+    monkeypatch.setattr("frontend.streamlit_app.st", fake_st)
+    fake_st.session_state["image_inspection_agent_source_request_id"] = "old-request"
+    fake_st.session_state["image_inspection_agent_question"] = "Is this production-ready?"
+    fake_st.session_state["image_inspection_agent_explanation"] = None
+    fake_st.session_state["image_inspection_agent_error"] = None
+
+    app._render_image_inspection_agent_panel(
+        api_base_url="http://localhost:8000",
+        payload={"request_id": "new-request"},
+        decision={},
+        classification={},
+        detection={},
+        anomaly={},
+        warnings=[],
+        limitations=[],
+    )
+
+    sent_payload = captured["json"]
+    assert sent_payload["question"] == "Explain this image inspection result safely for manual review."
+    assert "production-ready" not in sent_payload["question"].lower()
+    assert "deployment-safe" not in str(sent_payload).lower()
+    assert "limitations" not in sent_payload["inspection_response"]
+    assert "warnings" not in sent_payload["inspection_response"]
+    assert "errors" not in sent_payload["inspection_response"]
+    assert "explanation_context" not in sent_payload["inspection_response"]
 
 
 def test_frontend_source_no_longer_uses_classification_only_flow() -> None:

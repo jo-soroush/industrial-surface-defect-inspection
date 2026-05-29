@@ -1531,15 +1531,20 @@ def _build_real_gemini_prompt(
         *([f"- {item['source']}={item['value']}" for item in evidence_values] or ["- none"]),
         f"evidence_sources={evidence_sources or 'none'}",
         "safety_instructions:",
-        "- No production-ready claim.",
-        "- No deployment-safe claim.",
-        "- No autonomous decision claim.",
+        "- Do not discuss release status, provider status, or internal system details.",
+        "- Do not mention internal runtime/provider status.",
+        "- Only state that manual review is required.",
         "- No secret leakage.",
         "- No invented metrics or predictions.",
         "- Manual review still applies.",
         "- Do not invent or infer missing decision values, rule IDs, recommended actions, endpoints, or contract versions.",
         "- Use only the exact evidence_values listed above.",
         "- If a requested value is missing, say manual review is required instead of guessing.",
+        "- Return 2 to 4 short sentences.",
+        "- Mention final_decision exactly if present.",
+        "- Mention recommended_action exactly if present.",
+        "- Say manual review still applies.",
+        "- Do not mention rule_id, endpoint, contract_version, component_id, page_id, section_id, provider status, runtime status, deployment, readiness, autonomy, or internal system details unless explicitly asked.",
         *([f"limitations={limitations}"] if limitations else []),
         "Answer only from the compact sanitized context and keep manual review visible.",
     ]
@@ -1578,11 +1583,17 @@ def _format_real_prompt_value(value: Any) -> str | None:
 
 def _build_real_prompt_limitations(limitations: Iterable[Any]) -> list[str]:
     blocked_fragments = (
+        "no production-ready claim",
+        "no deployment-safe claim",
+        "no autonomous decision claim",
         "mock-only assistant path",
         "no external llm call",
         "mock backend agent is active",
         "external llm provider integration is not active",
         "no real llm provider call is made in the mvp mock path",
+        "production-ready",
+        "deployment-safe",
+        "autonomous decision",
     )
     filtered: list[str] = []
     seen: set[str] = set()

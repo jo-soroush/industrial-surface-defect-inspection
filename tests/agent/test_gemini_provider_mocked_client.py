@@ -762,8 +762,18 @@ def test_gemini_real_provider_prompt_includes_actual_evidence_values_and_omits_m
         "Do not invent or infer missing decision values, rule IDs, recommended actions, endpoints, or contract versions."
         in prompt
     )
+    assert "Do not discuss release status, provider status, or internal system details." in prompt
+    assert "Do not mention internal runtime/provider status." in prompt
+    assert "Only state that manual review is required." in prompt
+    assert "Return 2 to 4 short sentences." in prompt
+    assert "Mention final_decision exactly if present." in prompt
+    assert "Mention recommended_action exactly if present." in prompt
+    assert "Do not mention rule_id, endpoint, contract_version, component_id, page_id, section_id, provider status, runtime status, deployment, readiness, autonomy, or internal system details unless explicitly asked." in prompt
     assert "Mock-only assistant path" not in prompt
     assert "No external LLM call" not in prompt
+    assert "No production-ready claim." not in prompt
+    assert "No deployment-safe claim." not in prompt
+    assert "No autonomous decision claim." not in prompt
 
 
 def test_gemini_real_provider_blocks_invented_decision_output(monkeypatch) -> None:

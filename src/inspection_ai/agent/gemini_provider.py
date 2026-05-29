@@ -14,6 +14,7 @@ import importlib
 import json
 import os
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Any, Callable, Iterable, Literal, Protocol
 
 from .safety_guard import guard_post_generation_text, guard_pre_generation_context
@@ -309,6 +310,7 @@ class GeminiProviderStub:
         allowed_values = list(request_evidence_values)
         if allowed_evidence_values is not None:
             allowed_values.extend(list(allowed_evidence_values))
+        allowed_values.extend(_build_approved_compact_numeric_evidence_values(request))
 
         if client_result.error_kind == "timeout":
             return _build_mock_fallback_evaluation(
@@ -1350,10 +1352,16 @@ def _coerce_gemini_generation_request(
     client_name: str,
 ) -> GeminiGenerationRequest:
     if isinstance(request, GeminiGenerationRequest):
+        compact_values = tuple(_build_approved_compact_numeric_evidence_values(request.provider_request))
         if allowed_evidence_values is None:
-            return request
+            merged_allowed_values = tuple(dict.fromkeys(request.allowed_evidence_values + compact_values))
+            return GeminiGenerationRequest(
+                provider_request=request.provider_request,
+                allowed_evidence_values=merged_allowed_values,
+                client_name=request.client_name or client_name,
+            )
         merged_allowed_values = tuple(
-            dict.fromkeys(request.allowed_evidence_values + tuple(allowed_evidence_values))
+            dict.fromkeys(request.allowed_evidence_values + tuple(allowed_evidence_values) + compact_values)
         )
         return GeminiGenerationRequest(
             provider_request=request.provider_request,
@@ -1365,12 +1373,71 @@ def _coerce_gemini_generation_request(
         allowed = tuple()
     else:
         allowed = tuple(allowed_evidence_values)
+    allowed = tuple(dict.fromkeys(allowed + tuple(_build_approved_compact_numeric_evidence_values(request))))
 
     return GeminiGenerationRequest(
         provider_request=request,
         allowed_evidence_values=allowed,
         client_name=client_name,
     )
+
+
+def _build_approved_compact_numeric_evidence_values(request: AgentProviderRequest) -> list[Any]:
+    """Return compact numeric values already grounded in the request evidence.
+
+    This allows the post-generation guard to accept a rounded confidence value
+    such as ``0.89`` when the underlying evidence contains a more precise
+    confidence value for the same detection record.
+    """
+
+    grounded_values: list[Any] = []
+    evidence_used = request.grounding_context.get("evidence_used", [])
+    if not isinstance(evidence_used, list):
+        return grounded_values
+
+    for item in evidence_used:
+        if not isinstance(item, dict):
+            continue
+        compact_confidence = _find_compact_confidence_value(item.get("value"))
+        if compact_confidence is not None:
+            grounded_values.append(compact_confidence)
+            break
+    return grounded_values
+
+
+def _find_compact_confidence_value(value: Any) -> str | None:
+    if isinstance(value, dict):
+        best_detection = value.get("best_detection")
+        if isinstance(best_detection, dict):
+            compact_confidence = _format_compact_confidence_value(best_detection.get("confidence"))
+            if compact_confidence is not None:
+                return compact_confidence
+        for item in value.values():
+            compact_confidence = _find_compact_confidence_value(item)
+            if compact_confidence is not None:
+                return compact_confidence
+    elif isinstance(value, list):
+        for item in value:
+            compact_confidence = _find_compact_confidence_value(item)
+            if compact_confidence is not None:
+                return compact_confidence
+    return None
+
+
+def _format_compact_confidence_value(value: Any) -> str | None:
+    if value is None:
+        return None
+    try:
+        decimal_value = Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+
+    normalized = format(decimal_value.normalize(), "f")
+    if "." in normalized:
+        normalized = normalized.rstrip("0").rstrip(".")
+    if normalized == "-0":
+        normalized = "0"
+    return normalized
 
 
 def _coerce_gemini_client_result(raw_result: Any) -> GeminiClientResult | None:

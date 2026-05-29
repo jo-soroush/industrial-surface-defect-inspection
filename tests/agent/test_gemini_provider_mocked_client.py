@@ -418,8 +418,20 @@ def _build_real_prompt_evidence_request():
         inspection_response={
             "decision": {
                 "final_decision": "manual_review_required",
+                "decision_level": "evidence_supported",
                 "rule_id": "local_gated_runtime_validation_rule",
                 "recommended_action": "Review the inspection evidence before taking action.",
+            },
+            "classification": {
+                "predicted_label": "defect",
+            },
+            "detection": {
+                "predicted_box_count": 14,
+                "best_detection": {
+                    "class_label": "oil_spot",
+                    "display_label": "Oil spot",
+                    "confidence": 0.890102744102478,
+                },
             },
             "traceability": {
                 "source_endpoint": "local_gated_agent_endpoint_validation",
@@ -933,6 +945,51 @@ def test_gemini_real_provider_surfaces_sanitized_post_generation_block_reason(
     assert "manual review" in result.provider_response.answer.lower()
 
 
+def test_gemini_real_provider_allows_grounded_compact_confidence_output(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def fake_load_google_genai_module():
+        calls.append("called")
+        raise AssertionError("lazy SDK import should not be called when a fake SDK module is injected")
+
+    monkeypatch.setattr(gemini_provider_module, "_load_google_genai_module", fake_load_google_genai_module)
+
+    loader = _RecordingSdkLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai is available in the injected test seam.",
+        )
+    )
+    sdk_module = _FakeRealSdkModule("grounded_defect_answer")
+    provider = GeminiRealProvider(
+        settings=_build_real_provider_settings(enable_llm=True, gemini_key_present=True),
+        config=GeminiRealProviderConfig(
+            real_provider_implemented=True,
+            sdk_import_allowed=True,
+            api_key_resolver=lambda: "fake-key",
+        ),
+        sdk_loader=loader.loader,
+        sdk_module_loader=lambda: sdk_module,
+    )
+
+    result = provider.generate(_build_real_prompt_evidence_request())
+
+    assert calls == []
+    assert loader.calls == 1
+    assert sdk_module.models.calls == 1
+    assert result.provider_response.provider_used == "gemini"
+    assert result.provider_response.fallback_used is False
+    assert result.provider_response.provider_error_stage is None
+    assert result.provider_response.provider_error_reason is None
+    assert result.provider_response.safety_block_reason is None
+    assert result.provider_response.safety_status in {"pass", "limited"}
+    assert result.safe_to_display is True
+    assert "0.89 confidence" in result.provider_response.answer
+    assert "manual review still applies" in result.provider_response.answer.lower()
+
+
 @pytest.mark.parametrize(
     ("text", "expected_reason", "unexpected_phrase"),
     [
@@ -1287,6 +1344,15 @@ class _FakeRealGeminiModels:
                 "source_endpoint=local_gated_agent_endpoint_validation "
                 "contract_version=v1.0 "
                 "confidence=0.87 "
+                "Manual review still applies."
+            )
+        if self.mode == "grounded_defect_answer":
+            return (
+                "The final decision for this image is `defective`. "
+                "This decision is `evidence_supported` because both the classification model and the detection model identified defects, "
+                "with the detection model finding 14 localized defect boxes. "
+                "The most confident detection was an `Oil spot` with 0.89 confidence. "
+                "The recommended action is to `Inspect localized defect boxes`. "
                 "Manual review still applies."
             )
         if self.mode == "empty":

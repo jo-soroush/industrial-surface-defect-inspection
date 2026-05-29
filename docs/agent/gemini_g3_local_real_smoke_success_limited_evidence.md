@@ -38,6 +38,7 @@ The harness recorded:
 - success level: `limited`
 
 This proves the local smoke-level Gemini response path worked for `gemini-2.5-flash`.
+The gated frontend-to-agent path is the same explicit opt-in route used by the active Image Inspection explanation flow when the runtime gates are enabled.
 
 ## What This Means
 
@@ -45,19 +46,20 @@ This proves the local smoke-level Gemini response path worked for `gemini-2.5-fl
 - The response path can return a safe limited result without falling back to mock.
 - The validated smoke model is now `gemini-2.5-flash`.
 - The smoke harness default and the Gemini real-provider default are aligned on `gemini-2.5-flash`.
+- The explicit local gated runtime uses `AGENT_ENABLE_LLM=true`, `AGENT_ENABLE_REAL_PROVIDER_RUNTIME=true`, `AGENT_DEFAULT_PROVIDER=gemini`, `LLM_PROVIDER_ORDER=gemini,mock`, `LLM_ENABLE_FALLBACK=true`, `LLM_MAX_RETRIES=1`, with `GEMINI_API_KEY` supplied only at runtime and never committed.
 - Runtime remains mock-first by default.
 - Gated runtime activation remains disabled by default.
 
 ## What This Does Not Mean
 
-- Real smoke execution is unrestricted.
-- Gemini is connected in the normal `/agent/explain` runtime.
-- Gemini is active by default.
-- Gemini is production-ready.
-- Gemini is deployment-ready.
-- Gemini is public-ready.
-- Gemini is HTTPS/domain-ready.
-- Gemini is real-LLM runtime-ready.
+- This does not mean real smoke execution is unrestricted.
+- This does not mean Gemini is available only through the explicit gated `/agent/explain` runtime path and is not active by default.
+- This does not mean Gemini is active by default.
+- This does not mean Gemini is production-ready.
+- This does not mean Gemini is deployment-ready.
+- This does not mean Gemini is public-ready.
+- This does not mean Gemini is HTTPS/domain-ready.
+- This does not mean Gemini is real-LLM runtime-ready.
 
 ## Cleanup / Restoration Confirmed
 

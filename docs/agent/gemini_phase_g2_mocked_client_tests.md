@@ -11,15 +11,14 @@ What exists now:
 - The seam does not call the network.
 - The seam does not enable runtime Gemini execution.
 - The normal runtime remains mock-first.
-- No Gemini API call is implemented.
-- No real LLM execution is active.
-- Gemini runtime activation is not active.
+- At the G2 mocked-client-test stage, no Gemini API call was implemented.
+- At that stage, no real LLM execution was active.
+- Gemini runtime activation remains inactive by default.
 
 What this phase does not mean:
 
-- Real Gemini provider integration has not started.
-- Gemini is not connected.
-- Gemini is not active.
+- At that stage, real Gemini provider integration had not started.
+- Current project status is tracked in the roadmap and readiness docs, and the runtime remains mock-first by default.
 
 ## Current Status
 

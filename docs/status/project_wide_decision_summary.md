@@ -10,11 +10,13 @@
 - [x] Agent/RAG foundation: IMPLEMENTED AS EVIDENCE/DEMO/MOCK-FIRST LAYER
 - [ ] Production readiness: NOT CLAIMED
 - [ ] Deployment safety: NOT CLAIMED
-- [ ] Gemini local-smoke milestone: PAUSED / CLOSED FOR NOW at the local manual-harness level
+- [x] Gemini gated frontend integration milestone: validated as an explicit opt-in local path; safe mock fallback remains available
 
 This summary consolidates the current evidence-layer status after Track A, Track B, and YOLO / Detection evidence completion. It is intended to support final demo/readiness auditing, report packaging, and future roadmap decisions.
-It also records that the Gemini local-smoke milestone is paused / closed for now at the local manual-harness level, with runtime still mock-first and provider routing disabled by default.
+It also records that the Gemini gated frontend integration milestone is validated as an explicit opt-in local path, with runtime still mock-first by default and safe fallback preserved.
 The latest approved Gemini 2.5 Flash smoke reached `SUCCESS_LIMITED`, used `provider_used=gemini`, used `fallback_used=false`, and kept `grounding_status=grounded` with `safety_status=limited`.
+The frontend Image Inspection path now reaches `/agent/explain`, and the gated Gemini provider path is available only when explicit runtime gates are set.
+The explicit gated runtime gates are `AGENT_ENABLE_LLM=true`, `AGENT_ENABLE_REAL_PROVIDER_RUNTIME=true`, `AGENT_DEFAULT_PROVIDER=gemini`, `LLM_PROVIDER_ORDER=gemini,mock`, `LLM_ENABLE_FALLBACK=true`, `LLM_MAX_RETRIES=1`, with `GEMINI_API_KEY` provided only at runtime and never committed.
 The canonical Gemini provider default is aligned to `gemini-2.5-flash`, matching the validated smoke model.
 
 ## 2. Track A Decision
@@ -70,7 +72,7 @@ This is evidence/data-contract completion only.
 Evidence layers for Track A, Track B, and YOLO / Detection are complete enough for consolidated project status. The project is ready for a final demo/readiness audit next.
 
 The project is not declared production-ready. The project is not declared deployment-safe. Real productization work remains a later phase.
-The Gemini local-smoke milestone is paused / closed for now and should not be retried immediately; any future Gemini retry or runtime activation requires explicit approval.
+The gated frontend-to-agent Gemini path is now validated locally, and future Gemini work should focus on operational documentation for that gated mode or later deployment/env handling rather than another default-on activation step.
 
 ## 6. Remaining Work
 
@@ -103,7 +105,7 @@ Not recommended now:
 
 Next step: treat the reconciled roadmap/status docs as the source of truth; if implementation work resumes later, the next technical track should be a gated real-provider runtime activation validation slice with explicit opt-in only.
 
-Reason: the project now has complete evidence/status consolidation, the Gemini local-smoke milestone is paused / closed for now, and the repo already contains the implemented mock-first frontend/API/agent foundations. A live-provider path should only be designed later under explicit approval and gating.
+Reason: the project now has complete evidence/status consolidation, the gated frontend-to-agent Gemini path is already validated locally, and the repo already contains the implemented mock-first frontend/API/agent foundations. A live-provider path remains explicit opt-in only and should be operationalized conservatively if future work resumes.
 
 ## 8. Safety Boundaries
 

@@ -2,14 +2,14 @@
 
 ## Executive Summary
 
-This document describes how Gemini should later be integrated into the Agent/RAG foundation without breaking the current mock-first, safety-guarded, evidence-grounded system.
+This document describes how Gemini is integrated into the Agent/RAG foundation without breaking the current mock-first, safety-guarded, evidence-grounded system.
 
-This is a planning document only.
-Gemini is not currently connected.
-No real LLM call is currently made.
-The local manual Gemini smoke milestone is paused / closed for now at the harness level; no immediate further smoke should be run.
+This is a gated integration and readiness document, not a production-readiness claim.
+Gemini is available only through the explicit gated local runtime path.
+No real LLM call is made in the default mock-first runtime.
+The local manual Gemini smoke milestone is validated as a limited-success local path; no immediate further smoke should be run.
 
-The current foundation is ready for planning, not implementation.
+The current foundation is ready for conservative operational documentation and later gated expansion, not for default-on real-LLM use.
 
 ## Current Baseline
 
@@ -36,6 +36,8 @@ The current repository baseline already provides:
 - A G3 final real-smoke execution checklist that defines the mandatory pre-execution review items only.
 - A G3 harness dry-run verification evidence document that records the harness verification but does not claim a real smoke.
 - A limited-success local smoke evidence document that records the latest approved Gemini 2.5 Flash smoke result as `SUCCESS_LIMITED`.
+- A frontend-to-agent integration path that sends the active Image Inspection explanation through `/inspect/image` and `/agent/explain` before reaching the gated Gemini provider when explicit runtime gates are set.
+- The explicit runtime gates for local gated mode are `AGENT_ENABLE_LLM=true`, `AGENT_ENABLE_REAL_PROVIDER_RUNTIME=true`, `AGENT_DEFAULT_PROVIDER=gemini`, `LLM_PROVIDER_ORDER=gemini,mock`, `LLM_ENABLE_FALLBACK=true`, `LLM_MAX_RETRIES=1`, with `GEMINI_API_KEY` supplied only at runtime and never committed.
 - A first safe Gemini code slice that adds regression coverage for the disabled-by-default Gemini boundary without changing runtime behavior.
 - A second safe Gemini code slice that adds regression coverage proving provider router health, `/agent/explain`, and API health remain mock-first and secret-safe even when fake key-like values are present.
 - A fourth approved local-only real-smoke attempt evidence document that records a safe `provider_error` failure, a sanitized `error_category=provider_error`, and a `429 TooManyRequests` observation in Google AI Studio.
@@ -46,7 +48,7 @@ The current repository baseline already provides:
 - The Phase 12 LLM-disabled Docker / Compose validation is PASS and remains local-only.
 - An EC2 LLM-disabled readiness audit documents the next planning step for later deployment.
 - An EC2 LLM-disabled validation evidence document records the actual EC2 PASS and confirms the instance was stopped after validation.
-- The local manual Gemini smoke milestone is paused / closed for now at the harness level; the remaining issue is external Gemini availability and future approved retry timing, not the local harness design.
+- The local manual Gemini smoke milestone is validated at the harness level as a limited-success local path; the remaining issue is external Gemini availability and future approved retry timing, not the local harness design.
 
 ## Non-Negotiable Integration Rules
 
@@ -177,18 +179,18 @@ The G3 preparation audit exists and records the package, environment, API-key, a
 The package verification artifact has separately confirmed `google-genai` as the future dependency candidate and lazy import as the required import style.
 The package verification artifact is documented in `docs/agent/gemini_g3_package_verification.md`.
 The G3 entry checklist and first-slice plan are documented in `docs/agent/gemini_phase_g3_entry_checklist.md`.
-The first readiness-scaffolding slice is implemented and tested, but real Gemini provider integration has not started.
-The second offline-only lazy SDK loader boundary is implemented and tested, but real Gemini provider integration has not started.
-The third health/readiness integration slice is implemented and tested, but real Gemini provider integration has not started.
-The provider skeleton with mocked / injected SDK object is implemented and tested, but real Gemini provider integration has not started.
-The G3 pre-real-call audit is implemented and reviewed, but real Gemini provider integration has not started.
-The G3 local real-smoke plan is implemented as documentation only, but real Gemini provider integration has not started.
-The G3 local real-smoke harness skeleton is implemented and tested, but real Gemini provider integration has not started.
-The G3 final real-smoke execution checklist is implemented as documentation only, but real Gemini provider integration has not started.
-The G3 harness dry-run verification evidence is implemented as documentation only, but real Gemini provider integration has not started.
-The approved-but-not-executed real-smoke attempt discovery is documented separately, but real Gemini provider integration has not started.
-The first safe Gemini code slice is implemented as regression coverage only, but real Gemini provider integration has not started.
-The second safe Gemini code slice is implemented as regression coverage only, but real Gemini provider integration has not started.
+The first readiness-scaffolding slice is implemented and tested as part of the gated path.
+The second offline-only lazy SDK loader boundary is implemented and tested as part of the gated path.
+The third health/readiness integration slice is implemented and tested as part of the gated path.
+The provider skeleton with mocked / injected SDK object is implemented and tested as part of the gated path.
+The G3 pre-real-call audit is implemented and reviewed as part of the gated path.
+The G3 local real-smoke plan is implemented as documentation only and records the validated local gated path.
+The G3 local real-smoke harness skeleton is implemented and tested, and remains disabled by default.
+The G3 final real-smoke execution checklist is implemented as documentation only and remains a checklist rather than a default execution path.
+The G3 harness dry-run verification evidence is implemented as documentation only and records the dry-run boundary.
+The approved-but-not-executed real-smoke attempt discovery is documented separately.
+The first safe Gemini code slice is implemented as regression coverage only.
+The second safe Gemini code slice is implemented as regression coverage only.
 The Phase 12 LLM-disabled Docker / Compose validation evidence is implemented as documentation only and records the local PASS.
 The EC2 LLM-disabled validation evidence now records the actual EC2 PASS and confirms the instance was stopped after validation.
 The G3 dependency decision artifact is implemented and reviewed, and the backend/API requirements slice is applied.
@@ -197,17 +199,13 @@ The router activation tests are implemented and reviewed, and they keep Gemini m
 
 What this means:
 
-- Real Gemini provider integration has not started.
-- No Gemini API call is implemented.
-- No real LLM execution is active.
-- Gemini runtime activation is not active.
-- The runtime remains mock-first.
+- The runtime remains mock-first by default.
 - Health/readiness metadata is safe and does not activate Gemini.
-- The pre-real-call activation gates are documented and remain blocking for any real provider work.
-- The disabled-by-default router gate design is documented and remains blocking for any real provider work.
-- The router activation test coverage is documented and remains blocking for any real provider work.
+- The explicit runtime gates are documented and remain required for any real provider work.
+- The disabled-by-default router gate design is documented and remains required for any real provider work.
+- The router activation test coverage is documented and remains in place.
 - The dependency decision is documented and the backend/API requirements slice has been applied without changing runtime behavior.
-- The local real-smoke plan is documented and remains planning only.
+- The local real-smoke plan is documented and remains a validated local gated path record.
 - The local real-smoke harness skeleton is documented and remains disabled by default.
 - The final real-smoke execution checklist is documented and remains a checklist only.
 - The harness dry-run verification evidence is documented and remains dry-run verification only.
@@ -216,9 +214,9 @@ What this means:
 
 What this does not mean:
 
-- Gemini is connected.
-- Gemini is active.
-- G3 implementation has started.
+- This does not mean Gemini is active by default.
+- This does not mean Gemini availability is guaranteed.
+- This does not mean the gated path is production-ready.
 - A future Gemini retry is approved.
 - The current external Gemini availability condition is guaranteed.
 
@@ -239,9 +237,8 @@ What this means:
 
 What this does not mean:
 
-- Real Gemini provider integration has not started.
-- Gemini is not connected.
-- Gemini is not active.
+- The gated real-provider path is documented and ready for explicit opt-in only.
+- Gemini remains inactive by default.
 
 ## G2 Completion Note
 
@@ -260,9 +257,8 @@ What this means:
 
 What this does not mean:
 
-- Real Gemini provider integration has not started.
-- Gemini is not connected.
-- Gemini is not active.
+- The gated real-provider path is documented and ready for explicit opt-in only.
+- Gemini remains inactive by default.
 
 ## Failure Behavior
 
@@ -328,10 +324,10 @@ The G3 preparation audit exists and is reviewed.
 The G3 execution gate design exists and is reviewed.
 The G3 router activation tests exist and are reviewed.
 The latest approved Gemini 2.5 Flash smoke succeeded in limited mode, and the canonical Gemini provider default now aligns with that smoke model.
-Real Gemini provider integration has started only as disabled-by-default gated infrastructure and local smoke validation.
-No real LLM execution is active.
-Gemini is not active in the normal runtime by default, and normal `/agent/explain` remains mock-first unless a future explicit opt-in validation enables the gated path.
-Gemini, Grok, and OpenAI remain inactive.
+Gemini is integrated through disabled-by-default gated infrastructure and local smoke validation.
+No real LLM execution is active in the default runtime.
+Gemini remains inactive in the normal runtime by default, and normal `/agent/explain` remains mock-first unless the explicit runtime gates enable the gated path.
+Gemini, Grok, and OpenAI remain inactive by default.
 The system remains mock-first and offline by default.
 The latest approved Gemini 2.5 Flash smoke succeeded in limited mode, confirming that the local smoke path can return a safe limited result without changing the mock-first default runtime.
-The next technical step is gated real-provider runtime validation with explicit opt-in only, not Docker, EC2, UI redo, or API key storage.
+The next technical step is operational documentation for the gated mode or later deployment/env handling, not a default-on Gemini step.

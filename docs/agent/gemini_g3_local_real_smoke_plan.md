@@ -11,13 +11,13 @@ No provider routing activation is performed.
 Normal `/agent/explain` remains mock-first.
 This document does not approve real smoke execution.
 A future real smoke requires explicit user approval.
-Real Gemini, Grok, and OpenAI runtime remain not active.
+Gemini, Grok, and OpenAI remain inactive by default.
 Production readiness, HTTPS/domain readiness, and real LLM readiness are not claimed.
-The local manual Gemini smoke milestone is paused / closed for now at the harness level.
+The local manual Gemini smoke milestone is validated at the harness level as a limited-success local path.
 The latest approved Gemini 2.5 Flash smoke reached `SUCCESS_LIMITED`, used `provider_used=gemini`, used no fallback, and kept `grounding_status=grounded` with `safety_status=limited`.
 The validated smoke model is now `gemini-2.5-flash`, and the provider default is aligned to that same model.
 
-This plan defines the narrowest local-only evidence path for a future manual smoke while keeping the current mock-first runtime untouched.
+This plan defines the narrowest local-only evidence path for the validated gated smoke path while keeping the current mock-first runtime untouched.
 
 A disabled-by-default harness skeleton exists in `scripts/agent/run_gemini_local_smoke.py`; it is not executed by default and it does not call Gemini.
 

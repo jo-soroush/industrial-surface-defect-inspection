@@ -11,6 +11,7 @@ Importing this module does not make any real Gemini API call.
 from __future__ import annotations
 
 import importlib
+import json
 import os
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Literal, Protocol
@@ -1511,12 +1512,9 @@ def _build_real_gemini_prompt(
     *,
     sanitized_context: dict[str, Any],
 ) -> str:
-    evidence_sources = ", ".join(
-        str(item.get("source", "unknown"))
-        for item in sanitized_context.get("evidence_used", [])
-        if isinstance(item, dict)
-    )
-    limitations = ", ".join(str(item) for item in sanitized_context.get("limitations", []) if str(item).strip())
+    evidence_values = _build_real_prompt_evidence_values(sanitized_context)
+    evidence_sources = ", ".join(item["source"] for item in evidence_values)
+    limitations = _build_real_prompt_limitations(sanitized_context.get("limitations", []))
     page_id = sanitized_context.get("page_id", request.page_id)
     section_id = sanitized_context.get("section_id", request.section_id)
     component_id = sanitized_context.get("component_id", request.component_id or "none")
@@ -1529,11 +1527,77 @@ def _build_real_gemini_prompt(
         f"component_id={component_id}",
         f"question={question}",
         f"grounding_status={grounding_status}",
-        f"limitations={limitations or 'none'}",
+        "evidence_values:",
+        *([f"- {item['source']}={item['value']}" for item in evidence_values] or ["- none"]),
         f"evidence_sources={evidence_sources or 'none'}",
+        "safety_instructions:",
+        "- No production-ready claim.",
+        "- No deployment-safe claim.",
+        "- No autonomous decision claim.",
+        "- No secret leakage.",
+        "- No invented metrics or predictions.",
+        "- Manual review still applies.",
+        "- Do not invent or infer missing decision values, rule IDs, recommended actions, endpoints, or contract versions.",
+        "- Use only the exact evidence_values listed above.",
+        "- If a requested value is missing, say manual review is required instead of guessing.",
+        *([f"limitations={limitations}"] if limitations else []),
         "Answer only from the compact sanitized context and keep manual review visible.",
     ]
     return "\n".join(prompt_parts)
+
+
+def _build_real_prompt_evidence_values(sanitized_context: dict[str, Any]) -> list[dict[str, str]]:
+    evidence_values: list[dict[str, str]] = []
+    seen_sources: set[str] = set()
+    for item in sanitized_context.get("evidence_used", []):
+        if not isinstance(item, dict):
+            continue
+        source = str(item.get("source", "unknown")).strip() or "unknown"
+        if source in seen_sources:
+            continue
+        seen_sources.add(source)
+        value = _format_real_prompt_value(item.get("value"))
+        if value is None:
+            continue
+        evidence_values.append({"source": source, "value": value})
+    return evidence_values
+
+
+def _format_real_prompt_value(value: Any) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        if "value" in value and len(value) > 1:
+            return _format_real_prompt_value(value.get("value"))
+        return json.dumps(value, ensure_ascii=False, sort_keys=True)
+    if isinstance(value, list):
+        return json.dumps([_format_real_prompt_value(item) for item in value], ensure_ascii=False)
+    text = str(value).strip()
+    return text or None
+
+
+def _build_real_prompt_limitations(limitations: Iterable[Any]) -> list[str]:
+    blocked_fragments = (
+        "mock-only assistant path",
+        "no external llm call",
+        "mock backend agent is active",
+        "external llm provider integration is not active",
+        "no real llm provider call is made in the mvp mock path",
+    )
+    filtered: list[str] = []
+    seen: set[str] = set()
+    for item in limitations:
+        text = str(item).strip()
+        if not text:
+            continue
+        normalized = text.lower()
+        if any(fragment in normalized for fragment in blocked_fragments):
+            continue
+        if text in seen:
+            continue
+        seen.add(text)
+        filtered.append(text)
+    return filtered
 
 
 def _load_google_genai_module() -> Any:

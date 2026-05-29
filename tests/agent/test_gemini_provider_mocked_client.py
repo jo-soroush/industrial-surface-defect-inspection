@@ -408,6 +408,44 @@ def _build_gemini_provider_request(*, question: str = "What does this chart mean
     )
 
 
+def _build_real_prompt_evidence_request():
+    context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        component_id="image_inspection_ai_explanation_panel",
+        question="Explain this image inspection result safely for manual review.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {
+                "final_decision": "manual_review_required",
+                "rule_id": "local_gated_runtime_validation_rule",
+                "recommended_action": "Review the inspection evidence before taking action.",
+            },
+            "traceability": {
+                "source_endpoint": "local_gated_agent_endpoint_validation",
+                "contract_version": "local_validation_v1",
+            },
+        },
+        include_raw_evidence=False,
+    )
+    sanitized_context = {
+        "page_id": context.page_id,
+        "section_id": context.section_id,
+        "component_id": context.component_id,
+        "question": context.question,
+        "evidence_used": context.evidence_used,
+        "limitations": context.limitations,
+        "grounding_status": context.grounding_status,
+    }
+    return build_provider_request(
+        provider_name="gemini",
+        grounding_context=context,
+        sanitized_context=sanitized_context,
+        safety_status="pass",
+        llm_enabled=True,
+    )
+
+
 class _FakeGeminiClient:
     def __init__(self, mode: str) -> None:
         self.mode = mode
@@ -667,6 +705,109 @@ def test_gemini_real_provider_with_fake_safe_sdk_client_returns_safe_provider_re
     assert result.provider_response.raw_provider_response_allowed is False
     assert result.safe_to_display is True
     assert "manual review" in result.provider_response.answer.lower()
+
+
+def test_gemini_real_provider_prompt_includes_actual_evidence_values_and_omits_mock_only_contradictions(
+    monkeypatch,
+) -> None:
+    calls: list[str] = []
+
+    def fake_load_google_genai_module():
+        calls.append("called")
+        raise AssertionError("lazy SDK import should not be called when a fake SDK module is injected")
+
+    monkeypatch.setattr(gemini_provider_module, "_load_google_genai_module", fake_load_google_genai_module)
+
+    loader = _RecordingSdkLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai is available in the injected test seam.",
+        )
+    )
+    sdk_module = _FakeRealSdkModule("safe")
+    provider = GeminiRealProvider(
+        settings=_build_real_provider_settings(enable_llm=True, gemini_key_present=True),
+        config=GeminiRealProviderConfig(
+            real_provider_implemented=True,
+            sdk_import_allowed=True,
+            api_key_resolver=lambda: "fake-key",
+        ),
+        sdk_loader=loader.loader,
+        sdk_module_loader=lambda: sdk_module,
+    )
+
+    result = provider.generate(_build_real_prompt_evidence_request())
+
+    assert calls == []
+    assert loader.calls == 1
+    assert sdk_module.models.calls == 1
+    assert result.provider_response.provider_used == "gemini"
+    assert result.provider_response.fallback_used is False
+    prompt = sdk_module.models.prompts[-1]
+    assert "inspection_response.decision.final_decision=manual_review_required" in prompt
+    assert "inspection_response.decision.rule_id=local_gated_runtime_validation_rule" in prompt
+    assert (
+        "inspection_response.decision.recommended_action=Review the inspection evidence before taking action."
+        in prompt
+    )
+    assert "inspection_response.traceability.source_endpoint=local_gated_agent_endpoint_validation" in prompt
+    assert "inspection_response.traceability.contract_version=local_validation_v1" in prompt
+    assert "request.page_id=image_inspection" in prompt
+    assert "request.section_id=final_decision" in prompt
+    assert "request.component_id=image_inspection_ai_explanation_panel" in prompt
+    assert "Do not invent or infer missing decision values" in prompt
+    assert (
+        "Do not invent or infer missing decision values, rule IDs, recommended actions, endpoints, or contract versions."
+        in prompt
+    )
+    assert "Mock-only assistant path" not in prompt
+    assert "No external LLM call" not in prompt
+
+
+def test_gemini_real_provider_blocks_invented_decision_output(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def fake_load_google_genai_module():
+        calls.append("called")
+        raise AssertionError("lazy SDK import should not be called when a fake SDK module is injected")
+
+    monkeypatch.setattr(gemini_provider_module, "_load_google_genai_module", fake_load_google_genai_module)
+
+    loader = _RecordingSdkLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai is available in the injected test seam.",
+        )
+    )
+    sdk_module = _FakeRealSdkModule("invented_decision")
+    provider = GeminiRealProvider(
+        settings=_build_real_provider_settings(enable_llm=True, gemini_key_present=True),
+        config=GeminiRealProviderConfig(
+            real_provider_implemented=True,
+            sdk_import_allowed=True,
+            api_key_resolver=lambda: "fake-key",
+        ),
+        sdk_loader=loader.loader,
+        sdk_module_loader=lambda: sdk_module,
+    )
+
+    result = provider.generate(_build_real_prompt_evidence_request())
+
+    assert calls == []
+    assert loader.calls == 1
+    assert sdk_module.models.calls == 1
+    assert result.provider_response.provider_used == "mock"
+    assert result.provider_response.fallback_used is True
+    assert result.provider_response.provider_error_stage == "post_generation"
+    assert result.provider_response.provider_error_reason == "safety_blocked"
+    assert result.safety_block_reason == "invented_metric_like_output"
+    assert result.provider_response.safety_status == "blocked"
+    assert result.safe_to_display is False
+    assert "NO_ACTION" not in result.provider_response.answer
 
 
 @pytest.mark.parametrize(
@@ -1109,9 +1250,11 @@ class _FakeRealGeminiModels:
     def __init__(self, mode: str) -> None:
         self.mode = mode
         self.calls = 0
+        self.prompts: list[str] = []
 
     def generate_content(self, *, model: str, contents: str):
         self.calls += 1
+        self.prompts.append(contents)
         if self.mode == "safe":
             return (
                 "This threshold chart summarizes validation evidence and threshold behavior. "
@@ -1126,6 +1269,16 @@ class _FakeRealGeminiModels:
             return "The threshold is 0.99 and the F1 score is 0.87. Manual review still applies."
         if self.mode == "path":
             return "Here is the file path: /Users/jo.soroush/secret.key"
+        if self.mode == "invented_decision":
+            return (
+                "final_decision=NO_ACTION "
+                "rule_id=IMAGE_INSPECTION_NO_VIOLATIONS_FOUND "
+                "recommended_action=Take no action. "
+                "source_endpoint=local_gated_agent_endpoint_validation "
+                "contract_version=v1.0 "
+                "confidence=0.87 "
+                "Manual review still applies."
+            )
         if self.mode == "empty":
             return ""
         if self.mode == "malformed":
@@ -1165,10 +1318,12 @@ class _RetryingRealGeminiModels:
     def __init__(self, outcomes: tuple[str, ...]) -> None:
         self.outcomes = outcomes
         self.calls = 0
+        self.prompts: list[str] = []
 
     def generate_content(self, *, model: str, contents: str):
         index = min(self.calls, len(self.outcomes) - 1)
         self.calls += 1
+        self.prompts.append(contents)
         outcome = self.outcomes[index]
         if outcome == "safe":
             return (

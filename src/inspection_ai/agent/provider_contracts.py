@@ -90,6 +90,7 @@ class AgentProviderResponse:
     fallback_reason: str | None = None
     provider_error_stage: str | None = None
     provider_error_reason: str | None = None
+    safety_block_reason: str | None = None
     grounding_status: str = "insufficient_evidence"
     safety_status: str = "pass"
     limitations: tuple[str, ...] = field(default_factory=tuple)
@@ -139,6 +140,7 @@ def build_provider_response(
     fallback_reason: str | None,
     provider_error_stage: str | None = None,
     provider_error_reason: str | None = None,
+    safety_block_reason: str | None = None,
     grounding_status: str,
     safety_status: str,
     limitations: list[str],
@@ -162,6 +164,7 @@ def build_provider_response(
         fallback_reason=fallback_reason,
         provider_error_stage=provider_error_stage,
         provider_error_reason=provider_error_reason,
+        safety_block_reason=safety_block_reason,
         grounding_status=grounding_status,
         safety_status=safety_status,
         limitations=tuple(dict.fromkeys(limitations)),

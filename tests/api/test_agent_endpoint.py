@@ -62,6 +62,7 @@ def test_agent_explain_returns_grounded_mock_answer_for_image_inspection() -> No
     assert "mock" in payload["fallback_reason"].lower()
     assert payload["provider_error_stage"] is None
     assert payload["provider_error_reason"] is None
+    assert payload["safety_block_reason"] is None
     assert payload["grounding_status"] == "grounded"
     assert payload["page_id"] == "image_inspection"
     assert payload["section_id"] == "final_decision"
@@ -194,6 +195,7 @@ def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_
                 fallback_reason=None,
                 provider_error_stage=None,
                 provider_error_reason=None,
+                safety_block_reason=None,
                 grounding_status="grounded",
                 safety_status="pass",
                 limitations=["Manual review still applies."],
@@ -254,6 +256,7 @@ def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_
     assert payload["fallback_reason"] is None
     assert payload["provider_error_stage"] is None
     assert payload["provider_error_reason"] is None
+    assert payload["safety_block_reason"] is None
     assert payload["grounding_status"] == "grounded"
     assert "gemini gated endpoint answer" in payload["answer"].lower()
     assert "manual review" in payload["answer"].lower()
@@ -297,6 +300,7 @@ def test_agent_explain_exposes_safe_fallback_reason_for_gated_fake_gemini_fallba
                 fallback_reason="Gemini real provider service unavailable; mock fallback remains the safe path.",
                 provider_error_stage="client_invocation",
                 provider_error_reason="service_unavailable",
+                safety_block_reason=None,
                 grounding_status="grounded",
                 safety_status="pass",
                 limitations=["Manual review still applies."],
@@ -341,6 +345,96 @@ def test_agent_explain_exposes_safe_fallback_reason_for_gated_fake_gemini_fallba
     assert "service unavailable" in payload["fallback_reason"].lower()
     assert payload["provider_error_stage"] == "client_invocation"
     assert payload["provider_error_reason"] == "service_unavailable"
+    assert payload["safety_block_reason"] is None
+    assert "present-but-test-only" not in payload["fallback_reason"].lower()
+    assert "present-but-test-only" not in payload["answer"].lower()
+
+
+def test_agent_explain_exposes_sanitized_safety_block_reason_for_gated_fake_gemini_post_generation_block(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("AGENT_ENABLE_REAL_PROVIDER_RUNTIME", "true")
+    monkeypatch.setenv("AGENT_DEFAULT_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "gemini,mock")
+    monkeypatch.setenv("GEMINI_API_KEY", "present-but-test-only")
+    monkeypatch.delenv("GROK_API_KEY", raising=False)
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    def fake_generate_with_real_gemini_provider(
+        request,
+        *,
+        settings,
+        config,
+        sdk_loader=None,
+        sdk_module_loader=None,
+        client_factory=None,
+        allowed_evidence_values=None,
+    ):
+        return SimpleNamespace(
+            provider_response=build_provider_response(
+                answer="Mock fallback remains the safe path. Manual review still applies.",
+                provider_used="mock",
+                fallback_used=True,
+                fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
+                provider_error_stage="post_generation",
+                provider_error_reason="safety_blocked",
+                safety_block_reason="invented_metric_like_output",
+                grounding_status="grounded",
+                safety_status="blocked",
+                limitations=["Manual review still applies."],
+                evidence_used=[{"source": "inspection_response.decision.final_decision", "value": "defective"}],
+            ),
+            status="blocked",
+            safe_to_send=False,
+            safe_to_display=False,
+            provider_error="Gemini real provider output was blocked by the safety guard.",
+            fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
+        )
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "generate_with_real_gemini_provider",
+        fake_generate_with_real_gemini_provider,
+    )
+
+    response = client.post(
+        "/agent/explain",
+        json={
+            "page_id": "image_inspection",
+            "section_id": "final_decision",
+            "question": "Explain this image inspection result safely.",
+            "visible_context": {"page_title": "Image Inspection"},
+            "inspection_response": {
+                "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+                "classification": {"predicted_label": "defect"},
+                "detection": {"predicted_box_count": 1},
+                "anomaly": {"predicted_label": "anomaly"},
+                "traceability": {"source_endpoint": "/inspect/image"},
+            },
+            "include_raw_evidence": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["provider_used"] == "mock"
+    assert payload["fallback_used"] is True
+    assert payload["fallback_reason"] is not None
+    assert "safety guard" in payload["fallback_reason"].lower()
+    assert payload["provider_error_stage"] == "post_generation"
+    assert payload["provider_error_reason"] == "safety_blocked"
+    assert payload["safety_block_reason"] == "invented_metric_like_output"
     assert "present-but-test-only" not in payload["fallback_reason"].lower()
     assert "present-but-test-only" not in payload["answer"].lower()
 

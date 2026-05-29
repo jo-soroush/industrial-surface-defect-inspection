@@ -470,6 +470,7 @@ def test_router_explain_routes_to_gemini_with_explicit_runtime_gate_and_fake_pro
                 fallback_reason=None,
                 provider_error_stage=None,
                 provider_error_reason=None,
+                safety_block_reason=None,
                 grounding_status="grounded",
                 safety_status="pass",
                 limitations=["Manual review still applies."],
@@ -534,6 +535,7 @@ def test_router_explain_routes_to_gemini_with_explicit_runtime_gate_and_fake_pro
     assert response.fallback_reason is None
     assert response.provider_error_stage is None
     assert response.provider_error_reason is None
+    assert response.safety_block_reason is None
     assert response.grounding_status == "grounded"
     assert "gemini gated answer" in response.answer.lower()
     assert "manual review" in response.answer.lower()
@@ -744,7 +746,88 @@ def test_router_explain_falls_back_safely_when_real_provider_boundary_returns_mo
     assert response.fallback_reason == fallback_reason
     assert response.provider_error_stage == "client_invocation"
     assert response.provider_error_reason == boundary_status
+    assert response.safety_block_reason is None
     assert "mock fallback" in response.answer.lower()
+    assert "manual review" in response.answer.lower()
+
+
+def test_router_explain_exposes_sanitized_safety_block_reason_for_post_generation_blocks(monkeypatch) -> None:
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    def fake_generate_with_real_gemini_provider(*args, **kwargs):
+        return SimpleNamespace(
+            provider_response=build_provider_response(
+                answer="Mock fallback remains the safe path. Manual review still applies.",
+                provider_used="mock",
+                fallback_used=True,
+                fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
+                provider_error_stage="post_generation",
+                provider_error_reason="safety_blocked",
+                safety_block_reason="invented_metric_like_output",
+                grounding_status="grounded",
+                safety_status="blocked",
+                limitations=["Manual review still applies."],
+                evidence_used=[],
+            ),
+            status="blocked",
+            safe_to_send=False,
+            safe_to_display=False,
+            provider_error="Gemini real provider output was blocked by the safety guard.",
+            fallback_reason="Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
+        )
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "generate_with_real_gemini_provider",
+        fake_generate_with_real_gemini_provider,
+    )
+
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            enable_real_provider_runtime=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Explain this inspection result.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert response.provider_used == "mock"
+    assert response.fallback_used is True
+    assert response.fallback_reason is not None
+    assert "safety guard" in response.fallback_reason.lower()
+    assert response.provider_error_stage == "post_generation"
+    assert response.provider_error_reason == "safety_blocked"
+    assert response.safety_block_reason == "invented_metric_like_output"
     assert "manual review" in response.answer.lower()
 
 

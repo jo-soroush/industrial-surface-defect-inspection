@@ -370,6 +370,7 @@ class GeminiProviderStub:
                 fallback_reason="Gemini mocked client output was blocked by the safety guard; mock fallback remains the safe path.",
                 provider_error_stage="post_generation",
                 provider_error_reason="safety_blocked",
+                safety_block_reason=_classify_safety_block_reason(safety_result.reasons),
                 grounding_status=_request_grounding_status(request),
                 safety_status=safety_result.status,
                 limitations=_request_limitations(request, safety_result.limitations),
@@ -1312,6 +1313,7 @@ def _build_mock_fallback_evaluation(
     provider_error: str,
     provider_error_stage: str | None = None,
     provider_error_reason: str | None = None,
+    safety_block_reason: str | None = None,
 ) -> GeminiMockedClientEvaluation:
     response = build_provider_response(
         answer=(
@@ -1328,6 +1330,7 @@ def _build_mock_fallback_evaluation(
         provider_error=provider_error,
         provider_error_stage=provider_error_stage,
         provider_error_reason=provider_error_reason,
+        safety_block_reason=safety_block_reason,
     )
     return GeminiMockedClientEvaluation(
         provider_response=response,
@@ -1545,6 +1548,7 @@ def _build_real_generation_not_implemented_result(
     provider_error: str,
     provider_error_stage: str = "readiness",
     provider_error_reason: str = "readiness",
+    safety_block_reason: str | None = None,
 ) -> GeminiRealGenerationResult:
     response = build_provider_response(
         answer=(
@@ -1566,6 +1570,7 @@ def _build_real_generation_not_implemented_result(
         provider_error=provider_error,
         provider_error_stage=provider_error_stage,
         provider_error_reason=provider_error_reason,
+        safety_block_reason=safety_block_reason,
     )
     return GeminiRealGenerationResult(
         provider_response=response,
@@ -1648,7 +1653,7 @@ def _classify_safety_block_reason(reasons: Iterable[str] | None) -> str:
     if "raw evidence is not allowed" in normalized:
         return "evidence_boundary_violation"
     if "production/deployment/autonomous certification" in normalized:
-        return "evidence_boundary_violation"
+        return "unsupported_readiness_claim"
     return "unknown"
 
 

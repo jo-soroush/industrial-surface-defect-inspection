@@ -40,6 +40,7 @@ def test_provider_contract_objects_can_be_constructed() -> None:
         fallback_reason="Mock fallback is the MVP fallback.",
         provider_error_stage="readiness",
         provider_error_reason="provider_error",
+        safety_block_reason="unknown",
         grounding_status="grounded",
         safety_status="pass",
         limitations=["Manual review still applies."],
@@ -57,6 +58,7 @@ def test_provider_contract_objects_can_be_constructed() -> None:
     assert response.fallback_reason == "Mock fallback is the MVP fallback."
     assert response.provider_error_stage == "readiness"
     assert response.provider_error_reason == "provider_error"
+    assert response.safety_block_reason == "unknown"
     assert response.provider_used == "mock"
 
 

@@ -17,6 +17,7 @@ from .gemini_provider import (
     GeminiRealProviderConfig,
     GeminiSdkLoadResult,
     _default_gemini_api_key_resolver,
+    _classify_safety_block_reason,
     evaluate_gemini_g3_readiness,
     evaluate_gemini_provider_readiness,
     generate_with_real_gemini_provider,
@@ -200,6 +201,7 @@ class AgentProviderRouter:
         fallback_reason: str | None = decision.fallback_reason
         provider_error_stage: str | None = None
         provider_error_reason: str | None = None
+        safety_block_reason: str | None = None
         safety_status = pre_guard.status
         if pre_guard.blocked:
             provider_request = build_provider_request(
@@ -217,6 +219,7 @@ class AgentProviderRouter:
             fallback_reason = "Request blocked by the Agent safety guard; mock fallback remains the safe path."
             provider_error_stage = "pre_generation"
             provider_error_reason = "safety_blocked"
+            safety_block_reason = _classify_safety_block_reason(pre_guard.reasons)
         elif _question_requests_forbidden_claim(grounding_context.question, self._global_context):
             provider_request = build_provider_request(
                 provider_name="mock",
@@ -234,6 +237,7 @@ class AgentProviderRouter:
             fallback_reason = "Request blocked by the Agent safety guard; mock fallback remains the safe path."
             provider_error_stage = "pre_generation"
             provider_error_reason = "safety_blocked"
+            safety_block_reason = "unsupported_readiness_claim"
         else:
             gemini_response = self._maybe_route_to_gemini(grounding_context, pre_guard)
             if gemini_response is not None:
@@ -257,6 +261,7 @@ class AgentProviderRouter:
                 safety_status = post_guard.status
                 provider_error_stage = "post_generation"
                 provider_error_reason = "safety_blocked"
+                safety_block_reason = _classify_safety_block_reason(post_guard.reasons)
             elif decision.requested_provider == "gemini" and decision.selected_provider == "mock":
                 provider_error_stage, provider_error_reason = _gemini_route_fallback_diagnostics(
                     decision,
@@ -278,6 +283,7 @@ class AgentProviderRouter:
             fallback_reason=fallback_reason or "Mock provider is the MVP fallback.",
             provider_error_stage=provider_error_stage,
             provider_error_reason=provider_error_reason,
+            safety_block_reason=safety_block_reason,
             grounding_status=grounding_status,
             safety_status=safety_status,
             limitations=limitations,
@@ -332,6 +338,7 @@ class AgentProviderRouter:
         except Exception:
             answer, grounding_status = _build_mock_answer(grounding_context)
             safety_status = pre_guard.status
+            safety_block_reason = None
             post_guard = guard_post_generation_text(answer, grounding_context=grounding_context)
             if post_guard.blocked:
                 answer = post_guard.sanitized_text or (
@@ -342,6 +349,7 @@ class AgentProviderRouter:
                 safety_status = post_guard.status
                 provider_error_stage = "post_generation"
                 provider_error_reason = "safety_blocked"
+                safety_block_reason = _classify_safety_block_reason(post_guard.reasons)
             else:
                 provider_error_stage = "client_invocation"
                 provider_error_reason = "provider_error"
@@ -352,6 +360,7 @@ class AgentProviderRouter:
                 fallback_reason="Gemini real provider raised a provider error; mock fallback remains the safe path.",
                 provider_error_stage=provider_error_stage,
                 provider_error_reason=provider_error_reason,
+                safety_block_reason=safety_block_reason,
                 grounding_status=grounding_status,
                 safety_status=safety_status,
                 limitations=list(
@@ -391,6 +400,7 @@ def _build_agent_explain_response(
         fallback_reason=provider_response.fallback_reason,
         provider_error_stage=provider_response.provider_error_stage,
         provider_error_reason=provider_response.provider_error_reason,
+        safety_block_reason=provider_response.safety_block_reason,
         grounding_status=provider_response.grounding_status,
         page_id=grounding_context.page_id,  # type: ignore[arg-type]
         section_id=grounding_context.section_id,

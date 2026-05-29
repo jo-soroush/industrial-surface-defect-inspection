@@ -176,7 +176,23 @@ def _build_image_inspection_agent_inspection_response(inspection_response: dict[
         return {}
 
     blocked_keys = {"warnings", "limitations", "errors", "explanation_context"}
-    return {key: value for key, value in inspection_response.items() if key not in blocked_keys}
+    sanitized = {key: value for key, value in inspection_response.items() if key not in blocked_keys}
+    return _remove_nested_keys(sanitized, {"limitations"})
+
+
+def _remove_nested_keys(value: Any, blocked_keys: set[str]) -> Any:
+    """Recursively remove blocked keys from dicts while preserving other evidence."""
+    if isinstance(value, dict):
+        return {
+            key: _remove_nested_keys(item, blocked_keys)
+            for key, item in value.items()
+            if key not in blocked_keys
+        }
+    if isinstance(value, list):
+        return [_remove_nested_keys(item, blocked_keys) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_remove_nested_keys(item, blocked_keys) for item in value)
+    return value
 
 
 def _build_detection_confidence_visible_context(

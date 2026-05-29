@@ -219,10 +219,48 @@ def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_
         question="Explain the current image inspection result for manual review.",
         inspection_response={
             "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
-            "classification": {"predicted_label": "defect"},
-            "detection": {"predicted_box_count": 1},
-            "anomaly": {"predicted_label": "anomaly"},
-            "traceability": {"source_endpoint": "/inspect/image"},
+            "classification": {
+                "predicted_label": "defect",
+                "limitations": [
+                    "Classification output is local model output and not production-ready.",
+                    "Classification output is not deployment-safe.",
+                ],
+            },
+            "detection": {
+                "predicted_box_count": 1,
+                "limitations": [
+                    "Detection output is local model output and not production-ready.",
+                    "Detection output is not deployment-safe.",
+                ],
+            },
+            "anomaly": {
+                "predicted_label": "anomaly",
+                "limitations": [
+                    "Anomaly output is local autoencoder reconstruction evidence and not production-ready.",
+                    "Anomaly output is not deployment-safe.",
+                ],
+            },
+            "traceability": {
+                "source_endpoint": "/inspect/image",
+                "classification": {
+                    "limitations": [
+                        "Classification output is local model output and not production-ready.",
+                        "Classification output is not deployment-safe.",
+                    ]
+                },
+                "detection": {
+                    "limitations": [
+                        "Detection output is local model output and not production-ready.",
+                        "Detection output is not deployment-safe.",
+                    ]
+                },
+                "anomaly": {
+                    "limitations": [
+                        "Anomaly output is local autoencoder reconstruction evidence and not production-ready.",
+                        "Anomaly output is not deployment-safe.",
+                    ]
+                },
+            },
             "limitations": [
                 "This response does not claim production readiness.",
                 "This response does not claim deployment safety.",
@@ -270,6 +308,7 @@ def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_
     assert payload["safety_block_reason"] is None
     assert payload["grounding_status"] == "grounded"
     assert "limitations" not in frontend_request["inspection_response"]
+    assert "limitations" not in str(frontend_request["inspection_response"]).lower()
     assert "warnings" not in frontend_request["inspection_response"]
     assert "errors" not in frontend_request["inspection_response"]
     assert "explanation_context" not in frontend_request["inspection_response"]

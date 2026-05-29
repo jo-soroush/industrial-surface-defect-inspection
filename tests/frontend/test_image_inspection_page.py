@@ -296,10 +296,51 @@ def test_image_inspection_agent_request_sanitizes_readiness_boundary_text() -> N
     raw_inspection_response = {
         "request_id": "inspection-0001",
         "decision": {"final_decision": "manual_review_required", "rule_id": "local_gated_runtime_validation_rule"},
-        "classification": {"predicted_label": "defect"},
-        "detection": {"predicted_box_count": 1},
-        "anomaly": {"predicted_label": "anomaly"},
-        "traceability": {"source_endpoint": "local_gated_agent_endpoint_validation"},
+        "classification": {
+            "predicted_label": "defect",
+            "limitations": [
+                "Classification output is local model output and not production-ready.",
+                "Classification output is not deployment-safe.",
+            ],
+            "traceability": {"source_endpoint": "local_gated_agent_endpoint_validation"},
+        },
+        "detection": {
+            "predicted_box_count": 1,
+            "limitations": [
+                "Detection output is local model output and not production-ready.",
+                "Detection output is not deployment-safe.",
+            ],
+            "traceability": {"source_endpoint": "local_gated_agent_endpoint_validation"},
+        },
+        "anomaly": {
+            "predicted_label": "anomaly",
+            "limitations": [
+                "Anomaly output is local autoencoder reconstruction evidence and not production-ready.",
+                "Anomaly output is not deployment-safe.",
+            ],
+            "traceability": {"source_endpoint": "local_gated_agent_endpoint_validation"},
+        },
+        "traceability": {
+            "source_endpoint": "local_gated_agent_endpoint_validation",
+            "classification": {
+                "limitations": [
+                    "Classification output is local model output and not production-ready.",
+                    "Classification output is not deployment-safe.",
+                ]
+            },
+            "detection": {
+                "limitations": [
+                    "Detection output is local model output and not production-ready.",
+                    "Detection output is not deployment-safe.",
+                ]
+            },
+            "anomaly": {
+                "limitations": [
+                    "Anomaly output is local autoencoder reconstruction evidence and not production-ready.",
+                    "Anomaly output is not deployment-safe.",
+                ]
+            },
+        },
         "limitations": [
             "This response does not claim production readiness.",
             "This response does not claim deployment safety.",
@@ -321,6 +362,7 @@ def test_image_inspection_agent_request_sanitizes_readiness_boundary_text() -> N
     )
 
     assert request["inspection_response"] == sanitized
+    assert "limitations" not in str(request["inspection_response"]).lower()
     assert "limitations" not in sanitized
     assert "warnings" not in sanitized
     assert "errors" not in sanitized
@@ -328,6 +370,88 @@ def test_image_inspection_agent_request_sanitizes_readiness_boundary_text() -> N
     assert "production readiness" not in str(request).lower()
     assert "deployment safety" not in str(request).lower()
     assert "manual_review_required" in str(request)
+
+
+def test_image_inspection_agent_request_sanitizes_nested_readiness_fields_for_guard() -> None:
+    raw_inspection_response = {
+        "request_id": "inspection-0001",
+        "decision": {"final_decision": "manual_review_required", "rule_id": "local_gated_runtime_validation_rule"},
+        "classification": {
+            "predicted_label": "defect",
+            "limitations": [
+                "Classification output is local model output and not production-ready.",
+                "Classification output is not deployment-safe.",
+            ],
+        },
+        "detection": {
+            "predicted_box_count": 1,
+            "limitations": [
+                "Detection output is local model output and not production-ready.",
+                "Detection output is not deployment-safe.",
+            ],
+        },
+        "anomaly": {
+            "predicted_label": "anomaly",
+            "limitations": [
+                "Anomaly output is local autoencoder reconstruction evidence and not production-ready.",
+                "Anomaly output is not deployment-safe.",
+            ],
+        },
+        "traceability": {
+            "source_endpoint": "local_gated_agent_endpoint_validation",
+            "classification": {
+                "limitations": [
+                    "Classification output is local model output and not production-ready.",
+                    "Classification output is not deployment-safe.",
+                ]
+            },
+            "detection": {
+                "limitations": [
+                    "Detection output is local model output and not production-ready.",
+                    "Detection output is not deployment-safe.",
+                ]
+            },
+            "anomaly": {
+                "limitations": [
+                    "Anomaly output is local autoencoder reconstruction evidence and not production-ready.",
+                    "Anomaly output is not deployment-safe.",
+                ]
+            },
+        },
+        "limitations": [
+            "This response does not claim production readiness.",
+            "This response does not claim deployment safety.",
+        ],
+        "warnings": ["No inspection warnings were returned."],
+        "errors": [],
+        "explanation_context": {
+            "safety_boundaries": ["No production-ready claim.", "No deployment-safe claim."],
+            "forbidden_claims": ["production-ready", "deployment-safe"],
+        },
+    }
+
+    request = _build_image_inspection_agent_request(
+        question="Explain this image inspection result safely for manual review.",
+        inspection_response=raw_inspection_response,
+        visible_context={"final_decision": "manual_review_required", "decision_level": "review"},
+        include_raw_evidence=False,
+    )
+    grounding_context = build_grounding_context(
+        page_id=request["page_id"],
+        section_id=request["section_id"],
+        component_id=request["component_id"],
+        question=request["question"],
+        visible_context=request["visible_context"],
+        inspection_response=request["inspection_response"],
+        include_raw_evidence=False,
+    )
+    guard_result = guard_pre_generation_context(grounding_context)
+
+    assert guard_result.blocked is False
+    assert guard_result.reasons == ()
+    assert "limitations" not in str(request["inspection_response"]).lower()
+    assert "production-ready" not in str(request["inspection_response"]).lower()
+    assert "deployment-safe" not in str(request["inspection_response"]).lower()
 
 
 def test_image_inspection_question_field_is_the_readiness_trigger_when_it_contains_forbidden_phrase() -> None:
@@ -428,11 +552,49 @@ def test_image_inspection_agent_panel_sends_sanitized_payload_to_agent_explain(m
 
     payload = {
         "request_id": "inspection-0001",
-        "classification": {"predicted_label": "defect"},
-        "detection": {"predicted_box_count": 1},
-        "anomaly": {"predicted_label": "anomaly"},
+        "classification": {
+            "predicted_label": "defect",
+            "limitations": [
+                "Classification output is local model output and not production-ready.",
+                "Classification output is not deployment-safe.",
+            ],
+        },
+        "detection": {
+            "predicted_box_count": 1,
+            "limitations": [
+                "Detection output is local model output and not production-ready.",
+                "Detection output is not deployment-safe.",
+            ],
+        },
+        "anomaly": {
+            "predicted_label": "anomaly",
+            "limitations": [
+                "Anomaly output is local autoencoder reconstruction evidence and not production-ready.",
+                "Anomaly output is not deployment-safe.",
+            ],
+        },
         "decision": {"final_decision": "manual_review_required", "rule_id": "local_gated_runtime_validation_rule"},
-        "traceability": {"source_endpoint": "local_gated_agent_endpoint_validation"},
+        "traceability": {
+            "source_endpoint": "local_gated_agent_endpoint_validation",
+            "classification": {
+                "limitations": [
+                    "Classification output is local model output and not production-ready.",
+                    "Classification output is not deployment-safe.",
+                ]
+            },
+            "detection": {
+                "limitations": [
+                    "Detection output is local model output and not production-ready.",
+                    "Detection output is not deployment-safe.",
+                ]
+            },
+            "anomaly": {
+                "limitations": [
+                    "Anomaly output is local autoencoder reconstruction evidence and not production-ready.",
+                    "Anomaly output is not deployment-safe.",
+                ]
+            },
+        },
         "limitations": [
             "This response does not claim production readiness.",
             "This response does not claim deployment safety.",
@@ -460,6 +622,7 @@ def test_image_inspection_agent_panel_sends_sanitized_payload_to_agent_explain(m
     assert "production-ready" not in str(sent_payload).lower()
     assert "deployment-safe" not in str(sent_payload).lower()
     assert "limitations" not in sent_payload["inspection_response"]
+    assert "limitations" not in str(sent_payload["inspection_response"]).lower()
     assert "warnings" not in sent_payload["inspection_response"]
     assert "errors" not in sent_payload["inspection_response"]
     assert "explanation_context" not in sent_payload["inspection_response"]
@@ -512,6 +675,7 @@ def test_image_inspection_agent_panel_resets_stale_question_on_new_request_id(mo
     assert "production-ready" not in sent_payload["question"].lower()
     assert "deployment-safe" not in str(sent_payload).lower()
     assert "limitations" not in sent_payload["inspection_response"]
+    assert "limitations" not in str(sent_payload["inspection_response"]).lower()
     assert "warnings" not in sent_payload["inspection_response"]
     assert "errors" not in sent_payload["inspection_response"]
     assert "explanation_context" not in sent_payload["inspection_response"]

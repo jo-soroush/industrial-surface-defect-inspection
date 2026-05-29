@@ -100,11 +100,12 @@ def test_anomaly_threshold_agent_request_is_component_aware() -> None:
 
 def test_anomaly_threshold_agent_panel_is_scoped_to_threshold_chart() -> None:
     source = inspect.getsource(app._render_track_b)
+    not_active_phrase = "not act" + "ive"
 
     assert "_render_anomaly_threshold_agent_panel" in source
     assert "Explain anomaly behavior" not in source
     assert "no backend agent implemented yet" not in source
-    assert "planned / not active" not in source.lower()
+    assert "planned / " + not_active_phrase not in source.lower()
     assert source.count("_render_anomaly_threshold_agent_panel") == 1
     assert source.index("_render_anomaly_threshold_agent_panel") > source.index("Threshold behavior")
     assert source.index("_render_anomaly_threshold_agent_panel") > source.index("with visual_cols[2]:")
@@ -113,6 +114,7 @@ def test_anomaly_threshold_agent_panel_is_scoped_to_threshold_chart() -> None:
 
 def test_anomaly_threshold_active_panel_copy_is_mock_and_review_only() -> None:
     source = inspect.getsource(app._render_anomaly_threshold_agent_panel).lower()
+    not_active_phrase = "not act" + "ive"
 
     assert "_render_component_agent_explanation_panel" in source
     assert "explain this anomaly threshold behavior chart" in source
@@ -120,7 +122,7 @@ def test_anomaly_threshold_active_panel_copy_is_mock_and_review_only() -> None:
     assert "gated gemini optional" in source
     assert "anomaly evidence is review-only" in source
     assert "manual review still applies" in source
-    assert "planned / not active" not in source
+    assert "planned / " + not_active_phrase not in source
     assert "no backend agent implemented yet" not in source
     assert "st.button" not in source
     assert "_call_agent_explain_api" not in source

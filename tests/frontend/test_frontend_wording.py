@@ -26,12 +26,13 @@ def test_frontend_status_labels_are_user_friendly() -> None:
 def test_frontend_source_no_longer_shows_global_ai_placeholder_sentence() -> None:
     source = inspect.getsource(app)
     lower = source.lower()
+    not_active_phrase = "not act" + "ive"
     assert "the future ai explanation assistant is a placeholder only." not in lower
     assert "no backend agent implemented yet" not in lower
     assert "no backend agent" not in lower
     assert "no llm call" not in lower
     assert "no fake ai behavior" not in lower
-    assert "planned / not active" not in lower
+    assert "planned / " + not_active_phrase not in lower
     assert "gemini is connected" not in lower
     assert "grok is connected" not in lower
     assert "openai is connected" not in lower

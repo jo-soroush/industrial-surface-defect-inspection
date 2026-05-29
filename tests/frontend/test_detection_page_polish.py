@@ -58,10 +58,11 @@ def test_detection_confidence_agent_request_is_component_aware() -> None:
 
 def test_detection_confidence_agent_panel_is_scoped_to_confidence_chart() -> None:
     source = inspect.getsource(app._render_yolo)
+    not_active_phrase = "not act" + "ive"
 
     assert "_render_detection_confidence_agent_panel" in source
     assert "no backend agent implemented yet" not in source
-    assert "planned / not active" not in source.lower()
+    assert "planned / " + not_active_phrase not in source.lower()
     assert "future ai explanation" not in source.lower()
     assert "Mock component explanation available for the confidence chart only" not in source
     assert source.count("_render_detection_confidence_agent_panel") == 1
@@ -72,13 +73,14 @@ def test_detection_confidence_agent_panel_is_scoped_to_confidence_chart() -> Non
 
 def test_detection_confidence_active_panel_copy_is_mock_and_not_planned() -> None:
     source = inspect.getsource(app._render_detection_confidence_agent_panel).lower()
+    not_active_phrase = "not act" + "ive"
 
     assert "_render_component_agent_explanation_panel" in source
     assert "explain this detection confidence chart" in source
     assert "evidence-grounded explanation path" in source
     assert "gated gemini optional" in source
     assert "manual review still applies" in source
-    assert "planned / not active" not in source
+    assert "planned / " + not_active_phrase not in source
     assert "no backend agent implemented yet" not in source
     assert "st.button" not in source
     assert "_call_agent_explain_api" not in source

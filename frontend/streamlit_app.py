@@ -1118,7 +1118,7 @@ def _render_agent_placeholder(
     st.markdown(
         f"""
         <div class="premium-card premium-card--{accent}">
-            <div class="premium-card__eyebrow">Future LLM layer planned</div>
+            <div class="premium-card__eyebrow">Gated AI explanation</div>
             <div class="premium-card__title">{html.escape(action_label)}</div>
             <div class="premium-card__body">{html.escape(summary)}</div>
             <div class="premium-card__meta">{html.escape(note)}</div>
@@ -1135,14 +1135,14 @@ def _render_agent_callout(
     note: str,
     *,
     accent: str = "violet",
-    badge_label: str = "Future LLM layer planned",
+    badge_label: str = "Mock-first · gated Gemini optional",
 ) -> None:
     """Render a compact premium agent callout without an action button."""
     st.markdown(
         f"""
         <div class="premium-card premium-card--{accent}" style="margin-top:0.35rem; padding: 1.15rem 1.2rem 1.05rem;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:0.45rem;">
-                <div class="premium-card__eyebrow" style="margin:0;">Future LLM explanation</div>
+                <div class="premium-card__eyebrow" style="margin:0;">Gated AI explanation</div>
                 <span style="display:inline-flex; align-items:center; padding:0.22rem 0.7rem; border-radius:999px; background:rgba(124,58,237,0.16); color:#f5d0fe; border:1px solid rgba(192,132,252,0.28); font-size:0.72rem; font-weight:700; letter-spacing:0.02em; white-space:nowrap;">{html.escape(badge_label)}</span>
             </div>
             <div class="premium-card__title" style="font-size:1.15rem; line-height:1.2; margin-bottom:0.55rem;">{html.escape(action_label)}</div>
@@ -1160,12 +1160,12 @@ def _render_overview_ai_preview() -> None:
         """
         <div class="premium-card premium-card--violet" style="margin:0.35rem 0 0.15rem; padding:1.15rem 1.2rem 1.05rem;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:0.45rem;">
-                <div class="premium-card__eyebrow" style="margin:0;">Mock Agent status</div>
-                <span style="display:inline-flex; align-items:center; padding:0.22rem 0.7rem; border-radius:999px; background:rgba(124,58,237,0.16); color:#f5d0fe; border:1px solid rgba(192,132,252,0.28); font-size:0.72rem; font-weight:700; letter-spacing:0.02em; white-space:nowrap;">Mock Agent active</span>
+                <div class="premium-card__eyebrow" style="margin:0;">Gated AI explanation status</div>
+                <span style="display:inline-flex; align-items:center; padding:0.22rem 0.7rem; border-radius:999px; background:rgba(124,58,237,0.16); color:#f5d0fe; border:1px solid rgba(192,132,252,0.28); font-size:0.72rem; font-weight:700; letter-spacing:0.02em; white-space:nowrap;">Mock-first · gated Gemini optional</span>
             </div>
             <div class="premium-card__title" style="font-size:1.16rem; line-height:1.2; margin-bottom:0.55rem;">AI Explanation Assistant</div>
-            <div class="premium-card__body">A mock backend Agent is available for selected evidence-grounded explanations; broader natural-language LLM assistance remains planned.</div>
-            <div class="premium-card__meta">External LLM providers are not connected · Gemini/Grok/OpenAI are not active · manual review still applies</div>
+            <div class="premium-card__body">A mock-first Agent is available for selected evidence-grounded explanations, and gated Gemini responses can be enabled explicitly when needed.</div>
+            <div class="premium-card__meta">Uses /agent/explain · safe mock fallback remains available · manual review still applies</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -2973,15 +2973,15 @@ def _render_upload_predict() -> None:
 
 
 def _render_ai_assistant() -> None:
-    """Render the future AI explanation assistant placeholder page."""
+    """Render the gated AI explanation assistant page."""
     _render_hero_card(
         AI_EXPLANATION_ASSISTANT_PAGE_LABEL,
-        "A mock evidence-grounded Agent is active for selected components, while broader natural-language LLM assistance remains planned.",
-        "mock backend Agent active · external LLM providers not connected · manual review required",
+        "A mock-first evidence-grounded Agent is active for selected components, with optional gated Gemini responses when explicitly enabled.",
+        "Uses /agent/explain · safe mock fallback remains available · manual review required",
         accent="violet",
     )
     st.warning(
-        "Mock component explanations are active for selected evidence cards and charts. Real LLM providers are not connected, and Gemini/Grok/OpenAI are not active."
+        "Mock component explanations are active for selected evidence cards and charts. Gated Gemini responses remain optional, and safe mock fallback remains available."
     )
 
     status_cols = st.columns([1.25, 0.95])
@@ -2995,8 +2995,8 @@ def _render_ai_assistant() -> None:
     with status_cols[1]:
         _render_premium_info_card(
             "Provider status",
-            "External LLM providers are not connected.",
-            "Gemini/Grok/OpenAI are not active; this remains a mock/pre-Gemini explanation layer.",
+            "Gated Gemini responses are available only when explicitly enabled.",
+            "Safe mock fallback remains available; manual review still applies.",
             accent="orange",
         )
 
@@ -3005,7 +3005,7 @@ def _render_ai_assistant() -> None:
         _render_premium_info_card(
             "What selected explanations cover now",
             "Component-level chart explanations, inspection result summaries, confidence context, warnings, manual review needs, and limitations.",
-            "Broader page-level natural-language assistance remains planned.",
+            "Broader page-level natural-language assistance is available through the gated explanation path.",
             accent="violet",
         )
     with placement_cols[1]:
@@ -3021,24 +3021,24 @@ def _render_ai_assistant() -> None:
         _render_premium_info_card(
             "What it will not do",
             "It will not invent metrics or predictions, hide uncertainty, claim production readiness, claim deployment safety, replace reviewer approval, modify artifacts, update registries, or silently recompute evidence.",
-            "Mock explanations remain evidence-grounded and review-only.",
+            "Mock fallback remains evidence-grounded and review-only.",
             accent="gray",
         )
     with placement_cols[1]:
         _render_premium_info_card(
             "Visibility note",
-            "This page describes the current mock Agent boundary and the planned richer LLM assistant.",
+            "This page describes the current gated explanation boundary and the available mock-first fallback.",
             "It should remain visible, but secondary to the model evidence pages and manual review.",
             accent="orange",
         )
 
     with st.expander("Agent design notes", expanded=False):
-        st.caption("The future assistant should use governed evidence, prediction outputs, and safety docs.")
+        st.caption("The gated assistant uses governed evidence, prediction outputs, and safety docs.")
         st.write(
-            "Future explanations may use governed frontend bundles, Image Inspection response data, classification results, defect localization boxes, anomaly results, final rule-based decisions, warnings, errors, limitations, traceability, explanation_context, safety documentation, model metadata, thresholds, run IDs, and artifact references."
+            "Gated explanations use governed frontend bundles, Image Inspection response data, classification results, defect localization boxes, anomaly results, final rule-based decisions, warnings, errors, limitations, traceability, explanation_context, safety documentation, model metadata, thresholds, run IDs, and artifact references."
         )
         st.write(
-            "The mock backend Agent exists for selected component explanations. Broader real-LLM provider integration remains a future phase."
+            "The mock backend Agent exists for selected component explanations. Broader real-LLM provider integration is available only through the explicit gated path."
         )
 
 
@@ -3053,9 +3053,9 @@ def _render_limitations() -> None:
     _render_agent_callout(
         "Explain safety boundaries",
         "Ask for a plain-language summary of the local inspection workflow limits, production gaps, and deployment gaps.",
-        "Mock component explanations exist for selected components · real LLM providers are not connected · future explanations should use governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references",
+        "Mock component explanations exist for selected components · gated Gemini remains optional · broader gated explanations must stay grounded in governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references",
         accent="violet",
-        badge_label="Mock Agent active · LLM providers not connected",
+        badge_label="Mock-first · gated Gemini optional",
     )
 
     top_cols = st.columns(4)
@@ -3083,7 +3083,7 @@ def _render_limitations() -> None:
     with second_cols[1]:
         st.metric("Deployment readiness", "Not claimed", help="No deployment-safe claim is made.")
     with second_cols[2]:
-        st.metric("AI Explanation Assistant", "Mock selected components", help="Mock component explanations exist; real LLM providers are not connected.")
+        st.metric("AI Explanation Assistant", "Mock selected components", help="Mock component explanations exist; gated Gemini responses remain optional.")
     with second_cols[3]:
         st.metric("Docker / release", "Pending", help="Docker and release work remain later phases after local smoke tests.")
     st.caption("Current boundaries")
@@ -3099,7 +3099,7 @@ def _render_limitations() -> None:
             "The system is not production-ready and not deployment-safe. It does not replace expert/manual review. New evidence files must be created by governed pipeline scripts."
         )
         st.write(
-            "Mock component explanations exist for selected dashboard components. Real LLM providers are not connected, Gemini/Grok/OpenAI are not active, and future broader explanations must stay grounded in governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references."
+            "Mock component explanations exist for selected dashboard components. Gated Gemini responses are available only when explicitly enabled, and broader gated explanations must stay grounded in governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references."
         )
         st.write(
             "Docker, release, and hardening remain later phases and stay pending until frontend completion and local smoke tests pass."

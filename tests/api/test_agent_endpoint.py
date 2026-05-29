@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from fastapi.testclient import TestClient
 
 from api.app.main import app
+from frontend.streamlit_app import _build_image_inspection_agent_request
 import src.inspection_ai.agent.provider_router as provider_router_module
 from src.inspection_ai.agent.gemini_provider import GeminiSdkLoadResult
 from src.inspection_ai.agent.provider_contracts import build_provider_response
@@ -214,22 +215,32 @@ def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_
         fake_generate_with_real_gemini_provider,
     )
 
+    frontend_request = _build_image_inspection_agent_request(
+        question="Explain the current image inspection result for manual review.",
+        inspection_response={
+            "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
+            "classification": {"predicted_label": "defect"},
+            "detection": {"predicted_box_count": 1},
+            "anomaly": {"predicted_label": "anomaly"},
+            "traceability": {"source_endpoint": "/inspect/image"},
+            "limitations": [
+                "This response does not claim production readiness.",
+                "This response does not claim deployment safety.",
+            ],
+            "warnings": ["No inspection warnings were returned."],
+            "errors": [],
+            "explanation_context": {
+                "safety_boundaries": ["No production-ready claim.", "No deployment-safe claim."],
+                "forbidden_claims": ["production-ready", "deployment-safe"],
+            },
+        },
+        visible_context={"page_title": "Image Inspection"},
+        include_raw_evidence=False,
+    )
+
     response = client.post(
         "/agent/explain",
-        json={
-            "page_id": "image_inspection",
-            "section_id": "final_decision",
-            "question": "Explain this image inspection result safely.",
-            "visible_context": {"page_title": "Image Inspection"},
-            "inspection_response": {
-                "decision": {"final_decision": "defective", "rule_id": "manual_check_rule"},
-                "classification": {"predicted_label": "defect"},
-                "detection": {"predicted_box_count": 1},
-                "anomaly": {"predicted_label": "anomaly"},
-                "traceability": {"source_endpoint": "/inspect/image"},
-            },
-            "include_raw_evidence": False,
-        },
+        json=frontend_request,
     )
 
     assert response.status_code == 200
@@ -258,6 +269,12 @@ def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_
     assert payload["provider_error_reason"] is None
     assert payload["safety_block_reason"] is None
     assert payload["grounding_status"] == "grounded"
+    assert "limitations" not in frontend_request["inspection_response"]
+    assert "warnings" not in frontend_request["inspection_response"]
+    assert "errors" not in frontend_request["inspection_response"]
+    assert "explanation_context" not in frontend_request["inspection_response"]
+    assert "production-ready" not in str(frontend_request).lower()
+    assert "deployment-safe" not in str(frontend_request).lower()
     assert "gemini gated endpoint answer" in payload["answer"].lower()
     assert "manual review" in payload["answer"].lower()
     assert "present-but-test-only" not in payload["answer"].lower()

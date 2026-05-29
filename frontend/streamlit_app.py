@@ -165,9 +165,18 @@ def _build_image_inspection_agent_request(
         "component_id": "image_inspection_ai_explanation_panel",
         "question": question,
         "visible_context": visible_context,
-        "inspection_response": inspection_response,
+        "inspection_response": _build_image_inspection_agent_inspection_response(inspection_response),
         "include_raw_evidence": include_raw_evidence,
     }
+
+
+def _build_image_inspection_agent_inspection_response(inspection_response: dict[str, Any]) -> dict[str, Any]:
+    """Return the sanitized inspection response payload sent to /agent/explain."""
+    if not isinstance(inspection_response, dict):
+        return {}
+
+    blocked_keys = {"warnings", "limitations", "errors", "explanation_context"}
+    return {key: value for key, value in inspection_response.items() if key not in blocked_keys}
 
 
 def _build_detection_confidence_visible_context(

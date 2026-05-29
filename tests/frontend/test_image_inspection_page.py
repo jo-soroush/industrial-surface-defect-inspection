@@ -13,6 +13,7 @@ from frontend.streamlit_app import (
     _agent_explanation_status_caption,
     _annotate_detection_boxes,
     _build_image_inspection_agent_request,
+    _build_image_inspection_agent_inspection_response,
     _call_image_inspection_api,
     _call_agent_explain_api,
     _extract_detection_rows,
@@ -289,6 +290,44 @@ def test_agent_explanation_diagnostic_items_omit_empty_values() -> None:
     ]
 
 
+def test_image_inspection_agent_request_sanitizes_readiness_boundary_text() -> None:
+    raw_inspection_response = {
+        "request_id": "inspection-0001",
+        "decision": {"final_decision": "manual_review_required", "rule_id": "local_gated_runtime_validation_rule"},
+        "classification": {"predicted_label": "defect"},
+        "detection": {"predicted_box_count": 1},
+        "anomaly": {"predicted_label": "anomaly"},
+        "traceability": {"source_endpoint": "local_gated_agent_endpoint_validation"},
+        "limitations": [
+            "This response does not claim production readiness.",
+            "This response does not claim deployment safety.",
+        ],
+        "warnings": ["No inspection warnings were returned."],
+        "errors": [],
+        "explanation_context": {
+            "safety_boundaries": ["No production-ready claim.", "No deployment-safe claim."],
+            "forbidden_claims": ["production-ready", "deployment-safe"],
+        },
+    }
+
+    sanitized = _build_image_inspection_agent_inspection_response(raw_inspection_response)
+    request = _build_image_inspection_agent_request(
+        question="Explain the current image inspection result for manual review.",
+        inspection_response=raw_inspection_response,
+        visible_context={"final_decision": "manual_review_required"},
+        include_raw_evidence=False,
+    )
+
+    assert request["inspection_response"] == sanitized
+    assert "limitations" not in sanitized
+    assert "warnings" not in sanitized
+    assert "errors" not in sanitized
+    assert "explanation_context" not in sanitized
+    assert "production readiness" not in str(request).lower()
+    assert "deployment safety" not in str(request).lower()
+    assert "manual_review_required" in str(request)
+
+
 def test_image_inspection_agent_panel_renders_safe_fallback_diagnostics(monkeypatch) -> None:
     fake_st = _FakeStreamlit(submitted=False)
     monkeypatch.setattr("frontend.streamlit_app.st", fake_st)
@@ -328,6 +367,69 @@ def test_image_inspection_agent_panel_renders_safe_fallback_diagnostics(monkeypa
     assert ("metric", ("Safety block reason", "invented_metric_like_output")) in fake_st.calls
     assert not any("fake api key" in str(call).lower() for call in fake_st.calls)
     assert not any("raw provider" in str(call).lower() for call in fake_st.calls)
+
+
+def test_image_inspection_agent_panel_sends_sanitized_payload_to_agent_explain(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_post(endpoint, json, timeout):
+        captured["endpoint"] = endpoint
+        captured["json"] = json
+        return _FakeResponse(
+            200,
+            {
+                "answer": "Gemini gated endpoint answer. Manual review still applies.",
+                "evidence_used": [{"source": "inspection_response.decision.final_decision", "value": "manual_review_required"}],
+                "limitations": ["Manual review still applies."],
+                "provider_used": "gemini",
+                "fallback_used": False,
+                "grounding_status": "grounded",
+                "page_id": "image_inspection",
+                "section_id": "final_decision",
+            },
+        )
+
+    monkeypatch.setattr("frontend.streamlit_app.requests.post", fake_post)
+
+    payload = {
+        "request_id": "inspection-0001",
+        "classification": {"predicted_label": "defect"},
+        "detection": {"predicted_box_count": 1},
+        "anomaly": {"predicted_label": "anomaly"},
+        "decision": {"final_decision": "manual_review_required", "rule_id": "local_gated_runtime_validation_rule"},
+        "traceability": {"source_endpoint": "local_gated_agent_endpoint_validation"},
+        "limitations": [
+            "This response does not claim production readiness.",
+            "This response does not claim deployment safety.",
+        ],
+        "warnings": ["No inspection warnings were returned."],
+        "errors": [],
+        "explanation_context": {
+            "safety_boundaries": ["No production-ready claim.", "No deployment-safe claim."],
+            "forbidden_claims": ["production-ready", "deployment-safe"],
+        },
+    }
+    visible_context = {"final_decision": "manual_review_required", "decision_level": "review"}
+
+    sanitized_request = _build_image_inspection_agent_request(
+        question="Explain the current image inspection result for manual review.",
+        inspection_response=payload,
+        visible_context=visible_context,
+        include_raw_evidence=False,
+    )
+
+    response = _call_agent_explain_api("http://api:8000/", sanitized_request)
+
+    assert captured["endpoint"] == "http://api:8000/agent/explain"
+    sent_payload = captured["json"]
+    assert "production-ready" not in str(sent_payload).lower()
+    assert "deployment-safe" not in str(sent_payload).lower()
+    assert "limitations" not in sent_payload["inspection_response"]
+    assert "warnings" not in sent_payload["inspection_response"]
+    assert "errors" not in sent_payload["inspection_response"]
+    assert "explanation_context" not in sent_payload["inspection_response"]
+    assert response["provider_used"] == "gemini"
+    assert response["fallback_used"] is False
 
 
 def test_frontend_source_no_longer_uses_classification_only_flow() -> None:

@@ -126,6 +126,42 @@ def test_agent_health_stays_mock_first_when_llm_is_requested(monkeypatch) -> Non
     assert any("grok" in warning.lower() for warning in payload["warnings"])
 
 
+def test_agent_health_reports_gemini_enabled_runtime_when_all_gates_pass(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("AGENT_ENABLE_REAL_PROVIDER_RUNTIME", "true")
+    monkeypatch.setenv("AGENT_DEFAULT_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "gemini,mock")
+    monkeypatch.setenv("LLM_ENABLE_FALLBACK", "true")
+    monkeypatch.setenv("GEMINI_API_KEY", "present")
+    monkeypatch.delenv("GROK_API_KEY", raising=False)
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    response = client.get("/agent/health")
+
+    assert response.status_code == 200
+    payload = response.json()
+    joined_warnings = " ".join(payload["warnings"]).lower()
+    assert payload["llm_enabled"] is True
+    assert payload["default_provider"] == "gemini"
+    assert payload["provider_order"] == ["gemini", "mock"]
+    assert payload["available_providers"] == ["gemini", "mock"]
+    assert payload["fallback_available"] is True
+    assert payload["grounding_ready"] is True
+    assert "real provider execution is intentionally disabled" not in joined_warnings
+    assert "not implemented" not in joined_warnings
+    assert "safe mock fallback remains available" in joined_warnings
+
+
 def test_agent_health_stays_mock_first_with_fake_key_present(monkeypatch) -> None:
     monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
     monkeypatch.setenv("AGENT_DEFAULT_PROVIDER", "gemini")

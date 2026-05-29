@@ -148,6 +148,47 @@ def test_health_stays_mock_first_with_fake_key_present_and_llm_requested(monkeyp
     assert any("api_key_present=true" in warning.lower() for warning in health.warnings)
 
 
+def test_health_reports_gemini_enabled_runtime_when_all_gates_pass(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("AGENT_ENABLE_REAL_PROVIDER_RUNTIME", "true")
+    monkeypatch.setenv("AGENT_DEFAULT_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "gemini,mock")
+    monkeypatch.setenv("LLM_ENABLE_FALLBACK", "true")
+    monkeypatch.setenv("GEMINI_API_KEY", "present")
+    monkeypatch.delenv("GROK_API_KEY", raising=False)
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    router = AgentProviderRouter()
+    health = router.health()
+    gemini_readiness = router.gemini_readiness()
+
+    assert health.status == "ok"
+    assert health.agent_ready is True
+    assert health.llm_enabled is True
+    assert health.default_provider == "gemini"
+    assert health.provider_order == ["gemini", "mock"]
+    assert health.available_providers == ["gemini", "mock"]
+    assert health.fallback_available is True
+    assert health.grounding_ready is True
+    assert any("safe mock fallback remains available" in warning.lower() for warning in health.warnings)
+    assert not any("real provider execution is intentionally disabled" in warning.lower() for warning in health.warnings)
+    assert not any("not implemented" in warning.lower() for warning in health.warnings)
+    assert gemini_readiness.gates.llm_enabled is True
+    assert gemini_readiness.gates.api_key_present is True
+    assert gemini_readiness.gates.real_provider_implemented is True
+    assert gemini_readiness.gates.activation_allowed is True
+
+
 def test_gemini_route_decision_stays_mock_when_llm_disabled_even_with_key() -> None:
     router = AgentProviderRouter(
         AgentProviderSettings(

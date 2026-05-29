@@ -133,8 +133,16 @@ class AgentProviderRouter:
     @property
     def available_providers(self) -> list[str]:
         """Return providers that are actually available in the MVP runtime."""
-        readiness = evaluate_provider_readiness(self._provider_runtime_settings())
-        return [name for name, result in readiness.items() if result.availability.available and name == "mock"]
+        gemini_readiness = self.gemini_readiness()
+        available: list[str] = []
+        for provider in self.settings.provider_order:
+            if provider == "mock":
+                available.append("mock")
+            elif provider == "gemini" and gemini_readiness.gates.activation_allowed:
+                available.append("gemini")
+        if "mock" not in available:
+            available.append("mock")
+        return available or ["mock"]
 
     def gemini_readiness(self) -> GeminiG3Readiness:
         """Return the safe Gemini readiness snapshot without activating Gemini."""
@@ -163,30 +171,44 @@ class AgentProviderRouter:
     def health(self) -> AgentHealthResponse:
         """Return a safe health snapshot for the agent layer."""
         provider_runtime_settings = self._provider_runtime_settings()
-        readiness = evaluate_provider_readiness(provider_runtime_settings)
         gemini_readiness = self.gemini_readiness()
-        warnings = list(readiness["mock"].warnings)
+        runtime_active = gemini_readiness.gates.activation_allowed
+        warnings = ["Mock fallback remains available in the current MVP."]
         if not self.settings.enable_fallback:
             warnings.append(
                 "LLM_ENABLE_FALLBACK was disabled, but mock fallback is mandatory in this MVP slice."
             )
-        if self.settings.enable_llm:
+        if runtime_active:
             warnings.append(
-                "AGENT_ENABLE_LLM was requested, but real provider execution is intentionally disabled in this MVP slice."
+                "Gemini-gated execution is available in this runtime; safe mock fallback remains available."
             )
-        warnings.extend(readiness["gemini"].warnings)
-        warnings.extend(readiness["grok"].warnings)
-        warnings.extend(evaluate_gemini_provider_readiness(provider_runtime_settings).warnings)
-        warnings.extend(gemini_readiness.warnings)
-        warnings.append(_format_gemini_readiness_warning(gemini_readiness))
-        if self.settings.default_provider != "mock":
-            warnings.append("Mock remains the default safe provider for this MVP.")
+        else:
+            readiness = evaluate_provider_readiness(provider_runtime_settings)
+            if self.settings.enable_llm:
+                warnings.append(
+                    "AGENT_ENABLE_LLM was requested, but real provider execution is intentionally disabled in this MVP slice."
+                )
+            warnings.extend(readiness["gemini"].warnings)
+            warnings.extend(readiness["grok"].warnings)
+            warnings.extend(evaluate_gemini_provider_readiness(provider_runtime_settings).warnings)
+            warnings.extend(gemini_readiness.warnings)
+            warnings.append(_format_gemini_readiness_warning(gemini_readiness))
+            if self.settings.default_provider != "mock":
+                warnings.append("Mock remains the default safe provider for this MVP.")
+        if runtime_active:
+            llm_enabled = True
+            default_provider = self.settings.default_provider
+        else:
+            llm_enabled = False
+            default_provider = "mock"
+        if runtime_active and default_provider == "mock":
+            default_provider = self.settings.default_provider
         return AgentHealthResponse(
             status="ok",
             service="industrial-surface-defect-agent",
             agent_ready=True,
-            llm_enabled=False,
-            default_provider="mock",
+            llm_enabled=llm_enabled,
+            default_provider=default_provider,
             provider_order=list(self.settings.provider_order),
             available_providers=self.available_providers,
             fallback_available=True,

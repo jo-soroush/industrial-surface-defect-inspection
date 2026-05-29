@@ -1514,8 +1514,8 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
         st.metric("Production readiness", "Not claimed", help="The dashboard does not claim production readiness")
         _render_not_claimed_note("Not claimed means local review/demo only, not factory production use.")
     with capability_cols[2]:
-        st.metric("Deployment readiness", "Not claimed", help="The dashboard does not claim deployment safety")
-        _render_not_claimed_note("Not claimed means Docker/release validation is still pending.")
+        st.metric("Deployment readiness", "Previous EC2 demo completed", help="The dashboard records the prior EC2 demo run but does not claim deployment safety")
+        _render_not_claimed_note("Previous EC2 demo completed; Docker/release validation is still pending.")
 
     _render_overview_ai_preview()
 

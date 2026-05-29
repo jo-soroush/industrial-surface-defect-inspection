@@ -7,6 +7,7 @@ def test_frontend_visual_presentation_copy_and_helper_text() -> None:
     required_phrases = [
         "local review/demo",
         "Docker/release validation",
+        "Previous EC2 demo completed",
         "Gemini-gated responses can be used when enabled",
         "Image Inspection",
         "Not claimed means local review/demo only, not factory production use.",

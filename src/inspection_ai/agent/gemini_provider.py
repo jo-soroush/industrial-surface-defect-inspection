@@ -1354,14 +1354,23 @@ def _coerce_gemini_generation_request(
     if isinstance(request, GeminiGenerationRequest):
         compact_values = tuple(_build_approved_compact_numeric_evidence_values(request.provider_request))
         if allowed_evidence_values is None:
-            merged_allowed_values = tuple(dict.fromkeys(request.allowed_evidence_values + compact_values))
+            merged_allowed_values = tuple(
+                dict.fromkeys(
+                    tuple(_normalize_allowed_evidence_value(value) for value in request.allowed_evidence_values)
+                    + compact_values
+                )
+            )
             return GeminiGenerationRequest(
                 provider_request=request.provider_request,
                 allowed_evidence_values=merged_allowed_values,
                 client_name=request.client_name or client_name,
             )
         merged_allowed_values = tuple(
-            dict.fromkeys(request.allowed_evidence_values + tuple(allowed_evidence_values) + compact_values)
+            dict.fromkeys(
+                tuple(_normalize_allowed_evidence_value(value) for value in request.allowed_evidence_values)
+                + tuple(_normalize_allowed_evidence_value(value) for value in allowed_evidence_values)
+                + compact_values
+            )
         )
         return GeminiGenerationRequest(
             provider_request=request.provider_request,
@@ -1372,8 +1381,10 @@ def _coerce_gemini_generation_request(
     if allowed_evidence_values is None:
         allowed = tuple()
     else:
-        allowed = tuple(allowed_evidence_values)
-    allowed = tuple(dict.fromkeys(allowed + tuple(_build_approved_compact_numeric_evidence_values(request))))
+        allowed = tuple(_normalize_allowed_evidence_value(value) for value in allowed_evidence_values)
+    allowed = tuple(
+        dict.fromkeys(allowed + tuple(_build_approved_compact_numeric_evidence_values(request)))
+    )
 
     return GeminiGenerationRequest(
         provider_request=request,
@@ -1403,6 +1414,33 @@ def _build_approved_compact_numeric_evidence_values(request: AgentProviderReques
             grounded_values.append(compact_confidence)
             break
     return grounded_values
+
+
+def _normalize_allowed_evidence_value(value: Any) -> Any:
+    value = _unwrap_allowed_evidence_value(value)
+    if isinstance(value, dict):
+        return tuple(
+            (str(key), _normalize_allowed_evidence_value(item))
+            for key, item in sorted(value.items(), key=lambda item: str(item[0]))
+        )
+    if isinstance(value, list):
+        return tuple(_normalize_allowed_evidence_value(item) for item in value)
+    if isinstance(value, tuple):
+        return tuple(_normalize_allowed_evidence_value(item) for item in value)
+    if isinstance(value, set):
+        return tuple(sorted((_normalize_allowed_evidence_value(item) for item in value), key=repr))
+    return value
+
+
+def _unwrap_allowed_evidence_value(value: Any) -> Any:
+    if not isinstance(value, dict):
+        return value
+    if "value" not in value:
+        return value
+    wrapper_keys = {"field_path", "evidence_type", "component_id"}
+    if wrapper_keys.intersection(value.keys()):
+        return value.get("value")
+    return value
 
 
 def _find_compact_confidence_value(value: Any) -> str | None:

@@ -21,6 +21,7 @@ from .gemini_provider import (
     evaluate_gemini_g3_readiness,
     evaluate_gemini_provider_readiness,
     generate_with_real_gemini_provider,
+    _normalize_allowed_evidence_value,
     _load_google_genai_module,
 )
 from .provider_contracts import (
@@ -415,7 +416,7 @@ def _allowed_evidence_values_from_provider_request(request: AgentProviderRequest
         return allowed_values
     for item in evidence_items:
         if isinstance(item, dict):
-            allowed_values.append(item.get("value"))
+            allowed_values.append(_normalize_allowed_evidence_value(item.get("value")))
     return allowed_values
 
 

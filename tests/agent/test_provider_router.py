@@ -10,7 +10,7 @@ from src.inspection_ai.agent.context_builder import build_grounding_context
 from src.inspection_ai.agent.gemini_provider import GeminiSdkLoadResult, evaluate_gemini_g3_readiness
 import src.inspection_ai.agent.provider_router as provider_router_module
 from src.inspection_ai.agent.provider_router import AgentProviderRouter, AgentProviderSettings
-from src.inspection_ai.agent.provider_contracts import build_provider_response
+from src.inspection_ai.agent.provider_contracts import build_provider_request, build_provider_response
 
 
 def test_health_reports_mock_first_mvp_state() -> None:
@@ -539,6 +539,141 @@ def test_router_explain_routes_to_gemini_with_explicit_runtime_gate_and_fake_pro
     assert response.grounding_status == "grounded"
     assert "gemini gated answer" in response.answer.lower()
     assert "manual review" in response.answer.lower()
+
+
+def test_allowed_evidence_values_from_provider_request_normalizes_component_evidence() -> None:
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        component_id="image_inspection_ai_explanation_panel",
+        question="Explain this inspection result safely for manual review.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {
+                "final_decision": "defective",
+                "decision_level": "evidence_supported",
+                "rule_id": "local_gated_runtime_validation_rule",
+                "recommended_action": "Review the inspection evidence before taking action.",
+            },
+            "classification": {"predicted_label": "defect"},
+            "detection": {
+                "predicted_box_count": 14,
+                "best_detection": {
+                    "class_label": "oil_spot",
+                    "display_label": "Oil spot",
+                    "confidence": 0.890102744102478,
+                },
+            },
+            "traceability": {
+                "source_endpoint": "local_gated_agent_endpoint_validation",
+                "contract_version": "local_validation_v1",
+            },
+        },
+        include_raw_evidence=False,
+    )
+    request = build_provider_request(
+        provider_name="gemini",
+        grounding_context=grounding_context,
+        sanitized_context={
+            "page_id": grounding_context.page_id,
+            "section_id": grounding_context.section_id,
+            "component_id": grounding_context.component_id,
+            "question": grounding_context.question,
+            "evidence_used": grounding_context.evidence_used,
+            "limitations": grounding_context.limitations,
+            "grounding_status": grounding_context.grounding_status,
+        },
+        safety_status="pass",
+        llm_enabled=True,
+    )
+
+    allowed_values = provider_router_module._allowed_evidence_values_from_provider_request(request)
+
+    assert allowed_values
+    assert all(not isinstance(item, (dict, list)) for item in allowed_values)
+    for item in allowed_values:
+        hash(item)
+    assert "defective" in allowed_values
+    assert "local_gated_runtime_validation_rule" in allowed_values
+    assert "Review the inspection evidence before taking action." in allowed_values
+    assert "defect" in allowed_values
+    assert 14 in allowed_values
+    assert "local_gated_agent_endpoint_validation" in allowed_values
+    assert "local_validation_v1" in allowed_values
+    assert "Image Inspection" in allowed_values
+    assert "image_inspection" in allowed_values
+    assert "image_inspection_ai_explanation_panel" in allowed_values
+
+
+def test_router_explain_routes_to_gemini_with_real_provider_seam_for_component_evidence(monkeypatch) -> None:
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+    monkeypatch.setattr(provider_router_module, "_default_gemini_api_key_resolver", lambda: "fake-key")
+    monkeypatch.setattr(provider_router_module, "_load_google_genai_module", lambda: _RouterFakeRealSdkModule())
+
+    router = AgentProviderRouter(
+        AgentProviderSettings(
+            enable_llm=True,
+            enable_real_provider_runtime=True,
+            default_provider="gemini",
+            provider_order=("gemini", "mock"),
+            enable_fallback=True,
+            timeout_seconds=20,
+            max_retries=1,
+            gemini_api_key="present",
+            grok_api_key=None,
+        )
+    )
+    grounding_context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        component_id="image_inspection_ai_explanation_panel",
+        question="Explain this inspection result safely for manual review.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {
+                "final_decision": "defective",
+                "decision_level": "evidence_supported",
+                "rule_id": "local_gated_runtime_validation_rule",
+                "recommended_action": "Review the inspection evidence before taking action.",
+            },
+            "classification": {"predicted_label": "defect"},
+            "detection": {
+                "predicted_box_count": 14,
+                "best_detection": {
+                    "class_label": "oil_spot",
+                    "display_label": "Oil spot",
+                    "confidence": 0.890102744102478,
+                },
+            },
+            "traceability": {
+                "source_endpoint": "local_gated_agent_endpoint_validation",
+                "contract_version": "local_validation_v1",
+            },
+        },
+        include_raw_evidence=False,
+    )
+
+    response = router.explain(grounding_context)
+
+    assert response.provider_used == "gemini"
+    assert response.fallback_used is False
+    assert response.fallback_reason is None
+    assert response.provider_error_stage is None
+    assert response.provider_error_reason is None
+    assert response.safety_block_reason is None
+    assert response.grounding_status == "grounded"
+    assert "defective" in response.answer.lower()
+    assert "0.89 confidence" in response.answer
+    assert "manual review still applies" in response.answer.lower()
 
 
 def test_router_explain_stays_mock_when_runtime_enabled_but_sdk_is_missing(monkeypatch) -> None:
@@ -1082,3 +1217,35 @@ def _component_response(
         include_raw_evidence=False,
     )
     return router.explain(grounding_context)
+
+
+class _RouterFakeRealSdkModule:
+    def __init__(self) -> None:
+        self.models = _RouterFakeRealGeminiModels()
+
+    def Client(self, api_key: str):  # noqa: N802 - mimic SDK factory shape
+        return _RouterFakeRealGeminiClient(api_key=api_key, models=self.models)
+
+
+class _RouterFakeRealGeminiClient:
+    def __init__(self, *, api_key: str, models: "_RouterFakeRealGeminiModels") -> None:
+        self.api_key = api_key
+        self.models = models
+
+
+class _RouterFakeRealGeminiModels:
+    def __init__(self) -> None:
+        self.calls = 0
+        self.prompts: list[str] = []
+
+    def generate_content(self, *, model: str, contents: str):
+        self.calls += 1
+        self.prompts.append(contents)
+        return (
+            "The final decision for this image is `defective`. "
+            "This decision is `evidence_supported` because both the classification model and the detection model identified defects, "
+            "with the detection model finding 14 localized defect boxes. "
+            "The most confident detection was an `Oil spot` with 0.89 confidence. "
+            "The recommended action is to `Review the inspection evidence before taking action.` "
+            "Manual review still applies."
+        )

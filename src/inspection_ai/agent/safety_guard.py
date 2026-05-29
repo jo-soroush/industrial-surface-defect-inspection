@@ -155,6 +155,7 @@ UNSAFE_READINESS_PHRASES: tuple[str, ...] = (
 )
 
 NUMERIC_TOKEN_PATTERN = re.compile(r"(?<!\w)-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?%?(?!\w)")
+SEMANTIC_VERSION_TOKEN_PATTERN = re.compile(r"\bv?\d+(?:\.\d+){2,}\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -425,7 +426,7 @@ def _collect_allowed_numeric_tokens(
     tokens: set[str] = set()
     if grounding_context is not None:
         for item in grounding_context.evidence_used:
-            tokens.update(_extract_numeric_tokens(item.get("value")))
+            tokens.update(_extract_numeric_tokens(item.get("value"), source=str(item.get("source", ""))))
         tokens.update(_extract_numeric_tokens(grounding_context.visible_context))
         tokens.update(_extract_numeric_tokens(grounding_context.inspection_response))
         tokens.update(_extract_numeric_tokens(grounding_context.question))
@@ -438,7 +439,8 @@ def _collect_allowed_numeric_tokens(
 def _invented_numeric_tokens(answer_text: str, allowed_tokens: set[str]) -> list[str]:
     if not _contains_metric_language(answer_text):
         return []
-    answer_tokens = [_normalize_numeric_token(token) for token in NUMERIC_TOKEN_PATTERN.findall(answer_text)]
+    masked_answer = _mask_semantic_version_like_text(answer_text)
+    answer_tokens = [_normalize_numeric_token(token) for token in NUMERIC_TOKEN_PATTERN.findall(masked_answer)]
     invented_tokens = [token for token in answer_tokens if token and token not in allowed_tokens]
     return list(dict.fromkeys(invented_tokens))
 
@@ -447,15 +449,45 @@ def _contains_metric_language(text: str) -> bool:
     return any(pattern.search(text) for pattern in METRIC_LANGUAGE_PATTERNS)
 
 
-def _extract_numeric_tokens(value: Any) -> set[str]:
+def _extract_numeric_tokens(value: Any, source: str | None = None) -> set[str]:
     tokens: set[str] = set()
+    if isinstance(value, (int, float, Decimal)) and not isinstance(value, bool):
+        normalized = _normalize_numeric_token(str(value))
+        if normalized:
+            tokens.update(_numeric_equivalent_tokens(normalized, source=source))
+        return tokens
+
+    if isinstance(value, str):
+        normalized_value = value.strip()
+        if normalized_value:
+            if _is_exact_numeric_string(normalized_value):
+                normalized = _normalize_numeric_token(normalized_value)
+                if normalized:
+                    tokens.update(_numeric_equivalent_tokens(normalized, source=source))
+            masked_value = _mask_semantic_version_like_text(normalized_value)
+            for token in NUMERIC_TOKEN_PATTERN.findall(masked_value):
+                normalized = _normalize_numeric_token(token)
+                if normalized:
+                    tokens.update(_numeric_equivalent_tokens(normalized, source=source))
+        return tokens
+
+    if isinstance(value, dict):
+        for key, item in value.items():
+            nested_source = f"{source}.{key}" if source else str(key)
+            tokens.update(_extract_numeric_tokens(item, source=nested_source))
+        return tokens
+
+    if isinstance(value, (list, tuple, set)):
+        for item in value:
+            tokens.update(_extract_numeric_tokens(item, source=source))
+        return tokens
+
     for text in _iter_text_values(value):
-        for token in NUMERIC_TOKEN_PATTERN.findall(text):
+        masked_text = _mask_semantic_version_like_text(text)
+        for token in NUMERIC_TOKEN_PATTERN.findall(masked_text):
             normalized = _normalize_numeric_token(token)
             if normalized:
-                tokens.add(normalized)
-    if isinstance(value, (int, float, Decimal)):
-        tokens.add(_normalize_numeric_token(str(value)))
+                tokens.update(_numeric_equivalent_tokens(normalized, source=source))
     return tokens
 
 
@@ -476,6 +508,75 @@ def _normalize_numeric_token(token: str) -> str:
     if normalized == "-0":
         normalized = "0"
     return f"{normalized}%" if percent else normalized
+
+
+def _numeric_equivalent_tokens(normalized_token: str, *, source: str | None = None) -> set[str]:
+    tokens = {normalized_token}
+    tokens.update(_compact_numeric_equivalent_tokens(normalized_token, source=source))
+    tokens.update(_percentage_equivalent_tokens(normalized_token, source=source))
+    return tokens
+
+
+def _compact_numeric_equivalent_tokens(normalized_token: str, *, source: str | None = None) -> set[str]:
+    if not _should_allow_compact_numeric_equivalent(source):
+        return set()
+    if normalized_token.endswith("%"):
+        return set()
+    try:
+        decimal_value = Decimal(normalized_token)
+    except (InvalidOperation, ValueError):
+        return set()
+    if decimal_value < 0 or decimal_value > 1:
+        return set()
+    compact_value = decimal_value.quantize(Decimal("0.01"))
+    compact_text = format(compact_value.normalize(), "f")
+    if "." in compact_text:
+        compact_text = compact_text.rstrip("0").rstrip(".")
+    if compact_text == "-0":
+        compact_text = "0"
+    return {compact_text}
+
+
+def _percentage_equivalent_tokens(normalized_token: str, *, source: str | None = None) -> set[str]:
+    if not _should_allow_percentage_equivalent(source):
+        return set()
+    if normalized_token.endswith("%"):
+        return set()
+    try:
+        decimal_value = Decimal(normalized_token)
+    except (InvalidOperation, ValueError):
+        return set()
+    if decimal_value < 0 or decimal_value > 1:
+        return set()
+    percentage_value = (decimal_value * Decimal("100")).normalize()
+    percentage_text = format(percentage_value, "f")
+    if "." in percentage_text:
+        percentage_text = percentage_text.rstrip("0").rstrip(".")
+    if percentage_text == "-0":
+        percentage_text = "0"
+    return {f"{percentage_text}%"}
+
+
+def _should_allow_percentage_equivalent(source: str | None) -> bool:
+    if not source:
+        return False
+    normalized_source = source.lower()
+    return any(
+        token in normalized_source
+        for token in ("probability", "confidence", "threshold", "score")
+    )
+
+
+def _should_allow_compact_numeric_equivalent(source: str | None) -> bool:
+    return _should_allow_percentage_equivalent(source)
+
+
+def _is_exact_numeric_string(value: str) -> bool:
+    return bool(re.fullmatch(r"-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?%?", value.strip()))
+
+
+def _mask_semantic_version_like_text(text: str) -> str:
+    return SEMANTIC_VERSION_TOKEN_PATTERN.sub(lambda match: " " * len(match.group(0)), _normalize_text(text))
 
 
 def _normalize_text(value: str) -> str:

@@ -200,3 +200,179 @@ def test_post_generation_guard_allows_safe_mock_answers() -> None:
     assert result.blocked is False
     assert result.status in {"pass", "limited"}
     assert "manual review" in answer.lower()
+
+
+def test_post_generation_guard_allows_grounded_probability_percentage_equivalent() -> None:
+    context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Explain this inspection result.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {
+                "final_decision": "defective",
+                "decision_level": "evidence_supported",
+                "rule_id": "manual_check_rule",
+                "recommended_action": "Review the inspection evidence before taking action.",
+            },
+            "classification": {
+                "predicted_label": "defect",
+                "probability_defect": 1.0,
+            },
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    result = guard_post_generation_text(
+        "The final decision is defective. The defect probability is 100%. Manual review still applies.",
+        grounding_context=context,
+        allowed_evidence_values=["defective", "evidence_supported", "defect", 1.0, "Review the inspection evidence before taking action."],
+    )
+
+    assert result.blocked is False
+    assert result.status in {"pass", "limited"}
+
+
+def test_post_generation_guard_ignores_semantic_version_numbers_in_generated_text() -> None:
+    context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Explain this inspection result.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {
+                "final_decision": "defective",
+                "decision_level": "evidence_supported",
+                "rule_id": "manual_check_rule",
+                "recommended_action": "Review the inspection evidence before taking action.",
+            },
+            "classification": {
+                "predicted_label": "defect",
+                "model_version": "resnet18 v0.4.0",
+            },
+            "detection": {
+                "predicted_box_count": 19,
+                "model_version": "yolo v0.2.0",
+            },
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    result = guard_post_generation_text(
+        "The models are yolo v0.2.0 and resnet18 v0.4.0. Confidence remains grounded. Manual review still applies.",
+        grounding_context=context,
+        allowed_evidence_values=[
+            "defective",
+            "evidence_supported",
+            "defect",
+            19,
+            "resnet18 v0.4.0",
+            "yolo v0.2.0",
+            "Review the inspection evidence before taking action.",
+        ],
+    )
+
+    assert result.blocked is False
+    assert result.status in {"pass", "limited"}
+
+
+def test_post_generation_guard_blocks_invented_metrics_even_when_other_values_are_grounded() -> None:
+    context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Explain this inspection result.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {
+                "final_decision": "defective",
+                "decision_level": "evidence_supported",
+                "rule_id": "manual_check_rule",
+                "recommended_action": "Review the inspection evidence before taking action.",
+            },
+            "classification": {
+                "predicted_label": "defect",
+                "probability_defect": 1.0,
+            },
+            "traceability": {"source_endpoint": "/inspect/image"},
+        },
+        include_raw_evidence=False,
+    )
+
+    result = guard_post_generation_text(
+        "The accuracy is 98%. Manual review still applies.",
+        grounding_context=context,
+        allowed_evidence_values=["defective", "evidence_supported", "defect", 1.0],
+    )
+
+    assert result.blocked is True
+    assert result.status == "blocked"
+
+
+def test_post_generation_guard_allows_grounded_image_inspection_answer_with_probability_confidence_and_versions() -> None:
+    context = build_grounding_context(
+        page_id="image_inspection",
+        section_id="final_decision",
+        question="Explain this inspection result safely for manual review.",
+        visible_context={"page_title": "Image Inspection"},
+        inspection_response={
+            "decision": {
+                "final_decision": "defective",
+                "decision_level": "evidence_supported",
+                "rule_id": "local_gated_runtime_validation_rule",
+                "recommended_action": "Review the inspection evidence before taking action.",
+            },
+            "classification": {
+                "predicted_label": "defect",
+                "probability_defect": 1.0,
+                "model_version": "resnet18 v0.4.0",
+            },
+            "detection": {
+                "predicted_box_count": 19,
+                "best_detection": {
+                    "class_label": "oil_spot",
+                    "display_label": "Oil spot",
+                    "confidence": 0.890102744102478,
+                },
+                "model_version": "yolo v0.2.0",
+            },
+            "traceability": {
+                "source_endpoint": "local_gated_agent_endpoint_validation",
+                "contract_version": "local_validation_v1",
+            },
+        },
+        include_raw_evidence=False,
+    )
+
+    answer = (
+        "The final decision for this image is defective. "
+        "This decision is evidence_supported because both the classification model and the detection model identified defects, "
+        "with the detection model finding 19 localized defect boxes. "
+        "The classification model reports 100% probability of defect. "
+        "The models are yolo v0.2.0 and resnet18 v0.4.0. "
+        "The most confident detection was an Oil spot with 0.89 confidence. "
+        "The recommended action is to Review the inspection evidence before taking action. "
+        "Manual review still applies."
+    )
+
+    result = guard_post_generation_text(
+        answer,
+        grounding_context=context,
+        allowed_evidence_values=[
+            "defective",
+            "evidence_supported",
+            "defect",
+            19,
+            1.0,
+            0.890102744102478,
+            "resnet18 v0.4.0",
+            "yolo v0.2.0",
+            "Oil spot",
+            "Review the inspection evidence before taking action.",
+        ],
+    )
+
+    assert result.blocked is False
+    assert result.status in {"pass", "limited"}
+    assert "manual review still applies" in result.sanitized_text.lower()

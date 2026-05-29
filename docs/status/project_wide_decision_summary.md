@@ -11,6 +11,7 @@
 - [ ] Production readiness: NOT CLAIMED
 - [ ] Deployment safety: NOT CLAIMED
 - [x] Gemini gated frontend integration milestone: validated as an explicit opt-in local path; safe mock fallback remains available
+- [x] EC2 Gemini-gated demo validation: PASS
 
 This summary consolidates the current evidence-layer status after Track A, Track B, and YOLO / Detection evidence completion. It is intended to support final demo/readiness auditing, report packaging, and future roadmap decisions.
 It also records that the Gemini gated frontend integration milestone is validated as an explicit opt-in local path, with runtime still mock-first by default and safe fallback preserved.
@@ -18,6 +19,9 @@ The latest approved Gemini 2.5 Flash smoke reached `SUCCESS_LIMITED`, used `prov
 The frontend Image Inspection path now reaches `/agent/explain`, and the gated Gemini provider path is available only when explicit runtime gates are set.
 The explicit gated runtime gates are `AGENT_ENABLE_LLM=true`, `AGENT_ENABLE_REAL_PROVIDER_RUNTIME=true`, `AGENT_DEFAULT_PROVIDER=gemini`, `LLM_PROVIDER_ORDER=gemini,mock`, `LLM_ENABLE_FALLBACK=true`, `LLM_MAX_RETRIES=1`, with `GEMINI_API_KEY` provided only at runtime and never committed.
 The canonical Gemini provider default is aligned to `gemini-2.5-flash`, matching the validated smoke model.
+The Docker / EC2 Gemini-gated demo deployment has also been validated on EC2 with the public Streamlit UI and Docker Compose using the same explicit opt-in runtime gates. The EC2 host is `industrial-surface-defect-demo` at `13.60.218.168`, and the public Streamlit URL was `http://13.60.218.168:8501` during validation.
+On EC2, `/health` reported `status=ok`, `/agent/health` reported `llm_enabled=true`, `default_provider=gemini`, `provider_order=["gemini", "mock"]`, `available_providers=["gemini", "mock"]`, `fallback_available=true`, and `grounding_ready=true`.
+On EC2, `/agent/explain` returned `provider_used=gemini`, `fallback_used=false`, and `grounding_status=grounded`, and browser validation confirmed Gemini-backed explanations for Image Inspection, Surface Defect Classification, Surface Anomaly Detection, and the Detection confidence chart.
 
 Gemini gated explanation milestone completed:
 
@@ -43,6 +47,7 @@ Safety and scope boundaries remain unchanged:
 - The system is not autonomous.
 - The system is not production-ready or deployment-safe.
 - Custom user-written questions are not implemented yet.
+- This is demo deployment validation, not production readiness.
 
 ## 2. Track A Decision
 
@@ -107,6 +112,7 @@ Required before final handoff:
 - [ ] Final report/demo packaging
 - [ ] Final project-wide limitations and next-step summary
 - [x] Reconcile roadmap language after the Gemini local-smoke closure so the next technical track is clear
+- [x] Record EC2 Gemini-gated demo validation in canonical status docs
 - [ ] Define the gated real-provider runtime activation design if future real-LLM activation is explicitly approved
 - [ ] Decide whether later public frontend/dashboard hardening is needed
 - [ ] Decide whether later public API hardening is needed
@@ -128,9 +134,9 @@ Not recommended now:
 
 ## 7. Recommended Next Step
 
-Next step: treat the reconciled roadmap/status docs as the source of truth; if implementation work resumes later, the next technical track should be a gated real-provider runtime activation validation slice with explicit opt-in only.
+Next step: treat the reconciled roadmap/status docs as the source of truth; if implementation work resumes later, the next technical track should be README / documentation polish, presentation/storyline preparation, and then only later a gated hardening slice with explicit opt-in only if needed.
 
-Reason: the project now has complete evidence/status consolidation, the gated frontend-to-agent Gemini path is already validated locally, and the repo already contains the implemented mock-first frontend/API/agent foundations. A live-provider path remains explicit opt-in only and should be operationalized conservatively if future work resumes.
+Reason: the project now has complete evidence/status consolidation, the gated frontend-to-agent Gemini path is validated locally and on EC2, and the repo already contains the implemented mock-first frontend/API/agent foundations. A live-provider path remains explicit opt-in only and should be operationalized conservatively if future work resumes.
 
 ## 8. Safety Boundaries
 

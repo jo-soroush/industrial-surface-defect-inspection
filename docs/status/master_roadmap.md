@@ -11,6 +11,7 @@
 - [ ] Production readiness: NOT CLAIMED
 - [ ] Deployment safety: NOT CLAIMED
 - [x] Gemini gated frontend integration milestone: validated as an explicit opt-in local path; safe mock fallback remains available
+- [x] EC2 Gemini-gated demo validation: PASS
 
 The repository currently has governed evidence for the classification, anomaly detection, and object detection tracks, plus implemented mock-first frontend, API, and agent foundations. This status does not make any production-readiness or deployment-safety claim.
 The Gemini gated frontend integration milestone is validated as an explicit opt-in local path. The runtime remains mock-first by default and safe mock fallback remains available.
@@ -18,6 +19,9 @@ The latest approved Gemini 2.5 Flash smoke reached `SUCCESS_LIMITED`, used `prov
 The frontend Image Inspection path now reaches `/agent/explain`, and the gated Gemini provider path is available only when explicit runtime gates are set.
 The explicit gated runtime gates are `AGENT_ENABLE_LLM=true`, `AGENT_ENABLE_REAL_PROVIDER_RUNTIME=true`, `AGENT_DEFAULT_PROVIDER=gemini`, `LLM_PROVIDER_ORDER=gemini,mock`, `LLM_ENABLE_FALLBACK=true`, `LLM_MAX_RETRIES=1`, with `GEMINI_API_KEY` provided only at runtime and never committed.
 The canonical Gemini provider default is aligned to `gemini-2.5-flash`, matching the validated smoke model.
+The Docker / EC2 Gemini-gated demo deployment has also been validated on EC2 with the public Streamlit UI and Docker Compose using the same explicit opt-in runtime gates. The EC2 host is `industrial-surface-defect-demo` at `13.60.218.168`, and the public Streamlit URL was `http://13.60.218.168:8501` during validation.
+On EC2, `/health` reported `status=ok`, `/agent/health` reported `llm_enabled=true`, `default_provider=gemini`, `provider_order=["gemini", "mock"]`, `available_providers=["gemini", "mock"]`, `fallback_available=true`, and `grounding_ready=true`.
+On EC2, `/agent/explain` returned `provider_used=gemini`, `fallback_used=false`, and `grounding_status=grounded`, and browser validation confirmed Gemini-backed explanations for Image Inspection, Surface Defect Classification, Surface Anomaly Detection, and the Detection confidence chart.
 
 Gemini gated explanation milestone completed:
 
@@ -43,14 +47,14 @@ Safety and scope boundaries remain unchanged:
 - The system is not autonomous.
 - The system is not production-ready or deployment-safe.
 - Custom user-written questions are not implemented yet.
+- This is demo deployment validation, not production readiness.
 
 Recommended next steps:
 
 - Add custom user question mode later with evidence-grounded guardrails.
-- Perform final local smoke validation if another end-to-end check is needed.
-- Prepare Docker validation later if explicitly approved.
-- Prepare EC2 / deployment handling later if explicitly approved.
 - Polish README / documentation after the UI is stable.
+- Prepare presentation / storyline materials for the completed Gemini-gated demo.
+- Consider later hardening only if explicitly approved: HTTPS / domain setup, reverse proxy, monitoring, CI/CD deployment automation, and secret management hardening.
 
 ## 2. Source-of-Truth Rules
 

@@ -7,7 +7,10 @@ from types import SimpleNamespace
 from fastapi.testclient import TestClient
 
 from api.app.main import app
-from frontend.streamlit_app import _build_image_inspection_agent_request
+from frontend.streamlit_app import (
+    _build_detection_confidence_agent_request,
+    _build_image_inspection_agent_request,
+)
 import src.inspection_ai.agent.provider_router as provider_router_module
 from src.inspection_ai.agent.gemini_provider import GeminiSdkLoadResult
 from src.inspection_ai.agent.provider_contracts import build_provider_response
@@ -317,6 +320,125 @@ def test_agent_explain_routes_through_gated_fake_gemini_when_all_explicit_gates_
     assert "gemini gated endpoint answer" in payload["answer"].lower()
     assert "manual review" in payload["answer"].lower()
     assert "present-but-test-only" not in payload["answer"].lower()
+
+
+def test_agent_explain_routes_through_gated_fake_gemini_for_detection_chart_only_prompt(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_ENABLE_LLM", "true")
+    monkeypatch.setenv("AGENT_ENABLE_REAL_PROVIDER_RUNTIME", "true")
+    monkeypatch.setenv("AGENT_DEFAULT_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_PROVIDER_ORDER", "gemini,mock")
+    monkeypatch.setenv("GEMINI_API_KEY", "present-but-test-only")
+    monkeypatch.delenv("GROK_API_KEY", raising=False)
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "_load_runtime_gemini_sdk_status",
+        lambda: GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai SDK import succeeded.",
+        ),
+    )
+
+    calls: list[dict[str, object]] = []
+
+    def fake_generate_with_real_gemini_provider(
+        request,
+        *,
+        settings,
+        config,
+        sdk_loader=None,
+        sdk_module_loader=None,
+        client_factory=None,
+        allowed_evidence_values=None,
+    ):
+        calls.append(
+            {
+                "provider_name": request.provider_name,
+                "question": request.question,
+                "page_id": request.page_id,
+                "section_id": request.section_id,
+                "component_id": request.component_id,
+                "allowed_evidence_values": list(allowed_evidence_values or []),
+            }
+        )
+        return SimpleNamespace(
+            provider_response=build_provider_response(
+                answer=(
+                    "The chart explains how detection confidence bands are distributed across validation evidence. "
+                    "It is review-oriented evidence, not an automatic image decision. "
+                    "Manual review still applies."
+                ),
+                provider_used="gemini",
+                fallback_used=False,
+                fallback_reason=None,
+                provider_error_stage=None,
+                provider_error_reason=None,
+                safety_block_reason=None,
+                grounding_status="grounded",
+                safety_status="pass",
+                limitations=["Manual review still applies."],
+                evidence_used=[],
+            ),
+            status="pass",
+            safe_to_send=True,
+            safe_to_display=True,
+            provider_error=None,
+            fallback_reason=None,
+        )
+
+    monkeypatch.setattr(
+        provider_router_module,
+        "generate_with_real_gemini_provider",
+        fake_generate_with_real_gemini_provider,
+    )
+
+    frontend_request = _build_detection_confidence_agent_request(
+        confidence_chart={
+            "chart_title": "Detection confidence distribution",
+            "chart_explanation": "Counts of predicted boxes by confidence band on the validation split.",
+            "confidence_bins": [
+                {"label": "0.00-0.25", "count": 0, "percentage": 0.0},
+                {"label": "0.25-0.50", "count": 226, "percentage": 39.44153577661431},
+                {"label": "0.50-0.75", "count": 218, "percentage": 38.045375218150085},
+                {"label": "0.75-1.00", "count": 129, "percentage": 22.5130890052356},
+            ],
+        },
+        overview={
+            "run_id": "yolo_train_v0_2_0",
+            "image_count": 345,
+            "total_bbox_count": 573,
+        },
+        metadata={
+            "model_name": "YOLOv8",
+            "model_version": "0.2.0",
+        },
+    )
+
+    response = client.post(
+        "/agent/explain",
+        json=frontend_request,
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(calls) == 1
+    assert calls[0]["provider_name"] == "gemini"
+    assert calls[0]["page_id"] == "detection"
+    assert calls[0]["section_id"] == "visual_evidence"
+    assert calls[0]["component_id"] == "detection_confidence_chart"
+    assert "final image decisions" in calls[0]["question"].lower()
+    assert "chart evidence" in calls[0]["question"].lower()
+    assert "confidence_distribution_chart_only" in str(frontend_request["visible_context"]["explanation_scope"])
+    assert payload["provider_used"] == "gemini"
+    assert payload["fallback_used"] is False
+    assert payload["fallback_reason"] is None
+    assert payload["provider_error_stage"] is None
+    assert payload["provider_error_reason"] is None
+    assert payload["safety_block_reason"] is None
+    assert "review-oriented evidence" in payload["answer"].lower()
+    assert "final image decision" not in payload["answer"].lower()
 
 
 def test_agent_explain_exposes_safe_fallback_reason_for_gated_fake_gemini_fallback(monkeypatch) -> None:

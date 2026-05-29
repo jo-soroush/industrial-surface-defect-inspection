@@ -47,11 +47,19 @@ def test_detection_confidence_agent_request_is_component_aware() -> None:
     assert request["page_id"] == "detection"
     assert request["section_id"] == "visual_evidence"
     assert request["component_id"] == "detection_confidence_chart"
-    assert request["question"] == "What does this detection confidence chart mean?"
+    assert request["question"] == (
+        "Explain only what this detection confidence distribution chart means using the chart evidence. "
+        "Do not summarize final image decisions or live image inspection results."
+    )
     assert request["inspection_response"] == {}
     assert request["include_raw_evidence"] is False
     assert request["visible_context"]["page_title"] == app.DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL
     assert request["visible_context"]["component_label"] == "Detection confidence distribution"
+    assert request["visible_context"]["explanation_scope"] == "confidence_distribution_chart_only"
+    assert request["visible_context"]["forbidden_summary_scope"] == (
+        "Do not summarize final image decisions or live image inspection results."
+    )
+    assert request["visible_context"]["manual_review_required"] is True
     assert request["visible_context"]["chart_title"] == "Detection confidence distribution"
     assert "localhost" not in str(request)
 

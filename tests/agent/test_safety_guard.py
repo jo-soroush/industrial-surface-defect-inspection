@@ -234,6 +234,64 @@ def test_post_generation_guard_allows_grounded_probability_percentage_equivalent
     assert result.status in {"pass", "limited"}
 
 
+def test_post_generation_guard_allows_grounded_detection_percentage_display_equivalents() -> None:
+    context = build_grounding_context(
+        page_id="detection",
+        section_id="visual_evidence",
+        component_id="detection_confidence_chart",
+        question="Explain only what this detection confidence distribution chart means using the chart evidence.",
+        visible_context={
+            "page_title": "Defect Detection & Localization",
+            "component_label": "Detection confidence distribution",
+            "explanation_scope": "confidence_distribution_chart_only",
+            "forbidden_summary_scope": "Do not summarize final image decisions or live image inspection results.",
+            "manual_review_required": True,
+            "chart_title": "Detection confidence distribution",
+            "chart_explanation": "Counts of predicted boxes by confidence band on the validation split.",
+            "run_id": "yolo_train_v0_2_0",
+            "model_name": "YOLOv8",
+            "model_version": "0.2.0",
+            "image_count": 345,
+            "total_bbox_count": 573,
+            "confidence_bin_count": 4,
+        },
+        inspection_response={},
+        include_raw_evidence=False,
+    )
+
+    result = guard_post_generation_text(
+        (
+            "The Detection confidence distribution chart explains the counts of predicted boxes by confidence band on the validation split for the yolo model, version 0.2.0, from run yolo_train_v0_2_0. "
+            "For example, 226 predicted boxes (39.44%) had a confidence between 0.25 and 0.50, while 218 boxes (38.05%) were in the 0.50-0.75 confidence range. "
+            "No predicted boxes fell into the 0.00-0.25 confidence band, and 129 boxes (22.51%) had a confidence between 0.75 and 1.00. "
+            "Manual review still applies."
+        ),
+        grounding_context=context,
+        allowed_evidence_values=[
+            "Detection confidence distribution",
+            "Counts of predicted boxes by confidence band on the validation split.",
+            "0.00-0.25",
+            "0.25-0.50",
+            "0.50-0.75",
+            "0.75-1.00",
+            0,
+            226,
+            218,
+            129,
+            0.0,
+            39.44153577661431,
+            38.045375218150085,
+            22.5130890052356,
+            "yolo_train_v0_2_0",
+            "YOLOv8",
+            "0.2.0",
+        ],
+    )
+
+    assert result.blocked is False
+    assert result.status in {"pass", "limited"}
+
+
 def test_post_generation_guard_ignores_semantic_version_numbers_in_generated_text() -> None:
     context = build_grounding_context(
         page_id="image_inspection",
@@ -304,6 +362,16 @@ def test_post_generation_guard_blocks_invented_metrics_even_when_other_values_ar
         "The accuracy is 98%. Manual review still applies.",
         grounding_context=context,
         allowed_evidence_values=["defective", "evidence_supported", "defect", 1.0],
+    )
+
+    assert result.blocked is True
+    assert result.status == "blocked"
+
+
+def test_post_generation_guard_blocks_invented_percentage_when_not_grounded() -> None:
+    result = guard_post_generation_text(
+        "The accuracy is 98%. Manual review still applies.",
+        allowed_evidence_values=["defective", "evidence_supported", "defect"],
     )
 
     assert result.blocked is True

@@ -458,6 +458,51 @@ def _build_real_prompt_evidence_request():
     )
 
 
+def _build_detection_confidence_prompt_request():
+    context = build_grounding_context(
+        page_id="detection",
+        section_id="visual_evidence",
+        component_id="detection_confidence_chart",
+        question=(
+            "Explain only what this detection confidence distribution chart means using the chart evidence. "
+            "Do not summarize final image decisions or live image inspection results."
+        ),
+        visible_context={
+            "page_title": "Defect Detection & Localization",
+            "component_label": "Detection confidence distribution",
+            "explanation_scope": "confidence_distribution_chart_only",
+            "forbidden_summary_scope": "Do not summarize final image decisions or live image inspection results.",
+            "manual_review_required": True,
+            "chart_title": "Detection confidence distribution",
+            "chart_explanation": "Counts of predicted boxes by confidence band on the validation split.",
+            "run_id": "yolo_train_v0_2_0",
+            "model_name": "YOLOv8",
+            "model_version": "0.2.0",
+            "image_count": 345,
+            "total_bbox_count": 573,
+            "confidence_bin_count": 4,
+        },
+        inspection_response={},
+        include_raw_evidence=False,
+    )
+    sanitized_context = {
+        "page_id": context.page_id,
+        "section_id": context.section_id,
+        "component_id": context.component_id,
+        "question": context.question,
+        "evidence_used": context.evidence_used,
+        "limitations": context.limitations,
+        "grounding_status": context.grounding_status,
+    }
+    return build_provider_request(
+        provider_name="gemini",
+        grounding_context=context,
+        sanitized_context=sanitized_context,
+        safety_status="pass",
+        llm_enabled=True,
+    )
+
+
 class _FakeGeminiClient:
     def __init__(self, mode: str) -> None:
         self.mode = mode
@@ -990,6 +1035,95 @@ def test_gemini_real_provider_allows_grounded_compact_confidence_output(monkeypa
     assert "manual review still applies" in result.provider_response.answer.lower()
 
 
+def test_gemini_real_provider_allows_chart_only_detection_confidence_output(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def fake_load_google_genai_module():
+        calls.append("called")
+        raise AssertionError("lazy SDK import should not be called when a fake SDK module is injected")
+
+    monkeypatch.setattr(gemini_provider_module, "_load_google_genai_module", fake_load_google_genai_module)
+
+    loader = _RecordingSdkLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai is available in the injected test seam.",
+        )
+    )
+    sdk_module = _FakeRealSdkModule("detection_chart_only")
+    provider = GeminiRealProvider(
+        settings=_build_real_provider_settings(enable_llm=True, gemini_key_present=True),
+        config=GeminiRealProviderConfig(
+            real_provider_implemented=True,
+            sdk_import_allowed=True,
+            api_key_resolver=lambda: "fake-key",
+        ),
+        sdk_loader=loader.loader,
+        sdk_module_loader=lambda: sdk_module,
+    )
+
+    result = provider.generate(_build_detection_confidence_prompt_request())
+
+    assert calls == []
+    assert loader.calls == 1
+    assert sdk_module.models.calls == 1
+    assert result.provider_response.provider_used == "gemini"
+    assert result.provider_response.fallback_used is False
+    assert result.provider_response.provider_error_stage is None
+    assert result.provider_response.provider_error_reason is None
+    assert result.provider_response.safety_block_reason is None
+    assert result.safe_to_display is True
+    assert "confidence bands" in result.provider_response.answer.lower()
+    assert "manual review still applies" in result.provider_response.answer.lower()
+    assert "final decision" not in result.provider_response.answer.lower()
+
+
+def test_gemini_real_provider_blocks_detection_image_level_summary_output(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def fake_load_google_genai_module():
+        calls.append("called")
+        raise AssertionError("lazy SDK import should not be called when a fake SDK module is injected")
+
+    monkeypatch.setattr(gemini_provider_module, "_load_google_genai_module", fake_load_google_genai_module)
+
+    loader = _RecordingSdkLoader(
+        GeminiSdkLoadResult(
+            checked=True,
+            sdk_available=True,
+            status="available",
+            reason="google-genai is available in the injected test seam.",
+        )
+    )
+    sdk_module = _FakeRealSdkModule("detection_image_level")
+    provider = GeminiRealProvider(
+        settings=_build_real_provider_settings(enable_llm=True, gemini_key_present=True),
+        config=GeminiRealProviderConfig(
+            real_provider_implemented=True,
+            sdk_import_allowed=True,
+            api_key_resolver=lambda: "fake-key",
+        ),
+        sdk_loader=loader.loader,
+        sdk_module_loader=lambda: sdk_module,
+    )
+
+    result = provider.generate(_build_detection_confidence_prompt_request())
+
+    assert calls == []
+    assert loader.calls == 1
+    assert sdk_module.models.calls == 1
+    assert result.status == "blocked"
+    assert result.provider_response.provider_used == "mock"
+    assert result.provider_response.fallback_used is True
+    assert result.provider_response.provider_error_stage == "post_generation"
+    assert result.provider_response.provider_error_reason == "safety_blocked"
+    assert result.safety_block_reason == "invented_metric_like_output"
+    assert "final decision" not in result.provider_response.answer.lower()
+    assert "manual review" in result.provider_response.answer.lower()
+
+
 @pytest.mark.parametrize(
     ("text", "expected_reason", "unexpected_phrase"),
     [
@@ -1355,6 +1489,20 @@ class _FakeRealGeminiModels:
                 "The recommended action is to `Inspect localized defect boxes`. "
                 "Manual review still applies."
             )
+        if self.mode == "detection_chart_only":
+            return (
+                "The chart explains how detection confidence bands are distributed across validation evidence. "
+                "It is review-oriented evidence, not an automatic image decision. "
+                "Manual review still applies."
+            )
+        if self.mode == "detection_image_level":
+            return (
+                "The final decision for this image is `defective`. "
+                "This decision is `evidence_supported` because both the classification model and the detection model identified defects, "
+                "with the detection model finding 14 localized defect boxes. "
+                "The most confident detection was an `Oil spot` with 0.89 confidence. "
+                "Manual review still applies."
+            )
         if self.mode == "empty":
             return ""
         if self.mode == "malformed":
@@ -1418,6 +1566,20 @@ class _RetryingRealGeminiModels:
             raise GeminiProviderRateLimitError("rate")
         if outcome == "provider_error":
             raise GeminiProviderError("provider error")
+        if outcome == "detection_chart_only":
+            return (
+                "The chart explains how detection confidence bands are distributed across validation evidence. "
+                "It is review-oriented evidence, not an automatic image decision. "
+                "Manual review still applies."
+            )
+        if outcome == "detection_image_level":
+            return (
+                "The final decision for this image is `defective`. "
+                "This decision is `evidence_supported` because both the classification model and the detection model identified defects, "
+                "with the detection model finding 14 localized defect boxes. "
+                "The most confident detection was an `Oil spot` with 0.89 confidence. "
+                "Manual review still applies."
+            )
         if outcome == "unsafe":
             return (
                 "This model is production-ready, deployment-safe, and Gemini is active. "

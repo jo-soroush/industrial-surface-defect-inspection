@@ -514,6 +514,7 @@ def _numeric_equivalent_tokens(normalized_token: str, *, source: str | None = No
     tokens = {normalized_token}
     tokens.update(_compact_numeric_equivalent_tokens(normalized_token, source=source))
     tokens.update(_percentage_equivalent_tokens(normalized_token, source=source))
+    tokens.update(_percentage_display_equivalent_tokens(normalized_token, source=source))
     return tokens
 
 
@@ -557,6 +558,26 @@ def _percentage_equivalent_tokens(normalized_token: str, *, source: str | None =
     return {f"{percentage_text}%"}
 
 
+def _percentage_display_equivalent_tokens(normalized_token: str, *, source: str | None = None) -> set[str]:
+    if not _should_allow_percentage_display_equivalent(source):
+        return set()
+    if normalized_token.endswith("%"):
+        return set()
+    try:
+        decimal_value = Decimal(normalized_token)
+    except (InvalidOperation, ValueError):
+        return set()
+    if decimal_value < 0:
+        return set()
+    percentage_value = decimal_value.quantize(Decimal("0.01"))
+    percentage_text = format(percentage_value.normalize(), "f")
+    if "." in percentage_text:
+        percentage_text = percentage_text.rstrip("0").rstrip(".")
+    if percentage_text == "-0":
+        percentage_text = "0"
+    return {f"{percentage_text}%"}
+
+
 def _should_allow_percentage_equivalent(source: str | None) -> bool:
     if not source:
         return False
@@ -569,6 +590,13 @@ def _should_allow_percentage_equivalent(source: str | None) -> bool:
 
 def _should_allow_compact_numeric_equivalent(source: str | None) -> bool:
     return _should_allow_percentage_equivalent(source)
+
+
+def _should_allow_percentage_display_equivalent(source: str | None) -> bool:
+    if not source:
+        return False
+    normalized_source = source.lower()
+    return "percentage" in normalized_source or "percent" in normalized_source
 
 
 def _is_exact_numeric_string(value: str) -> bool:

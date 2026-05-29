@@ -205,6 +205,9 @@ def _build_detection_confidence_visible_context(
     return {
         "page_title": DEFECT_DETECTION_LOCALIZATION_PAGE_LABEL,
         "component_label": "Detection confidence distribution",
+        "explanation_scope": "confidence_distribution_chart_only",
+        "forbidden_summary_scope": "Do not summarize final image decisions or live image inspection results.",
+        "manual_review_required": True,
         "chart_title": confidence_chart.get("chart_title"),
         "chart_explanation": confidence_chart.get("chart_explanation"),
         "run_id": metadata.get("run_id") or overview.get("run_id"),
@@ -226,7 +229,10 @@ def _build_detection_confidence_agent_request(
         "page_id": "detection",
         "section_id": "visual_evidence",
         "component_id": "detection_confidence_chart",
-        "question": "What does this detection confidence chart mean?",
+        "question": (
+            "Explain only what this detection confidence distribution chart means using the chart evidence. "
+            "Do not summarize final image decisions or live image inspection results."
+        ),
         "visible_context": _build_detection_confidence_visible_context(
             confidence_chart=confidence_chart,
             overview=overview,

@@ -8,14 +8,13 @@ def test_ai_assistant_page_copy_reflects_mock_agent_and_gated_boundary() -> None
     not_active_phrase = "not act" + "ive"
 
     assert app.AI_EXPLANATION_ASSISTANT_PAGE_LABEL == "AI Explanation Assistant"
-    assert "mock component explanations are active" in source
-    assert "a mock-first evidence-grounded agent is active for selected components" in source
-    assert "optional gated gemini responses when explicitly enabled" in source
+    assert "evidence-grounded component explanations are active" in source
+    assert "evidence-grounded explanations are active for selected components" in source
+    assert "gemini-gated responses available when enabled" in source
     assert "uses /agent/explain" in source
-    assert "safe mock fallback remains available" in source
+    assert "safe fallback remains available" in source
     assert "manual review required" in source
     assert "gated gemini responses remain optional" in source
-    assert "safe mock fallback remains available" in source
     assert "gated explanation boundary" in source
     assert "gated assistant uses governed evidence" in source
     assert "broader real-llm provider integration is available only through the explicit gated path" in source

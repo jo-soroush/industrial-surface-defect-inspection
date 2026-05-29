@@ -512,7 +512,7 @@ def _render_detection_confidence_agent_panel(
     _render_component_agent_explanation_panel(
         title="Explain this detection confidence chart",
         caption="Evidence-grounded explanation path · gated Gemini optional · manual review still applies.",
-        button_label="Mock evidence-grounded explanation",
+        button_label="Generate evidence-grounded explanation",
         button_key="detection_confidence_agent_button",
         response_key="detection_confidence_agent_explanation",
         error_key="detection_confidence_agent_error",
@@ -536,7 +536,7 @@ def _render_classification_threshold_agent_panel(
     _render_component_agent_explanation_panel(
         title="Explain this classification threshold chart",
         caption="Evidence-grounded explanation path · gated Gemini optional · manual review still applies.",
-        button_label="Mock evidence-grounded explanation",
+        button_label="Generate evidence-grounded explanation",
         button_key="classification_threshold_agent_button",
         response_key="classification_threshold_agent_explanation",
         error_key="classification_threshold_agent_error",
@@ -564,7 +564,7 @@ def _render_anomaly_threshold_agent_panel(
             "Evidence-grounded explanation path · gated Gemini optional · "
             "anomaly evidence is review-only · manual review still applies."
         ),
-        button_label="Mock evidence-grounded explanation",
+        button_label="Generate evidence-grounded explanation",
         button_key="anomaly_threshold_agent_button",
         response_key="anomaly_threshold_agent_explanation",
         error_key="anomaly_threshold_agent_error",
@@ -596,7 +596,10 @@ def _render_component_agent_explanation_panel(
         st.markdown(f"#### {title}")
         st.caption(caption)
         submitted = st.button(button_label, key=button_key)
-        st.caption("Uses governed component evidence only. No external provider call is made.")
+        st.caption(
+            "Uses governed component evidence through /agent/explain. Gemini-gated execution is used when enabled; "
+            "safe fallback remains available."
+        )
 
         if submitted:
             try:
@@ -622,6 +625,7 @@ def _render_component_agent_explanation_panel(
             f"Fallback: {_friendly_status_label(fallback_used)} · "
             f"{_agent_explanation_status_caption(provider_used, fallback_used)}"
         )
+        st.markdown("**Evidence-grounded explanation result**")
         st.write(_safe_text(agent_response.get("answer")))
         st.caption("Manual review still applies.")
 
@@ -1141,7 +1145,7 @@ def _render_agent_callout(
     note: str,
     *,
     accent: str = "violet",
-    badge_label: str = "Mock-first · gated Gemini optional",
+    badge_label: str = "Gemini-gated · safe fallback available",
 ) -> None:
     """Render a compact premium agent callout without an action button."""
     st.markdown(
@@ -1167,11 +1171,11 @@ def _render_overview_ai_preview() -> None:
         <div class="premium-card premium-card--violet" style="margin:0.35rem 0 0.15rem; padding:1.15rem 1.2rem 1.05rem;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:0.45rem;">
                 <div class="premium-card__eyebrow" style="margin:0;">Gated AI explanation status</div>
-                <span style="display:inline-flex; align-items:center; padding:0.22rem 0.7rem; border-radius:999px; background:rgba(124,58,237,0.16); color:#f5d0fe; border:1px solid rgba(192,132,252,0.28); font-size:0.72rem; font-weight:700; letter-spacing:0.02em; white-space:nowrap;">Mock-first · gated Gemini optional</span>
+                <span style="display:inline-flex; align-items:center; padding:0.22rem 0.7rem; border-radius:999px; background:rgba(124,58,237,0.16); color:#f5d0fe; border:1px solid rgba(192,132,252,0.28); font-size:0.72rem; font-weight:700; letter-spacing:0.02em; white-space:nowrap;">Gemini-gated · safe fallback available</span>
             </div>
             <div class="premium-card__title" style="font-size:1.16rem; line-height:1.2; margin-bottom:0.55rem;">AI Explanation Assistant</div>
-            <div class="premium-card__body">A mock-first Agent is available for selected evidence-grounded explanations, and gated Gemini responses can be enabled explicitly when needed.</div>
-            <div class="premium-card__meta">Uses /agent/explain · safe mock fallback remains available · manual review still applies</div>
+            <div class="premium-card__body">Evidence-grounded explanations are available for selected components. Gemini-gated responses can be used when enabled, with safe fallback preserved.</div>
+            <div class="premium-card__meta">Uses /agent/explain · safe fallback remains available · manual review still applies</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1528,7 +1532,7 @@ def _render_overview(bundles: dict[str, dict[str, Any]] | None) -> None:
             "- It is not production-ready.\n"
             "- It is not deployment-safe.\n"
             "- It does not replace expert/manual inspection.\n"
-            "- It does not contain an active AI agent yet.\n"
+            "- It does not contain an autonomous AI agent. Current explanations are gated, evidence-grounded, and review-only.\n"
             "- Docker/release/hardening remain later steps.\n"
             "- Weak anomaly evidence is review-only/supporting signal."
         )
@@ -2982,20 +2986,20 @@ def _render_ai_assistant() -> None:
     """Render the gated AI explanation assistant page."""
     _render_hero_card(
         AI_EXPLANATION_ASSISTANT_PAGE_LABEL,
-        "A mock-first evidence-grounded Agent is active for selected components, with optional gated Gemini responses when explicitly enabled.",
-        "Uses /agent/explain · safe mock fallback remains available · manual review required",
+        "Evidence-grounded explanations are active for selected components, with Gemini-gated responses available when enabled and safe fallback preserved.",
+        "Uses /agent/explain · safe fallback remains available · manual review required",
         accent="violet",
     )
     st.warning(
-        "Mock component explanations are active for selected evidence cards and charts. Gated Gemini responses remain optional, and safe mock fallback remains available."
+        "Evidence-grounded component explanations are active for selected evidence cards and charts. Gated Gemini responses remain optional, and safe fallback remains available."
     )
 
     status_cols = st.columns([1.25, 0.95])
     with status_cols[0]:
         _render_premium_info_card(
-            "Current mock Agent",
+            "Current explanation layer",
             "Selected component explanations are active for Image Inspection, Classification threshold behavior, Anomaly threshold behavior, and Detection confidence.",
-            "The mock Agent sits beside charts and result cards; it does not change model outputs or replace review.",
+            "The explanation layer sits beside charts and result cards; it does not change model outputs or replace review.",
             accent="violet",
         )
     with status_cols[1]:
@@ -3011,14 +3015,14 @@ def _render_ai_assistant() -> None:
         _render_premium_info_card(
             "What selected explanations cover now",
             "Component-level chart explanations, inspection result summaries, confidence context, warnings, manual review needs, and limitations.",
-            "Broader page-level natural-language assistance is available through the gated explanation path.",
+            "Broader page-level natural-language assistance must stay grounded in governed evidence and review boundaries.",
             accent="violet",
         )
     with placement_cols[1]:
         _render_premium_info_card(
             "Evidence it will use",
             "Governed frontend bundles, Image Inspection responses, prediction responses, traceability, and safety docs only.",
-            "Future explanations must stay grounded in real evidence and response data.",
+            "Explanations must stay grounded in real evidence and response data.",
             accent="blue",
         )
 
@@ -3033,7 +3037,7 @@ def _render_ai_assistant() -> None:
     with placement_cols[1]:
         _render_premium_info_card(
             "Visibility note",
-            "This page describes the current gated explanation boundary and the available mock-first fallback.",
+            "This page describes the current gated explanation boundary and the available safe fallback.",
             "It should remain visible, but secondary to the model evidence pages and manual review.",
             accent="orange",
         )
@@ -3044,7 +3048,7 @@ def _render_ai_assistant() -> None:
             "Gated explanations use governed frontend bundles, Image Inspection response data, classification results, defect localization boxes, anomaly results, final rule-based decisions, warnings, errors, limitations, traceability, explanation_context, safety documentation, model metadata, thresholds, run IDs, and artifact references."
         )
         st.write(
-            "The mock backend Agent exists for selected component explanations. Broader real-LLM provider integration is available only through the explicit gated path."
+            "The explanation layer exists for selected component explanations. Broader real-LLM provider integration is available only through the explicit gated path."
         )
 
 
@@ -3059,9 +3063,9 @@ def _render_limitations() -> None:
     _render_agent_callout(
         "Explain safety boundaries",
         "Ask for a plain-language summary of the local inspection workflow limits, production gaps, and deployment gaps.",
-        "Mock component explanations exist for selected components · gated Gemini remains optional · broader gated explanations must stay grounded in governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references",
+        "Evidence-grounded explanations exist for selected components · gated Gemini remains optional · broader gated explanations must stay grounded in governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references",
         accent="violet",
-        badge_label="Mock-first · gated Gemini optional",
+        badge_label="Gemini-gated · safe fallback available",
     )
 
     top_cols = st.columns(4)
@@ -3089,7 +3093,7 @@ def _render_limitations() -> None:
     with second_cols[1]:
         st.metric("Deployment readiness", "Not claimed", help="No deployment-safe claim is made.")
     with second_cols[2]:
-        st.metric("AI Explanation Assistant", "Mock selected components", help="Mock component explanations exist; gated Gemini responses remain optional.")
+        st.metric("AI Explanation Assistant", "Gemini-gated available", help="Evidence-grounded explanations exist; gated Gemini responses remain optional and safe fallback remains available.")
     with second_cols[3]:
         st.metric("Docker / release", "Pending", help="Docker and release work remain later phases after local smoke tests.")
     st.caption("Current boundaries")
@@ -3105,7 +3109,7 @@ def _render_limitations() -> None:
             "The system is not production-ready and not deployment-safe. It does not replace expert/manual review. New evidence files must be created by governed pipeline scripts."
         )
         st.write(
-            "Mock component explanations exist for selected dashboard components. Gated Gemini responses are available only when explicitly enabled, and broader gated explanations must stay grounded in governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references."
+            "Evidence-grounded explanations exist for selected dashboard components. Gated Gemini responses are available only when explicitly enabled, and broader gated explanations must stay grounded in governed evidence, prediction responses, decision outputs, safety docs, model metadata, thresholds, run IDs, and artifact references."
         )
         st.write(
             "Docker, release, and hardening remain later phases and stay pending until frontend completion and local smoke tests pass."

@@ -101,4 +101,6 @@ def test_shared_component_agent_panel_is_horizontal_and_full_width() -> None:
     assert "st.columns([0.32, 0.68]" not in source
     assert "status_cols = st.columns(3)" not in source
     assert "submitted = st.button(button_label, key=button_key)" in source
-    assert "Uses governed component evidence only. No external provider call is made." in source
+    assert "Uses governed component evidence through /agent/explain." in source
+    assert "Gemini-gated execution is used when enabled;" in source
+    assert "safe fallback remains available." in source

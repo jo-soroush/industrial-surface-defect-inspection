@@ -14,11 +14,13 @@ def test_overview_copy_is_professional_and_grounded() -> None:
     assert "not deployment-safe" in source
     assert "inspection capability summary" not in source
     assert "gated ai explanation status" in source
-    assert "gated gemini responses can be enabled explicitly when needed" in source
+    assert "evidence-grounded explanations are available for selected components" in source
     assert "uses /agent/explain" in source
-    assert "safe mock fallback remains available" in source
+    assert "safe fallback remains available" in source
     assert "ai explanation assistant" in source
-    assert "mock-first evidence-grounded agent is active for selected components" in source
+    assert "evidence-grounded explanations are active for selected components" in source
+    assert "does not contain an autonomous ai agent" in source
+    assert "current explanations are gated, evidence-grounded, and review-only" in source
     assert "recommended review path" in source
     assert "run image inspection" in source
     assert "check safety & limitations" in source

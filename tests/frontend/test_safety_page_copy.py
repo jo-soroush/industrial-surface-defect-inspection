@@ -18,10 +18,10 @@ def test_safety_page_copy_is_current() -> None:
     assert "not production-ready" in source
     assert "not deployment-safe" in source
     assert "manual review" in source or "expert/manual review" in source
-    assert "mock component explanations exist for selected" in source
+    assert "evidence-grounded explanations exist for selected" in source
     assert "gated gemini remains optional" in source
-    assert "mock-first · gated gemini optional" in source
-    assert "mock selected components" in source
+    assert "gemini-gated · safe fallback available" in source
+    assert "gemini-gated available" in source
     assert "no backend agent" not in source
     assert "planned / " + not_active_phrase not in source
     assert "track a only" not in source

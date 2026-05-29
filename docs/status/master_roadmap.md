@@ -19,6 +19,39 @@ The frontend Image Inspection path now reaches `/agent/explain`, and the gated G
 The explicit gated runtime gates are `AGENT_ENABLE_LLM=true`, `AGENT_ENABLE_REAL_PROVIDER_RUNTIME=true`, `AGENT_DEFAULT_PROVIDER=gemini`, `LLM_PROVIDER_ORDER=gemini,mock`, `LLM_ENABLE_FALLBACK=true`, `LLM_MAX_RETRIES=1`, with `GEMINI_API_KEY` provided only at runtime and never committed.
 The canonical Gemini provider default is aligned to `gemini-2.5-flash`, matching the validated smoke model.
 
+Gemini gated explanation milestone completed:
+
+- `599e51e` `[agent] Fix Gemini evidence safety validation`
+- `7124537` `[agent] Fix detection chart Gemini explanation grounding`
+- `4716414` `[frontend] Clean up Gemini explanation wording`
+
+Validated page-by-page status:
+
+- Image Inspection Gemini explanation: PASS
+- Surface Defect Classification Gemini explanation: PASS
+- Surface Anomaly Detection Gemini explanation: PASS
+- Defect Detection & Localization confidence chart Gemini explanation: PASS
+- Safety & Limitations page wording: PASS
+- AI Explanation Assistant page wording: PASS
+- Overview page wording: PASS
+
+Safety and scope boundaries remain unchanged:
+
+- Safety guard stays active and still blocks invented metrics, unsupported readiness claims, secrets, and paths.
+- Manual review still applies.
+- Safe mock fallback remains available.
+- The system is not autonomous.
+- The system is not production-ready or deployment-safe.
+- Custom user-written questions are not implemented yet.
+
+Recommended next steps:
+
+- Add custom user question mode later with evidence-grounded guardrails.
+- Perform final local smoke validation if another end-to-end check is needed.
+- Prepare Docker validation later if explicitly approved.
+- Prepare EC2 / deployment handling later if explicitly approved.
+- Polish README / documentation after the UI is stable.
+
 ## 2. Source-of-Truth Rules
 
 - Scripts, configs, governed artifacts, inventories, and registries are the source of truth for project state.

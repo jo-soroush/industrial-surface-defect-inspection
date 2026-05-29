@@ -5,9 +5,11 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     AGENT_ENABLE_LLM=false \
+    AGENT_ENABLE_REAL_PROVIDER_RUNTIME=false \
     AGENT_DEFAULT_PROVIDER=mock \
     LLM_PROVIDER_ORDER=mock,gemini,grok \
-    LLM_ENABLE_FALLBACK=true
+    LLM_ENABLE_FALLBACK=true \
+    LLM_MAX_RETRIES=1
 
 COPY requirements-api.txt pyproject.toml README.md .env.example ./
 

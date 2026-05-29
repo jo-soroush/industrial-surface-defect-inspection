@@ -11,11 +11,14 @@ services:
       API_PORT: "8000"
       PYTHONUNBUFFERED: "1"
       PYTHONPATH: /app
-      AGENT_ENABLE_LLM: "false"
-      AGENT_DEFAULT_PROVIDER: mock
-      LLM_PROVIDER_ORDER: mock,gemini,grok
-      LLM_ENABLE_FALLBACK: "true"
-      LOG_LEVEL: INFO
+      AGENT_ENABLE_LLM: ${AGENT_ENABLE_LLM:-false}
+      AGENT_ENABLE_REAL_PROVIDER_RUNTIME: ${AGENT_ENABLE_REAL_PROVIDER_RUNTIME:-false}
+      AGENT_DEFAULT_PROVIDER: ${AGENT_DEFAULT_PROVIDER:-mock}
+      LLM_PROVIDER_ORDER: ${LLM_PROVIDER_ORDER:-mock,gemini,grok}
+      LLM_ENABLE_FALLBACK: ${LLM_ENABLE_FALLBACK:-true}
+      LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-1}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     healthcheck:
       test:
         - CMD
@@ -38,7 +41,7 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       PYTHONPATH: /app
-      STREAMLIT_API_BASE_URL: http://api:8000
+      STREAMLIT_API_BASE_URL: ${STREAMLIT_API_BASE_URL:-http://api:8000}
     command:
       - streamlit
       - run

@@ -88,7 +88,7 @@ STATUS_LINES = [
     ("Image Inspection", "LOCAL WORKFLOW"),
     ("Frontend app", "NOT STARTED / NOT VALIDATED"),
     ("API endpoints", "NOT STARTED"),
-    ("AI Explanation Assistant", "MOCK AGENT ACTIVE"),
+    ("AI Explanation Assistant", "MOCK-FIRST · GATED GEMINI AVAILABLE"),
     ("Production readiness", "NOT CLAIMED"),
     ("Deployment safety", "NOT CLAIMED"),
 ]
@@ -313,9 +313,28 @@ def _build_anomaly_threshold_agent_request(
 def _agent_explanation_status_caption(provider_used: Any, fallback_used: Any) -> str:
     """Return a short status caption for the agent explanation panel."""
     provider_text = str(provider_used).strip().lower()
+    if provider_text == "gemini" and not bool(fallback_used):
+        return "Gemini-gated explanation returned a grounded response."
     if provider_text == "mock" or bool(fallback_used):
-        return "Mock MVP active · external LLM not connected · no fake AI"
+        return "Safe mock fallback active · manual review still applies."
     return "External provider response returned a grounded explanation."
+
+
+def _build_agent_explanation_diagnostic_items(agent_response: dict[str, Any]) -> list[tuple[str, Any]]:
+    """Return sanitized diagnostic fields for the agent explanation response."""
+    diagnostic_fields = [
+        ("Fallback reason", "fallback_reason"),
+        ("Provider error stage", "provider_error_stage"),
+        ("Provider error reason", "provider_error_reason"),
+        ("Safety block reason", "safety_block_reason"),
+    ]
+    items: list[tuple[str, Any]] = []
+    for label, key in diagnostic_fields:
+        value = agent_response.get(key)
+        if value is None or value == "":
+            continue
+        items.append((label, value))
+    return items
 
 
 def _call_agent_explain_api(api_base_url: str, request_payload: dict[str, Any]) -> dict[str, Any]:
@@ -369,7 +388,7 @@ def _render_image_inspection_agent_panel(
         st.session_state.pop(error_key, None)
         st.session_state[source_request_key] = payload_request_id
 
-    default_question = "Explain this inspection result."
+    default_question = "Explain this image inspection result safely for manual review."
     current_question = st.session_state.get(question_key)
     if current_question is None:
         st.session_state[question_key] = default_question
@@ -426,6 +445,7 @@ def _render_image_inspection_agent_panel(
         ]
     )
     st.write(_safe_text(agent_response.get("answer")))
+    st.caption("Manual review still applies.")
 
     evidence_used = agent_response.get("evidence_used", [])
     if not isinstance(evidence_used, list):
@@ -435,6 +455,11 @@ def _render_image_inspection_agent_panel(
             st.json(evidence_used)
         else:
             st.info("No evidence items were returned.")
+
+    diagnostic_items = _build_agent_explanation_diagnostic_items(agent_response)
+    if diagnostic_items:
+        with st.expander("Response diagnostics", expanded=False):
+            _render_key_value_grid(diagnostic_items)
 
     limitations_used = agent_response.get("limitations", [])
     if not isinstance(limitations_used, list):
@@ -454,7 +479,7 @@ def _render_detection_confidence_agent_panel(
     """Render a focused mock explanation panel for the Detection confidence chart."""
     _render_component_agent_explanation_panel(
         title="Explain this detection confidence chart",
-        caption="Mock evidence-grounded explanation · external LLM not connected · manual review still applies.",
+        caption="Evidence-grounded explanation path · gated Gemini optional · manual review still applies.",
         button_label="Mock evidence-grounded explanation",
         button_key="detection_confidence_agent_button",
         response_key="detection_confidence_agent_explanation",
@@ -478,7 +503,7 @@ def _render_classification_threshold_agent_panel(
     """Render a focused mock explanation panel for the Classification threshold chart."""
     _render_component_agent_explanation_panel(
         title="Explain this classification threshold chart",
-        caption="Mock evidence-grounded explanation · external LLM not connected · manual review still applies.",
+        caption="Evidence-grounded explanation path · gated Gemini optional · manual review still applies.",
         button_label="Mock evidence-grounded explanation",
         button_key="classification_threshold_agent_button",
         response_key="classification_threshold_agent_explanation",
@@ -504,7 +529,7 @@ def _render_anomaly_threshold_agent_panel(
     _render_component_agent_explanation_panel(
         title="Explain this anomaly threshold behavior chart",
         caption=(
-            "Mock evidence-grounded explanation · external LLM not connected · "
+            "Evidence-grounded explanation path · gated Gemini optional · "
             "anomaly evidence is review-only · manual review still applies."
         ),
         button_label="Mock evidence-grounded explanation",
@@ -566,6 +591,12 @@ def _render_component_agent_explanation_panel(
             f"{_agent_explanation_status_caption(provider_used, fallback_used)}"
         )
         st.write(_safe_text(agent_response.get("answer")))
+        st.caption("Manual review still applies.")
+
+        diagnostic_items = _build_agent_explanation_diagnostic_items(agent_response)
+        if diagnostic_items:
+            with st.expander("Response diagnostics", expanded=False):
+                _render_key_value_grid(diagnostic_items)
 
 
 def _safe_text(value: Any, default: str = "Unavailable") -> str:
@@ -2667,10 +2698,10 @@ def _render_upload_predict() -> None:
 
     _render_agent_callout(
         "Explain this inspection result",
-        "Mock explanation MVP active for the current inspection result. The panel uses governed response evidence, model outputs, warnings, limitations, and traceability.",
-        "Mock explanation MVP active · external LLM not connected · no fake AI",
+        "Evidence-grounded explanation for the current inspection result. Uses the /agent/explain response path and stays grounded in governed response evidence, model outputs, warnings, limitations, and traceability.",
+        "Gemini-gated responses are available only when explicitly enabled. Safe mock fallback remains available and manual review still applies.",
         accent="violet",
-        badge_label="Mock MVP active · external LLM not connected · no fake AI",
+        badge_label="Safe explanation path · fallback available",
     )
     _render_image_inspection_agent_panel(
         api_base_url=api_base_url,

@@ -73,8 +73,8 @@ def test_classification_threshold_active_panel_copy_is_mock_and_not_planned() ->
 
     assert "_render_component_agent_explanation_panel" in source
     assert "explain this classification threshold chart" in source
-    assert "mock evidence-grounded explanation" in source
-    assert "external llm not connected" in source
+    assert "evidence-grounded explanation path" in source
+    assert "gated gemini optional" in source
     assert "manual review still applies" in source
     assert "planned / not active" not in source
     assert "no backend agent implemented yet" not in source

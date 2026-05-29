@@ -7,7 +7,9 @@ from types import SimpleNamespace
 import pytest
 from PIL import Image
 
+from frontend import streamlit_app as app
 from frontend.streamlit_app import (
+    _build_agent_explanation_diagnostic_items,
     _agent_explanation_status_caption,
     _annotate_detection_boxes,
     _build_image_inspection_agent_request,
@@ -27,6 +29,67 @@ class _FakeResponse:
 
     def json(self) -> dict[str, object]:
         return self._payload
+
+
+class _FakeStreamlitContext:
+    def __init__(self, recorder: list[tuple[str, object]]) -> None:
+        self._recorder = recorder
+
+    def __enter__(self) -> "_FakeStreamlitContext":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        return False
+
+
+class _FakeStreamlit:
+    def __init__(self, submitted: bool = False) -> None:
+        self.submitted = submitted
+        self.session_state: dict[str, object] = {}
+        self.calls: list[tuple[str, object]] = []
+
+    def markdown(self, text: str) -> None:
+        self.calls.append(("markdown", text))
+
+    def caption(self, text: str) -> None:
+        self.calls.append(("caption", text))
+
+    def form(self, name: str, clear_on_submit: bool = False) -> _FakeStreamlitContext:
+        self.calls.append(("form", name))
+        return _FakeStreamlitContext(self.calls)
+
+    def text_input(self, label: str, key: str | None = None) -> str:
+        self.calls.append(("text_input", f"{label}:{key}"))
+        if key is not None and key not in self.session_state:
+            self.session_state[key] = "Explain this image inspection result safely for manual review."
+        return str(self.session_state.get(key, "Explain this image inspection result safely for manual review."))
+
+    def form_submit_button(self, label: str, type: str = "secondary") -> bool:
+        self.calls.append(("submit", label))
+        return self.submitted
+
+    def warning(self, text: str) -> None:
+        self.calls.append(("warning", text))
+
+    def info(self, text: str) -> None:
+        self.calls.append(("info", text))
+
+    def write(self, text: str) -> None:
+        self.calls.append(("write", text))
+
+    def json(self, payload: object) -> None:
+        self.calls.append(("json", payload))
+
+    def expander(self, label: str, expanded: bool = False) -> _FakeStreamlitContext:
+        self.calls.append(("expander", f"{label}:{expanded}"))
+        return _FakeStreamlitContext(self.calls)
+
+    def columns(self, count: int) -> list[_FakeStreamlitContext]:
+        self.calls.append(("columns", count))
+        return [_FakeStreamlitContext(self.calls) for _ in range(count)]
+
+    def metric(self, label: str, value: str, help: str | None = None) -> None:
+        self.calls.append(("metric", (label, value)))
 
 
 def test_image_inspection_api_call_uses_unified_endpoint(monkeypatch) -> None:
@@ -203,9 +266,68 @@ def test_image_inspection_compact_labels_are_friendly() -> None:
 
 
 def test_agent_explanation_status_caption_reports_mock_fallback() -> None:
-    expected = "Mock MVP active · external LLM not connected · no fake AI"
-    assert _agent_explanation_status_caption("mock", False) == expected
-    assert _agent_explanation_status_caption("gemini", True) == expected
+    mock_expected = "Safe mock fallback active · manual review still applies."
+    gemini_expected = "Gemini-gated explanation returned a grounded response."
+    assert _agent_explanation_status_caption("mock", False) == mock_expected
+    assert _agent_explanation_status_caption("gemini", True) == mock_expected
+    assert _agent_explanation_status_caption("gemini", False) == gemini_expected
+
+
+def test_agent_explanation_diagnostic_items_omit_empty_values() -> None:
+    items = _build_agent_explanation_diagnostic_items(
+        {
+            "fallback_reason": "",
+            "provider_error_stage": "post_generation",
+            "provider_error_reason": "safety_blocked",
+            "safety_block_reason": None,
+        }
+    )
+
+    assert items == [
+        ("Provider error stage", "post_generation"),
+        ("Provider error reason", "safety_blocked"),
+    ]
+
+
+def test_image_inspection_agent_panel_renders_safe_fallback_diagnostics(monkeypatch) -> None:
+    fake_st = _FakeStreamlit(submitted=False)
+    monkeypatch.setattr("frontend.streamlit_app.st", fake_st)
+
+    fake_st.session_state["image_inspection_agent_source_request_id"] = "inspection-0001"
+    fake_st.session_state["image_inspection_agent_explanation"] = {
+        "answer": "Use the evidence and keep manual review in place.",
+        "evidence_used": [{"source": "decision.final_decision", "value": "manual_review_required"}],
+        "limitations": ["Manual review still applies."],
+        "provider_used": "mock",
+        "fallback_used": True,
+        "grounding_status": "grounded",
+        "fallback_reason": "Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.",
+        "provider_error_stage": "post_generation",
+        "provider_error_reason": "safety_blocked",
+        "safety_block_reason": "invented_metric_like_output",
+    }
+
+    app._render_image_inspection_agent_panel(
+        api_base_url="http://localhost:8000",
+        payload={"request_id": "inspection-0001"},
+        decision={},
+        classification={},
+        detection={},
+        anomaly={},
+        warnings=[],
+        limitations=[],
+    )
+
+    assert ("caption", "Safe mock fallback active · manual review still applies.") in fake_st.calls
+    assert ("metric", ("Provider", "mock")) in fake_st.calls
+    assert ("metric", ("Fallback", "Yes")) in fake_st.calls
+    assert ("expander", "Response diagnostics:False") in fake_st.calls
+    assert ("metric", ("Fallback reason", "Gemini real provider output was blocked by the safety guard; mock fallback remains the safe path.")) in fake_st.calls
+    assert ("metric", ("Provider error stage", "post_generation")) in fake_st.calls
+    assert ("metric", ("Provider error reason", "safety_blocked")) in fake_st.calls
+    assert ("metric", ("Safety block reason", "invented_metric_like_output")) in fake_st.calls
+    assert not any("fake api key" in str(call).lower() for call in fake_st.calls)
+    assert not any("raw provider" in str(call).lower() for call in fake_st.calls)
 
 
 def test_frontend_source_no_longer_uses_classification_only_flow() -> None:
@@ -215,11 +337,16 @@ def test_frontend_source_no_longer_uses_classification_only_flow() -> None:
     assert "classification only" not in source
     assert "unified inspection UI is not yet connected" not in source
     assert "Explain this inspection result" in source
-    assert "Mock explanation MVP active for the current inspection result. The panel uses governed response evidence, model outputs, warnings, limitations, and traceability." in source
+    assert "Response diagnostics" in source
+    assert "Safe mock fallback active · manual review still applies." in source
+    assert "Gemini-gated explanation returned a grounded response." in source
+    assert "Evidence-grounded explanation for the current inspection result." in source
+    assert "Uses the /agent/explain response path" in source
+    assert "Gemini-gated responses are available only when explicitly enabled." in source
+    assert "Safe mock fallback remains available and manual review still applies." in source
     assert "One-shot, evidence-grounded explanation for the current inspection result." in source
-    assert "Mock MVP active · external LLM not connected · no fake AI" in source
-    assert 'badge_label: str = "Future LLM layer planned"' in source
-    assert "Mock Agent active" in source
+    assert "Safe explanation path · fallback available" in source
+    assert "MOCK-FIRST · GATED GEMINI AVAILABLE" in source
     assert "Detection box details" in source
     assert "Classification details" in source
     assert "Detection details" in source

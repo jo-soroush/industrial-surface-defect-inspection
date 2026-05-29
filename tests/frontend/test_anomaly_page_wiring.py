@@ -116,8 +116,8 @@ def test_anomaly_threshold_active_panel_copy_is_mock_and_review_only() -> None:
 
     assert "_render_component_agent_explanation_panel" in source
     assert "explain this anomaly threshold behavior chart" in source
-    assert "mock evidence-grounded explanation" in source
-    assert "external llm not connected" in source
+    assert "evidence-grounded explanation path" in source
+    assert "gated gemini optional" in source
     assert "anomaly evidence is review-only" in source
     assert "manual review still applies" in source
     assert "planned / not active" not in source

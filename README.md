@@ -2,17 +2,19 @@
 
 ## Project Overview
 
-Industrial Surface Defect Inspection Platform is a production-oriented AI inspection platform for industrial image analysis. It is defined as an industrial surface inspection system that combines known defect classification, anomaly-aware evaluation, decision-support, and controlled human-review routing within a governed inspection workflow.
+Industrial Surface Defect Inspection Platform is a YOLO-focused industrial surface defect inspection demo/platform for industrial image analysis. Its main inspection story is defect detection and localization with YOLO, supported by governed classification and anomaly evidence, a deterministic decision layer, and Gemini-gated explanations where explicitly enabled.
 
-The system is designed for operational quality-control environments in which inspection outputs must be usable, reviewable, and traceable. It is AWS-deployable, intended for disciplined deployment and governance practices, and explicitly positioned as a decision-support system. It does not claim full automation.
+The system is designed for quality-control workflows in which inspection outputs must be usable, reviewable, and traceable. It is positioned as a decision-support system, not an autonomous inspector, and the current demo deployment has been validated on EC2 with Docker Compose and browser checks.
 
 ## Mission Statement
 
-To provide a production-oriented industrial surface inspection system that combines classification, anomaly detection, decision-support, and human-review routing within an AWS-deployable AI inspection platform for governed industrial inspection workflows.
+To provide a governed industrial surface defect inspection platform centered on YOLO-based defect detection and localization, with supporting classification and anomaly evidence, review-only explanations, and manual-review routing for industrial inspection workflows.
 
 ## System Identity
 
-Industrial Surface Defect Inspection Platform is an AI inspection platform and an industrial surface inspection system. It is production-oriented, AWS-deployable, and defined as a decision-support system for industrial quality workflows. The system is not notebook-only, not research-only, and not fully autonomous.
+Industrial Surface Defect Inspection Platform is an AI inspection platform and an industrial surface inspection system. It is a decision-support system for industrial quality workflows, with YOLO as the primary defect detection/localization focus and classification/anomaly tracks providing supporting evidence. Gemini-gated explanations are evidence-grounded and review-only when explicitly enabled. The system is not fully autonomous.
+
+Validated demo status: EC2 Gemini-gated demo validation passed on the public Docker Compose deployment, with API and frontend containers running successfully, `/agent/health` reporting Gemini readiness, and `/agent/explain` returning grounded Gemini-backed explanations in the validated runtime.
 
 ## Problem Definition Summary
 
@@ -38,7 +40,9 @@ The system does not guarantee detection of unknown defects. Anomaly-related outp
 
 The system provides decision-support rather than prediction in isolation. In operational inspection settings, useful outputs must support routing, uncertainty handling, review prioritization, and exception management. A prediction-only system is insufficient because it leaves action handling undefined and does not establish how ambiguous or suspicious cases should be governed.
 
-Anomaly detection adds value by identifying cases that may not align with known defect categories and therefore require stronger scrutiny than standard classification output can provide. Human review integration adds value by ensuring that ambiguous, high-risk, or distribution-shifted cases are handled through defined oversight instead of silent automation. The resulting value is operational: more controlled inspection decisions, clearer escalation behavior, and better alignment between model output and real inspection workflow needs.
+YOLO-based defect detection and localization is the core value driver, with classification and anomaly detection adding supporting evidence for review and escalation. Human review integration adds value by ensuring that ambiguous, high-risk, or distribution-shifted cases are handled through defined oversight instead of silent automation. Gemini-gated explanations add value by turning governed evidence into reviewable summaries without changing model outputs or removing manual review.
+
+The resulting value is operational: more controlled inspection decisions, clearer escalation behavior, and better alignment between model output and real inspection workflow needs.
 
 ## Repository Structure Overview
 
@@ -81,11 +85,13 @@ Human review serves an operational control role within the system. It is part of
 
 The system is defined to support the following core capabilities:
 
-- Known defect classification for defined industrial defect categories
-- Anomaly-aware inspection support for suspicious, novel, or out-of-distribution cases
+- YOLO-based defect detection and localization as the main inspection focus
+- Known defect classification for defined industrial defect categories as supporting evidence
+- Anomaly-aware inspection support for suspicious, novel, or out-of-distribution cases as supporting evidence
 - Confidence-aware decision-support for separating routine outputs from review-required outputs
+- Gemini-gated evidence-grounded explanations for selected components when explicitly enabled
 - Action routing into bounded operational decisions such as `accept`, `manual_review`, `high_risk`, and `uncertain`
-- AWS-deployable, production-oriented system design suitable for governed deployment and operational control
+- EC2/Docker Compose demo deployment validation for the gated explanation path
 
 ## Scope Boundaries
 
@@ -98,6 +104,22 @@ All capabilities are governed by documented risk and limitation controls. Use of
 This repository defines a decision-support system for governed industrial inspection workflows. It must not be interpreted or deployed as a fully autonomous inspection authority. Model outputs, anomaly-related signals, confidence-related signals, and explainability artifacts are bounded decision-support signals and must not be treated as ground truth or as a substitute for human judgment.
 
 Use of the system remains subject to documented intended use, explicit non-intended use boundaries, risk and limitation controls, human-in-the-loop policy, and evidence requirements. Any use that bypasses those controls is outside the defined scope of the system.
+
+## Validated Demo Status
+
+- EC2 Gemini-gated demo validation: PASS
+- Public EC2 Streamlit URL validated during testing: `http://13.60.218.168:8501`
+- API and frontend containers run through Docker Compose on EC2
+- API container is healthy
+- Frontend container is running
+- Docker restart policy is set to `unless-stopped`
+- Docker service restart recovery was validated
+- `/health` returns `status=ok` and `api_ready=true`
+- `/agent/health` returns Gemini-enabled runtime readiness with mock fallback available
+- `/agent/explain` returns grounded Gemini-backed explanations in the validated runtime
+- Browser validation confirmed Gemini-backed explanations for Image Inspection, Surface Defect Classification, Surface Anomaly Detection, and the Detection confidence chart
+
+This is demo deployment validation, not production readiness. Manual review remains required. Safe mock fallback remains available.
 
 ## Repository Documentation Map
 

@@ -66,14 +66,49 @@ These directories are part of the intended repository structure. Their mention h
 
 ## Basic Setup
 
-This repository currently establishes the governance and root-baseline needed before feature implementation begins. Basic local setup at this stage is intentionally minimal:
+For local Python development:
 
 1. Create a Python virtual environment in the repository root.
 2. Install runtime dependencies from `requirements.txt`.
 3. Install development dependencies from `requirements-dev.txt` when working on tests, linting, or local quality checks.
 4. Copy `.env.example` into a local environment file only when local runtime configuration is needed.
 
-The repository is not yet presented as a complete runnable service. Setup instructions are therefore limited to the current baseline and root-governance stage.
+For the validated local Docker Compose runtime, use the steps below.
+
+## Local Docker Usage
+
+The project has been validated locally on macOS with Docker Desktop and Docker Compose. The default local mode intentionally disables Gemini real execution and uses mock/fallback explanations. Manual review still applies.
+
+From the parent directory of the repository:
+
+```bash
+cd industrial-surface-defect-inspection
+
+AGENT_ENABLE_LLM=false \
+AGENT_ENABLE_REAL_PROVIDER_RUNTIME=false \
+LLM_ENABLE_FALLBACK=true \
+docker compose build
+
+AGENT_ENABLE_LLM=false \
+AGENT_ENABLE_REAL_PROVIDER_RUNTIME=false \
+LLM_ENABLE_FALLBACK=true \
+docker compose up -d
+
+docker compose ps
+
+curl -sS http://127.0.0.1:8000/health | python3 -m json.tool
+```
+
+After startup:
+
+- Local dashboard: `http://localhost:8501`
+- Local API health: `http://localhost:8000/health`
+- `/health` returns `status=ok` and `api_ready=true`
+- `/agent/health` returns `llm_enabled=false`, `default_provider=mock`, `available_providers=["mock"]`, `fallback_available=true`, and `grounding_ready=true`
+
+This local default behavior is expected. Gemini real execution is enabled only when explicitly configured. It requires a local `.env` file containing `GEMINI_API_KEY`. Never commit `.env` or API keys.
+
+The validated Gemini-enabled public EC2 demo remains available at `http://13.60.218.168:8501`.
 
 ## Human-in-the-Loop Principle
 
@@ -107,6 +142,18 @@ Use of the system remains subject to documented intended use, explicit non-inten
 
 ## Validated Demo Status
 
+### Local Docker Compose Validation
+
+- macOS Docker Desktop startup: PASS
+- Local Docker Compose build for `api` and `frontend`: PASS
+- Local Docker Compose startup for both containers: PASS
+- API container is healthy
+- Frontend container is running
+- `/health` returns `status=ok` and `api_ready=true`
+- `/agent/health` reports local default mock/fallback mode: `llm_enabled=false`, `default_provider=mock`, `available_providers=["mock"]`, `fallback_available=true`, and `grounding_ready=true`
+
+### EC2 Gemini-Enabled Demo Validation
+
 - EC2 Gemini-gated demo validation: PASS
 - Public EC2 Streamlit URL validated during testing: `http://13.60.218.168:8501`
 - API and frontend containers run through Docker Compose on EC2
@@ -119,7 +166,7 @@ Use of the system remains subject to documented intended use, explicit non-inten
 - `/agent/explain` returns grounded Gemini-backed explanations in the validated runtime
 - Browser validation confirmed Gemini-backed explanations for Image Inspection, Surface Defect Classification, Surface Anomaly Detection, and the Detection confidence chart
 
-This is demo deployment validation, not production readiness. Manual review remains required. Safe mock fallback remains available.
+Local Docker and EC2 Docker are demo/runtime validation only, not production readiness. They must not be interpreted as deployment-safe or factory-ready. Manual review remains required. Safe mock fallback remains available.
 
 ## Repository Documentation Map
 
